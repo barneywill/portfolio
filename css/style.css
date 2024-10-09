@@ -335,7 +335,7 @@ p {
   .mdl-navigation__link {
   color: #444;
   text-transform: capitalize;
-  padding: 0 15px;
+  padding: 0 10px;
   position: relative;
   -moz-transition: 0.3s ease;
   -o-transition: 0.3s ease;
