@@ -732,6 +732,15 @@ p {
   text-align: center;
 }
 
+.candidate-img-com {
+  height: 90px;
+  width: 90px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.26);
+  background-size: cover;
+  margin: 0 auto;
+  display: block;
+}
 
 figure > img {
   height: 90px;
