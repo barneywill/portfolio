@@ -746,3 +746,7 @@ figure > img {
   height: 90px;
   width: 90px;
 }
+
+tr:nth-child(even) {
+  background-color: #D6EEEE;
+}
