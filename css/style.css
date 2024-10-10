@@ -747,11 +747,12 @@ figure > a > img {
   width: 90px;
 }
 
-tr:nth-child(even) {
-  background-color: #D6EEEE;
-}
-
 .imageContainer > img:hover {
   width: 1200px;
   height: 600px;
+}
+
+.imageContainer2 > img:hover {
+  width: 1200px;
+  height: 400px;
 }
