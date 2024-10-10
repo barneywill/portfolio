@@ -750,3 +750,8 @@ figure > a > img {
 tr:nth-child(even) {
   background-color: #D6EEEE;
 }
+
+.imageContainer > img:hover {
+  width: 1200px;
+  height: 600px;
+}
