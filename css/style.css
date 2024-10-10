@@ -742,7 +742,7 @@ p {
   display: block;
 }
 
-figure > img {
+figure > a > img {
   height: 90px;
   width: 90px;
 }
