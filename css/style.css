@@ -469,7 +469,7 @@ p {
   top: 0;
 }
 .bg-struct.bg-img {
-  background: url(../img/banner.jpg);
+  background: url(../img/banner.jpeg);
   background-position: top;
   background-size: cover;
 }
