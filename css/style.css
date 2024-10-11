@@ -469,8 +469,8 @@ p {
   top: 0;
 }
 .bg-struct.bg-img {
-  background: url(../img/big_data_pic.jpeg);
-  background-position: 5% 65%;
+  background: url(../img/banner.jpg);
+  background-position: top;
   background-size: cover;
 }
 .about-sec .candidate-img {
@@ -754,5 +754,5 @@ figure > a > img {
 
 .imageContainer2 > img:hover {
   width: 1200px;
-  height: 400px;
+  height: 4banner.jpg00px;
 }
