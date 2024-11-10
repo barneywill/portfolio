@@ -772,3 +772,8 @@ figure > a > img {
   height: 900px;
 }
 
+.imageContainer3 > img.large:hover {
+  width: 1200px;
+  height: 600px;
+}
+
