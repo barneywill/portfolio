@@ -46,7 +46,6 @@
               <li><a class="mdl-navigation__link" data-scroll href="#education_sec">education</a></li>
               <!--
               <li><a class="mdl-navigation__link" data-scroll href="#interest_sec">interest</a></li>
-              <li><a class="mdl-navigation__link" data-scroll href="#share_sec">sharing</a></li>
               -->
             </ul>
             <button id="demo-menu-lower-right" class="mdl-button mdl-js-button mdl-button--icon ver-more-btn">
@@ -143,12 +142,6 @@
                     <span class="font-capitalize">interest</span>
                   </a>
                 </li>
-                <li>
-                  <a class="mdl-navigation__link border-top-sep" data-scroll href="#share_sec">
-                    <i class="zmdi zmdi-help pr-15"></i>
-                    <span class="font-capitalize">sharing</span>
-                  </a>
-                </li>
                 -->
               </ul>
             </div>
@@ -213,7 +206,7 @@
                       <div class="col-md-7 col-xs-12">
                         <div class="info-wrap">
                           <h1>Hi. I'm Weiwei Wu.</h1>
-                          <h5 class="mt-20 font-grey">Big Data Engineer</h5>
+                          <h5 class="mt-20 font-grey">Data Engineer</h5>
                           <div class="mt-30">
                             <a id="download_cv" class="mdl-button mdl-js-button mdl-button--raised mdl-js-ripple-effect bg-blue font-white mr-10"
                               href="https://drive.google.com/file/d/165Pp_CqZMBKbl-H-cpePsyc3vQQxeSWB/view?usp=drive_link" target="_blank">Resume</a>
@@ -307,13 +300,7 @@
                 </figure>
               </div>
               <h4 class="profile-title mb-10 mt-10" style="color:#2879ff;font-weight:bold;text-align:center;">Miscellaneous</h4>
-              <div id="skills-icons">
-                <!--
-                <figure class="skill-icon">
-                  <a href="https://www.linux.org/" target="_blank"><img src='https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/linux/linux-original.svg' title="Linux® is an open source operating system (OS). An operating system is the software that directly manages a system’s hardware and resources, like CPU, memory, and storage. The OS sits between applications and hardware and makes the connections between all of your software and the physical resources that do the work."/>
-                  <figcaption>Linux</figcaption></a>
-                </figure>
-                -->
+              <div id="skills-icons-1">
                 <figure class="skill-icon">
                   <a href="https://www.java.com/" target="_blank"><img src='https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/java/java-original-wordmark.svg' title="Java is a programming language and computing platform first released by Sun Microsystems in 1995. It has evolved from humble beginnings to power a large share of today’s digital world, by providing the reliable platform upon which many services and applications are built. New, innovative products and digital services designed for the future continue to rely on Java, as well."/>
                     <figcaption>Java</figcaption></a>
@@ -349,7 +336,11 @@
               </div>
               <!--
               <h4 class="profile-title mb-10 mt-10" style="color:#2879ff;font-weight:bold;text-align:center;">Web Development</h4>
-              <div id="skills-icons">
+              <div id="skills-icons-2">
+                <figure class="skill-icon">
+                  <a href="https://www.linux.org/" target="_blank"><img src='https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/linux/linux-original.svg' title="Linux® is an open source operating system (OS). An operating system is the software that directly manages a system’s hardware and resources, like CPU, memory, and storage. The OS sits between applications and hardware and makes the connections between all of your software and the physical resources that do the work."/>
+                  <figcaption>Linux</figcaption></a>
+                </figure>
                 <figure class="skill-icon">
                   <a href="https://maven.apache.org/" target="_blank"><img src='https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/maven/maven-original-wordmark.svg' title="Apache Maven is a software project management and comprehension tool. Based on the concept of a project object model (POM), Maven can manage a project's build, reporting and documentation from a central piece of information."/>
                   <figcaption>Maven</figcaption></a>
@@ -604,39 +595,11 @@
                 </div>
               </div>
             </section>
-      <section id="share_sec" class="blog-sec sec-pad-top-sm">
-        <h2 class="mb-30">Sharing</h2>
-        <div class="row" id="repo-card">
-          <div class="mb-30">
-            <h4 style="color:#2879ff;font-weight:bold;text-align:center;">BI Charts All-in-one</h4>
-            <img src="./img/bi_charts.jpeg" width="850px" height="600px" class="mt-10 mb-10" style="display:block;margin-left:auto;margin-right:auto;">
-          </div>
-          <div class="mb-30 imageContainer">
-            <h4 style="color:#2879ff;font-weight:bold;text-align:center;">Database Category</h4>
-            <img src="./img/databases.jpeg" width="900px" height="450px" class="mt-10 mb-10" style="display:block;margin-left:auto;margin-right:auto;">
-          </div>
-          <div class="mb-30">
-            <h4 style="color:#2879ff;font-weight:bold;text-align:center;">Data Warehouse</h4>
-            <img src="./img/data_warehouse.jpeg" width="650px" height="350px" class="mt-10 mb-10" style="display:block;margin-left:auto;margin-right:auto;">
-          <br/>
-          Data Warehouse Layers
-          <table border="2" style="width:100%; padding: 10px;">
-            <tr style="height:30px;"><th style="width:5%;text-align: center;">Layer</th><th style="width:20%;text-align: center;">Full Name</th><th style="text-align: center;">Explanation</th></tr>
-            <tr><td style="font-weight:bold;">STG</td><td>Stage</td><td>Usually not necessary.</td></tr>
-            <tr><td style="font-weight:bold;">ODS</td><td>Operational Data Store</td><td>A data warehouse preparation area that provides basic raw data for the DWD layer. Keep the same as tables in the business system.</td></tr>
-            <tr><td style="font-weight:bold;">DWD</td><td>Data Warehouse Details</td><td>Responsible for cleaning and precipitating the data of the ODS layer, storing data in a subject-oriented manner, and storing historical incremental data or full data. Detailed data with the same granularity as ODS.</td></tr>
-            <tr><td style="font-weight:bold;">DIM</td><td>Dimension</td><td>Dimension tables.</td></tr>
-            <tr><td style="font-weight:bold;">DWS</td><td>Data Warehouse Service</td><td>A slightly summarized wide table divided by business and topic, is the subject of the data warehouse.</td></tr>
-            <tr><td style="font-weight:bold;">ADS</td><td>Application Data Service</td><td>Provides users with visual data query and analysis services based on DWS based on the analysis business needs of users. </td></tr>
-          </table>
-                </div>
-              </div>
-            </section>
           -->
             <footer class="footer-sec sec-pad-top-sm sec-pad-bottom text-center">
               <h4>thank you for visiting.</h4>
               <p class="mt-10">
-                Weiwei Wu © 2024 All rights reserved.
+                Weiwei Wu © 2025 All rights reserved.
               </p>
             </footer>
           </div>
