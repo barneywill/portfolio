@@ -4,7 +4,7 @@ import xml.etree.ElementTree as ET
 from urllib.parse import urljoin
 
 # Define the base URL and GitHub API URL
-USERNAME = "ptprashanttripathi"  # Replace with the GitHub username
+USERNAME = "barneywill"  # Replace with the GitHub username
 BASE_URL = f"https://{USERNAME}.github.io/"
 GITHUB_API_URL = f"https://api.github.com/users/{USERNAME}/repos"
 
