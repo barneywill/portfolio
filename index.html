@@ -15,6 +15,9 @@
     <!-- Latest compiled and minified CSS -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@3.4.1/dist/css/bootstrap.min.css" integrity="sha384-HSMxcRTRxnN+Bdg0JdbxYKrThecOKuH5zCYotlSAcp1+c8xmyTe9GYg1l9a69psu" crossorigin="anonymous">
     <link rel="stylesheet" href="https://code.getmdl.io/1.3.0/material.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" type="text/css" href="css/style.css" />
 
     <link rel="shortcut icon" type="image/x-icon" href="./favicon.ico"/>
@@ -32,7 +35,7 @@
   <body>
     <div id="body" class="main-wrapper">
       <div class="bg-struct bg-img"></div>
-      <div class="mdl-js-layout mdl-layout--fixed-header">
+      <div class="mdl-layout mdl-js-layout">
         <header class="mdl-layout__header">
           <div class="mdl-layout__header-row mdl-scroll-spy-1">
             <a href="index.html"><span class="mdl-layout-title">Weiwei Wu's Portfolio</span></a>
@@ -164,44 +167,38 @@
                         />
                         <ul class="social-icons">
                           <li>
-                            <a class="linkedin-link" href="https://www.linkedin.com/in/barneywill/" target="_blank">
+                            <a class="linkedin-link" href="https://www.linkedin.com/in/barneywill/" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn">
                               <i id="tt1" class="zmdi zmdi-linkedin"></i>
-                              <div class="mdl-tooltip" data-mdl-for="tt1">
-                                linkedin
-                              </div>
+                              <span class="social-label">LinkedIn</span>
                             </a>
                           </li>
                           <li>
-                            <a class="blogger-link" href="https://www.cnblogs.com/barneywill" target="_blank">
+                            <a class="blogger-link" href="https://www.cnblogs.com/barneywill" target="_blank" rel="noopener noreferrer" aria-label="Blog">
                               <i id="tt2" class="zmdi zmdi-blogger"></i>
-                              <div class="mdl-tooltip" data-mdl-for="tt2">
-                                blog
-                              </div>
+                              <span class="social-label">Blog</span>
                             </a>
                           </li>
                           <li>
-                            <a class="github-link" href="https://github.com/barneywill" target="_blank">
+                            <a class="github-link" href="https://github.com/barneywill" target="_blank" rel="noopener noreferrer" aria-label="GitHub">
                               <i id="tt3" class="zmdi zmdi-github"></i>
-                              <div class="mdl-tooltip" data-mdl-for="tt3">
-                                github
-                              </div>
+                              <span class="social-label">GitHub</span>
                             </a>
                           </li>
                           <li>
-                            <a class="github-link" href="https://leetcode.com/u/barneywill/" target="_blank">
+                            <a class="github-link" href="https://leetcode.com/u/barneywill/" target="_blank" rel="noopener noreferrer" aria-label="LeetCode">
                               <i id="tt4" class="zmdi zmdi-code"></i>
-                              <div class="mdl-tooltip" data-mdl-for="tt4">
-                                leetcode
-                              </div>
+                              <span class="social-label">LeetCode</span>
                             </a>
                           </li>
                         </ul>
+                        <!--
                           <br>
                         <p align="center">
                           <a href="https://skillicons.dev">
-                            <img src="https://go-skill-icons.vercel.app/api/icons?i=linux,bash,vim,md,notion&theme=light" title="Linux, Bash, Vim, Markdown, Notion"/>
+                            <img src="https://go-skill-icons.vercel.app/api/icons?i=python,linux,bash,vim,md,notion&theme=light" title="Python, Linux, Bash, Vim, Markdown, Notion"/>
                           </a>
                         </p>
+                        -->
                       </div>
                       <div class="col-md-7 col-xs-12">
                         <div class="info-wrap">
@@ -214,15 +211,13 @@
                               href="mailto:barneyhoho@gmail.com" data-scroll>email</a>
                           </div>
                         </div>
+                        
                         <ul class="profile-wrap mt-30">
                           <li>
                             <div class="profile-title">
-                              <!--
-                              &#128104; &#8205;
-                              -->
                               💻 Experience :
                             </div>
-                            ML, Spark, Kafka, GCP, Bigquery, SQL, Python, Scala
+                            LLM, AI, ML, Python, Spark, AWS/GCP, Clickhouse, SQL
                           </li>
                           <li>
                             <div class="profile-title">
@@ -230,6 +225,7 @@
                             </div>
                             <a href='https://www.coursera.org/account/accomplishments/specialization/RQSXR3RVNACJ' target='_blank'>Google Advanced Data Analytics Certificate</a>
                           </li>
+                          <!--
                           <li>
                             <div class="profile-title">
                               &#129513; Interested in :
@@ -248,7 +244,9 @@
                             <div class="profile-title">&#128104; Fun Fact :</div>
                             Actually it's very easy to 'say' my name.
                           </li>
+                          -->
                         </ul>
+                        
                       </div>
                     </div>
                   </div>
@@ -256,11 +254,14 @@
               </div>
             </section>
             <!--/About Sec-->
+
             <section id="skills_sec" class="skill-container">
+              <!--
               <h2 class="mb-30">my skill cloud</h2>
               <div class="mb-10 mt-10 imageContainer">
                 <img src="./img/skills.jpeg" width="950px" height="500px"/>
               </div>
+              -->
 
               <h2 class="mt-10 mb-30">what i use</h2>
               <!--Tech Icons-->
@@ -413,8 +414,10 @@
                     <figcaption>Power BI</figcaption></a>
                 </figure>
               </div>
-            -->
+            
             </section>
+            -->
+            
             <section id="portfolio_sec" class="profile-sec sec-pad-top-sm">
               <h2 class="mb-30">what i do</h2>
               <div class="row">
@@ -425,7 +428,7 @@
                     <p>
                       Highly skilled <span style="font-weight:bold">Data Engineer</span> and <span style="font-weight:bold">Data Architect</span> with 7+ years of hands-on experience in data engineering, data warehousing, data modeling, PB-level data processing, ETL, OLAP, BI.
                     </p>
-                    <p>Proficient in Java, Scala, Shell, SQL, and some Python.</p>
+                    <p>Proficient in Java, Scala, Shell, and SQL.</p>
                     <p>Skilled in Apache Spark, Kafka, Hive, Hadoop, HBase, and Doris.</p>
                     <p>Familiar with GCP, Bigquery, Looker.</p>
                   </div>
@@ -433,7 +436,7 @@
                 <div class="col-md-4 col-xs-12 mb-10">
                   <div class="mdl-card mdl-shadow--2dp text-center">
                     <i class="zmdi zmdi-apps font-green profile-icon"></i>
-                    <h4 class="mb-15" style="color:#2879ff;font-weight:bold;">Web Development</h4>
+                    <h4 class="mb-15" style="color:#2879ff;font-weight:bold;">AI & ML</h4>
                     <p>
                       Prior to that, I was a <span style="font-weight:bold">Java Software Engineer</span> for 8 years and responsible for the development of e-commerce web products.
                     </p>
@@ -456,50 +459,64 @@
             </section>
             <section id="project_sec" class="blog-sec sec-pad-top-sm">
               <h2 class="mb-30">Projects</h2>
-              <div class="row" id="repo-card">
-                <div class="mb-40 mt-50 imageContainer">
-                  <h4 style="color:#2879ff;font-weight:bold;text-align:center;">1. A Data Analysis Demo Project on Google Cloud Platform</h4>
-                  <p class="mt-20 mb-10" style="text-align:center;"><a href='https://github.com/barneywill/bigdata_demo' target="_blank"><span style="font-weight:bold">Developed</span> a data analysis demo project using Nifi, Google Cloud Storage, dbt, Bigquery, Looker, Kafka, Dataproc, Spark, Airflow, XGBoost, Clickhouse on Google Cloud Platform.<br>Project URL: <span style="color:blue;text-decoration: underline;">https://github.com/barneywill/bigdata_demo</span></a></p>
-                  <img src="./img/bigdata_cloud.jpg" width="950px" height="500px" class="large mt-10 mb-10">
+              <div class="project-tabs" id="repo-card">
+                <div class="project-tab-list" role="tablist" aria-label="Project Tabs">
+                  <button class="project-tab is-active" id="project-tab-1" role="tab" aria-selected="true" aria-controls="project-panel-1" data-target="project-panel-1">GCP Demo</button>
+                  <button class="project-tab" id="project-tab-2" role="tab" aria-selected="false" aria-controls="project-panel-2" data-target="project-panel-2">Analysis Projects</button>
+                  <button class="project-tab" id="project-tab-3" role="tab" aria-selected="false" aria-controls="project-panel-3" data-target="project-panel-3">Segway Data Platform</button>
+                  <button class="project-tab" id="project-tab-4" role="tab" aria-selected="false" aria-controls="project-panel-4" data-target="project-panel-4">MZDATA Data Platform</button>
+                  <button class="project-tab" id="project-tab-5" role="tab" aria-selected="false" aria-controls="project-panel-5" data-target="project-panel-5">Customer Profiling</button>
                 </div>
-                <div class="mb-40 mt-50 imageContainer">
-                  <h4 style="color:#2879ff;font-weight:bold;text-align:center;">2. Numbers of Data Analysis Projects</h4>
-                  <p class="mt-20 mb-10" style="text-align:center;"><span style="font-weight:bold">Developed</span> numbers of data analysis projects such as funnel analysis, customer profiling, audience targeting, Nginx log real-time analysis, advertising impact assessment, and all kinds of customer analysis.</p>
-                  <img src="./img/data_analysis_projects.jpeg" width="950px" height="500px" class="large mt-10 mb-10">
+
+                <div class="project-tab-panels">
+                  <article class="project-tab-panel is-active imageContainer" id="project-panel-1" role="tabpanel" aria-labelledby="project-tab-1">
+                    <div class="project-card-content">
+                      <h4 class="project-card-title">1. Data Analysis Demo on Google Cloud Platform</h4>
+                      <p class="project-card-description">Developed an end-to-end data analysis demo using NiFi, Google Cloud Storage, dbt, BigQuery, Looker, Kafka, Dataproc, Spark, Airflow, XGBoost, and ClickHouse on Google Cloud Platform.</p>
+                      <p class="project-card-url"><span>Project URL</span><a href="https://github.com/barneywill/bigdata_demo" target="_blank" rel="noopener noreferrer">https://github.com/barneywill/bigdata_demo</a></p>
+                    </div>
+                    <img src="./img/bigdata_cloud.jpg" width="950px" height="500px" class="large mt-10 mb-10" alt="Demo image of GCP data analysis project architecture">
+                  </article>
+
+                  <article class="project-tab-panel imageContainer" id="project-panel-2" role="tabpanel" aria-labelledby="project-tab-2" hidden>
+                    <div class="project-card-content">
+                      <h4 class="project-card-title">2. Data Analysis Project Portfolio</h4>
+                      <p class="project-card-description">Delivered multiple analytics initiatives including funnel analysis, customer profiling, audience targeting, real-time Nginx log analysis, advertising impact assessment, and advanced customer segmentation.</p>
+                      <p class="project-card-url"><span>Project URL</span><a href="https://www.cnblogs.com/barneywill" target="_blank" rel="noopener noreferrer">https://www.cnblogs.com/barneywill</a></p>
+                    </div>
+                    <img src="./img/data_analysis_projects.jpeg" width="950px" height="500px" class="large mt-10 mb-10" alt="Demo image showing multiple data analysis project outcomes">
+                  </article>
+
+                  <article class="project-tab-panel imageContainer" id="project-panel-3" role="tabpanel" aria-labelledby="project-tab-3" hidden>
+                    <div class="project-card-content">
+                      <h4 class="project-card-title">3. Segway Big Data Platform</h4>
+                      <p class="project-card-description">Built and operated a large-scale platform processing billions of daily incremental records across 1,300+ workflows, with a balanced workload distribution across Hive, ETL, Shell, and Spark jobs.</p>
+                      <p class="project-card-url"><span>Project URL</span><a href="https://www.segway.com" target="_blank" rel="noopener noreferrer">https://www.segway.com</a></p>
+                    </div>
+                    <img src="./img/data_flow.jpeg" width="950px" height="500px" class="mt-10 mb-10" alt="Demo image of Segway big data platform architecture">
+                  </article>
+
+                  <article class="project-tab-panel imageContainer" id="project-panel-4" role="tabpanel" aria-labelledby="project-tab-4" hidden>
+                    <div class="project-card-content">
+                      <h4 class="project-card-title">4. MZDATA Big Data Platform</h4>
+                      <p class="project-card-description">Designed a hybrid platform that combined batch and real-time retrieval workflows, enabling reliable business insights and straightforward on-site deployment for retail clients.</p>
+                      <p class="project-card-url"><span>Project URL</span><a href="https://www.linkedin.com/in/barneywill/" target="_blank" rel="noopener noreferrer">https://www.linkedin.com/in/barneywill/</a></p>
+                    </div>
+                    <img src="./img/mzdata.jpeg" width="950px" height="500px" class="mt-10 mb-10" alt="Demo image of MZDATA big data platform">
+                  </article>
+
+                  <article class="project-tab-panel imageContainer" id="project-panel-5" role="tabpanel" aria-labelledby="project-tab-5" hidden>
+                    <div class="project-card-content">
+                      <h4 class="project-card-title">5. Customer Profiling &amp; Audience Targeting System</h4>
+                      <p class="project-card-description">Implemented a high-performance profiling and audience targeting solution delivering less than 0.1 second response time for search scenarios and near real-time inverted-search capabilities.</p>
+                      <p class="project-card-url"><span>Project URL</span><a href="https://www.segway.com" target="_blank" rel="noopener noreferrer">https://www.segway.com</a></p>
+                    </div>
+                    <img src="./img/customer_profiling.jpeg" width="950px" height="450px" class="mt-10 mb-10" alt="Demo image of customer profiling and audience targeting system">
+                  </article>
                 </div>
-                <div class="mb-40 imageContainer">
-                  <h4 style="color:#2879ff;font-weight:bold;text-align:center;">3. Segway Big Data Platform</h4>
-                  <p class="mt-20 mb-10" style="text-align:center;"><span style="font-weight:bold">Processed</span> billions of incremental daily data with 1,300+ tasks (Hive task: 56%, ETL task: 29%, Shell task: 12%, Spark task: 3%).</p>
-                  <img src="./img/data_flow.jpeg" width="950px" height="500px" class="mt-10 mb-10">
-                </div>
-                <!--
-                <div class="mb-40 mt-50 imageContainer3">
-                  <h4 style="color:#2879ff;font-weight:bold;text-align:center;">4. Segway Server Cost Savings</h4>
-                  <p class="mt-20 mb-10" style="text-align:center;"><span style="font-weight:bold">Achieved</span> significant server expense savings, 100,000 Euros per year, by leveraging my expertise in open source big data frameworks like Hive/Hadoop/HBase/Kafka/ELK to free up 300+ Cores CPU, 800+ GB memory, and 400+ TB disk.</p>
-                  <img src="./img/cost_saving.jpeg" width="950px" height="500px" class="large mt-10 mb-10">
-                  <p class="mt-20 mb-10" style="text-align:center;"><span style="font-weight:bold">Developed</span> a storage usage BI dashboard to monitor total and daily storage distribution by date, region, and framework.</p>
-                  <img src="./img/usage_dashboard.jpeg" width="784px" height="555px" class="mt-10 mb-10" style="display:block;margin-left:auto;margin-right:auto;">>
-                </div>
-              -->
-                <div class="mb-40 mt-50 imageContainer">
-                  <h4 style="color:#2879ff;font-weight:bold;text-align:center;">4. MZDATA Big Data Platform</h4>
-                  <p class="mt-20 mb-10" style="text-align:center;"><span style="font-weight:bold">Combined</span> batch and real-time data retrieval and supported easy on-site deployment.</p>
-                  <img src="./img/mzdata.jpeg" width="950px" height="500px" class="mt-10 mb-10">
-                </div>
-                <div class="mb-40 mt-50 imageContainer">
-                  <h4 style="color:#2879ff;font-weight:bold;text-align:center;">5. Customer Profiling & Audience Targeting System</h4>
-                  <p class="mt-20 mb-10" style="text-align:center;"><span style="font-weight:bold">Achieved</span> high performance, meeting the search scenario in less than 0.1s and the inverted search scenario within seconds.</p>
-                  <img src="./img/customer_profiling.jpeg" width="950px" height="450px" class="mt-10 mb-10">
-                </div>
-                <!--
-                <div class="mb-40 mt-50 imageContainer2">
-                  <h4 style="color:#2879ff;font-weight:bold;text-align:center;">7. Big Data Frameworks Related Problem Solving Wallchart</h4>
-                  <p class="mt-20 mb-10" style="text-align:center;"><span style="font-weight:bold">With</span> strong problem solving skills, I have encountered and solved many challenging problems and issues like the below, which provides me with expertise and deep insight into big data open source frameworks, such as Spark, Kafka, Hive, Hadoop, and HBase.</p>
-                  <img src="./img/problem_solving.jpeg" width="950px" height="650px" class="mt-10 mb-10">
-                </div>
-              -->
               </div>
             </section>
+            
             <section id="work_sec" class="about-sec mt-50 mt-sm-120 mb-30">
               <h2 class="mt-20 mb-40">Work Experience</h2>
               <div class="main-content relative mt-20 mb-20">
@@ -507,17 +524,17 @@
                   <a href="https://www.segway.com" target="_blank"><img class="candidate-img-com" src="./img/segway_logo.jpeg"></a>
                 </div>
                 <div class="container">
-                  <h4>Data Architect &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 04.2021-12.2022</h4>
-                  <a href="https://www.segway.com" target="_blank"><h5 style="font-style: italic;">Segway & Ninebot, Full-time, Beijing, China | Internet of Vehicles(IoV)</h5></a>
-                  <a href="https://www.segway.com" target="_blank"><p><span style="color:blue;text-decoration: underline;">Segway</span> is an international hi-tech company with a mission to ‘Simplify Moving’.</p></a>
+                  <h4>Data Architect (04.2021 - 12.2022)</h4>
+                  <a href="https://www.segway.com" target="_blank"><h5 style="font-style: italic;">Segway &amp; Ninebot, Full-time, Beijing, China | Internet of Vehicles(IoV)</h5></a>
+                  <a href="https://www.segway.com" target="_blank"><p><span style="color:blue;text-decoration: underline;">Segway</span> is an international hi-tech company with a mission to 'Simplify Moving'.</p></a>
                 </div>
               </div>
-              <div class="main-content relative mb-20" style="background-color:white;">
+              <div class="main-content relative mb-20">
                 <div style="float:left; margin-right:20px;">
                   <img class="candidate-img-com" src="./img/startup.png">
                 </div>
                 <div class="container">
-                  <h4>Data Architect &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 05.2019-11.2020</h4>
+                  <h4>Data Architect (05.2019 - 11.2020)</h4>
                   <h5 style="font-style: italic;">MZDATA, Full-time, Beijing, China | Retailing</h5>
                   <p>MZDATA is a start-up company translating big data and machine learning into tangible growth for traditional retail chains.</p>
                 </div>
@@ -527,17 +544,17 @@
                   <a href="https://www.jd.com" target="_blank"><img class="candidate-img-com" src="./img/jd.jpeg"></a>
                 </div>
                 <div class="container">
-                  <h4>Data Engineer &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 05.2017-04.2019</h4>
+                  <h4>Data Engineer (05.2017 - 04.2019)</h4>
                   <a href="https://www.jd.com" target="_blank"><h5 style="font-style: italic;">JD.com, Full-time, Beijing, China | Marketing</h5></a>
                   <a href="https://www.jd.com" target="_blank"><p><span style="color:blue;text-decoration: underline;">JD</span> (NASDAQ: JD) is China's largest B2C E-Commerce company.</p></a>
                 </div>
               </div>
-              <div class="main-content relative mb-20" style="background-color:white;">
+              <div class="main-content relative mb-20">
                 <div style="float:left; margin-right:20px;">
                   <a href="https://www.163.com" target="_blank"><img class="candidate-img-com" src="./img/netease_logo.jpeg"></a>
                 </div>
                 <div class="container">
-                  <h4>Senior Java Engineer, Team Lead &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 05.2011-03.2017</h4>
+                  <h4>Senior Java Engineer, Team Lead (05.2011 - 03.2017)</h4>
                   <a href="https://www.163.com" target="_blank"><h5 style="font-style: italic;">NetEase.com, Full-time, Beijing, China | E-Commerce</h5></a>
                   <a href="https://www.163.com" target="_blank"><p><span style="color:blue;text-decoration: underline;">NetEase</span> (NASDAQ: NTES) is one of the largest internet companies in China.</p></a>
                 </div>
@@ -550,13 +567,14 @@
                   <a href="https://www.buaa.edu.cn/" target="_blank"><img class="candidate-img-com" src="./img/beihang.jpeg"></a>
                 </div>
                 <div class="container">
-                  <a href="https://www.buaa.edu.cn/" target="_blank"><h4>BUAA (Beijing University of Aeronautics and Astronautics) &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 2004-2008</h4></a>
+                  <a href="https://www.buaa.edu.cn/" target="_blank"><h4>BUAA (Beijing University of Aeronautics and Astronautics) (2004 - 2008)</h4></a>
                   <h5 style="font-style: italic;">Bachelor’s degree in Mathematics and Applied Mathematics, Beijing, China</h5>
                   <p><span style="font-weight:bold">Thesis</span>: Classify web pages based on Support Vector Machine(SVM).</p>
                   <p><span style="font-weight:bold">Related Coursework</span>: C Programming Language, Data Structure and Algorithm, Database Technology.</p>
                 </div>
               </div>
             </section>
+            
             <!--
             <section id="interest_sec" class="interest-sec sec-pad-top-sm">
               <h2 class="mb-30">interests</h2>
@@ -603,7 +621,7 @@
             <footer class="footer-sec sec-pad-top-sm sec-pad-bottom text-center">
               <h4>thank you for visiting.</h4>
               <p class="mt-10">
-                Weiwei Wu © 2025 All rights reserved.
+                Weiwei Wu © 2026 All rights reserved.
               </p>
             </footer>
           </div>
@@ -611,5 +629,61 @@
       </div>
     </div>
     <script defer src="https://code.getmdl.io/1.3.0/material.min.js"></script>
+    <script>
+      (function () {
+        var tabs = document.querySelectorAll('.project-tab');
+        var panels = document.querySelectorAll('.project-tab-panel');
+
+        if (!tabs.length || !panels.length) {
+          return;
+        }
+
+        function activateTab(targetId, clickedTab) {
+          tabs.forEach(function (tab) {
+            var active = tab === clickedTab;
+            tab.classList.toggle('is-active', active);
+            tab.setAttribute('aria-selected', active ? 'true' : 'false');
+            tab.setAttribute('tabindex', active ? '0' : '-1');
+          });
+
+          panels.forEach(function (panel) {
+            var show = panel.id === targetId;
+            panel.classList.toggle('is-active', show);
+            panel.hidden = !show;
+          });
+        }
+
+        tabs.forEach(function (tab) {
+          tab.addEventListener('click', function () {
+            activateTab(tab.getAttribute('data-target'), tab);
+          });
+
+          tab.addEventListener('keydown', function (event) {
+            var current = Array.prototype.indexOf.call(tabs, tab);
+            var nextIndex = current;
+
+            if (event.key === 'ArrowRight') {
+              nextIndex = (current + 1) % tabs.length;
+            } else if (event.key === 'ArrowLeft') {
+              nextIndex = (current - 1 + tabs.length) % tabs.length;
+            } else {
+              return;
+            }
+
+            event.preventDefault();
+            tabs[nextIndex].focus();
+            activateTab(tabs[nextIndex].getAttribute('data-target'), tabs[nextIndex]);
+          });
+        });
+
+        function initTabs() {
+          activateTab(tabs[0].getAttribute('data-target'), tabs[0]);
+        }
+
+        initTabs();
+        document.addEventListener('DOMContentLoaded', initTabs);
+        window.addEventListener('load', initTabs);
+      })();
+    </script>
   </body>
 </html>
