@@ -251,8 +251,8 @@
                           </li>
                           -->
                         </ul>
-                        <div class="mt-10">
-                            <a id="download_cv" class="mdl-button mdl-js-button mdl-button--raised mdl-js-ripple-effect bg-blue font-white mr-10"
+                        <div class="mt-10 hero-cta">
+                            <a id="download_cv" class="mdl-button mdl-js-button mdl-button--raised mdl-js-ripple-effect bg-blue font-white"
                               href="https://drive.google.com/file/d/165Pp_CqZMBKbl-H-cpePsyc3vQQxeSWB/view?usp=drive_link" target="_blank">Resume</a>
                             <a class="mdl-button mdl-js-button mdl-button--raised mdl-js-ripple-effect bg-green font-white"
                               href="mailto:barneyhoho@gmail.com" data-scroll>email</a>
@@ -265,7 +265,7 @@
             </section>
             <!--/About Sec-->
 
-            <section id="skills_sec" class="skill-container">
+            <section id="skills_sec" class="skill-container reveal-on-scroll">
               <!--
               <h2 class="mb-30">my skill cloud</h2>
               <div class="mb-10 mt-10 imageContainer">
@@ -285,7 +285,7 @@
               </div>
 
               <div class="use-category-grid">
-                <article class="use-category-card">
+                <article class="use-category-card reveal-on-scroll">
                   <h4 class="profile-title mb-10">AI &amp; ML</h4>
                   <p class="use-category-note">Modeling, LLM workflows, and practical AI tooling.</p>
                   <div class="skills-grid">
@@ -324,7 +324,7 @@
                   </div>
                 </article>
 
-                <article class="use-category-card">
+                <article class="use-category-card reveal-on-scroll">
                   <h4 class="profile-title mb-10">Big Data</h4>
                   <p class="use-category-note">Distributed processing, streaming, and analytics infrastructure.</p>
                   <div class="skills-grid">
@@ -363,7 +363,7 @@
                   </div>
                 </article>
 
-                <article class="use-category-card">
+                <article class="use-category-card reveal-on-scroll">
                   <h4 class="profile-title mb-10">Engineering Tools</h4>
                   <p class="use-category-note">Workflow orchestration, delivery, and platform operations.</p>
                   <div class="skills-grid">
@@ -489,11 +489,11 @@
             </section>
             -->
             
-            <section id="portfolio_sec" class="profile-sec sec-pad-top-sm">
-              <h2 class="mb-30">what i do</h2>
+            <section id="portfolio_sec" class="profile-sec sec-pad-top-sm reveal-on-scroll">
+              <h2 class="mb-10">what i do</h2>
               <div class="row">
                 <div class="col-md-4 col-xs-12 mb-10">
-                  <div class="mdl-card mdl-shadow--2dp text-center what-i-do-card">
+                  <div class="mdl-card mdl-shadow--2dp text-center what-i-do-card reveal-on-scroll">
                     <i class="zmdi zmdi-chart font-blue profile-icon"></i>
                     <h4 class="mb-15" style="color:#2879ff;font-weight:bold;">AI & ML</h4>
                     <p>
@@ -507,7 +507,7 @@
                   </div>
                 </div>
                 <div class="col-md-4 col-xs-12 mb-10">
-                  <div class="mdl-card mdl-shadow--2dp text-center what-i-do-card">
+                  <div class="mdl-card mdl-shadow--2dp text-center what-i-do-card reveal-on-scroll">
                     <i class="zmdi zmdi-apps font-green profile-icon"></i>
                     <h4 class="mb-15" style="color:#2879ff;font-weight:bold;">Big Data</h4>
                     <p>
@@ -521,7 +521,7 @@
                   </div>
                 </div>
                 <div class="col-md-4 col-xs-12 mb-10">
-                  <div class="mdl-card mdl-shadow--2dp text-center what-i-do-card">
+                  <div class="mdl-card mdl-shadow--2dp text-center what-i-do-card reveal-on-scroll">
                     <i class="zmdi zmdi-thumb-up font-yellow profile-icon"></i>
                     <h4 class="mb-15" style="color:#2879ff;font-weight:bold;">Passion</h4>
                     <p>
@@ -536,9 +536,9 @@
                 </div>
               </div>
             </section>
-            <section id="project_sec" class="blog-sec sec-pad-top-sm">
-              <h2 class="mb-30">Projects</h2>
-              <div class="project-tabs" id="repo-card">
+            <section id="project_sec" class="blog-sec sec-pad-top-sm reveal-on-scroll">
+              <h2 class="mb-10">Projects</h2>
+              <div class="project-tabs reveal-on-scroll" id="repo-card">
                 <div class="project-tab-list" role="tablist" aria-label="Project Tabs">
                   <button class="project-tab is-active" id="project-tab-1" role="tab" aria-selected="true" aria-controls="project-panel-1" data-target="project-panel-1">GCP Demo</button>
                   <button class="project-tab" id="project-tab-2" role="tab" aria-selected="false" aria-controls="project-panel-2" data-target="project-panel-2">Analysis Projects</button>
@@ -598,70 +598,119 @@
             
             <section id="work_sec" class="about-sec mt-50 mt-sm-120 mb-30">
               <h2 class="mt-20 mb-40">Work Experience</h2>
-              <div class="main-content relative mt-20 mb-20">
-                <div style="float:left; margin-right:20px;">
-                  <a href="https://www.mindonly.com" target="_blank"><img class="candidate-img-com" src="./img/mindonly.png"></a>
+              <p class="work-intro">A timeline of roles where I built and scaled data and AI systems in fast-moving product environments.</p>
+
+              <article class="main-content relative mt-20 mb-20 work-item">
+                <a class="work-logo-wrap" href="https://www.mindonly.com" target="_blank" rel="noopener noreferrer" aria-label="MindOnly">
+                  <img class="candidate-img-com" src="./img/mindonly.png" alt="MindOnly logo">
+                </a>
+                <div class="work-copy">
+                  <h4 class="work-role">ML&amp;AI Engineer <span>(04.2025 - Now)</span></h4>
+                  <h5 class="work-company">
+                    <a href="https://www.mindonly.com" target="_blank" rel="noopener noreferrer">MindOnly</a>
+                    <span>Part-time · Malta</span>
+                  </h5>
+                  <p>MindOnly is an international mental health and well-being venture blending Western psychotherapy and positive psychology with Eastern contemplative traditions to build practical wellness solutions.</p>
+                  <ul class="work-impact-list">
+                    <li>Built practical ML workflows for mental wellness product features.</li>
+                    <li>Designed data-to-insight loops that improved experimentation speed.</li>
+                  </ul>
                 </div>
-                <div class="container">
-                  <h4>ML&AI Engineer (04.2025 - Now)</h4>
-                  <a href="https://www.mindonly.com" target="_blank"><h5 style="font-style: italic;">MindOnly, Part-time, Malta</h5></a>
-                  <a href="https://www.mindonly.com" target="_blank"><p><span style="color:blue;text-decoration: underline;">MindOnly</span> is an international mental health and well-being venture, which blends Western psychotherapy and positive psychology with Eastern contemplative traditions to build practical wellness solutions.</p></a>
+              </article>
+
+              <article class="main-content relative mt-20 mb-20 work-item">
+                <a class="work-logo-wrap" href="https://www.segway.com" target="_blank" rel="noopener noreferrer" aria-label="Segway and Ninebot">
+                  <img class="candidate-img-com" src="./img/segway_logo.jpeg" alt="Segway logo">
+                </a>
+                <div class="work-copy">
+                  <h4 class="work-role">Data Architect <span>(04.2021 - 12.2022)</span></h4>
+                  <h5 class="work-company">
+                    <a href="https://www.segway.com" target="_blank" rel="noopener noreferrer">Segway &amp; Ninebot</a>
+                    <span>Full-time · Beijing, China · Internet of Vehicles (IoV)</span>
+                  </h5>
+                  <p>Segway is an international hi-tech company with a mission to "Simplify Moving".</p>
+                  <ul class="work-impact-list">
+                    <li>Led data architecture for IoV analytics and operational intelligence.</li>
+                    <li>Scaled batch and near real-time data pipelines for business reporting.</li>
+                  </ul>
                 </div>
-              </div>
-              <div class="main-content relative mt-20 mb-20">
-                <div style="float:left; margin-right:20px;">
-                  <a href="https://www.segway.com" target="_blank"><img class="candidate-img-com" src="./img/segway_logo.jpeg"></a>
+              </article>
+
+              <article class="main-content relative mb-20 work-item">
+                <div class="work-logo-wrap" aria-label="MZDATA">
+                  <img class="candidate-img-com" src="./img/startup.png" alt="MZDATA logo">
                 </div>
-                <div class="container">
-                  <h4>Data Architect (04.2021 - 12.2022)</h4>
-                  <a href="https://www.segway.com" target="_blank"><h5 style="font-style: italic;">Segway &amp; Ninebot, Full-time, Beijing, China | Internet of Vehicles(IoV)</h5></a>
-                  <a href="https://www.segway.com" target="_blank"><p><span style="color:blue;text-decoration: underline;">Segway</span> is an international hi-tech company with a mission to 'Simplify Moving'.</p></a>
-                </div>
-              </div>
-              <div class="main-content relative mb-20">
-                <div style="float:left; margin-right:20px;">
-                  <img class="candidate-img-com" src="./img/startup.png">
-                </div>
-                <div class="container">
-                  <h4>Data Architect (05.2019 - 11.2020)</h4>
-                  <h5 style="font-style: italic;">MZDATA, Full-time, Beijing, China | Retailing</h5>
+                <div class="work-copy">
+                  <h4 class="work-role">Data Architect <span>(05.2019 - 11.2020)</span></h4>
+                  <h5 class="work-company">
+                    <span class="work-company-name">MZDATA</span>
+                    <span>Full-time · Beijing, China · Retailing</span>
+                  </h5>
                   <p>MZDATA is a start-up company translating big data and machine learning into tangible growth for traditional retail chains.</p>
+                  <ul class="work-impact-list">
+                    <li>Built retail-focused data models that supported customer growth initiatives.</li>
+                    <li>Shipped analytics capabilities suited for fast on-site adoption.</li>
+                  </ul>
                 </div>
-              </div>
-              <div class="main-content relative mb-20">
-                <div style="float:left; margin-right:20px;">
-                  <a href="https://www.jd.com" target="_blank"><img class="candidate-img-com" src="./img/jd.jpeg"></a>
+              </article>
+
+              <article class="main-content relative mb-20 work-item">
+                <a class="work-logo-wrap" href="https://www.jd.com" target="_blank" rel="noopener noreferrer" aria-label="JD dot com">
+                  <img class="candidate-img-com" src="./img/jd.jpeg" alt="JD logo">
+                </a>
+                <div class="work-copy">
+                  <h4 class="work-role">Data Engineer <span>(05.2017 - 04.2019)</span></h4>
+                  <h5 class="work-company">
+                    <a href="https://www.jd.com" target="_blank" rel="noopener noreferrer">JD.com</a>
+                    <span>Full-time · Beijing, China · Marketing</span>
+                  </h5>
+                  <p>JD (NASDAQ: JD) is China's largest B2C E-Commerce company.</p>
+                  <ul class="work-impact-list">
+                    <li>Developed reliable ETL pipelines for marketing and campaign analytics.</li>
+                    <li>Supported high-volume data processing for decision-ready dashboards.</li>
+                  </ul>
                 </div>
-                <div class="container">
-                  <h4>Data Engineer (05.2017 - 04.2019)</h4>
-                  <a href="https://www.jd.com" target="_blank"><h5 style="font-style: italic;">JD.com, Full-time, Beijing, China | Marketing</h5></a>
-                  <a href="https://www.jd.com" target="_blank"><p><span style="color:blue;text-decoration: underline;">JD</span> (NASDAQ: JD) is China's largest B2C E-Commerce company.</p></a>
+              </article>
+
+              <article class="main-content relative mb-20 work-item">
+                <a class="work-logo-wrap" href="https://www.163.com" target="_blank" rel="noopener noreferrer" aria-label="NetEase">
+                  <img class="candidate-img-com" src="./img/netease_logo.jpeg" alt="NetEase logo">
+                </a>
+                <div class="work-copy">
+                  <h4 class="work-role">Senior Java Engineer, Team Lead <span>(05.2011 - 03.2017)</span></h4>
+                  <h5 class="work-company">
+                    <a href="https://www.163.com" target="_blank" rel="noopener noreferrer">NetEase.com</a>
+                    <span>Full-time · Beijing, China · E-Commerce</span>
+                  </h5>
+                  <p>NetEase (NASDAQ: NTES) is one of the largest internet companies in China.</p>
+                  <ul class="work-impact-list">
+                    <li>Led Java engineering delivery across core e-commerce initiatives.</li>
+                    <li>Improved service stability and team execution through technical leadership.</li>
+                  </ul>
                 </div>
-              </div>
-              <div class="main-content relative mb-20">
-                <div style="float:left; margin-right:20px;">
-                  <a href="https://www.163.com" target="_blank"><img class="candidate-img-com" src="./img/netease_logo.jpeg"></a>
-                </div>
-                <div class="container">
-                  <h4>Senior Java Engineer, Team Lead (05.2011 - 03.2017)</h4>
-                  <a href="https://www.163.com" target="_blank"><h5 style="font-style: italic;">NetEase.com, Full-time, Beijing, China | E-Commerce</h5></a>
-                  <a href="https://www.163.com" target="_blank"><p><span style="color:blue;text-decoration: underline;">NetEase</span> (NASDAQ: NTES) is one of the largest internet companies in China.</p></a>
-                </div>
-              </div>
+              </article>
             </section>
-            <section id="education_sec" class="about-sec mt-50 mt-sm-120 mb-10">
+            <section id="education_sec" class="about-sec mt-50 mt-sm-120 mb-10 reveal-on-scroll">
               <h2 class="mt-20 mb-40">Education</h2>
-              <div class="main-content relative mt-20">
-                <div style="float:left; margin-right:20px;">
-                  <a href="https://www.buaa.edu.cn/" target="_blank"><img class="candidate-img-com" src="./img/beihang.jpeg"></a>
+              <p class="edu-intro">Academic foundation that shaped my engineering mindset in mathematics, algorithms, and practical software systems.</p>
+
+              <article class="main-content relative mt-20 reveal-on-scroll edu-item">
+                <a class="edu-logo-wrap" href="https://www.buaa.edu.cn/" target="_blank" rel="noopener noreferrer" aria-label="BUAA">
+                  <img class="candidate-img-com" src="./img/beihang.jpeg" alt="BUAA logo">
+                </a>
+                <div class="edu-copy">
+                  <h4 class="edu-degree">BUAA (Beijing University of Aeronautics and Astronautics) <span>(2004 - 2008)</span></h4>
+                  <h5 class="edu-school">
+                    <a href="https://www.buaa.edu.cn/" target="_blank" rel="noopener noreferrer">Bachelor's Degree in Mathematics and Applied Mathematics</a>
+                    <span>Beijing, China</span>
+                  </h5>
+                  <p>Built a strong quantitative and systems-thinking foundation that later supported large-scale data engineering and architecture work.</p>
+                  <ul class="edu-impact-list">
+                    <li>Thesis: Classified web pages using Support Vector Machine (SVM).</li>
+                    <li>Core coursework: C Programming, Data Structures and Algorithms, Database Technology.</li>
+                  </ul>
                 </div>
-                <div class="container">
-                  <a href="https://www.buaa.edu.cn/" target="_blank"><h4>BUAA (Beijing University of Aeronautics and Astronautics) (2004 - 2008)</h4></a>
-                  <h5 style="font-style: italic;">Bachelor’s degree in Mathematics and Applied Mathematics, Beijing, China</h5>
-                  <p><span style="font-weight:bold">Thesis</span>: Classify web pages based on Support Vector Machine(SVM).</p>
-                  <p><span style="font-weight:bold">Related Coursework</span>: C Programming Language, Data Structure and Algorithm, Database Technology.</p>
-                </div>
-              </div>
+              </article>
             </section>
             
             <!--
@@ -707,7 +756,7 @@
               </div>
             </section>
           -->
-            <footer class="footer-sec sec-pad-top-sm sec-pad-bottom text-center">
+            <footer class="footer-sec sec-pad-top-sm sec-pad-bottom text-center reveal-on-scroll">
               <h4>thank you for visiting.</h4>
               <p class="mt-10">
                 Weiwei Wu © 2026 All rights reserved.
@@ -722,10 +771,6 @@
       (function () {
         var tabs = document.querySelectorAll('.project-tab');
         var panels = document.querySelectorAll('.project-tab-panel');
-
-        if (!tabs.length || !panels.length) {
-          return;
-        }
 
         function activateTab(targetId, clickedTab) {
           tabs.forEach(function (tab) {
@@ -742,36 +787,88 @@
           });
         }
 
-        tabs.forEach(function (tab) {
-          tab.addEventListener('click', function () {
-            activateTab(tab.getAttribute('data-target'), tab);
-          });
-
-          tab.addEventListener('keydown', function (event) {
-            var current = Array.prototype.indexOf.call(tabs, tab);
-            var nextIndex = current;
-
-            if (event.key === 'ArrowRight') {
-              nextIndex = (current + 1) % tabs.length;
-            } else if (event.key === 'ArrowLeft') {
-              nextIndex = (current - 1 + tabs.length) % tabs.length;
-            } else {
-              return;
-            }
-
-            event.preventDefault();
-            tabs[nextIndex].focus();
-            activateTab(tabs[nextIndex].getAttribute('data-target'), tabs[nextIndex]);
-          });
-        });
-
         function initTabs() {
+          if (!tabs.length || !panels.length) {
+            return;
+          }
+
+          tabs.forEach(function (tab) {
+            tab.addEventListener('click', function () {
+              activateTab(tab.getAttribute('data-target'), tab);
+            });
+
+            tab.addEventListener('keydown', function (event) {
+              var current = Array.prototype.indexOf.call(tabs, tab);
+              var nextIndex = current;
+
+              if (event.key === 'ArrowRight') {
+                nextIndex = (current + 1) % tabs.length;
+              } else if (event.key === 'ArrowLeft') {
+                nextIndex = (current - 1 + tabs.length) % tabs.length;
+              } else {
+                return;
+              }
+
+              event.preventDefault();
+              tabs[nextIndex].focus();
+              activateTab(tabs[nextIndex].getAttribute('data-target'), tabs[nextIndex]);
+            });
+          });
+
           activateTab(tabs[0].getAttribute('data-target'), tabs[0]);
         }
 
-        initTabs();
-        document.addEventListener('DOMContentLoaded', initTabs);
-        window.addEventListener('load', initTabs);
+        function initRevealOnScroll() {
+          var revealItems = document.querySelectorAll('#work_sec .work-item, .reveal-on-scroll');
+
+          if (!revealItems.length) {
+            return;
+          }
+
+          var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+          if (!('IntersectionObserver' in window) || reduceMotion) {
+            revealItems.forEach(function (item) {
+              item.classList.add('is-revealed');
+            });
+            return;
+          }
+
+          document.body.classList.add('motion-ready');
+
+          var observer = new IntersectionObserver(
+            function (entries, obs) {
+              entries.forEach(function (entry) {
+                if (!entry.isIntersecting) {
+                  return;
+                }
+
+                entry.target.classList.add('is-revealed');
+                obs.unobserve(entry.target);
+              });
+            },
+            {
+              threshold: 0.18,
+              rootMargin: '0px 0px -8% 0px'
+            }
+          );
+
+          revealItems.forEach(function (item, index) {
+            item.style.transitionDelay = (Math.min(index, 9) * 55) + 'ms';
+            observer.observe(item);
+          });
+        }
+
+        function initPageEnhancements() {
+          initTabs();
+          initRevealOnScroll();
+        }
+
+        if (document.readyState === 'loading') {
+          document.addEventListener('DOMContentLoaded', initPageEnhancements);
+        } else {
+          initPageEnhancements();
+        }
       })();
     </script>
   </body>
