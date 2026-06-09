@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Oozie 2 - 使用</title>
+    <link rel="stylesheet" href="../css/style3.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header Navigation -->
+        <div class="header">
+            <h1><a href="../blog_cn.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+        </div>
+
+        <!-- Post Container -->
+        <article class="post">
+            <!-- Post Header -->
+            <div class="post-header">
+                <h1>Oozie 2 - 使用</h1>
+                <div class="post-meta">
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📅</span>
+                        <span>March 30, 2019</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📖</span>
+                        <span>4 min read</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">👁️</span>
+                        <span>657 views</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Post Content -->
+            <div class="post-content">
+                <div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<h1>命令行</h1>
+<blockquote>
+<p>$ oozie help</p>
+</blockquote>
+<h2>1 导出环境变量</h2>
+<blockquote>
+<p>$ export OOZIE_URL=http://oozie_server:11000/oozie</p>
+</blockquote>
+<p>否则都需要增加 - oozie 参数，比如</p>
+<blockquote>
+<p>$ oozie jobs - oozie http://oozie_server:11000/oozie</p>
+</blockquote>
+<h2>2 查看全部流程</h2>
+<blockquote>
+<p>$ oozie jobs</p>
+</blockquote>
+<h2>3 操作一个流程</h2>
+<blockquote>
+<p>$ oozie job<br/>Invalid sub-command: Missing required option: [-suspend suspend a job, - resume resume a job, - dryrun Dryrun a workflow (since 3.3.2) or coordinator (since 2.0) job without actually executing it, - submit submit a job, - log job log, - change change a coordinator or bundle job, - start start a job, - update Update coord definition and properties, - run run a job, - poll poll Oozie until a job reaches a terminal state or a timeout occurs, - kill kill a job (coordinator can mention - action or - date), - configcontent job configuration, - rerun rerun a job  (coordinator requires - action or - date, bundle requires - coordinator or - date), - ignore change status of a coordinator job or action to IGNORED (-action required to ignore coord actions), - definition job definition, - info info of a job]</p>
+</blockquote>
+<h3>3.1 查看一个流程的信息</h3>
+<blockquote>
+<p>$ oozie job - info 0000003-190315230448327-oozie-oozi-W</p>
+</blockquote>
+<h3>3.2 查看一个流程的日志</h3>
+<blockquote>
+<p>$ oozie job - log 0000003-190315230448327-oozie-oozi-W</p>
+</blockquote>
+<h3>3.3 查看一个流程的定义（xml）</h3>
+<blockquote>
+<p>$ oozie job - definition 0000003-190315230448327-oozie-oozi-W</p>
+</blockquote>
+<h3>3.4 查看一个流程的配置（properties）</h3>
+<blockquote>
+<p>$ oozie job - configcontent 0000003-190315230448327-oozie-oozi-W</p>
+</blockquote>
+<h1>示例流程</h1>
+<h2>1 流程定义</h2>
+<h3>执行系统命令</h3>
+<div class="cnblogs_code">
+<pre>$<span style="color: rgba(0, 0, 0, 1)"> cat test_sh.xml
+&lt;workflow</span>-app name=<span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">test_sh</span><span style="color: rgba(128, 0, 0, 1)">"</span> xmlns=<span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">uri:oozie:workflow:0.5</span><span style="color: rgba(128, 0, 0, 1)">"</span>&gt;<span style="color: rgba(0, 0, 0, 1)">
+    &lt;start to</span>=<span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">test_sh_action</span><span style="color: rgba(128, 0, 0, 1)">"</span>/&gt;<span style="color: rgba(0, 0, 0, 1)">
+    &lt;kill name</span>=<span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">Kill</span><span style="color: rgba(128, 0, 0, 1)">"</span>&gt;<span style="color: rgba(0, 0, 0, 1)">
+        &lt;message</span>&gt;Action failed, error message[${wf:errorMessage(wf:lastErrorNode())}]&lt;/message&gt;<span style="color: rgba(0, 0, 0, 1)">
+    &lt;</span>/kill&gt;<span style="color: rgba(0, 0, 0, 1)">
+    &lt;action name</span>=<span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">test_sh_action</span><span style="color: rgba(128, 0, 0, 1)">"</span>&gt;<span style="color: rgba(0, 0, 0, 1)">
+        &lt;shell xmlns</span>=<span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">uri:oozie:shell-action:0.1</span><span style="color: rgba(128, 0, 0, 1)">"</span>&gt;<span style="color: rgba(0, 0, 0, 1)">
+            &lt;job</span>-tracker&gt;<span style="color: rgba(128, 0, 128, 1)">${jobTracker}</span>&lt;/job-tracker&gt;<span style="color: rgba(0, 0, 0, 1)">
+            &lt;name</span>-node&gt;<span style="color: rgba(128, 0, 128, 1)">${nameNode}</span>&lt;/name-node&gt;<span style="color: rgba(0, 0, 0, 1)">
+            &lt;exec</span>&gt;/usr/bin/df - h&lt;/exec&gt;<span style="color: rgba(0, 0, 0, 1)">
+            &lt;capture</span>-output/&gt;<span style="color: rgba(0, 0, 0, 1)">
+        &lt;</span>/shell&gt;<span style="color: rgba(0, 0, 0, 1)">
+        &lt;ok to</span>=<span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">End</span><span style="color: rgba(128, 0, 0, 1)">"</span>/&gt;<span style="color: rgba(0, 0, 0, 1)">
+        &lt;error to</span>=<span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">Kill</span><span style="color: rgba(128, 0, 0, 1)">"</span>/&gt;<span style="color: rgba(0, 0, 0, 1)">
+    &lt;</span>/action&gt;<span style="color: rgba(0, 0, 0, 1)">
+    &lt;</span><span style="color: rgba(0, 0, 255, 1)">end</span> name=<span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">End</span><span style="color: rgba(128, 0, 0, 1)">"</span>/&gt;<span style="color: rgba(0, 0, 0, 1)">
+&lt;</span>/workflow-app&gt;</pre>
+</div>
+<p>注意：df必须用绝对路径/usr/bin/df，因为action执行时没有环境变量PATH，或者执行 source /etc/profile &amp;&amp;df - h ;</p>
+<p> </p>
+<h3>执行sh脚本</h3>
+<div class="cnblogs_code">
+<pre>&lt;workflow-app name=<span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">test_sh_wf</span><span style="color: rgba(128, 0, 0, 1)">"</span> xmlns=<span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">uri:oozie:workflow:0.5</span><span style="color: rgba(128, 0, 0, 1)">"</span>&gt;<span style="color: rgba(0, 0, 0, 1)">
+    &lt;start to</span>=<span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">test_sh_action</span><span style="color: rgba(128, 0, 0, 1)">"</span>/&gt;<span style="color: rgba(0, 0, 0, 1)">
+    &lt;kill name</span>=<span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">Kill</span><span style="color: rgba(128, 0, 0, 1)">"</span>&gt;<span style="color: rgba(0, 0, 0, 1)">
+        &lt;message</span>&gt;Action failed, error message[${wf:errorMessage(wf:lastErrorNode())}]&lt;/message&gt;<span style="color: rgba(0, 0, 0, 1)">
+    &lt;</span>/kill&gt;<span style="color: rgba(0, 0, 0, 1)">
+    &lt;action name</span>=<span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">test_sh_action</span><span style="color: rgba(128, 0, 0, 1)">"</span>&gt;<span style="color: rgba(0, 0, 0, 1)">
+        &lt;shell xmlns</span>=<span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">uri:oozie:shell-action:0.1</span><span style="color: rgba(128, 0, 0, 1)">"</span>&gt;<span style="color: rgba(0, 0, 0, 1)">
+            &lt;job</span>-tracker&gt;<span style="color: rgba(128, 0, 128, 1)">${jobTracker}</span>&lt;/job-tracker&gt;<span style="color: rgba(0, 0, 0, 1)">
+            &lt;name</span>-node&gt;<span style="color: rgba(128, 0, 128, 1)">${nameNode}</span>&lt;/name-node&gt;<span style="color: rgba(0, 0, 0, 1)">
+            &lt;exec</span>&gt;<span style="color: rgba(128, 0, 128, 1)">${script_file}</span>&lt;/exec&gt;<span style="color: rgba(0, 0, 0, 1)">
+            &lt;file</span>&gt;<span style="color: rgba(128, 0, 128, 1)">${script_file}</span>&lt;/file&gt;<span style="color: rgba(0, 0, 0, 1)">
+            &lt;capture</span>-output/&gt;<span style="color: rgba(0, 0, 0, 1)">
+        &lt;</span>/shell&gt;<span style="color: rgba(0, 0, 0, 1)">
+        &lt;ok to</span>=<span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">End</span><span style="color: rgba(128, 0, 0, 1)">"</span>/&gt;<span style="color: rgba(0, 0, 0, 1)">
+        &lt;error to</span>=<span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">Kill</span><span style="color: rgba(128, 0, 0, 1)">"</span>/&gt;<span style="color: rgba(0, 0, 0, 1)">
+    &lt;</span>/action&gt;<span style="color: rgba(0, 0, 0, 1)">
+    &lt;</span><span style="color: rgba(0, 0, 255, 1)">end</span> name=<span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">End</span><span style="color: rgba(128, 0, 0, 1)">"</span>/&gt;<span style="color: rgba(0, 0, 0, 1)">
+&lt;</span>/workflow-app&gt;</pre>
+</div>
+<p>此时配置文件中需要定义</p>
+<blockquote>
+<p>script_file=test_sh.sh</p>
+</blockquote>
+<p>注意：test_sh.sh也要上传到hdfs上，与xml在一起，不能使用本地文件系统路径；</p>
+<h2>2 校验</h2>
+<blockquote>
+<p>$ oozie validate test_sh.xml</p>
+</blockquote>
+<h2>3 上传到hdfs</h2>
+<blockquote>
+<p>$ hdfs dfs - put test_sh.xml /user/oozie/wf/</p>
+</blockquote>
+<h2>4 配置文件</h2>
+<blockquote>
+<p>$ cat test_sh.properties <br/>nameNode=hdfs://namenode:9000<br/>jobTracker=resourcemanager:8032<br/>oozie.wf.application.path=/user/oozie/wf/test_sh.xml</p>
+</blockquote>
+<h2>5 运行流程</h2>
+<blockquote>
+<p>$ oozie job - config test_sh.properties - run </p>
+</blockquote>
+<h2>6 其他</h2>
+<p>kill、rerun等，rerun的时候需要指定两个参数之一，即跳过指定的节点或者重跑失败的节点；</p>
+<p>Missing configuration property [oozie.wf.rerun.skip.nodes OR oozie.wf.rerun.failnodes]</p>
+<blockquote>
+<p>$ oozie job - Doozie.wf.rerun.failnodes=true - rerun 0000000-190329232917986-oozie-oozi-W</p>
+</blockquote>
+<p> </p>
+<p>ext下载: <a href="http://archive.cloudera.com/gplextras/misc/ext-2.2.zip" rel="noopener nofollow">http://archive.cloudera.com/gplextras/misc/ext-2.2.zip</a></p>
+</div>
+            </div>
+
+            <!-- Post Footer -->
+            <div class="post-footer">
+                <div class="post-navigation">
+                    <a href="../blog_cn.html" class="nav-button">← Back to Home</a>
+                    <a href="0157.html" class="nav-button">Next Post →</a>
+                </div>
+            </div>
+        </article>
+    </div>
+</body>
+</html>

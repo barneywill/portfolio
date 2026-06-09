@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Docker 3 - 搭建私有仓库</title>
+    <link rel="stylesheet" href="../css/style3.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header Navigation -->
+        <div class="header">
+            <h1><a href="../blog_cn.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+        </div>
+
+        <!-- Post Container -->
+        <article class="post">
+            <!-- Post Header -->
+            <div class="post-header">
+                <h1>Docker 3 - 搭建私有仓库</h1>
+                <div class="post-meta">
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📅</span>
+                        <span>February 13, 2019</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📖</span>
+                        <span>1 min read</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">👁️</span>
+                        <span>388 views</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Post Content -->
+            <div class="post-content">
+                <div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<p> </p>
+<p>下载并启动registry</p>
+<blockquote>
+<p>$ docker pull registry<br/>$ docker run --name my_registry - d - p 5000:5000 - v /var/lib/registry:/var/lib/registry registry</p>
+</blockquote>
+<p>从官方仓库下载nginx并push到私有仓库中</p>
+<blockquote>
+<p>$ docker pull nginx<br/>$ docker tag nginx localhost:5000/mynginx<br/>$ docker push localhost:5000/mynginx</p>
+</blockquote>
+<p>push报错</p>
+<blockquote>
+<p>The push refers to repository [localhost:5000/nginx]<br/>Get https://localhost:5000/v2/: http: server gave HTTP response to HTTPS client</p>
+</blockquote>
+<p>解决方法</p>
+<blockquote>
+<p>$ echo '{ "insecure-registries":["localhost:5000"] }' &gt; /etc/docker/daemon.json<br/>$ service docker restart</p>
+</blockquote>
+<p>早期docker版本（1.10及之前）不支持insecure-registries，需要改为</p>
+<blockquote>
+<p># vi /etc/sysconfig/docker<br/>OPTIONS='--selinux-enabled --insecure-registry=localhost:5000 --log-driver=journald'</p>
+</blockquote>
+<p>再push即可</p>
+<blockquote>
+<p>$ curl http://localhost:5000/v2/_catalog<br/>{"repositories":["mynginx"]}</p>
+</blockquote>
+<p> </p>
+</div>
+            </div>
+
+            <!-- Post Footer -->
+            <div class="post-footer">
+                <div class="post-navigation">
+                    <a href="../blog_cn.html" class="nav-button">← Back to Home</a>
+                    <a href="0234.html" class="nav-button">Next Post →</a>
+                </div>
+            </div>
+        </article>
+    </div>
+</body>
+</html>

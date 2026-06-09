@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>fail2ban</title>
+    <link rel="stylesheet" href="../css/style3.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header Navigation -->
+        <div class="header">
+            <h1><a href="../blog_cn.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+        </div>
+
+        <!-- Post Container -->
+        <article class="post">
+            <!-- Post Header -->
+            <div class="post-header">
+                <h1>fail2ban</h1>
+                <div class="post-meta">
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📅</span>
+                        <span>September 12, 2021</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📖</span>
+                        <span>1 min read</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">👁️</span>
+                        <span>516 views</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Post Content -->
+            <div class="post-content">
+                <div class="blogpost-body cnblogs-markdown" id="cnblogs_post_body">
+<p>ssh登录linux服务器的时候，经常会有提示</p>
+<blockquote>
+<p>There were * failed login attempts since the last successful login.</p>
+</blockquote>
+<p>说明有大量的非法登录尝试，有几种应对方法</p>
+<h3 id="1-换一个sshd端口">1 换一个sshd端口</h3>
+<p>不过也经常会被扫到</p>
+<h3 id="2-禁止root账号直接ssh登录">2 禁止root账号直接ssh登录</h3>
+<p>修改/etc/ssh/sshd_config</p>
+<pre><code>PermitRootLogin no
+</code></pre>
+<p>修改之后重启sshd</p>
+<pre><code>systemctl restart sshd
+</code></pre>
+<h3 id="3-使用fail2ban">3 使用fail2ban</h3>
+<h4 id="安装">安装</h4>
+<pre><code>yum install fail2ban
+</code></pre>
+<h4 id="修改配置">修改配置</h4>
+<p>/etc/fail2ban/jail.conf，找到[sshd]，增加enable</p>
+<pre><code>[sshd]
+
+# To use more aggressive sshd modes set filter parameter "mode" in jail.local:
+# normal (default), ddos, extra or aggressive (combines all).
+# See "tests/files/logs/sshd" or "filter.d/sshd.conf" for usage example and details.
+#mode   = normal
+filter = sshd
+port    = ssh
+logpath = %(sshd_log)s
+backend = %(sshd_backend)s
+enabled = true
+</code></pre>
+<h4 id="启动">启动</h4>
+<pre><code>systemctl start fail2ban
+</code></pre>
+<h4 id="配置开机启动">配置开机启动</h4>
+<pre><code>systemctl enable fail2ban
+</code></pre>
+<h4 id="检查状态">检查状态</h4>
+<pre><code>fail2ban-client status sshd
+</code></pre>
+<h4 id="对某个ip取消限制">对某个ip取消限制</h4>
+<pre><code>fail2ban-client set sshd unbanip $ip
+</code></pre>
+</div>
+            </div>
+
+            <!-- Post Footer -->
+            <div class="post-footer">
+                <div class="post-navigation">
+                    <a href="../blog_cn.html" class="nav-button">← Back to Home</a>
+                    <a href="0032.html" class="nav-button">Next Post →</a>
+                </div>
+            </div>
+        </article>
+    </div>
+</body>
+</html>

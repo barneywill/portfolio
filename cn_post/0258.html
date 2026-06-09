@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Impala 1 - 简介、安装、使用</title>
+    <link rel="stylesheet" href="../css/style3.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header Navigation -->
+        <div class="header">
+            <h1><a href="../blog_cn.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+        </div>
+
+        <!-- Post Container -->
+        <article class="post">
+            <!-- Post Header -->
+            <div class="post-header">
+                <h1>Impala 1 - 简介、安装、使用</h1>
+                <div class="post-meta">
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📅</span>
+                        <span>January 21, 2019</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📖</span>
+                        <span>6 min read</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">👁️</span>
+                        <span>3329 views</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Post Content -->
+            <div class="post-content">
+                <div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<p>impala2.12</p>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201901/1509647-20190120223822578-405081931.png"/></p>
+<p>官方：http://impala.apache.org/</p>
+<h1>一 简介</h1>
+<p>Apache Impala is the open source, native analytic database for Apache Hadoop. Impala is shipped by Cloudera, MapR, Oracle, and Amazon.</p>
+<p><em>impala是hadoop上的开源分析性数据库；C++和java语言开发；</em></p>
+<ul>
+<li>Do BI-style Queries on Hadoop
+<ul>
+<li>Impala provides low latency and high concurrency for BI/analytic queries on Hadoop (not delivered by batch frameworks such as Apache Hive). Impala also scales linearly, even in multitenant environments.</li>
+</ul>
+</li>
+</ul>
+<p><em>impala支持hadoop上低延迟和高并发的查询。</em></p>
+<ul>
+<li>Unify Your Infrastructure
+<ul>
+<li>Utilize the same file and data formats and metadata, security, and resource management frameworks as your Hadoop deployment—no redundant infrastructure or data conversion/duplication.</li>
+</ul>
+</li>
+</ul>
+<p><em>使用同样的文件、格式和元数据。</em></p>
+<ul>
+<li>Implement Quickly
+<ul>
+<li>For Apache Hive users, Impala utilizes the same metadata and ODBC driver. Like Hive, Impala supports SQL, so you don't have to worry about re-inventing the implementation wheel.</li>
+</ul>
+</li>
+</ul>
+<p><em>对于hive用户来说，impala使用相同的元数据和driver，支持sql。</em></p>
+<p> </p>
+<p><em><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201901/1509647-20190129182645882-2072576294.png"/></em></p>
+<p>Impala provides fast, interactive SQL queries directly on your Apache Hadoop data stored in HDFS, HBase, or the Amazon Simple Storage Service (S3). In addition to using the same unified storage platform, Impala also uses the same metadata, SQL syntax (Hive SQL), ODBC driver, and user interface (Impala query UI in Hue) as Apache Hive. This provides a familiar and unified platform for real-time or batch-oriented queries.</p>
+<p><em>impala直接基于hadoop数据（hdsf、hbase等）实现快速的、交互式的sql查询；impala使用与hive相同的存储平台、元数据、sql语法、driver和ui，这样实现了实时查询和批处理查询的统一；</em></p>
+<p>Impala is an addition to tools available for querying big data. Impala does not replace the batch processing frameworks built on MapReduce such as Hive. Hive and other frameworks built on MapReduce are best suited for long running batch jobs, such as those involving batch processing of Extract, Transform, and Load (ETL) type jobs.</p>
+<p><em>impala是一个大数据查询工具集的有力补充，impala不替换现有的批处理框架比如hive（hive通常用来执行一些ETL任务）；</em></p>
+<p> </p>
+<p>To avoid latency, Impala circumvents MapReduce to directly access the data through a specialized distributed query engine that is very similar to those found in commercial parallel RDBMSs. The result is order-of-magnitude faster performance than Hive, depending on the type of query and configuration.</p>
+<p> </p>
+<p>Impala provides:</p>
+<ul>
+<li>Familiar SQL interface that data scientists and analysts already know.</li>
+<li>Ability to query high volumes of data ("big data") in Apache Hadoop.</li>
+<li>Distributed queries in a cluster environment, for convenient scaling and to make use of cost-effective commodity hardware.</li>
+<li>Ability to share data files between different components with no copy or export/import step; for example, to write with Pig, transform with Hive and query with Impala. Impala can read from and write to Hive tables, enabling simple data interchange using Impala for analytics on Hive-produced data.</li>
+<li>Single system for big data processing and analytics, so customers can avoid costly modeling and ETL just for analytics.</li>
+</ul>
+<p> </p>
+<h2>impala架构</h2>
+<p>The Impala server is a distributed, massively parallel processing (MPP) database engine.</p>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201901/1509647-20190129212712189-1491677635.png"/></p>
+<p> </p>
+<h3>1 Impala Daemon</h3>
+<p>The core Impala component is a daemon process that runs on each DataNode of the cluster, physically represented by the impalad process. It reads and writes to data files; accepts queries transmitted from the impala-shell command, Hue, JDBC, or ODBC; parallelizes the queries and distributes work across the cluster; and transmits intermediate query results back to the central coordinator node.</p>
+<p><em>impala deamon（即impalad）和数据节点部署在一起，负责读写数据、响应impala-shell/Hue/JDBC请求、分布式查询、返回查询结果，部署多个；</em></p>
+<h3>2 Impala Statestore</h3>
+<p>The Impala component known as the statestore checks on the health of Impala daemons on all the DataNodes in a cluster, and continuously relays its findings to each of those daemons. It is physically represented by a daemon process named statestored; you only need such a process on one host in the cluster. If an Impala daemon goes offline due to hardware failure, network error, software issue, or other reason, the statestore informs all the other Impala daemons so that future queries can avoid making requests to the unreachable node.</p>
+<p><em>impala statestore检查和记录impala deamon服务器的健康情况，这样查询时可以踢掉不健康的节点，只需要部署1个。</em></p>
+<h3>3 Impala Catalog Service</h3>
+<p>The Impala component known as the catalog service relays the metadata changes from Impala SQL statements to all the Impala daemons in a cluster. It is physically represented by a daemon process named catalogd; you only need such a process on one host in the cluster. Because the requests are passed through the statestore daemon, it makes sense to run the statestored and catalogd services on the same host.</p>
+<p><em>impala catalog负责元数据，只需要1个。</em></p>
+<p> </p>
+<h2>客户端</h2>
+<ul>
+<li>The impala-shell interactive command interpreter.</li>
+<li>The Hue web-based user interface.</li>
+<li>JDBC.</li>
+</ul>
+<p> </p>
+<h1>二 安装</h1>
+<p>安装支持3种方式：</p>
+<h2>1 Cloudera Manager安装</h2>
+<p>页面操作</p>
+<h2>2 Ambari安装</h2>
+<p>详见 <a href="https://www.cnblogs.com/barneywill/p/10290849.html" target="_blank">https://www.cnblogs.com/barneywill/p/10290849.html</a></p>
+<h2>3 手工安装 </h2>
+<p>1 增加repo</p>
+<blockquote>
+<p># cat /etc/yum.repos.d/cdh.repo</p>
+<p>[cloudera-cdh5]<br/># Packages for Cloudera's Distribution for Hadoop, Version 5, on RedHat	or CentOS 7 x86_64<br/>name=Cloudera's Distribution for Hadoop, Version 5<br/>baseurl=https://archive.cloudera.com/cdh5/redhat/7/x86_64/cdh/5/<br/>gpgkey =https://archive.cloudera.com/cdh5/redhat/7/x86_64/cdh/RPM-GPG-KEY-cloudera <br/>gpgcheck = 1</p>
+</blockquote>
+<p>2 安装</p>
+<blockquote>
+<p># yum install impala impala-catalog impala-server impala-state-store impala-shell </p>
+</blockquote>
+<p>也可以细分安装</p>
+<blockquote>
+<p>catalog 安装<br/># yum install impala impala-catalog</p>
+<p>server安装<br/># yum install impala impala-server</p>
+<p>statestore安装<br/># yum install impala impala-state-store</p>
+<p>客户端安装<br/># yum install impala-shell</p>
+</blockquote>
+<p>配置文件修改catalogd和statestored的地址</p>
+<blockquote>
+<p># vi /etc/default/impala<br/>IMPALA_CATALOG_SERVICE_HOST=$catalog_server<br/>IMPALA_STATE_STORE_HOST=$state_store_server</p>
+<p>MEM_LIMIT=20gb</p>
+</blockquote>
+<p>MEM_LIMIT赋值格式为*gb，*g，*m，*mb，70%</p>
+<p>注意catalogd和statestored只能部署单点，没有内置的failover机制，官方建议是必要时通过dns切换；</p>
+<p>其他hadoop、hive、hbase等配置文件（core-site.xml、hdfs-site.xml、hive-site.xml、hbase-site.xml）放到</p>
+<blockquote>
+<p>/etc/impala/conf/</p>
+</blockquote>
+<p>启动命令</p>
+<blockquote>
+<p>service impala-statestore start<br/>service impala-catalog start<br/>service impala-server start</p>
+</blockquote>
+<p>注意：impala需要用到hive的元数据，2.12支持hive2及以下，不支持hive3； </p>
+<p> </p>
+<p>通过Llama可以实现impala on yarn部署；</p>
+<p> </p>
+<p>ps：也可以手工下载rpm安装：https://archive.cloudera.com/cdh5/redhat/7/x86_64/cdh/5/RPMS/x86_64/</p>
+<blockquote>
+<p>impala-2.12.0+cdh5.16.1+0-1.cdh5.16.1.p0.3.el7.x86_64.rpm<br/>impala-catalog-2.12.0+cdh5.16.1+0-1.cdh5.16.1.p0.3.el7.x86_64.rpm<br/>impala-server-2.12.0+cdh5.16.1+0-1.cdh5.16.1.p0.3.el7.x86_64.rpm<br/>impala-shell-2.12.0+cdh5.16.1+0-1.cdh5.16.1.p0.3.el7.x86_64.rpm<br/>impala-state-store-2.12.0+cdh5.16.1+0-1.cdh5.16.1.p0.3.el7.x86_64.rpm<br/>impala-udf-devel-2.12.0+cdh5.16.1+0-1.cdh5.16.1.p0.3.el7.x86_64.rpm</p>
+</blockquote>
+<p>不过rpm安装会有很多依赖</p>
+<blockquote>
+<p># rpm - ivh impala-2.12.0+cdh5.16.1+0-1.cdh5.16.1.p0.3.el6.x86_64.rpm <br/>warning: impala-2.12.0+cdh5.16.1+0-1.cdh5.16.1.p0.3.el6.x86_64.rpm: Header V4 DSA/SHA1 Signature, key ID e8f86acd: NOKEY<br/>error: Failed dependencies:<br/>        hadoop is needed by impala-2.12.0+cdh5.16.1+0-1.cdh5.16.1.p0.3.el6.x86_64<br/>        hadoop-hdfs is needed by impala-2.12.0+cdh5.16.1+0-1.cdh5.16.1.p0.3.el6.x86_64<br/>        hadoop-yarn is needed by impala-2.12.0+cdh5.16.1+0-1.cdh5.16.1.p0.3.el6.x86_64<br/>        hadoop-mapreduce is needed by impala-2.12.0+cdh5.16.1+0-1.cdh5.16.1.p0.3.el6.x86_64<br/>        hbase is needed by impala-2.12.0+cdh5.16.1+0-1.cdh5.16.1.p0.3.el6.x86_64<br/>        hive &gt;= 0.12.0+cdh5.1.0 is needed by impala-2.12.0+cdh5.16.1+0-1.cdh5.16.1.p0.3.el6.x86_64<br/>        zookeeper is needed by impala-2.12.0+cdh5.16.1+0-1.cdh5.16.1.p0.3.el6.x86_64<br/>        hadoop-libhdfs is needed by impala-2.12.0+cdh5.16.1+0-1.cdh5.16.1.p0.3.el6.x86_64<br/>        avro-libs is needed by impala-2.12.0+cdh5.16.1+0-1.cdh5.16.1.p0.3.el6.x86_64<br/>        parquet is needed by impala-2.12.0+cdh5.16.1+0-1.cdh5.16.1.p0.3.el6.x86_64<br/>        sentry &gt;= 1.3.0+cdh5.1.0 is needed by impala-2.12.0+cdh5.16.1+0-1.cdh5.16.1.p0.3.el6.x86_64<br/>        sentry is needed by impala-2.12.0+cdh5.16.1+0-1.cdh5.16.1.p0.3.el6.x86_64<br/>        libhdfs.so.0.0.0()(64bit) is needed by impala-2.12.0+cdh5.16.1+0-1.cdh5.16.1.p0.3.el6.x86_64</p>
+</blockquote>
+<p> </p>
+<p> impala server页面</p>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201901/1509647-20190121133440438-668655366.png"/></p>
+<p> </p>
+<h1>三 使用</h1>
+<p>impala-server有两个端口</p>
+<blockquote>
+<p>port:21000, for impala-shell and ODBC driver 1.2.<br/>port:21050, for JDBC and for ODBC driver 2.</p>
+</blockquote>
+<h2>1 impala-shell</h2>
+<p>使用impala-shell</p>
+<blockquote>
+<p>$ impala-shell - i $impala_server:21000<br/>Starting Impala Shell without Kerberos authentication<br/>Connected to $impala_server:21000<br/>Server version: impalad version 2.12.0-cdh5.16.1 RELEASE (build 4a3775ef6781301af81b23bca45a9faeca5e761d)<br/>***********************************************************************************<br/>Welcome to the Impala shell.<br/>(Impala Shell v2.12.0-cdh5.16.1 (4a3775e) built on Wed Nov 21 21:02:28 PST 2018)</p>
+<p>When you set a query option it lasts for the duration of the Impala shell session.<br/>***********************************************************************************<br/>[$impala_server:21000] &gt; </p>
+</blockquote>
+<p>连接成功之后像hive一样使用；</p>
+<h2>2 beeline（jdbc）</h2>
+<p>需要先下载impala driver</p>
+<p>下载</p>
+<blockquote>
+<p># wget https://downloads.cloudera.com/connectors/impala_jdbc_2.6.4.1005.zip<br/># unzip impala_jdbc_2.6.4.1005.zip<br/># cd ClouderaImpalaJDBC-2.6.4.1005<br/># unzip ClouderaImpalaJDBC4-2.6.4.1005.zip</p>
+</blockquote>
+<p>beeline连接</p>
+<p>1</p>
+<blockquote>
+<p># beeline - u jdbc:hive2://$impala_server:21050</p>
+</blockquote>
+<p>2</p>
+<blockquote>
+<p># export HIVE_AUX_JARS_PATH=/path/to/ClouderaImpalaJDBC-2.6.4.1005/ImpalaJDBC4.jar<br/># beeline -d com.cloudera.impala.jdbc4.Driver - u jdbc:impala://$impala_server:21050<br/>Connecting to jdbc:impala://$impala_server:21050<br/>Connected to: Impala (version 2.12.0-cdh5.16.1)<br/>Driver: ImpalaJDBC (version 02.06.04.1005)<br/>Error: [Cloudera][JDBC](11975) Unsupported transaction isolation level: 4. (state=HY000,code=11975)<br/>Beeline version 3.1.0.3.1.0.0-78 by Apache Hive<br/>0: jdbc:impala://$impala_server:21050&gt; show databases;</p>
+</blockquote>
+<p>注意这里有个Error但是不影响使用；</p>
+<p> </p>
+<p>查询sql之后，通过summary查看刚才的查询统计</p>
+<p>[localhost:21000] &gt; summary;<br/>+--------------+--------+----------+----------+---------+------------+----------+---------------+---------------+<br/>| Operator     | #Hosts | Avg Time | Max Time | #Rows   | Est. #Rows | Peak Mem | Est. Peak Mem | Detail        |<br/>+--------------+--------+----------+----------+---------+------------+----------+---------------+---------------+<br/>| 06:AGGREGATE | 1      | 230.00ms | 230.00ms | 1       | 1          | 16.00 KB | - 1 B          | FINALIZE      |<br/>| 05:EXCHANGE  | 1      | 43.44us  | 43.44us  | 1       | 1          | 0 B      | - 1 B          | UNPARTITIONED |<br/>| 02:AGGREGATE | 1      | 227.14ms | 227.14ms | 1       | 1          | 12.00 KB | 10.00 MB      |               |<br/>| 04:AGGREGATE | 1      | 126.27ms | 126.27ms | 150.00K | 150.00K    | 15.17 MB | 10.00 MB      |               |<br/>| 03:EXCHANGE  | 1      | 44.07ms  | 44.07ms  | 150.00K | 150.00K    | 0 B      | 0 B           | HASH(c_name)  |<br/>| 01:AGGREGATE | 1      | 361.94ms | 361.94ms | 150.00K | 150.00K    | 23.04 MB | 10.00 MB      |               |<br/>| 00:SCAN HDFS | 1      | 43.64ms  | 43.64ms  | 150.00K | 150.00K    | 24.19 MB | 64.00 MB      | tpch.customer |<br/>+--------------+--------+----------+----------+---------+------------+----------+---------------+---------------+</p>
+<p>通过profile查看详细的查询过程</p>
+<p>[localhost:21000] &gt; profile;</p>
+<p> </p>
+<p>强制刷新一个表元数据</p>
+<p>&gt; REFRESH [db_name.]table_name [PARTITION (key_col1=val1 [, key_col2=val2...])]</p>
+<p> </p>
+<p>强制刷新所有元数据</p>
+<p>&gt; invalidate metadata</p>
+<p> </p>
+<p>参考：</p>
+<p>Impala: A Modern, Open-Source SQL Engine for Hadoop：http://cidrdb.org/cidr2015/Papers/CIDR15_Paper28.pdf</p>
+<p>Apache Impala Guide：http://impala.apache.org/docs/build/impala-2.12.pdf</p>
+<p> </p>
+</div>
+            </div>
+
+            <!-- Post Footer -->
+            <div class="post-footer">
+                <div class="post-navigation">
+                    <a href="../blog_cn.html" class="nav-button">← Back to Home</a>
+                    <a href="0259.html" class="nav-button">Next Post →</a>
+                </div>
+            </div>
+        </article>
+    </div>
+</body>
+</html>

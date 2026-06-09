@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>免费股票行情接口</title>
+    <link rel="stylesheet" href="../css/style3.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header Navigation -->
+        <div class="header">
+            <h1><a href="../blog_cn.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+        </div>
+
+        <!-- Post Container -->
+        <article class="post">
+            <!-- Post Header -->
+            <div class="post-header">
+                <h1>免费股票行情接口</h1>
+                <div class="post-meta">
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📅</span>
+                        <span>December 18, 2018</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📖</span>
+                        <span>1 min read</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">👁️</span>
+                        <span>6219 views</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Post Content -->
+            <div class="post-content">
+                <div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<p>免费股票行情接口：</p>
+<h1>A股</h1>
+<h2>1 sina 新浪js接口</h2>
+<blockquote>
+<p>http://hq.sinajs.cn/list=sh600001</p>
+</blockquote>
+<p>返回</p>
+<blockquote>
+<pre>var hq_str_sh600011="华能国际,7.390,7.420,7.230,7.500,7.110,7.210,7.230,24257738,174459225.000,6200,7.210,9900,7.200,16000,7.190,24400,7.180,18506,7.170,23900,7.230,53100,7.240,50400,7.250,17000,7.260,2000,7.270,2018-12-17,15:00:00,00";</pre>
+</blockquote>
+<p> </p>
+<blockquote>
+<p>http://hq.sinajs.cn/list=sh600011,sh600012</p>
+</blockquote>
+<p>返回</p>
+<blockquote>
+<pre>var hq_str_sh600011="华能国际,7.390,7.420,7.230,7.500,7.110,7.210,7.230,24257738,174459225.000,6200,7.210,9900,7.200,16000,7.190,24400,7.180,18506,7.170,23900,7.230,53100,7.240,50400,7.250,17000,7.260,2000,7.270,2018-12-17,15:00:00,00";
+var hq_str_sh600012="皖通高速,5.590,5.590,5.620,5.650,5.550,5.610,5.620,2157530,12066336.000,16500,5.610,45971,5.600,11600,5.590,44300,5.580,19600,5.570,1200,5.620,19500,5.630,21300,5.640,57700,5.650,38100,5.660,2018-12-17,15:00:00,00";</pre>
+</blockquote>
+<p>返回格式如下：</p>
+<blockquote>
+<pre>股票名字,今日开盘价,昨日收盘价,当前价格,今日最高价,今日最低价,买一价,买一价,成交量,成交额,买一量,买一价,买二量,买二价,买三量,买三价,买四量,买四价,买五量,买五价,卖一量,卖一价,卖二量,卖二价,卖三量,卖三价,卖四量,卖四价,卖五量,卖五价,日期,时间</pre>
+</blockquote>
+<p>优点：实时数据，可以一次获取多个股票的当天实时数据，而且数据指标很全；</p>
+<p>缺点：不能指定日期；</p>
+<p> </p>
+<p>另外还有图片url如下：</p>
+<blockquote>
+<p>查看日K线图：<br/>http://image.sinajs.cn/newchart/daily/n/sh600011.gif<br/>分时线的查询：<br/>http://image.sinajs.cn/newchart/min/n/sh600011.gif<br/>日K线查询：<br/>http://image.sinajs.cn/newchart/daily/n/sh600011.gif<br/>周K线查询：<br/>http://image.sinajs.cn/newchart/weekly/n/sh600011.gif<br/>月K线查询：<br/>http://image.sinajs.cn/newchart/monthly/n/sh600011.gif</p>
+<p> </p>
+</blockquote>
+<p>ps: 美股接口：</p>
+<p>http://hq.sinajs.cn/list=gb_sina</p>
+<p>http://image.sinajs.cn/newchart/usstock/daily/SINA.gif</p>
+<h2>2 netease 网易csv下载接口</h2>
+<blockquote>
+<p>http://quotes.money.163.com/service/chddata.html?code=0600011&amp;start=19940809&amp;end=20181214&amp;fields=TCLOSE;HIGH;LOW;TOPEN;LCLOSE;CHG;PCHG;TURNOVER;VOTURNOVER;VATURNOVER;TCAP;MCAP</p>
+</blockquote>
+<p>返回</p>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201812/1509647-20181218010257158-582944474.png"/></p>
+<p>优点：可以指定起始和结束日期以及哪些数据指标，适合下载历史数据；</p>
+<p>缺点：不实时；</p>
+<p>代码如下：</p>
+<div class="cnblogs_code">
+<pre>    val url = <span style="color: rgba(0, 0, 255, 1)">new</span><span style="color: rgba(0, 0, 0, 1)"> URL(urlStr)
+    val conn </span>=<span style="color: rgba(0, 0, 0, 1)"> url.openConnection
+    val is </span>=<span style="color: rgba(0, 0, 0, 1)"> conn.getInputStream
+    val bos </span>= <span style="color: rgba(0, 0, 255, 1)">new</span><span style="color: rgba(0, 0, 0, 1)"> ByteArrayOutputStream()
+    val b </span>= <span style="color: rgba(0, 0, 255, 1)">new</span> Array[Byte](1024<span style="color: rgba(0, 0, 0, 1)">)
+    var len </span>= 0
+    <span style="color: rgba(0, 0, 255, 1)">do</span><span style="color: rgba(0, 0, 0, 1)"> {
+      len </span>=<span style="color: rgba(0, 0, 0, 1)"> is.read(b)
+      </span><span style="color: rgba(0, 0, 255, 1)">if</span> (len &gt; 0) bos.write(b, 0<span style="color: rgba(0, 0, 0, 1)">, len)
+    } </span><span style="color: rgba(0, 0, 255, 1)">while</span> (len != - 1<span style="color: rgba(0, 0, 0, 1)">)
+    println(</span><span style="color: rgba(0, 0, 255, 1)">new</span> String(bos.toByteArray, "GBK"))</pre>
+</div>
+<h2>3 sohu历史数据接口</h2>
+<blockquote>
+<p><a href="https://q.stock.sohu.com/hisHq?code=cn_159915&amp;start=20130201&amp;end=20200904&amp;stat=1&amp;order=D&amp;period=d&amp;callback=historySearchHandler&amp;rt=jsonp" rel="noopener nofollow">https://q.stock.sohu.com/hisHq?code=cn_159915&amp;start=20130201&amp;end=20200904&amp;stat=1&amp;order=D&amp;period=d&amp;callback=historySearchHandler&amp;rt=jsonp</a></p>
+</blockquote>
+<p>返回结果为js数据</p>
+<h2>４ 其他</h2>
+<p>以下接口已经不能使用：</p>
+<p>webservice：<a href="http://www.webxml.com.cn/WebServices/ChinaStockWebService.asmx" rel="noopener nofollow" target="_blank">http://www.webxml.com.cn/WebServices/ChinaStockWebService.asmx</a> </p>
+<p>yahoo：<a href="http://quote.yahoo.com/d/quotes.csv?s=000969.SZ&amp;f=slc1wop" rel="noopener nofollow" target="_blank">http://quote.yahoo.com/d/quotes.csv?s=000969.SZ&amp;f=slc1wop</a> </p>
+<h2>５ 代码</h2>
+<p>指数代码：</p>
+<blockquote>
+<p>https://www.myquant.cn/gm2/docs/api/index_list/</p>
+</blockquote>
+<p>股票代码：</p>
+<blockquote>
+<p>http://quote.eastmoney.com/stocklist.html</p>
+</blockquote>
+<p>场内ETF代码：</p>
+<blockquote>
+<pre>http://fund_open.eastmoney.com/data/rankhandler.aspx?op=ph&amp;dt=fb&amp;ft=ct&amp;rs=&amp;gs=0&amp;sc=zzf&amp;st=desc&amp;pi=1&amp;pn=10000&amp;v=0.03511869769117637</pre>
+</blockquote>
+<h1>外汇</h1>
+<p>福汇api</p>
+<p><a href="https://www.fuhuiyazhou.com/gb/algorithmic-trading/api-trading/" rel="noopener nofollow">https://www.fuhuiyazhou.com/gb/algorithmic-trading/api-trading/</a></p>
+<p><a href="https://github.com/fxcm/JavaAPI" rel="noopener nofollow">https://github.com/fxcm/JavaAPI</a></p>
+<h1>数字货币</h1>
+<p>火币api</p>
+<p><a href="https://huobiapi.github.io/docs/spot/v1/en/" rel="noopener nofollow">https://huobiapi.github.io/docs/spot/v1/en/</a></p>
+<p> </p>
+</div>
+            </div>
+
+            <!-- Post Footer -->
+            <div class="post-footer">
+                <div class="post-navigation">
+                    <a href="../blog_cn.html" class="nav-button">← Back to Home</a>
+                    <a href="0315.html" class="nav-button">Next Post →</a>
+                </div>
+            </div>
+        </article>
+    </div>
+</body>
+</html>

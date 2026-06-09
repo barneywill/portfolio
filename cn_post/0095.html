@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>mysql内存设置</title>
+    <link rel="stylesheet" href="../css/style3.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header Navigation -->
+        <div class="header">
+            <h1><a href="../blog_cn.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+        </div>
+
+        <!-- Post Container -->
+        <article class="post">
+            <!-- Post Header -->
+            <div class="post-header">
+                <h1>mysql内存设置</h1>
+                <div class="post-meta">
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📅</span>
+                        <span>July 31, 2019</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📖</span>
+                        <span>1 min read</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">👁️</span>
+                        <span>343 views</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Post Content -->
+            <div class="post-content">
+                <div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<p>mysql内存设置，首先要知道当前的设置</p>
+<div class="cnblogs_code">
+<pre>MySQL [(none)]&gt; show variables like <span style="color: rgba(128, 0, 0, 1)">'</span><span style="color: rgba(128, 0, 0, 1)">%buffer%</span><span style="color: rgba(128, 0, 0, 1)">'</span><span style="color: rgba(0, 0, 0, 1)">;
+</span>+-------------------------------------+----------------+
+| Variable_name                       | Value          |
++-------------------------------------+----------------+
+| bulk_insert_buffer_size             | 8388608        |
+| innodb_buffer_pool_chunk_size       | 33554432       |
+| innodb_buffer_pool_dump_at_shutdown | ON             |
+| innodb_buffer_pool_dump_now         | OFF            |
+| innodb_buffer_pool_dump_pct         | 25             |
+| innodb_buffer_pool_filename         | ib_buffer_pool |
+| innodb_buffer_pool_instances        | 1              |
+| innodb_buffer_pool_load_abort       | OFF            |
+| innodb_buffer_pool_load_at_startup  | ON             |
+| innodb_buffer_pool_load_now         | OFF            |
+| innodb_buffer_pool_size             | 67108864       |
+| innodb_change_buffer_max_size       | 25             |
+| innodb_change_buffering             | all            |
+| innodb_log_buffer_size              | 16777216       |
+| innodb_sort_buffer_size             | 1048576        |
+| join_buffer_size                    | 262144         |
+| key_buffer_size                     | 8388608        |
+| myisam_sort_buffer_size             | 8388608        |
+| net_buffer_length                   | 16384          |
+| preload_buffer_size                 | 32768          |
+| read_buffer_size                    | 131072         |                                                                                                                                                                 
+| read_rnd_buffer_size                | 262144         |                                                                                                                                                                 
+| sort_buffer_size                    | 262144         |                                                                                                                                                                 
+| sql_buffer_result                   | OFF            |                                                                                                                                                                 
++-------------------------------------+----------------+</pre>
+</div>
+<p>想改哪个直接配置到my.cnf中即可</p>
+<p> </p>
+</div>
+            </div>
+
+            <!-- Post Footer -->
+            <div class="post-footer">
+                <div class="post-navigation">
+                    <a href="../blog_cn.html" class="nav-button">← Back to Home</a>
+                    <a href="0096.html" class="nav-button">Next Post →</a>
+                </div>
+            </div>
+        </article>
+    </div>
+</body>
+</html>

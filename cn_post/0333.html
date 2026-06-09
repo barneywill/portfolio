@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Oozie如何查看提交到Yarn上的任务日志</title>
+    <link rel="stylesheet" href="../css/style3.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header Navigation -->
+        <div class="header">
+            <h1><a href="../blog_cn.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+        </div>
+
+        <!-- Post Container -->
+        <article class="post">
+            <!-- Post Header -->
+            <div class="post-header">
+                <h1>Oozie如何查看提交到Yarn上的任务日志</h1>
+                <div class="post-meta">
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📅</span>
+                        <span>December 12, 2018</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📖</span>
+                        <span>1 min read</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">👁️</span>
+                        <span>2776 views</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Post Content -->
+            <div class="post-content">
+                <div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<p>通过oozie job id可以查看流程详细信息，命令如下：</p>
+<blockquote>
+<p>oozie job -info <strong>0012077-180830142722522-oozie-hado-W</strong></p>
+</blockquote>
+<p> </p>
+<p>流程详细信息如下：</p>
+<blockquote>
+<p>Job ID : <strong>0012077-180830142722522-oozie-hado-W</strong></p>
+<p>------------------------------------------------------------------------------------------------------------------------------------</p>
+<p>Workflow Name : test_wf</p>
+<p>App Path      : <a rel="nofollow">hdfs://hdfs_name/oozie/test_wf.xml</a></p>
+<p>Status        : KILLED</p>
+<p>Run           : 0</p>
+<p>User          : hadoop</p>
+<p>Group         : -</p>
+<p>Created       : 2018-09-25 02:51 GMT</p>
+<p>Started       : 2018-09-25 02:51 GMT</p>
+<p>Last Modified : 2018-09-25 02:53 GMT</p>
+<p>Ended         : 2018-09-25 02:53 GMT</p>
+<p>CoordAction ID: -</p>
+<p> </p>
+<p>Actions</p>
+<p>------------------------------------------------------------------------------------------------------------------------------------</p>
+<p>ID                                                                            Status    Ext ID                 Ext Status Err Code </p>
+<p>------------------------------------------------------------------------------------------------------------------------------------</p>
+<p>0012077-180830142722522-oozie-hado-W@:start:                                  OK        -                      OK         -        </p>
+<p>------------------------------------------------------------------------------------------------------------------------------------</p>
+<p>0012077-180830142722522-oozie-hado-W@test_spark_task                  ERROR     application_1537326594090_5663<strong>FAILED/KILLED</strong>JA018    </p>
+<p>------------------------------------------------------------------------------------------------------------------------------------</p>
+<p>0012077-180830142722522-oozie-hado-W@Kill                                     OK        -                      OK         E0729    </p>
+<p>------------------------------------------------------------------------------------------------------------------------------------</p>
+</blockquote>
+<p> </p>
+<p>失败的任务定义如下</p>
+<blockquote>
+<p>&lt;action name="test_spark_task"&gt; </p>
+<p>        &lt;spark xmlns="uri:oozie:spark-action:0.1"&gt; </p>
+<p>            &lt;job-tracker&gt;${job_tracker}&lt;/job-tracker&gt; </p>
+<p>            &lt;name-node&gt;${name_node}&lt;/name-node&gt; </p>
+<p>            &lt;master&gt;${jobmaster}&lt;/master&gt; </p>
+<p>            &lt;mode&gt;${jobmode}&lt;/mode&gt; </p>
+<p>            &lt;name&gt;${jobname}&lt;/name&gt; </p>
+<p>            &lt;class&gt;${jarclass}&lt;/class&gt; </p>
+<p>            &lt;jar&gt;${jarpath}&lt;/jar&gt; </p>
+<p>            &lt;spark-opts&gt;--executor-memory 4g --executor-cores 2 --num-executors 4 --driver-memory 4g&lt;/spark-opts&gt; </p>
+<p>        &lt;/spark&gt;</p>
+</blockquote>
+<p> </p>
+<p>在yarn上可以看到application_1537326594090_5663对应的application如下</p>
+<blockquote>
+<p>application_1537326594090_5663       hadoop oozie:launcher:T=spark:W=test_wf:A=test_spark_task:ID=0012077-180830142722522-oozie-hado-W         Oozie Launcher</p>
+</blockquote>
+<p> </p>
+<p>查看application_1537326594090_5663日志发现</p>
+<blockquote>
+<p>2018-09-25 10:52:05,237 [main] INFO  org.apache.hadoop.yarn.client.api.impl.YarnClientImpl  - Submitted application application_1537326594090_5664</p>
+</blockquote>
+<p> </p>
+<p>yarn上application_1537326594090_5664对应的application如下</p>
+<blockquote>
+<p>application_1537326594090_5664       hadoop    TestSparkTask SPARK</p>
+</blockquote>
+<p> </p>
+<p>即application_1537326594090_5664才是Action对应的spark任务，为什么中间会多一步，类结构和核心代码详见 <a href="https://www.cnblogs.com/barneywill/p/9895225.html" target="_blank" title="大数据基础之Quartz（1）简介、源代码解析">https://www.cnblogs.com/barneywill/p/9895225.html</a><a href="https://cf.jd.com/pages/viewpage.action?pageId=105293178" rel="noopener nofollow"><br/></a></p>
+<p>简要来说，Oozie执行Action时，即ActionExecutor（最主要的子类是JavaActionExecutor，hive、spark等action都是这个类的子类），JavaActionExecutor首先会提交一个LauncherMapper（map任务）到yarn，其中会执行LauncherMain（具体的action是其子类，比如JavaMain、SparkMain等），spark任务会执行SparkMain，在SparkMain中会调用org.apache.spark.deploy.SparkSubmit来提交任务</p>
+<p> </p>
+<p>如果提交的是spark任务，那么按照上边的方法就可以跟踪到实际任务的applicationId；<br/>如果你提交的hive2任务，实际是用beeline启动，从hive2开始，beeline命令的日志已经简化，不像hive命令可以看到详细的applicationId和进度，这时有两种方法：</p>
+<p>1）修改hive代码，使得beeline命令和hive命令一样有详细日志输出</p>
+<p>详见：<a href="https://www.cnblogs.com/barneywill/p/10185949.html" target="_blank">https://www.cnblogs.com/barneywill/p/10185949.html</a></p>
+<p>2）根据application tag手工查找任务</p>
+<p>oozie在使用beeline提交任务时，会添加一个mapreduce.job.tags参数，比如</p>
+<blockquote>
+<p>             --hiveconf<br/>             mapreduce.job.tags=oozie-9f896ad3d40c261235dc6858cadb885c</p>
+</blockquote>
+<p>但是这个tag从yarn application命令中查不到，只能手工逐个查找（实际启动的任务会在当前LuancherMapper的applicationId上递增），</p>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201903/1509647-20190321105658212-1149426996.png"/></p>
+<p>然后就可以看到实际启动的applicationId了</p>
+<p> </p>
+<p>另外还可以从job history server上看到application的详细信息，比如configuration、task等</p>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201903/1509647-20190321105921182-1835194218.png"/></p>
+<p>查看hive任务执行的完整sql详见：<a href="https://www.cnblogs.com/barneywill/p/10083731.html" target="_blank">https://www.cnblogs.com/barneywill/p/10083731.html</a></p>
+<p> </p>
+</div>
+            </div>
+
+            <!-- Post Footer -->
+            <div class="post-footer">
+                <div class="post-navigation">
+                    <a href="../blog_cn.html" class="nav-button">← Back to Home</a>
+                    <a href="0334.html" class="nav-button">Next Post →</a>
+                </div>
+            </div>
+        </article>
+    </div>
+</body>
+</html>

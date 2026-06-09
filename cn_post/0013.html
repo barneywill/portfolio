@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>doris和clickhouse对比</title>
+    <link rel="stylesheet" href="../css/style3.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header Navigation -->
+        <div class="header">
+            <h1><a href="../blog_cn.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+        </div>
+
+        <!-- Post Container -->
+        <article class="post">
+            <!-- Post Header -->
+            <div class="post-header">
+                <h1>doris和clickhouse对比</h1>
+                <div class="post-meta">
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📅</span>
+                        <span>May 20, 2022</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📖</span>
+                        <span>2 min read</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">👁️</span>
+                        <span>2309 views</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Post Content -->
+            <div class="post-content">
+                <div class="blogpost-body cnblogs-markdown" id="cnblogs_post_body">
+<table>
+<thead>
+<tr>
+<th></th>
+<th>***</th>
+<th>doris</th>
+<th>clickhouse</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>官网</strong></td>
+<td></td>
+<td><a href="http://doris.apache.org/" rel="noopener nofollow" target="_blank">http://doris.apache.org/</a></td>
+<td><a href="https://clickhouse.tech/" rel="noopener nofollow" target="_blank">https://clickhouse.tech/</a></td>
+</tr>
+<tr>
+<td><strong>版本</strong></td>
+<td></td>
+<td>0.14.0</td>
+<td>21.7.2.7</td>
+</tr>
+<tr>
+<td><strong>开源</strong></td>
+<td></td>
+<td>是</td>
+<td>是</td>
+</tr>
+<tr>
+<td><strong>开发语言</strong></td>
+<td>*</td>
+<td>java + c</td>
+<td>c</td>
+</tr>
+<tr>
+<td><strong>安装</strong></td>
+<td></td>
+<td>源码编译</td>
+<td>rpm包</td>
+</tr>
+<tr>
+<td><strong>定位</strong></td>
+<td></td>
+<td>olap</td>
+<td>olap</td>
+</tr>
+<tr>
+<td><strong>架构</strong></td>
+<td></td>
+<td>mpp</td>
+<td>scatter-gatter</td>
+</tr>
+<tr>
+<td><strong>开发公司</strong></td>
+<td></td>
+<td>Yandex</td>
+</tr>
+<tr>
+<td><strong>实现</strong></td>
+<td></td>
+<td>google mesa + impala</td>
+<td></td>
+</tr>
+<tr>
+<td><strong>存储</strong></td>
+<td></td>
+<td>自己管理，lsm-tree + compact</td>
+<td>自己管理，merge tree</td>
+</tr>
+<tr>
+<td><strong>列式</strong></td>
+<td></td>
+<td>是</td>
+<td>是</td>
+</tr>
+<tr>
+<td><strong>集群</strong></td>
+<td></td>
+<td>fe主从</td>
+<td>zk（read-only mode）、clickhouse-keeper</td>
+</tr>
+<tr>
+<td><strong>数据分布</strong></td>
+<td>**</td>
+<td>透明</td>
+<td>本地表、分布式表</td>
+</tr>
+<tr>
+<td><strong>副本</strong></td>
+<td>**</td>
+<td>tablet、replica（单master）</td>
+<td>shard、replica（多master）</td>
+</tr>
+<tr>
+<td><strong>大表写入</strong></td>
+<td>**</td>
+<td>透明</td>
+<td>人工分shard做均衡，类似于分库操作</td>
+</tr>
+<tr>
+<td><strong>角色</strong></td>
+<td></td>
+<td>3个fe、至少3个be</td>
+<td>至少2个server</td>
+</tr>
+<tr>
+<td><strong>高可用</strong></td>
+<td></td>
+<td>多fe</td>
+<td>多server</td>
+</tr>
+<tr>
+<td><strong>元数据高可用</strong></td>
+<td></td>
+<td>支持，berkerlydb</td>
+<td>shard+replica，/clickhouse_path/metadata，system table</td>
+</tr>
+<tr>
+<td><strong>进程守护</strong></td>
+<td></td>
+<td>第三方 supervisor</td>
+<td>systemctl</td>
+</tr>
+<tr>
+<td><strong>开机启动</strong></td>
+<td></td>
+<td>第三方 supervisor</td>
+<td>systemctl</td>
+</tr>
+<tr>
+<td><strong>监控</strong></td>
+<td>***</td>
+<td>prometheus + grafana</td>
+<td>只能记录日志文件，第三方 clickhouse-grafana + prometheus</td>
+</tr>
+<tr>
+<td><strong>扩容</strong></td>
+<td>***</td>
+<td>fe和be均可通过命令扩容，扩容后数据自动迁移、无需人工干预</td>
+<td>shard扩容、拆环、数据迁移（re-shard），全程都需要人工操作</td>
+</tr>
+<tr>
+<td><strong>sql支持</strong></td>
+<td>***</td>
+<td>丰富</td>
+<td>一般</td>
+</tr>
+<tr>
+<td><strong>客户端</strong></td>
+<td>**</td>
+<td>mysql</td>
+<td>clickhouse-client、mysql</td>
+</tr>
+<tr>
+<td><strong>权限</strong></td>
+<td></td>
+<td>mysql</td>
+<td>grant、revoke语句，支持外部（LDAP）</td>
+</tr>
+<tr>
+<td><strong>升级</strong></td>
+<td></td>
+<td>替换安装文件后先逐个重启be，再逐个重启fe</td>
+<td>停服，yum upgrade，启动</td>
+</tr>
+<tr>
+<td><strong>管理界面</strong></td>
+<td></td>
+<td><a href="http://ip:8030" rel="noopener nofollow" target="_blank">http://ip:8030</a></td>
+<td>无</td>
+</tr>
+<tr>
+<td><strong>jdbc</strong></td>
+<td>*</td>
+<td>jdbc:mysql://</td>
+<td>jdbc:clickhouse://</td>
+</tr>
+<tr>
+<td><strong>Tableau集成</strong></td>
+<td>*</td>
+<td>mysql</td>
+<td>其他数据源（odbc）</td>
+</tr>
+<tr>
+<td><strong>spark集成</strong></td>
+<td></td>
+<td>spark connection，可将doris映射到spark view</td>
+<td>不支持</td>
+</tr>
+<tr>
+<td><strong>flink集成</strong></td>
+<td></td>
+<td>flink connection</td>
+<td>第三方 flink-clickhouse-sink</td>
+</tr>
+<tr>
+<td><strong>logstash集成</strong></td>
+<td></td>
+<td>output</td>
+<td>不支持</td>
+</tr>
+<tr>
+<td><strong>kafka集成</strong></td>
+<td></td>
+<td>支持（routine load）</td>
+<td>支持（kafka engine）</td>
+</tr>
+<tr>
+<td><strong>数据导入</strong></td>
+<td>**</td>
+<td>http（file、csv、json）、broker（hdfs、hive）、routine（kafka）、外部表</td>
+<td>http、mysql、kafka</td>
+</tr>
+<tr>
+<td><strong>导入事务控制</strong></td>
+<td>**</td>
+<td>支持，transaction id</td>
+<td>不支持</td>
+</tr>
+<tr>
+<td><strong>表分区</strong></td>
+<td>***</td>
+<td>支持，Range、List</td>
+<td>支持，日期类型</td>
+</tr>
+<tr>
+<td><strong>表分桶</strong></td>
+<td>***</td>
+<td>支持</td>
+<td>不支持</td>
+</tr>
+<tr>
+<td><strong>join</strong></td>
+<td>***</td>
+<td>hash、broadcast、colocate、bucket</td>
+<td>hash、merge（两个及以上大表）</td>
+</tr>
+<tr>
+<td><strong>多租户</strong></td>
+<td>*</td>
+<td>实验阶段，cluster</td>
+<td></td>
+</tr>
+<tr>
+<td><strong>预聚合</strong></td>
+<td>***</td>
+<td>支持，可根据场景自定义任意rollup</td>
+<td>支持，MergeTree系列</td>
+</tr>
+<tr>
+<td><strong>自定义聚合前后顺序</strong></td>
+<td></td>
+<td>支持，sequence column</td>
+<td>不支持</td>
+</tr>
+<tr>
+<td><strong>rollup</strong></td>
+<td>***</td>
+<td>支持，Aggregate表</td>
+<td>不支持</td>
+</tr>
+<tr>
+<td><strong>物化视图</strong></td>
+<td>***</td>
+<td>支持，单表，rollup的超集</td>
+<td>支持，to table，populate，live</td>
+</tr>
+<tr>
+<td><strong>物化视图使用</strong></td>
+<td>***</td>
+<td>透明</td>
+<td>显式指定</td>
+</tr>
+<tr>
+<td><strong>外部表</strong></td>
+<td>***</td>
+<td>odbc（mysql、oracle、postgre）、es（支持Pushdown）、hive</td>
+<td>database（mysql、postgre）</td>
+</tr>
+<tr>
+<td><strong>表类型</strong></td>
+<td></td>
+<td>Aggregate、Unique、Duplicate</td>
+<td>MergeTree、ReplacingMergeTree</td>
+</tr>
+<tr>
+<td><strong>主索引</strong></td>
+<td></td>
+<td>prefix sparse index</td>
+<td>sparse index（primary key），索引进内存</td>
+</tr>
+<tr>
+<td><strong>排序列</strong></td>
+<td></td>
+<td>prefix，36byte</td>
+<td>sort by</td>
+</tr>
+<tr>
+<td><strong>其他索引</strong></td>
+<td></td>
+<td>bloomfilter、bitmap</td>
+<td>data skipping indexes（minmax/set/bloom_filter/ngrambf/tokenbf），人工添加</td>
+</tr>
+<tr>
+<td><strong>行分组</strong></td>
+<td></td>
+<td>1024</td>
+<td>index_granularity=8192</td>
+</tr>
+<tr>
+<td><strong>primary key</strong></td>
+<td></td>
+<td>无</td>
+<td>有，可重复</td>
+</tr>
+<tr>
+<td><strong>多磁盘</strong></td>
+<td>***</td>
+<td>支持多磁盘，ssd和hdd，根据分区策略自动冷热数据分离</td>
+<td>支持多磁盘，ssd和hdd，根据分区策略自动冷热数据分离（TTL）</td>
+</tr>
+<tr>
+<td><strong>自动创建新日期型分区</strong></td>
+<td></td>
+<td>支持</td>
+<td></td>
+</tr>
+<tr>
+<td><strong>动态分区</strong></td>
+<td></td>
+<td>支持</td>
+<td></td>
+</tr>
+<tr>
+<td><strong>bitmap类型</strong></td>
+<td>***</td>
+<td>支持</td>
+<td>支持</td>
+</tr>
+<tr>
+<td><strong>表切换</strong></td>
+<td>*</td>
+<td>支持，replace</td>
+<td>支持，exchange</td>
+</tr>
+<tr>
+<td><strong>分区切换</strong></td>
+<td>*</td>
+<td>支持</td>
+<td>不支持</td>
+</tr>
+<tr>
+<td><strong>数据更新</strong></td>
+<td></td>
+<td>append、delete、merge</td>
+<td>MergeTree支持，mutation，高成本</td>
+</tr>
+<tr>
+<td><strong>数据删除</strong></td>
+<td></td>
+<td>支持，标记 + compact</td>
+<td>MergeTree支持，mutation，高成本</td>
+</tr>
+<tr>
+<td><strong>修改表结构</strong></td>
+<td></td>
+<td>支持，时间较长</td>
+<td>支持，很快，merge之后数据生效</td>
+</tr>
+<tr>
+<td><strong>数据备份</strong></td>
+<td>**</td>
+<td>支持，远程（hdfs）</td>
+<td>不支持，人工备份（备份kafka数据、文件系统快照、clickhouse-copier）</td>
+</tr>
+<tr>
+<td><strong>数据恢复</strong></td>
+<td>**</td>
+<td>支持，远程（hdfs）</td>
+<td>不支持，人工恢复</td>
+</tr>
+<tr>
+<td><strong>集群均衡</strong></td>
+<td>**</td>
+<td>支持，BeLoad磁盘占用、Partition数量</td>
+<td>不支持，大表需要人工re-shard</td>
+</tr>
+<tr>
+<td><strong>表删除恢复</strong></td>
+<td></td>
+<td>支持，回收站</td>
+<td>支持，drop时只删除元数据，后台根据database_atomic_delay_before_drop_table_sec做实际删除</td>
+</tr>
+<tr>
+<td><strong>CPU SIMD加速</strong></td>
+<td>**</td>
+<td>暂不支持</td>
+<td>支持</td>
+</tr>
+<tr>
+<td><strong>压缩</strong></td>
+<td></td>
+<td>lz4</td>
+<td>Codecs（LZ4/LZ4HC/ZSTD），Specialized Codecs（Delta/DoubleDelta/Gorilla/T64）</td>
+</tr>
+<tr>
+<td><strong>UDF</strong></td>
+<td></td>
+<td>支持，c</td>
+<td>支持，c</td>
+</tr>
+<tr>
+<td><strong>HLL</strong></td>
+<td></td>
+<td>支持</td>
+<td>支持</td>
+</tr>
+<tr>
+<td><strong>采样</strong></td>
+<td></td>
+<td>不支持</td>
+<td>支持</td>
+</tr>
+<tr>
+<td><strong>查看profile</strong></td>
+<td></td>
+<td>支持，命令打开，页面查看</td>
+<td>sampling query profiler</td>
+</tr>
+<tr>
+<td><strong>云托管</strong></td>
+<td></td>
+<td>不支持</td>
+<td>阿里云、腾讯云、金山云等</td>
+</tr>
+<tr>
+<td><strong>限制</strong></td>
+<td></td>
+<td>count慢</td>
+<td>join弱</td>
+</tr>
+</tbody>
+</table>
+</div>
+            </div>
+
+            <!-- Post Footer -->
+            <div class="post-footer">
+                <div class="post-navigation">
+                    <a href="../blog_cn.html" class="nav-button">← Back to Home</a>
+                    <a href="0014.html" class="nav-button">Next Post →</a>
+                </div>
+            </div>
+        </article>
+    </div>
+</body>
+</html>

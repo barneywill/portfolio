@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>spark sql中设置hive.exec.max.dynamic.partitions无效</title>
+    <link rel="stylesheet" href="../css/style3.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header Navigation -->
+        <div class="header">
+            <h1><a href="../blog_cn.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+        </div>
+
+        <!-- Post Container -->
+        <article class="post">
+            <!-- Post Header -->
+            <div class="post-header">
+                <h1>spark sql中设置hive.exec.max.dynamic.partitions无效</h1>
+                <div class="post-meta">
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📅</span>
+                        <span>October 03, 2019</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📖</span>
+                        <span>1 min read</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">👁️</span>
+                        <span>7623 views</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Post Content -->
+            <div class="post-content">
+                <div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<p>spark 2.4</p>
+<p> </p>
+<p>spark sql中执行</p>
+<blockquote>
+<p>set hive.exec.max.dynamic.partitions=10000;</p>
+</blockquote>
+<p>后再执行sql依然会报错：</p>
+<div class="cnblogs_code">
+<pre><span style="color: rgba(0, 0, 0, 1)">org.apache.hadoop.hive.ql.metadata.HiveException:
+Number of dynamic partitions created </span><span style="color: rgba(0, 0, 255, 1)">is</span> 1001, which <span style="color: rgba(0, 0, 255, 1)">is</span> more than 1000<span style="color: rgba(0, 0, 0, 1)">.
+To solve this </span><span style="color: rgba(0, 0, 255, 1)">try</span> to set hive.<span style="color: rgba(0, 0, 255, 1)">exec</span>.max.dynamic.partitions to at least 1001.</pre>
+</div>
+<p>这个参数hive.exec.max.dynamic.partitions的默认值是1000，修改没有生效，</p>
+<p> </p>
+<p>原因如下：</p>
+<blockquote>
+<p>`HiveClient` does not know new value 1001. There is no way to change the default value of `hive.exec.max.dynamic.partitions` of `HiveCilent` with `SET` command.</p>
+<p>The root cause is that `hive` parameters are passed to `HiveClient` on creating. So, the workaround is to use `--hiveconf` when starting `spark-shell`.</p>
+</blockquote>
+<p> </p>
+<p>解决方法是在启动spark-sql时设置hiveconf</p>
+<blockquote>
+<p>spark-sql --hiveconf hive.exec.max.dynamic.partitions=10000</p>
+</blockquote>
+<p> </p>
+<p>参考：</p>
+<p>https://issues.apache.org/jira/browse/SPARK-19881</p>
+</div>
+            </div>
+
+            <!-- Post Footer -->
+            <div class="post-footer">
+                <div class="post-navigation">
+                    <a href="../blog_cn.html" class="nav-button">← Back to Home</a>
+                    <a href="0090.html" class="nav-button">Next Post →</a>
+                </div>
+            </div>
+        </article>
+    </div>
+</body>
+</html>

@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>hive元数据中location修复</title>
+    <link rel="stylesheet" href="../css/style3.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header Navigation -->
+        <div class="header">
+            <h1><a href="../blog_cn.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+        </div>
+
+        <!-- Post Container -->
+        <article class="post">
+            <!-- Post Header -->
+            <div class="post-header">
+                <h1>hive元数据中location修复</h1>
+                <div class="post-meta">
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📅</span>
+                        <span>May 19, 2022</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📖</span>
+                        <span>1 min read</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">👁️</span>
+                        <span>400 views</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Post Content -->
+            <div class="post-content">
+                <div class="blogpost-body cnblogs-markdown" id="cnblogs_post_body">
+<p>假如hive中table或者partition的location错误或者丢失，需要批量修复，可以参考如下步骤：</p>
+<h2 id="修复table的location">修复table的location</h2>
+<blockquote>
+<p>hdfs dfs - ls /data/hive/warehouse/$db | awk '{print $8}' |sed '1d' | awk - F '/' '{print "alter table "$5"."$7" set location ""$0"";"}'</p>
+</blockquote>
+<p>输出的sql在hive中执行</p>
+<h2 id="修复partition的location">修复partition的location</h2>
+<blockquote>
+<p>update DBS d, TBLS t, SDS ts, PARTITIONS p, SDS ps set ps.location = concat(ts.location, '/', p.part_name)<br/>
+-&gt; where d.db_id = t.db_id and t.sd_id = ts.sd_id and p.tbl_id = t.tbl_id and p.sd_id = ps.sd_id<br/>
+-&gt; and d.name = '$db';&gt;</p>
+</blockquote>
+<p>在hive元数据库中执行以上命令</p>
+<h2 id="确认修复">确认修复</h2>
+<blockquote>
+<p>select * from $db.$table limit 10</p>
+</blockquote>
+</div>
+            </div>
+
+            <!-- Post Footer -->
+            <div class="post-footer">
+                <div class="post-navigation">
+                    <a href="../blog_cn.html" class="nav-button">← Back to Home</a>
+                    <a href="0023.html" class="nav-button">Next Post →</a>
+                </div>
+            </div>
+        </article>
+    </div>
+</body>
+</html>

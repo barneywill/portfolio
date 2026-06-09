@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>sudo</title>
+    <link rel="stylesheet" href="../css/style3.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header Navigation -->
+        <div class="header">
+            <h1><a href="../blog_cn.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+        </div>
+
+        <!-- Post Container -->
+        <article class="post">
+            <!-- Post Header -->
+            <div class="post-header">
+                <h1>sudo</h1>
+                <div class="post-meta">
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📅</span>
+                        <span>January 15, 2019</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📖</span>
+                        <span>1 min read</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">👁️</span>
+                        <span>465 views</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Post Content -->
+            <div class="post-content">
+                <div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<p><br/>sudo允许用户以其他用户的身份（比如root）执行命令，比如切换用户、执行命令、读写文件等；</p>
+<h1>配置</h1>
+<p>sudo配置在：/etc/sudoers</p>
+<blockquote>
+<p>## Sudoers allows particular users to run various commands as<br/>## the root user, without needing the root password.<br/>##<br/>## Examples are provided at the bottom of the file for collections<br/>## of related commands, which can then be delegated out to particular<br/>## users or groups.<br/>##<br/>## This file must be edited with the 'visudo' command.<br/>...<br/>## Next comes the main part: which users can run what software on<br/>## which machines (the sudoers file can be shared between multiple<br/>## systems).<br/>## Syntax:<br/>##<br/>##      user    MACHINE=COMMANDS<br/>##<br/>## The COMMANDS section may have other options added to it.<br/>##<br/>## Allow root to run any commands anywhere<br/>root    ALL=(ALL)       ALL<br/>...<br/>## Read drop-in files from /etc/sudoers.d (the # here does not mean a comment)<br/>#includedir /etc/sudoers.d</p>
+</blockquote>
+<p>从这个配置文件可以看到3点：</p>
+<ul>
+<li>配置的格式（user MACHINE=COMMANDS）以及示例（在末尾附近），比如root的权限；</li>
+<li>/etc/sudoers.d/* 这个目录下边的文件也会被加载，这样就可以把不同类别的权限配置分开到不同的文件；</li>
+<li>使用visudo编辑，使用vi或vim编辑也可以，不过visudo在保存前会做检查，如果配置有问题会报错，直接保存错误的配置可能导致难以预料的后果，千万不要尝试；</li>
+</ul>
+<blockquote>
+<p>Options are:<br/>  (e)dit sudoers file again<br/>  e(x)it without saving changes to sudoers file<br/>  (Q)uit and save changes to sudoers file (DANGER!)</p>
+<p>What now?</p>
+</blockquote>
+<h1>常用场景</h1>
+<h2>1 切换用户</h2>
+<blockquote>
+<p>username ALL=(root) NOPASSWD: /bin/su - targetuser</p>
+</blockquote>
+<p>允许username切换到targetuser</p>
+<blockquote>
+<p>%groupname ALL=(root) NOPASSWD: /bin/su - targetuser</p>
+</blockquote>
+<p>允许groupname里边的用户切换到targetuser</p>
+<h2>2 执行命令</h2>
+<blockquote>
+<p>username ALL=(root) NOPASSWD: /usr/sbin/iptables</p>
+</blockquote>
+<p>允许username执行iptables命令</p>
+<p> </p>
+</div>
+            </div>
+
+            <!-- Post Footer -->
+            <div class="post-footer">
+                <div class="post-navigation">
+                    <a href="../blog_cn.html" class="nav-button">← Back to Home</a>
+                    <a href="0269.html" class="nav-button">Next Post →</a>
+                </div>
+            </div>
+        </article>
+    </div>
+</body>
+</html>

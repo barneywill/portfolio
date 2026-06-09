@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OpenResty</title>
+    <link rel="stylesheet" href="../css/style3.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header Navigation -->
+        <div class="header">
+            <h1><a href="../blog_cn.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+        </div>
+
+        <!-- Post Container -->
+        <article class="post">
+            <!-- Post Header -->
+            <div class="post-header">
+                <h1>OpenResty</h1>
+                <div class="post-meta">
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📅</span>
+                        <span>March 07, 2019</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📖</span>
+                        <span>2 min read</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">👁️</span>
+                        <span>993 views</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Post Content -->
+            <div class="post-content">
+                <div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<p>openresty 1.15.8.1</p>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201903/1509647-20190306184037271-885281521.png"/></p>
+<p>官方：https://openresty.org/en/</p>
+<p> </p>
+<h1>一 简介</h1>
+<p>OpenResty® is a dynamic web platform based on NGINX and LuaJIT.</p>
+<p><em>openresty是一个基于nginx和luajit的动态web平台；</em></p>
+<p>OpenResty® is a full-fledged web platform that integrates the standard Nginx core, LuaJIT, many carefully written Lua libraries, lots of high quality 3rd-party Nginx modules, and most of their external dependencies. It is designed to help developers easily build scalable web applications, web services, and dynamic web gateways.</p>
+<p><em>openresty是一个丰富的web平台，将标准nginx内核、luajit、多个lua库，多个第三方nginx模块以及依赖整合在一起；</em></p>
+<p>By taking advantage of various well-designed Nginx modules (most of which are developed by the OpenResty team themselves), OpenResty® effectively turns the nginx server into a powerful web app server, in which the web developers can use the Lua programming language to script various existing nginx C modules and Lua modules and construct extremely high-performance web applications that are capable to handle 10K ~ 1000K+ connections in a single box.</p>
+<p><em>利用设计良好的nginx模块，openresty将nginx高效的变为一个web应用服务器，开发者可以通过lua来调用nginx模块和lua模块，并且构建极端高效的web应用，轻松应用10k-1000k的连接数；</em></p>
+<p>OpenResty® aims to run your server-side web app completely in the Nginx server, leveraging Nginx's event model to do non-blocking I/O not only with the HTTP clients, but also with remote backends like MySQL, PostgreSQL, Memcached, and Redis.</p>
+<p><em>openresty使你的服务端应用完全运行在nginx上，并且将nginx的事件模型应用到很多方面；</em></p>
+<p>Real-world applications of OpenResty® range from dynamic web portals and web gateways, web application firewalls, web service platforms for mobile apps/advertising/distributed storage/data analytics, to full-fledged dynamic web applications and web sites. The hardware used to run OpenResty® also ranges from very big metals to embedded devices with very limited resources. It is not uncommon for our production users to serve billions of requests daily for millions of active users with just a handful of machines.</p>
+<p>OpenResty® is not an Nginx fork. It is just a software bundle. Most of the patches applied to the Nginx core in OpenResty® have already been submitted to the official Nginx team and most of the patches submitted have also been accepted. We are trying hard not to fork Nginx and always to use the latest best Nginx core from the official Nginx team.</p>
+<p><em>openresty不是一个nginx分支，它只是一个软件的组合包；</em></p>
+<p> </p>
+<h1>二 安装</h1>
+<h2>1 tar包编译安装</h2>
+<blockquote>
+<p>tar - xvf openresty-VERSION.tar.gz<br/>cd openresty-VERSION/<br/>./configure - j2<br/>make - j2<br/>sudo make install</p>
+</blockquote>
+<p>参考：https://openresty.org/en/installation.html</p>
+<h2>2 docker安装</h2>
+<blockquote>
+<p>$ docker run - d --name resty - p 80:80 host openresty/openresty</p>
+</blockquote>
+<p>参考：https://hub.docker.com/r/openresty/openresty</p>
+<p> </p>
+<h1>三 使用 </h1>
+<p>访问：http://127.0.0.1:80</p>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201903/1509647-20190307150937444-1226721236.png"/></p>
+<p> </p>
+<p>默认的nginx.conf位于 /usr/local/openresty/nginx/conf/nginx.conf （不是 /etc/nginx/nginx.conf），默认会加载所有/etc/nginx/conf.d/下的配置文件</p>
+<blockquote>
+<p>include /etc/nginx/conf.d/*.conf;</p>
+</blockquote>
+<p>准备测试配置</p>
+<blockquote>
+<p># cat testlua.conf</p>
+<p>    server {</p>
+<p>        listen 80;</p>
+<p>        server_name testlua;</p>
+<p>        location / {</p>
+<p>            default_type text/html;</p>
+<p>            content_by_lua '</p>
+<p>                ngx.say("&lt;p&gt;hello, world&lt;/p&gt;")</p>
+<p>            ';</p>
+<p>        }</p>
+<p>    }</p>
+</blockquote>
+<p>启动</p>
+<blockquote>
+<p># docker run - d --name resty - p 80:80 - v /path/testlua.conf:/etc/nginx/conf.d/testlua.conf openresty/openresty</p>
+</blockquote>
+<p>测试</p>
+<blockquote>
+<p># curl http://testlua - x 127.0.0.1:80<br/>&lt;p&gt;hello, world&lt;/p&gt;</p>
+</blockquote>
+<p> </p>
+</div>
+            </div>
+
+            <!-- Post Footer -->
+            <div class="post-footer">
+                <div class="post-navigation">
+                    <a href="../blog_cn.html" class="nav-button">← Back to Home</a>
+                    <a href="0191.html" class="nav-button">Next Post →</a>
+                </div>
+            </div>
+        </article>
+    </div>
+</body>
+</html>

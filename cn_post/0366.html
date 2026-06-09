@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>基于地址位置的用户人群定位方案</title>
+    <link rel="stylesheet" href="../css/style3.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header Navigation -->
+        <div class="header">
+            <h1><a href="../blog_cn.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+        </div>
+
+        <!-- Post Container -->
+        <article class="post">
+            <!-- Post Header -->
+            <div class="post-header">
+                <h1>基于地址位置的用户人群定位方案</h1>
+                <div class="post-meta">
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📅</span>
+                        <span>October 17, 2018</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📖</span>
+                        <span>1 min read</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">👁️</span>
+                        <span>885 views</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Post Content -->
+            <div class="post-content">
+                <div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<h1 id="id-经纬度人群包提取方案-背景">背景</h1>
+<p>假设一个应用有很多的用户位置信息基础数据，抽象数据格式如下：</p>
+<div class="table-wrap">
+<table class="confluenceTable tablesorter tablesorter-default">
+<thead>
+<tr class="tablesorter-headerRow"><th class="confluenceTh sortableHeader" data-column="0">
+<div class="tablesorter-header-inner">user_id</div>
+</th><th class="confluenceTh sortableHeader" data-column="1">
+<div class="tablesorter-header-inner">date</div>
+</th><th class="confluenceTh sortableHeader" data-column="2">
+<div class="tablesorter-header-inner">time</div>
+</th><th class="confluenceTh sortableHeader" data-column="3">
+<div class="tablesorter-header-inner">address</div>
+</th><th class="confluenceTh sortableHeader" data-column="4">
+<div class="tablesorter-header-inner">province</div>
+</th><th class="confluenceTh sortableHeader" data-column="5">
+<div class="tablesorter-header-inner">city</div>
+</th><th class="confluenceTh sortableHeader" data-column="6">
+<div class="tablesorter-header-inner">district</div>
+</th><th class="confluenceTh sortableHeader" data-column="7">
+<div class="tablesorter-header-inner">latitude</div>
+</th><th class="confluenceTh sortableHeader" colspan="1" data-column="8">
+<div class="tablesorter-header-inner">longitude</div>
+</th></tr>
+</thead>
+<tbody>
+<tr>
+<td class="confluenceTd">user1</td>
+<td class="confluenceTd">2018-01-01</td>
+<td class="confluenceTd">12:00:00</td>
+<td class="confluenceTd">北京市朝阳区朝阳大悦城</td>
+<td class="confluenceTd">北京</td>
+<td class="confluenceTd">北京</td>
+<td class="confluenceTd">朝阳</td>
+<td class="confluenceTd">1.1</td>
+<td class="confluenceTd" colspan="1">1.2</td>
+</tr>
+<tr>
+<td class="confluenceTd">...</td>
+<td class="confluenceTd"> </td>
+<td class="confluenceTd"> </td>
+<td class="confluenceTd"> </td>
+<td class="confluenceTd"> </td>
+<td class="confluenceTd"> </td>
+<td class="confluenceTd"> </td>
+<td class="confluenceTd"> </td>
+<td class="confluenceTd" colspan="1"> </td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>应用里有一些需要根据地址位置定位用户的需求，<strong>抽象问题</strong>是任给一块<strong>区域</strong>找出该区域内所有的user_id，具体如下：</p>
+<ol>
+<li>给定一个<em>经纬度参数</em>以及<em>半径公里数参数</em>，提取该圆范围内所有的user_id；</li>
+<li>给定一个任意多边形的<em>所有顶点的经纬度参数</em>，提取该多边形范围内所有的user_id；</li>
+</ol>
+<p>这里需要两个<strong>基础函数</strong>，</p>
+<p>一个是根据两个点的经纬度计算距离，calDistance；<a class="external-link" href="https://www.cnblogs.com/zhoug2020/p/3950933.html" rel="nofollow">https://www.cnblogs.com/zhoug2020/p/3950933.html</a></p>
+<p>一个是判断一个点是否在给定的多边形内，isInPolygon；<a class="external-link" href="https://www.cnblogs.com/luxiaoxun/p/3722358.html" rel="nofollow">https://www.cnblogs.com/luxiaoxun/p/3722358.html</a></p>
+<p> </p>
+<h1 id="id-经纬度人群包提取方案-方案一：SQL">方案一：SQL</h1>
+<h2>步骤</h2>
+<ol>
+<li>将calDistance和isInPolygon定义为UDF，一个sql即可得到结果；</li>
+</ol>
+<h2>分析</h2>
+<ul>
+<li><strong>优点</strong>：简单；</li>
+<li><strong>缺点</strong>：计算量大，运行缓慢，包含大量无用计算；</li>
+</ul>
+<p> </p>
+<p>方案一中会做大量的<strong>无用计算</strong>，而且calDistance和isInPolygon这两个高阶浮点计算非常昂贵</p>
+<ol>
+<li>比如给定区域在河南省，但是其他省（比如河北）的用户数据也会参与计算，并且计算之后会被抛弃；</li>
+<li>比如给定区域在河南省郑州市，但是其他市（比如洛阳）的数据也会参与计算，并且计算之后会被抛弃；</li>
+<li>比如给定区域在河南省郑州市中原区，但是其他区（比如金水区）的数据也会参与计算并且计算之后会被抛弃；</li>
+</ol>
+<p>为了优化这些无用计算得到方案二如下：</p>
+<p> </p>
+<h1 id="id-经纬度人群包提取方案-方案二">方案二</h1>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201811/1509647-20181107110206254-1059861481.png"/></p>
+<h2> 步骤</h2>
+<ol>
+<li>根据给定区域（河南省郑州市中原区内）只查询必要的用户位置数据，比如只查询郑州市的用户数据（为什么不直接查中原区的数据？因为第一种情形虽然中心店在中原区，但是半径较大时可能区域包含其他区），读取数据量缩小到原来的1%以下，避免了无用计算中的1和2；</li>
+<li>对给定区域（圆或者多边形）求一个能包含该区域同时边长最小的长方形，这样可以很容易的通过判断一个点是否长方形内来避免calDistance或isInPolygon计算，比如如果一个点在长方形外可以直接抛弃，将高阶浮点运算转化为简单的数字比较运算，计算数据量缩小到原来的万分之一以下，简化和避免了无用计算中的3；</li>
+<li>对长方形范围内的所有用户数据计算calDistance或isInPolygon来获取精确结果；</li>
+</ol>
+<h2>分析</h2>
+<ul>
+<li><strong>优点</strong>：改进了方案一中的大量无用计算，避免或者简化；</li>
+<li><strong>缺点</strong>：依然包含部分无用计算，比如区域内的点也要计算一遍，并且无法快速响应一些需求，比如快速返回区域内的用户数量；</li>
+</ul>
+<p> </p>
+<p>方案二可以抽象为<strong>映射</strong>，第一轮映射是利用省市区信息来减少读取数据量，第二轮映射是利用是否在正方形外来减少计算数据量；并且这两轮映射都是现成的，或者很容易计算的；如果把映射改为网格grid，则效果比上述两轮映射更好，得到方案三如下：</p>
+<p> </p>
+<h1 id="id-经纬度人群包提取方案-方案三">方案三</h1>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201811/1509647-20181107110516938-225418770.png"/></p>
+<h2>步骤</h2>
+<ol>
+<li>预处理，将所有用户位置数据进行网格划分并标记存储，比如按每平方公里划分网格（同时得到网格的顶点经纬度），网格内存储该网格内所有的用户位置数据，同时存储一些统计信息，比如用户总量，不重复的用户总量，不重复的用户集合等，放到任意KV存储中；</li>
+<li>根据给定区域计算哪些网格在区域内（区域内的网格不需要计算），哪些网格在区域边上（区域边上的网格需要计算，因为网格内部分用户在区域内，部分用户在区域外），这个是纯图形计算；</li>
+<li>读取所有区域内的网格的不重复的用户集合数据（直接使用），读取所有区域边上的网格的所有用户位置数据（计算后使用），可以快速得到区域内用户数量或者用户列表；</li>
+</ol>
+<h2>分析</h2>
+<ul>
+<li><strong>优点</strong>：相比方案二进一步减少读取数据量和计算数据量，并且可以满足一些快速响应的需求，可以通过减小网格的面积来进一步减少读取数据量和计算数据量，当网格的面积足够小以后，还可以在误差容许的范围内，将区域边上的网格‘认为’在区域内，避免所有的计算；</li>
+<li><strong>缺点</strong>：需要预处理，并且需要额外的KV存储；</li>
+</ul>
+<p> </p>
+<p>另外还可以利用ElasticSearch对GIS的支持 <a class="external-link" href="https://www.elastic.co/blog/geo-location-and-search" rel="noopener nofollow">https://www.elastic.co/blog/geo-location-and-search</a></p>
+</div>
+            </div>
+
+            <!-- Post Footer -->
+            <div class="post-footer">
+                <div class="post-navigation">
+                    <a href="../blog_cn.html" class="nav-button">← Back to Home</a>
+                    <a href="0366.html" class="nav-button">Next Post →</a>
+                </div>
+            </div>
+        </article>
+    </div>
+</body>
+</html>

@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SSH秘钥登录</title>
+    <link rel="stylesheet" href="../css/style3.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header Navigation -->
+        <div class="header">
+            <h1><a href="../blog_cn.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+        </div>
+
+        <!-- Post Container -->
+        <article class="post">
+            <!-- Post Header -->
+            <div class="post-header">
+                <h1>SSH秘钥登录</h1>
+                <div class="post-meta">
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📅</span>
+                        <span>January 15, 2019</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📖</span>
+                        <span>2 min read</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">👁️</span>
+                        <span>1260 views</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Post Content -->
+            <div class="post-content">
+                <div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201902/1509647-20190222234844388-1771608622.png"/></p>
+<p>官方：https://www.ssh.com/ssh/</p>
+<p>The SSH protocol uses encryption to secure the connection between a client and a server. All user authentication, commands, output, and file transfers are encrypted to protect against attacks in the network. </p>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201902/1509647-20190222234808097-255955738.png"/></p>
+<p> </p>
+<p>密钥类型包括rsa和dsa，详见 https://security.stackexchange.com/questions/5096/rsa-vs-dsa-for-ssh-authentication-keys</p>
+<p>The security of the RSA algorithm is based on the fact that factorization of large integers is known to be "difficult", whereas DSA security is based on the discrete logarithm problem.</p>
+<p>rsa基于大数分解，dsa基于离散对数；</p>
+<p>RSA keys can go up to 4096 bits, where DSA has to be exactly 1024 bits (although OpenSSL allows for more.)</p>
+<p>rsa key最高支持4096长度bit，dsa key只支持1024长度bit；</p>
+<h1>1 生成秘钥，rsa或者dsa</h1>
+<h2>1.1 命令生成（linux或mac）</h2>
+<blockquote>
+<p>$ ssh-keygen -t rsa -b 4096<br/>Generating public/private rsa key pair.<br/>Enter file in which to save the key (/home/testuser/.ssh/id_rsa): <br/>Enter passphrase (empty for no passphrase): <br/>Enter same passphrase again: <br/>Your identification has been saved in /home/testuser/.ssh/id_rsa.<br/>Your public key has been saved in /home/testuser/.ssh/id_rsa.pub.<br/>The key fingerprint is:<br/>SHA256:mRMuErgh17o9EPe1gzdd/tFuj6L0rVsk7qTw1rrGFCc testuser@testserver<br/>The key's randomart image is:<br/>+---[RSA 4096]----+<br/>|                 |<br/>|   o             |<br/>|. = +   o   .    |<br/>| o * o + *Eo.  . |<br/>|  + . + S .+o o .|<br/>|   + . o +.. + o |<br/>|  . o   .o..o o o|<br/>|     .   ++=oo o.|<br/>|         o*+=+o .|<br/>+----[SHA256]-----+</p>
+</blockquote>
+<p>创建过程会输入密码；</p>
+<p>创建完成后默认会在home目录的.ssh目录下创建两个秘钥文件，公钥（pub后缀）和私钥</p>
+<blockquote>
+<p>$ ls .ssh<br/>id_rsa  id_rsa.pub</p>
+</blockquote>
+<p> 登录时私钥自己保存，公钥放到服务器上</p>
+<h2>1.2 securecrt或xshell界面生成（windows）</h2>
+<p>securecrt创建秘钥的地方在 </p>
+<p>Tools--Create Public Keys</p>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201901/1509647-20190115141126761-143816549.png"/></p>
+<h1>2 上传公钥</h1>
+<p>将公钥上传到要登录的服务器的用户home目录下，同时将公钥加入authorized_keys</p>
+<blockquote>
+<p>cat .ssh/id_rsa.pub &gt;&gt; .ssh/authorized_keys<br/>chmod 600 .ssh/authorized_keys</p>
+</blockquote>
+<h1>3 本机私钥登录</h1>
+<h2>3.1 ssh命令登录（linux或mac）</h2>
+<blockquote>
+<p>$ ssh -i /path/id_rsa user@remote_ip</p>
+</blockquote>
+<p>另外还可以修改配置文件，配置key，这样就可以免掉-i</p>
+<blockquote>
+<p>#vi /etc/ssh/ssh_config</p>
+<p><span class="hljs-constant">IdentityFile ~<span class="hljs-regexp">/.ssh/id_rsa</span></span></p>
+</blockquote>
+<h2>3.2 securecrt或xshell登录（windows）</h2>
+<p> 选择私钥<img alt="" src="https://img2018.cnblogs.com/blog/1509647/201901/1509647-20190115140939540-1938816752.png"/></p>
+<p> </p>
+<h1>4 hadoop集群配置免密登录</h1>
+<h2>4.1 root用户ssh免密登录</h2>
+<h3>1 准备key</h3>
+<blockquote>
+<p># ssh-keygen -t rsa -b 4096<br/># ls .ssh<br/>authorized_keys  id_rsa  id_rsa.pub  known_hosts<br/># cat .ssh/id_rsa.pub &gt;&gt; .ssh/authorized_keys<br/># chmod 600 .ssh/authorized_keys</p>
+</blockquote>
+<h3>2 拷贝</h3>
+<p>1）没有密码，但是可以登录到服务器，逐台登录服务器后nc接收文件</p>
+<blockquote>
+<p># nc -l $receive_port |tar -zxvf -</p>
+</blockquote>
+<p>本机执行</p>
+<blockquote>
+<p># tar -zcvf - .ssh |nc $receive_ip $receive_port</p>
+</blockquote>
+<p>2）有服务器的登录账号和密码，逐台拷贝</p>
+<blockquote>
+<p># scp .ssh/id_rsa.pub root@$server_ip:/root/.ssh<br/># scp .ssh/authorized_keys root@$server_ip:/root/.ssh</p>
+</blockquote>
+<h3>3 逐台ssh登录验证</h3>
+<blockquote>
+<p># ssh $server_ip</p>
+</blockquote>
+<h3>4 逐台拷贝known_hosts</h3>
+<blockquote>
+<p># scp .ssh/known_hosts $server_ip:/root/.ssh/</p>
+</blockquote>
+<p> </p>
+<h2>4.2 其他用户免密登陆，以hadoop为例</h2>
+<blockquote>
+<p># ansible all-servers -m shell -a 'useradd hadoop'<br/># su - hadoop<br/>$ ssh-keygen -t rsa -b 4096<br/>$ cat .ssh/id_rsa.pub &gt;&gt; .ssh/authorized_keys<br/>$ chmod 600 .ssh/authorized_keys<br/>$ exit<br/># ansible other-servers -m copy -a 'src=/home/hadoop/.ssh dest=/home/hadoop/'<br/># ansible other-servers -m shell -a 'chown -R hadoop.hadoop /home/hadoop/.ssh &amp;&amp; cd /home/hadoop/.ssh &amp;&amp; chmod 600 id_rsa authorized_keys'<br/># su - hadoop<br/>$ ssh $server<br/>$ scp .ssh/known_host $server:/home/hadoop/.ssh</p>
+</blockquote>
+<p> </p>
+<h1>5 问题排查</h1>
+<p>如果配置好证书之后还是提示输入密码，需要到服务器查看日志　/var/logs/auth.log</p>
+<p>如果其中有日志: User *** from *** not allowed because none of user's groups are listed in AllowGroups</p>
+<p>查看sshd配置　/etc/ssh/sshd_config</p>
+<p>AllowGroups root ssh</p>
+<p>几种方法：１注释；２将用户加到相关的组；３将用户的组加到这里；</p>
+<p> </p>
+</div>
+            </div>
+
+            <!-- Post Footer -->
+            <div class="post-footer">
+                <div class="post-navigation">
+                    <a href="../blog_cn.html" class="nav-button">← Back to Home</a>
+                    <a href="0270.html" class="nav-button">Next Post →</a>
+                </div>
+            </div>
+        </article>
+    </div>
+</body>
+</html>

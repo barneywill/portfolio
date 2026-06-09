@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>marathon反复重启</title>
+    <link rel="stylesheet" href="../css/style3.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header Navigation -->
+        <div class="header">
+            <h1><a href="../blog_cn.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+        </div>
+
+        <!-- Post Container -->
+        <article class="post">
+            <!-- Post Header -->
+            <div class="post-header">
+                <h1>marathon反复重启</h1>
+                <div class="post-meta">
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📅</span>
+                        <span>January 11, 2020</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📖</span>
+                        <span>1 min read</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">👁️</span>
+                        <span>733 views</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Post Content -->
+            <div class="post-content">
+                <div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<p>marathon反复重启</p>
+<div class="cnblogs_code">
+<pre><span style="color: rgba(0, 128, 0, 1)">#</span><span style="color: rgba(0, 128, 0, 1)"> systemctl status marathon</span>
+● marathon.service - <span style="color: rgba(0, 0, 0, 1)"> Marathon
+   Loaded: loaded (</span>/usr/lib/systemd/system/<span style="color: rgba(0, 0, 0, 1)">marathon.service; enabled; vendor preset: disabled)
+   Active: activating (auto</span>-restart) (Result: exit-code) since Fri 2020-01-10 19:57:20<span style="color: rgba(0, 0, 0, 1)"> CST; 284ms ago
+  Process: </span>9919 ExecStart=/usr/share/marathon/bin/marathon (code=exited, status=103<span style="color: rgba(0, 0, 0, 1)">)
+  Process: </span>9916 ExecStartPre=/bin/chmod 755 /run/marathon (code=exited, status=0/<span style="color: rgba(0, 0, 0, 1)">SUCCESS)
+  Process: </span>9913 ExecStartPre=/bin/chown marathon:marathon /run/marathon (code=exited, status=0/<span style="color: rgba(0, 0, 0, 1)">SUCCESS)
+  Process: </span>9910 ExecStartPre=/bin/mkdir - p /run/marathon (code=exited, status=0/<span style="color: rgba(0, 0, 0, 1)">SUCCESS)
+ Main PID: </span>9919 (code=exited, status=103)</pre>
+</div>
+<p>通过journalctl查看日志如下：</p>
+<div class="cnblogs_code">
+<pre>Jan 10 19:20:53 test-002 marathon[26905]: [2020-01-10 19:20:53,773] ERROR abdicateLeadership was called (mesosphere.marathon.core.election.ElectionServiceImpl:scala-<span style="color: rgba(0, 0, 0, 1)">execut
+Jan </span>10 19:20:53 test-002 marathon[26905<span style="color: rgba(0, 0, 0, 1)">]: mesosphere.marathon.Exception: abdicateLeadership
+Jan </span>10 19:20:53 test-002 marathon[26905]: at mesosphere.marathon.core.election.ElectionServiceImpl.abdicateLeadership(ElectionService.scala:154<span style="color: rgba(0, 0, 0, 1)">)
+Jan </span>10 19:20:53 test-002 marathon[26905]: at mesosphere.marathon.MarathonSchedulerService.$anonfun$startLeadership$7(MarathonSchedulerService.scala:254<span style="color: rgba(0, 0, 0, 1)">)
+Jan </span>10 19:20:53 test-002 marathon[26905]: at mesosphere.marathon.MarathonSchedulerService.$anonfun$startLeadership$7$adapted(MarathonSchedulerService.scala:253<span style="color: rgba(0, 0, 0, 1)">)
+Jan </span>10 19:20:53 test-002 marathon[26905]: at scala.Option.foreach(Option.scala:257<span style="color: rgba(0, 0, 0, 1)">)
+Jan </span>10 19:20:53 test-002 marathon[26905]: at mesosphere.marathon.MarathonSchedulerService.$anonfun$startLeadership$6(MarathonSchedulerService.scala:253<span style="color: rgba(0, 0, 0, 1)">)
+Jan </span>10 19:20:53 test-002 marathon[26905]: at mesosphere.marathon.MarathonSchedulerService.$anonfun$startLeadership$6$adapted(MarathonSchedulerService.scala:240<span style="color: rgba(0, 0, 0, 1)">)
+Jan </span>10 19:20:53 test-002 marathon[26905]: at scala.concurrent.impl.CallbackRunnable.run(Promise.scala:60<span style="color: rgba(0, 0, 0, 1)">)
+Jan </span>10 19:20:53 test-002 marathon[26905]: at java.util.concurrent.ForkJoinTask$RunnableExecuteAction.<span style="color: rgba(0, 0, 255, 1)">exec</span>(ForkJoinTask.java:1402<span style="color: rgba(0, 0, 0, 1)">)
+Jan </span>10 19:20:53 test-002 marathon[26905]: at java.util.concurrent.ForkJoinTask.doExec(ForkJoinTask.java:289<span style="color: rgba(0, 0, 0, 1)">)
+Jan </span>10 19:20:53 test-002 marathon[26905]: at java.util.concurrent.ForkJoinPool$WorkQueue.runTask(ForkJoinPool.java:1056<span style="color: rgba(0, 0, 0, 1)">)
+Jan </span>10 19:20:53 test-002 marathon[26905]: at java.util.concurrent.ForkJoinPool.runWorker(ForkJoinPool.java:1692<span style="color: rgba(0, 0, 0, 1)">)
+Jan </span>10 19:20:53 test-002 marathon[26905]: at java.util.concurrent.ForkJoinWorkerThread.run(ForkJoinWorkerThread.java:157)</pre>
+</div>
+<p>检查mesos发现mesos异常，最终定位原因为zookeeper节点之间数据不同步，mesos在zookeeper上维护master leader信息</p>
+<blockquote>
+<p>[zk: 192.168.0.1:2181(CONNECTED) 1] ls /mesos</p>
+<p>[json.info_0000000114, log_replicas, json.info_0000000115]</p>
+</blockquote>
+<p>这个数据不同步导致mesos找不到master，进而导致marathon异常，将有问题的zookeeper节点stop，清空数据目录后重启，数据一致后问题解决；</p>
+</div>
+            </div>
+
+            <!-- Post Footer -->
+            <div class="post-footer">
+                <div class="post-navigation">
+                    <a href="../blog_cn.html" class="nav-button">← Back to Home</a>
+                    <a href="0074.html" class="nav-button">Next Post →</a>
+                </div>
+            </div>
+        </article>
+    </div>
+</body>
+</html>

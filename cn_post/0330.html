@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spark保存文本类型文件（text、csv、json等）到hdfs时为什么是压缩格式的</title>
+    <link rel="stylesheet" href="../css/style3.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header Navigation -->
+        <div class="header">
+            <h1><a href="../blog_cn.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+        </div>
+
+        <!-- Post Container -->
+        <article class="post">
+            <!-- Post Header -->
+            <div class="post-header">
+                <h1>Spark保存文本类型文件（text、csv、json等）到hdfs时为什么是压缩格式的</h1>
+                <div class="post-meta">
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📅</span>
+                        <span>December 12, 2018</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📖</span>
+                        <span>1 min read</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">👁️</span>
+                        <span>2191 views</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Post Content -->
+            <div class="post-content">
+                <div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<p id="id-20180921整理-问题重现">问题重现</p>
+<div class="cnblogs_code">
+<pre>rdd.repartition(1).write.csv(outPath)</pre>
+</div>
+<p>写文件之后发现文件是压缩过的</p>
+<p> </p>
+<p>write时首先会获取hadoopConf，然后从中获取是否压缩以及压缩格式</p>
+<p><strong>org.apache.spark.sql.execution.datasources.DataSource</strong></p>
+<div class="cnblogs_code">
+<pre>  def write(</pre>
+</div>
+<p><strong>org.apache.spark.sql.execution.datasources.InsertIntoHadoopFsRelationCommand</strong></p>
+<div class="cnblogs_code">
+<pre>    val hadoopConf = sparkSession.sessionState.newHadoopConfWithOptions(options)</pre>
+</div>
+<p><strong>org.apache.hadoop.mapreduce.lib.output.TextOutputFormat</strong></p>
+<div class="cnblogs_code">
+<pre>    <span style="color: rgba(0, 0, 255, 1)">public</span> RecordWriter&lt;K, V&gt; getRecordWriter(TaskAttemptContext job) <span style="color: rgba(0, 0, 255, 1)">throws</span><span style="color: rgba(0, 0, 0, 1)"> IOException, InterruptedException {
+
+        Configuration conf </span>=<span style="color: rgba(0, 0, 0, 1)"> job.getConfiguration();
+
+        </span><span style="color: rgba(0, 0, 255, 1)">boolean</span> isCompressed =<span style="color: rgba(0, 0, 0, 1)"> getCompressOutput(job);
+
+        String keyValueSeparator </span>= conf.get(SEPERATOR, "\t"<span style="color: rgba(0, 0, 0, 1)">);
+
+        CompressionCodec codec </span>= <span style="color: rgba(0, 0, 255, 1)">null</span><span style="color: rgba(0, 0, 0, 1)">;
+
+        String extension </span>= ""<span style="color: rgba(0, 0, 0, 1)">;
+
+        </span><span style="color: rgba(0, 0, 255, 1)">if</span><span style="color: rgba(0, 0, 0, 1)"> (isCompressed) {
+
+            Class</span>&lt;? <span style="color: rgba(0, 0, 255, 1)">extends</span> CompressionCodec&gt; codecClass = getOutputCompressorClass(job, GzipCodec.<span style="color: rgba(0, 0, 255, 1)">class</span><span style="color: rgba(0, 0, 0, 1)">);
+
+            codec </span>=<span style="color: rgba(0, 0, 0, 1)"> (CompressionCodec)ReflectionUtils.newInstance(codecClass, conf);
+
+            extension </span>=<span style="color: rgba(0, 0, 0, 1)"> codec.getDefaultExtension();
+
+        }</span></pre>
+</div>
+<p>isCompressed取的是mapreduce.output.fileoutputformat.compress，codecClass取的是mapreduce.output.fileoutputformat.compress.codec</p>
+<p> </p>
+<p>hadoopConf初始化过程为</p>
+<p><strong>org.apache.spark.sql.internal.SessionState</strong></p>
+<div class="cnblogs_code">
+<pre>  def newHadoopConf(): Configuration =<span style="color: rgba(0, 0, 0, 1)"> {
+
+    val hadoopConf </span>= <span style="color: rgba(0, 0, 255, 1)">new</span> Configuration(sparkSession.sparkContext.hadoopConfiguration)</pre>
+</div>
+<p><strong>org.apache.spark.SparkContext</strong></p>
+<div class="cnblogs_code">
+<pre>  _hadoopConfiguration =<span style="color: rgba(0, 0, 0, 1)"> SparkHadoopUtil.get.newConfiguration(_conf)
+
+ 
+
+  def newConfiguration(conf: SparkConf): Configuration </span>=<span style="color: rgba(0, 0, 0, 1)"> {
+
+    val hadoopConf </span>= <span style="color: rgba(0, 0, 255, 1)">new</span><span style="color: rgba(0, 0, 0, 1)"> Configuration()
+
+    appendS3AndSparkHadoopConfigurations(conf, hadoopConf)
+
+    hadoopConf
+
+  }
+
+ 
+
+  def appendS3AndSparkHadoopConfigurations(conf: SparkConf, hadoopConf: Configuration): Unit </span>=<span style="color: rgba(0, 0, 0, 1)"> {
+
+  ...
+
+      conf.getAll.foreach { </span><span style="color: rgba(0, 0, 255, 1)">case</span> (key, value) =&gt;
+
+        <span style="color: rgba(0, 0, 255, 1)">if</span> (key.startsWith("spark.hadoop."<span style="color: rgba(0, 0, 0, 1)">)) {
+
+          hadoopConf.set(key.substring(</span>"spark.hadoop."<span style="color: rgba(0, 0, 0, 1)">.length), value)
+
+        }
+
+      }
+
+ </span></pre>
+</div>
+<p> </p>
+<p>hadoopConf默认会从classpath中加载所有的hadoop相关配置文件，可以通过spark-shell来简单测试：</p>
+<blockquote>
+<p>scala&gt; val hc = spark.sparkContext.hadoopConfiguration</p>
+<p>hc: org.apache.hadoop.conf.Configuration = Configuration: core-default.xml, core-site.xml, mapred-default.xml, mapred-site.xml, yarn-default.xml, yarn-site.xml, hdfs-default.xml, hdfs-site.xml</p>
+<p>scala&gt; println(hc.get("mapreduce.output.fileoutputformat.compress"))</p>
+<p>true</p>
+<p>scala&gt; println(hc.get("mapreduce.output.fileoutputformat.compress.codec"))</p>
+<p><a class="external-link" href="http://org.apache.hadoop.io/" rel="noopener nofollow">org.apache.hadoop.io</a>.compress.DefaultCodec</p>
+</blockquote>
+<p> </p>
+<p>综上，只需要在创建SparkConf的时候设置spark.hadoop.mapreduce.output.fileoutputformat.compress=false即可不压缩，</p>
+<div class="cnblogs_code">
+<pre>val sparkConf = <span style="color: rgba(0, 0, 255, 1)">new</span> SparkConf().set("spark.hadoop.mapreduce.output.fileoutputformat.compress", "false")</pre>
+</div>
+<p>另外还可以通过option来控制</p>
+<div class="cnblogs_code">
+<pre>rdd.repartition(1).write.option("compression", "none").csv(outPath)</pre>
+</div>
+<p> </p>
+</div>
+            </div>
+
+            <!-- Post Footer -->
+            <div class="post-footer">
+                <div class="post-navigation">
+                    <a href="../blog_cn.html" class="nav-button">← Back to Home</a>
+                    <a href="0331.html" class="nav-button">Next Post →</a>
+                </div>
+            </div>
+        </article>
+    </div>
+</body>
+</html>

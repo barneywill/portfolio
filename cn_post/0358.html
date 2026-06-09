@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Zookeeper 4 - 应用场景</title>
+    <link rel="stylesheet" href="../css/style3.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header Navigation -->
+        <div class="header">
+            <h1><a href="../blog_cn.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+        </div>
+
+        <!-- Post Container -->
+        <article class="post">
+            <!-- Post Header -->
+            <div class="post-header">
+                <h1>Zookeeper 4 - 应用场景</h1>
+                <div class="post-meta">
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📅</span>
+                        <span>November 02, 2018</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📖</span>
+                        <span>1 min read</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">👁️</span>
+                        <span>319 views</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Post Content -->
+            <div class="post-content">
+                <div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<h1>1 集群配置管理</h1>
+<p>应用服务器的配置通常会放到properties文件中，格式为：</p>
+<blockquote>
+<p>system1.module2.prop3=value4</p>
+</blockquote>
+<p>然后启动的时候加载，这样带来的问题是启动后无法修改，想修改必须要重启应用服务器；</p>
+<ul>
+<li>一个简单的替代方式是存放到数据库中，应用服务器每次从数据库中加载配置，这样带来的问题是由于数据库是一种昂贵的资源从而降低性能；</li>
+<li>一个简单的改进方式是存放到数据库中后再存放到缓存中，应用服务器每次从缓存中加载配置，这时要解决的问题是数据库和缓存的数据一致性问题，缓存的可靠性问题，而且会增加相当多的网络IO（缓存读操作）；</li>
+<li>一个简单的改进方式是应用服务器在本地也存一份配置，每次从缓存中加载配置或者定时从缓存中加载配置，缓存读超时则使用本地配置；</li>
+</ul>
+<p>回过头来看，配置的名字是一个标准的树形结构，可以直接将所有配置以及值放到zookeeper中，</p>
+<blockquote>
+<p>/config/system1/module2/prop3=value4</p>
+</blockquote>
+<p>由于zookeeper将所有的数据存放在内存中，所以读操作非常快，应用服务器启动之后从zookeeper中将所有配置存储到本地一份，另外利用zookeeper的watcher，当配置修改之后所有的应用服务器都可以收到通知，同步修改本地配置即可，这样达到的效果是如果配置没有更新（极大概率事件），则所有的配置读取都是本地操作（没有网络io）；如果配置有更新（极小概率事件），所有的应用服务器都可以及时收到通知并更新本地；</p>
+<h1>2 服务器分组及动态更新</h1>
+<p>在大规模集群中通常有很多类型角色的服务器，这时会将服务器按照类型角色进行分组，然后可以动态监控组内服务器的变更，然后做进一步处理；</p>
+<p>比如在Dubbo中会将producer服务器分组，当producer服务器有变更时consumer端会及时收到更新方便做balance，这样实现producer服务器动态增减以及自动发现；</p>
+<p>比如在Kafka中会将consumer服务器分组，当consumer服务器有变更时也会触发rebalance；</p>
+<p>另外还可以用来对组内服务器的存活进行监控报警；</p>
+<h1>3 Master主备</h1>
+<p>众多的开源软件中比如Hadoop（HDFS、YARN）、HBase、Spark Standalone、Oozie等，都是通过zookeeper来实现master的HA，实现主从切换；</p>
+<p>比如：</p>
+<blockquote>
+<p>/hadoop-ha/$hdfs_name/ActiveStandbyElectorLock</p>
+<p>/yarn-leader-election/$yarn_name/ActiveStandbyElectorLock</p>
+<p>/hbase/master</p>
+</blockquote>
+<h1>4 分布式锁</h1>
+<p>分布式环境中有时需要在服务器之间进行协调，比如一个任务只允许在集群中的一台服务器运行等，常用的方法是利用数据库锁，这里分为乐观锁和悲观锁两种实现；</p>
+<p>比如Quartz的分布式部署，就是利用数据库锁；</p>
+<p>使用数据库锁有一些问题，1 数据库资源昂贵，而且有并发数限制，悲观锁会直接占用连接数，乐观锁可能由于数据库连接池满导致锁释放，悲观锁可能由于数据库连接池满导致卡住；2 数据库连接有超时时间限制；</p>
+<p>利用zookeeper的Ephemeral Node+Sequence Node+watch可以很方便的实现分布式锁，Sequence Node可以保证只有一个节点能拿到锁，Ephemeral Node+watch可以保证一旦锁的持有者挂掉，其他等待锁的节点可以马上收到通知，同时再利用Sequence Node保证下一个节点能拿到锁；</p>
+<p> </p>
+</div>
+            </div>
+
+            <!-- Post Footer -->
+            <div class="post-footer">
+                <div class="post-navigation">
+                    <a href="../blog_cn.html" class="nav-button">← Back to Home</a>
+                    <a href="0359.html" class="nav-button">Next Post →</a>
+                </div>
+            </div>
+        </article>
+    </div>
+</body>
+</html>

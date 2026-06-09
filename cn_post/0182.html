@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>spark cache unpersist级联操作</title>
+    <link rel="stylesheet" href="../css/style3.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header Navigation -->
+        <div class="header">
+            <h1><a href="../blog_cn.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+        </div>
+
+        <!-- Post Container -->
+        <article class="post">
+            <!-- Post Header -->
+            <div class="post-header">
+                <h1>spark cache unpersist级联操作</h1>
+                <div class="post-meta">
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📅</span>
+                        <span>March 13, 2019</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📖</span>
+                        <span>1 min read</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">👁️</span>
+                        <span>1639 views</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Post Content -->
+            <div class="post-content">
+                <div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<p>问题：spark中如果有两个DataFrame（或者DataSet），DataFrameA依赖DataFrameB，并且两个DataFrame都进行了cache，将DataFrameB unpersist之后，DataFrameA的cache也会失效，官方解释如下：</p>
+<p><em>When invalidating a cache, we invalid other caches dependent on this cache to ensure cached data is up to date. For example, when the underlying table has been modified or the table has been dropped itself, all caches that use this table should be invalidated or refreshed.</em></p>
+<p><em>However, in other cases, like when user simply want to drop a cache to free up memory, we do not need to invalidate dependent caches since no underlying data has been changed. For this reason, we would like to introduce a new cache invalidation mode: the non-cascading cache invalidation.</em></p>
+<p>之前默认的模式为regular mode，这种模式下为了保证被cache数据是最新的（没有过期），会对cache的unpersist进行级联操作，即清空所有依赖（包括间接依赖）该cache的其他cache；<br/>从spark2.4开始引入了一个新的模式：non-cascading mode，这个模式下不会对cache的unpersist进行级联操作；</p>
+<p>DataFrame/DataSet的cache操作默认用的level是MEMORY_AND_DISK，除非手工指定MEMORY，并且确认内存足够，否则unpersist之前的cache看起来没有必要；</p>
+<p>参考：<br/>https://issues.apache.org/jira/browse/SPARK-21478<br/>https://issues.apache.org/jira/browse/SPARK-24596<br/>https://issues.apache.org/jira/browse/SPARK-21579</p>
+</div>
+            </div>
+
+            <!-- Post Footer -->
+            <div class="post-footer">
+                <div class="post-navigation">
+                    <a href="../blog_cn.html" class="nav-button">← Back to Home</a>
+                    <a href="0183.html" class="nav-button">Next Post →</a>
+                </div>
+            </div>
+        </article>
+    </div>
+</body>
+</html>

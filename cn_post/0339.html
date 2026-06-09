@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>提交spark任务偶尔报错 org.apache.spark.SparkException: A master URL must be set in your configuration</title>
+    <link rel="stylesheet" href="../css/style3.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header Navigation -->
+        <div class="header">
+            <h1><a href="../blog_cn.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+        </div>
+
+        <!-- Post Container -->
+        <article class="post">
+            <!-- Post Header -->
+            <div class="post-header">
+                <h1>提交spark任务偶尔报错 org.apache.spark.SparkException: A master URL must be set in your configuration</h1>
+                <div class="post-meta">
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📅</span>
+                        <span>December 12, 2018</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📖</span>
+                        <span>4 min read</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">👁️</span>
+                        <span>3260 views</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Post Content -->
+            <div class="post-content">
+                <div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<p>spark 2.1.1</p>
+<p> </p>
+<h1>一 问题重现</h1>
+<p>问题代码示例</p>
+<div class="cnblogs_code">
+<pre><span style="color: rgba(0, 0, 0, 1)">object MethodPositionTest {
+
+ 
+
+  val sparkConf </span>= <span style="color: rgba(0, 0, 255, 1)">new</span> SparkConf().setAppName("MethodPositionTest"<span style="color: rgba(0, 0, 0, 1)">)
+
+  val sc </span>= <span style="color: rgba(0, 0, 255, 1)">new</span><span style="color: rgba(0, 0, 0, 1)"> SparkContext(sparkConf)
+
+  val spark </span>=<span style="color: rgba(0, 0, 0, 1)"> SparkSession.builder().enableHiveSupport().getOrCreate()
+
+ 
+
+  def main(args : Array[String]) : Unit </span>=<span style="color: rgba(0, 0, 0, 1)"> {
+
+    val cnt </span>= spark.sql("select * from test_table").rdd.map(item =&gt; mapFun(item.getString(0<span style="color: rgba(0, 0, 0, 1)">))).count
+
+    println(cnt)
+
+  }
+
+  def mapFun(str : String) : String </span>= "p:" +<span style="color: rgba(0, 0, 0, 1)"> str
+
+}</span></pre>
+</div>
+<p> </p>
+<p>当如下3行代码放到main外时</p>
+<blockquote>
+<p>    val sparkConf = new SparkConf().setAppName(getName)</p>
+<p>    val sc = new SparkContext(sparkConf)</p>
+<p>    val spark = SparkSession.builder().enableHiveSupport().getOrCreate()</p>
+</blockquote>
+<div>有一定几率报错：</div>
+<blockquote>
+<p>Caused by: java.lang.ExceptionInInitializerError</p>
+<p><strong>    at app.package.AppClass$$anonfun$1.apply(AppClass.scala:208)</strong></p>
+<p>    at org.apache.spark.sql.execution.MapElementsExec$$anonfun$8$$anonfun$apply$1.apply(objects.scala:237)</p>
+<p>    at org.apache.spark.sql.execution.MapElementsExec$$anonfun$8$$anonfun$apply$1.apply(objects.scala:237)</p>
+<p>    at scala.collection.Iterator$$anon$11.next(Iterator.scala:409)</p>
+<p>    at scala.collection.Iterator$$anon$11.next(Iterator.scala:409)</p>
+<p>    at scala.collection.Iterator$class.foreach(Iterator.scala:893)</p>
+<p>    at scala.collection.AbstractIterator.foreach(Iterator.scala:1336)</p>
+<p>    at scala.collection.generic.Growable$class.$plus$plus$eq(Growable.scala:59)</p>
+<p>    at scala.collection.mutable.ArrayBuffer.$plus$plus$eq(ArrayBuffer.scala:104)</p>
+<p>    at scala.collection.mutable.ArrayBuffer.$plus$plus$eq(ArrayBuffer.scala:48)</p>
+<p>    at scala.collection.TraversableOnce$<a class="external-link" href="http://class.to/" rel="noopener nofollow">class.to</a>(TraversableOnce.scala:310)</p>
+<p>    at <a class="external-link" href="http://scala.collection.abstractiterator.to/" rel="noopener nofollow">scala.collection.AbstractIterator.to</a>(Iterator.scala:1336)</p>
+<p>    at scala.collection.TraversableOnce$class.toBuffer(TraversableOnce.scala:302)</p>
+<p>    at scala.collection.AbstractIterator.toBuffer(Iterator.scala:1336)</p>
+<p>    at scala.collection.TraversableOnce$class.toArray(TraversableOnce.scala:289)</p>
+<p>    at scala.collection.AbstractIterator.toArray(Iterator.scala:1336)</p>
+<p>    at org.apache.spark.rdd.RDD$$anonfun$collect$1$$anonfun$13.apply(RDD.scala:936)</p>
+<p>    at org.apache.spark.rdd.RDD$$anonfun$collect$1$$anonfun$13.apply(RDD.scala:936)</p>
+<p>    at org.apache.spark.SparkContext$$anonfun$runJob$5.apply(SparkContext.scala:1951)</p>
+<p>    at org.apache.spark.SparkContext$$anonfun$runJob$5.apply(SparkContext.scala:1951)</p>
+<p>    at org.apache.spark.scheduler.ResultTask.runTask(ResultTask.scala:87)</p>
+<p>    at org.apache.spark.scheduler.Task.run(Task.scala:99)</p>
+<p><strong>    at org.apache.spark.executor.Executor$TaskRunner.run(Executor.scala:322)</strong></p>
+<p>    at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1142)</p>
+<p>    at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:617)</p>
+<p>    at java.lang.Thread.run(Thread.java:745)</p>
+<p>Caused by: org.apache.spark.SparkException: A master URL must be set in your configuration</p>
+<p><strong>    at org.apache.spark.SparkContext.&lt;init&gt;(SparkContext.scala:379)</strong></p>
+<p>    at app.package.AppClass$.&lt;clinit&gt;(AppClass.scala)</p>
+</blockquote>
+<h1>二 问题解析</h1>
+<pre><span>MethodPositionTest </span>定义了一个匿名函数anonfun，这个匿名函数在RDD.map中调用，即在Executor中执行，匿名函数中又依赖mapFun方法，触发类的初始化：MethodPositionTest$.&lt;clinit&gt;，初始化时会执行main外的spark初始化代码，即在Executor中创建SparkConf和SparkContext，这是不应该发生的，一个spark应用中只能有一个SparkContext并且应该在Driver端而不是Executor，而且发生之后会导致错误，代码如下：</pre>
+<h3>org.apache.spark.SparkContext</h3>
+<div class="cnblogs_code">
+<pre>  <span style="color: rgba(0, 0, 255, 1)">try</span><span style="color: rgba(0, 0, 0, 1)"> {
+
+    _conf </span>=<span style="color: rgba(0, 0, 0, 1)"> config.clone()
+
+    _conf.validateSettings()
+
+ 
+
+    </span><span style="color: rgba(0, 0, 255, 1)">if</span> (!_conf.contains("spark.master"<span style="color: rgba(0, 0, 0, 1)">)) {
+
+      </span><span style="color: rgba(0, 0, 255, 1)">throw</span> <span style="color: rgba(0, 0, 255, 1)">new</span> SparkException("A master URL must be set in your configuration"<span style="color: rgba(0, 0, 0, 1)">)
+
+ 
+
+    }</span></pre>
+</div>
+<p> </p>
+<h2>问题1）为什么在Driver端不会报错找不到master，而在Executor端会报错</h2>
+<p>Spark应用代码如下：</p>
+<blockquote>
+<p>val sparkConf = new SparkConf().setAppName(getName)</p>
+</blockquote>
+<p>这里SparkConf只设置了AppName，为什么在Driver端不会报错找不到master，而在Executor端会报错，这里需要看Spark Submit的执行过程，详见 <a href="https://www.cnblogs.com/barneywill/p/9820684.html" target="_blank" title="大数据基础之Spark（1）Spark Submit即Spark任务提交过程">https://www.cnblogs.com/barneywill/p/9820684.html</a><a class="createlink" href="https://cf.jd.com/pages/createpage.action?spaceKey=SZDEV&amp;title=Spark&amp;linkCreation=true&amp;fromPageId=137650513" rel="noopener nofollow"><br/></a></p>
+<p>Driver端执行时SparkSubmit会将各种参数包括命令行、配置文件、系统环境变量等，统一设置到系统环境变量</p>
+<blockquote>
+<p>    for ((key, value) &lt;- sysProps) {</p>
+<p>      System.setProperty(key, value)</p>
+<p>    }</p>
+</blockquote>
+<p>然后SparkConf会默认从系统环境变量中加载配置</p>
+<blockquote>
+<p>    for ((key, value) &lt;- Utils.getSystemProperties if key.startsWith("spark.")) {</p>
+<p>      set(key, value, silent)</p>
+<p>    }</p>
+</blockquote>
+<p>所以Driver端的SparkConf会包含所有的参数，但是Executor端则没有。</p>
+<p> </p>
+<h2>问题2）当spark相关的初始化代码在main外时，为什么有时报错，有时不报错</h2>
+<p>具体情形如下：<br/>1）如果main里边的transformation（示例中的map方法）不依赖外部函数调用，正常；<br/>2）如果main里边的transformation（示例中的map方法）依赖main里的函数，报错；<br/>3）如果main里边的transformation（示例中的map方法）依赖main外的函数，报错；</p>
+<p>这里可以通过反编译代码来看原因，示例MethodPositionTest的反编译代码如下：</p>
+<div class="cnblogs_code">
+<pre><span style="color: rgba(0, 0, 255, 1)">public</span> <span style="color: rgba(0, 0, 255, 1)">final</span> <span style="color: rgba(0, 0, 255, 1)">class</span><span style="color: rgba(0, 0, 0, 1)"> MethodPositionTest$
+
+{
+
+ 
+
+         </span><span style="color: rgba(0, 0, 255, 1)">public</span> <span style="color: rgba(0, 0, 255, 1)">static</span> <span style="color: rgba(0, 0, 255, 1)">final</span> MethodPositionTest$ MODULE$ = <span style="color: rgba(0, 0, 255, 1)">this</span><span style="color: rgba(0, 0, 0, 1)">;
+
+         </span><span style="color: rgba(0, 0, 255, 1)">private</span> <span style="color: rgba(0, 0, 255, 1)">final</span> SparkConf sparkConf = (<span style="color: rgba(0, 0, 255, 1)">new</span> SparkConf()).setAppName("MethodPositionTest"<span style="color: rgba(0, 0, 0, 1)">);
+
+         </span><span style="color: rgba(0, 0, 255, 1)">private</span> <span style="color: rgba(0, 0, 255, 1)">final</span> SparkContext sc = <span style="color: rgba(0, 0, 255, 1)">new</span><span style="color: rgba(0, 0, 0, 1)"> SparkContext(sparkConf());
+
+         </span><span style="color: rgba(0, 0, 255, 1)">private</span> <span style="color: rgba(0, 0, 255, 1)">final</span><span style="color: rgba(0, 0, 0, 1)"> SparkSession spark;
+
+ 
+
+         </span><span style="color: rgba(0, 0, 255, 1)">public</span><span style="color: rgba(0, 0, 0, 1)"> SparkConf sparkConf()
+
+         {
+
+                  </span><span style="color: rgba(0, 0, 255, 1)">return</span><span style="color: rgba(0, 0, 0, 1)"> sparkConf;
+
+         }
+
+ 
+
+         </span><span style="color: rgba(0, 0, 255, 1)">public</span><span style="color: rgba(0, 0, 0, 1)"> SparkContext sc()
+
+         {
+
+                  </span><span style="color: rgba(0, 0, 255, 1)">return</span><span style="color: rgba(0, 0, 0, 1)"> sc;
+
+         }
+
+ 
+
+         </span><span style="color: rgba(0, 0, 255, 1)">public</span><span style="color: rgba(0, 0, 0, 1)"> SparkSession spark()
+
+         {
+
+                  </span><span style="color: rgba(0, 0, 255, 1)">return</span><span style="color: rgba(0, 0, 0, 1)"> spark;
+
+         }
+
+ 
+
+         </span><span style="color: rgba(0, 0, 255, 1)">public</span><span style="color: rgba(0, 0, 0, 1)"> String mapFun(String str)
+
+         {
+
+                  </span><span style="color: rgba(0, 0, 255, 1)">return</span> (<span style="color: rgba(0, 0, 255, 1)">new</span> StringBuilder()).append("p:"<span style="color: rgba(0, 0, 0, 1)">).append(str).toString();
+
+         }
+
+ 
+
+         </span><span style="color: rgba(0, 0, 255, 1)">public</span> <span style="color: rgba(0, 0, 255, 1)">void</span><span style="color: rgba(0, 0, 0, 1)"> main(String args[])
+
+         {
+
+                  </span><span style="color: rgba(0, 0, 255, 1)">long</span> cnt = spark().sql("select * from test_table").rdd().map(<span style="color: rgba(0, 0, 255, 1)">new</span><span style="color: rgba(0, 0, 0, 1)"> Serializable() {
+
+ 
+
+                          </span><span style="color: rgba(0, 0, 255, 1)">public</span> <span style="color: rgba(0, 0, 255, 1)">static</span> <span style="color: rgba(0, 0, 255, 1)">final</span> <span style="color: rgba(0, 0, 255, 1)">long</span> serialVersionUID = 0L<span style="color: rgba(0, 0, 0, 1)">;
+
+ 
+
+                          </span><span style="color: rgba(0, 0, 255, 1)">public</span> <span style="color: rgba(0, 0, 255, 1)">final</span><span style="color: rgba(0, 0, 0, 1)"> String apply(Row item)
+
+                          {
+
+                                   </span><span style="color: rgba(0, 0, 255, 1)">return</span> MethodPositionTest$.MODULE$.mapFun(item.getString(0<span style="color: rgba(0, 0, 0, 1)">));
+
+                          }
+
+ 
+
+                          </span><span style="color: rgba(0, 0, 255, 1)">public</span> <span style="color: rgba(0, 0, 255, 1)">final</span> <span style="color: rgba(0, 0, 255, 1)">volatile</span><span style="color: rgba(0, 0, 0, 1)"> Object apply(Object v1)
+
+                          {
+
+                                   </span><span style="color: rgba(0, 0, 255, 1)">return</span><span style="color: rgba(0, 0, 0, 1)"> apply((Row)v1);
+
+                          }
+
+ 
+
+                  }, ClassTag$.MODULE$.apply(java</span>/lang/<span style="color: rgba(0, 0, 0, 1)">String)).count();
+
+                  Predef$.MODULE$.println(BoxesRunTime.boxToLong(cnt));
+
+         }
+
+ 
+
+         </span><span style="color: rgba(0, 0, 255, 1)">private</span><span style="color: rgba(0, 0, 0, 1)"> MethodPositionTest$()
+
+         {
+
+                  spark </span>=<span style="color: rgba(0, 0, 0, 1)"> SparkSession$.MODULE$.builder().enableHiveSupport().getOrCreate();
+
+         }
+
+ 
+
+         </span><span style="color: rgba(0, 0, 255, 1)">static</span><span style="color: rgba(0, 0, 0, 1)">
+
+         {
+
+                  </span><span style="color: rgba(0, 0, 255, 1)">new</span><span style="color: rgba(0, 0, 0, 1)"> MethodPositionTest$();
+
+         }
+
+}</span></pre>
+</div>
+<p>可见这里的匿名内部类依赖类MethodPositionTest$的方法mapFun，所以会触发类MethodPositionTest$的加载以及静态代码块执行，触发报错；</p>
+<p>综上，不建议将spark的初始化代码放到main外，很容易出问题。</p>
+<p> </p>
+</div>
+            </div>
+
+            <!-- Post Footer -->
+            <div class="post-footer">
+                <div class="post-navigation">
+                    <a href="../blog_cn.html" class="nav-button">← Back to Home</a>
+                    <a href="0340.html" class="nav-button">Next Post →</a>
+                </div>
+            </div>
+        </article>
+    </div>
+</body>
+</html>

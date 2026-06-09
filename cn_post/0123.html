@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gobblin 2 - 持久化kafka到hdfs</title>
+    <link rel="stylesheet" href="../css/style3.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header Navigation -->
+        <div class="header">
+            <h1><a href="../blog_cn.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+        </div>
+
+        <!-- Post Container -->
+        <article class="post">
+            <!-- Post Header -->
+            <div class="post-header">
+                <h1>Gobblin 2 - 持久化kafka到hdfs</h1>
+                <div class="post-meta">
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📅</span>
+                        <span>June 01, 2019</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📖</span>
+                        <span>2 min read</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">👁️</span>
+                        <span>1696 views</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Post Content -->
+            <div class="post-content">
+                <div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<p>gobblin 0.10</p>
+<p>想要持久化kafka到hdfs有很多种方式，比如flume、logstash、gobblin，其中flume和logstash是流式的，gobblin是批处理式的，gobblin通过定时任务触发来完成数据持久化，在任务和任务之间是没有任何读写的，这点是和flume、logstash的最大不同；</p>
+<p>gobblin有几种部署方式：</p>
+<p>1）standalone+cron；</p>
+<p>2）mr+oozie/azkaban等</p>
+<p>3）docker；</p>
+<p>其中第3中方式最为方便，因为gobblin可以把任务的状态都写到hdfs上，所以在哪个节点启动gobblin并没有什么区别，而且只有数据同步之后才会修改元数据，保证不会因为kafka或者hdfs或者自身故障导致丢数据；</p>
+<h1>1 配置</h1>
+<div class="cnblogs_code">
+<pre><span style="color: rgba(0, 128, 0, 1)">#</span><span style="color: rgba(0, 128, 0, 1)">job</span>
+job.name=<span style="color: rgba(0, 0, 0, 1)">test_job
+job.group</span>=<span style="color: rgba(0, 0, 0, 1)">test_group
+job.schedule</span>=0 0 */1 * *<span style="color: rgba(0, 0, 0, 1)"> ?
+job.lock.enabled</span>=<span style="color: rgba(0, 0, 0, 1)">false
+
+</span><span style="color: rgba(0, 128, 0, 1)">#</span><span style="color: rgba(0, 128, 0, 1)">source</span>
+source.<span style="color: rgba(0, 0, 255, 1)">class</span>=<span style="color: rgba(0, 0, 0, 1)">gobblin.source.extractor.extract.kafka.KafkaSimpleSource
+extract.namespace</span>=<span style="color: rgba(0, 0, 0, 1)">gobblin.extract.kafka
+kafka.brokers</span>=<span style="color: rgba(0, 0, 0, 1)">$kafka_brokers
+bootstrap.with.offset</span>=<span style="color: rgba(0, 0, 0, 1)">latest
+topic.whitelist</span>=<span style="color: rgba(0, 0, 0, 1)">$kafka_topics
+
+mr.job.max.mappers</span>=1
+
+<span style="color: rgba(0, 128, 0, 1)">#</span><span style="color: rgba(0, 128, 0, 1)">writer</span>
+writer.builder.<span style="color: rgba(0, 0, 255, 1)">class</span>=<span style="color: rgba(0, 0, 0, 1)">gobblin.writer.SimpleDataWriterBuilder
+writer.file.path.type</span>=<span style="color: rgba(0, 0, 0, 1)">tablename
+writer.destination.type</span>=<span style="color: rgba(0, 0, 0, 1)">HDFS
+writer.output.format</span>=<span style="color: rgba(0, 0, 0, 1)">txt
+writer.partitioner.</span><span style="color: rgba(0, 0, 255, 1)">class</span>=<span style="color: rgba(0, 0, 0, 1)">gobblin.writer.partitioner.TimeBasedWriterPartitioner<br/>writer.partition.columns=time
+writer.partition.level</span>=<span style="color: rgba(0, 0, 0, 1)">hourly
+writer.partition.pattern</span>=<span style="color: rgba(0, 0, 0, 1)">yyyyMMdd/HH
+writer.partition.timezone</span>=Asia/<span style="color: rgba(0, 0, 0, 1)">Shanghai
+data.publisher.type</span>=<span style="color: rgba(0, 0, 0, 1)">gobblin.publisher.TimePartitionedDataPublisher
+
+</span><span style="color: rgba(0, 128, 0, 1)">#</span><span style="color: rgba(0, 128, 0, 1)">metrics</span>
+metrics.reporting.file.enabled=<span style="color: rgba(0, 0, 0, 1)">true
+metrics.reporting.file.suffix</span>=<span style="color: rgba(0, 0, 0, 1)">txt
+
+</span><span style="color: rgba(0, 128, 0, 1)">#</span><span style="color: rgba(0, 128, 0, 1)">fs</span>
+fs.uri=hdfs://$name_node:8020<span style="color: rgba(0, 0, 0, 1)">
+writer.fs.uri</span>=<span style="color: rgba(0, 0, 0, 1)">${fs.uri}
+state.store.fs.uri</span>=<span style="color: rgba(0, 0, 0, 1)">${fs.uri}
+
+data.publisher.final.dir</span>=${env:GOBBLIN_WORK_DIR}/job-<span style="color: rgba(0, 0, 0, 1)">output
+metrics.log.dir</span>=${env:GOBBLIN_WORK_DIR}/<span style="color: rgba(0, 0, 0, 1)">metrics
+state.store.dir</span>=${env:GOBBLIN_WORK_DIR}/state-<span style="color: rgba(0, 0, 0, 1)">store
+mr.job.root.dir</span>=${env:GOBBLIN_WORK_DIR}/<span style="color: rgba(0, 0, 0, 1)">working
+task.data.root.dir</span>=${env:GOBBLIN_WORK_DIR}/task-data</pre>
+</div>
+<p>修改其中的$kafka_brokers,$kafka_topics,$name_node即可；</p>
+<p>这里的配置为standalone每小时执行一次，每次执行时根据数据中的time字段来格式化为时间分区进行存放到hdfs上的指定目录；</p>
+<p> </p>
+<h1>2 启动</h1>
+<div class="cnblogs_code">
+<pre>export GOBBLIN_JOB_CONFIG_DIR=/opt/gobblin/gobblin-dist/<span style="color: rgba(0, 0, 0, 1)">job_conf
+export GOBBLIN_WORK_DIR</span>=/opt/gobblin/gobblin-dist/<span style="color: rgba(0, 0, 0, 1)">work_dir
+
+bin</span>/gobblin-standalone.sh start</pre>
+</div>
+<p> </p>
+<h1>3 定制化</h1>
+<p>1）希望按照当前时间（而不是数据中的时间）进行时间分区</p>
+<div class="cnblogs_code">
+<pre><span>package gobblin.writer.partitioner;
+
+import<span> gobblin.configuration.State;
+
+public class<span> DefaultTimeBasedWriterPartitioner extends TimeBasedWriterPartitioner {
+    public DefaultTimeBasedWriterPartitioner(State state, int numBranches, int branchId) {
+        super(state, numBranches, branchId);
+    }
+    public long getRecordTimestamp(Object record) {
+        return<span> System.currentTimeMillis();
+    }
+}</span></span></span></span></pre>
+</div>
+<p>配置：</p>
+<blockquote>
+<p>writer.partitioner.class=gobblin.writer.partitioner.DefaultTimeBasedWriterPartitioner</p>
+</blockquote>
+<p>2）只保存json数据，并且添加换行</p>
+<div class="cnblogs_code">
+<pre><span>package gobblin.source.extractor.extract.kafka;
+
+import<span> gobblin.configuration.WorkUnitState;
+import<span> gobblin.source.extractor.Extractor;
+
+import<span> java.io.IOException;
+
+public class<span> JsonKafkaSimpleSource extends KafkaSimpleSource {
+    public JsonKafkaSimpleSource() {}
+    @Override
+    public Extractor&lt;String, byte[]&gt;<span> getExtractor(WorkUnitState state) throws IOException {
+        return<span> new JsonKafkaSimpleExtractor(state);
+    }
+}</span></span></span></span></span></span></span></pre>
+</div>
+<p> </p>
+<div class="cnblogs_code">
+<pre><span>package gobblin.source.extractor.extract.kafka;
+
+import<span> gobblin.configuration.WorkUnitState;
+import<span> gobblin.kafka.client.ByteArrayBasedKafkaRecord;
+
+import<span> java.io.IOException;
+import<span> java.text.SimpleDateFormat;
+import<span> java.util.Date;
+
+public class<span> JsonKafkaSimpleExtractor extends KafkaSimpleExtractor {
+    public JsonKafkaSimpleExtractor(WorkUnitState state) {
+        super(state);
+    }
+
+    @Override
+    protected byte[] decodeRecord(ByteArrayBasedKafkaRecord kafkaConsumerRecord) throws IOException {
+        byte[] resultBytes =<span> kafkaConsumerRecord.getMessageBytes();
+        String result = new String(resultBytes, "UTF-8"<span>);
+        if (result != null &amp;&amp; result.length() &gt; 2 &amp;&amp; result.charAt(0) == '{' &amp;&amp; result.charAt(result.length() - 1) == '}'<span>)
+            return (result + "\n").getBytes("UTF-8"<span>);
+        else<span> {
+            System.out.println("[" + new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date()) + "]found invalid json : " +<span> result);
+            return ""<span>.getBytes();
+        }
+    }
+}</span></span></span></span></span></span></span></span></span></span></span></span></span></span></pre>
+<p><span> </span></p>
+</div>
+<p>配置：</p>
+<blockquote>
+<p>source.class=gobblin.source.extractor.extract.kafka.JsonKafkaSimpleSource</p>
+</blockquote>
+<p> </p>
+<h1>4 docker image</h1>
+<p>https://hub.docker.com/r/gobblin/gobblin-standalone</p>
+<blockquote>
+<p>docker run -d gobblin/gobblin-standalone:ubuntu-gobblin-0.10.0</p>
+</blockquote>
+<p> </p>
+<p>参考：</p>
+<p>https://gobblin.readthedocs.io/en/latest/case-studies/Kafka-HDFS-Ingestion/</p>
+<p>https://gobblin.readthedocs.io/en/latest/user-guide/Configuration-Properties-Glossary/</p>
+<p> </p>
+</div>
+            </div>
+
+            <!-- Post Footer -->
+            <div class="post-footer">
+                <div class="post-navigation">
+                    <a href="../blog_cn.html" class="nav-button">← Back to Home</a>
+                    <a href="0124.html" class="nav-button">Next Post →</a>
+                </div>
+            </div>
+        </article>
+    </div>
+</body>
+</html>

@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Docker 2 -通过docker部署zookeeper nginx tomcat java redis kibana/elasticsearch/logstash mysql kafka mesos/marathon ftp git</title>
+    <link rel="stylesheet" href="../css/style3.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header Navigation -->
+        <div class="header">
+            <h1><a href="../blog_cn.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+        </div>
+
+        <!-- Post Container -->
+        <article class="post">
+            <!-- Post Header -->
+            <div class="post-header">
+                <h1>Docker 2 -通过docker部署zookeeper nginx tomcat java redis kibana/elasticsearch/logstash mysql kafka mesos/marathon ftp git</h1>
+                <div class="post-meta">
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📅</span>
+                        <span>February 14, 2019</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📖</span>
+                        <span>2 min read</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">👁️</span>
+                        <span>673 views</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Post Content -->
+            <div class="post-content">
+                <div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<p>通过docker可以从头开始构建集群，也可以将现有集群（配置以及数据）平滑的迁移到docker部署；</p>
+<h1>1 docker部署zookeeper</h1>
+<blockquote>
+<p># usermod -G docker zookeeper<br/># mkdir /data<br/># chown zookeeper.zookeeper /data<br/># echo 1 &gt; /data/myid<br/># su - zookeeper<br/>$ docker run --name zookeeper --restart always -p 2181:2181 -p 2888:2888 -p 3888:3888 -e ZOO_LOG4J_PROP="INFO,ROLLINGFILE" -v /var/log/zookeeper:/logs -v /conf/zoo.cfg:/conf/zoo.cfg -v /data:/data -v /etc/hosts:/etc/hosts:ro -d zookeeper</p>
+</blockquote>
+<p>其中zoo.cfg使用正常的集群配置即可，需要挂载配置文件、日志目录、数据目录、host文件等，</p>
+<p>注意：</p>
+<p>1）zoo.cfg中的server.*配置可以通过 -e ZOO_SERVERS=server.1=0.0.0.0:2888:3888 server.2=zoo2:2888:3888 server.3=zoo3:2888:3888 代替，其中本机的ip要配置为0.0.0.0，否则启动的时候会绑定端口失败</p>
+<p>2）/data/myid文件也可以通过 -e ZOO_MY_ID=1 代替</p>
+<p> </p>
+<p>参考：https://docs.docker.com/samples/library/zookeeper/</p>
+<p> </p>
+<h1>2 docker部署nginx</h1>
+<blockquote>
+<p># docker run --name nginx --restart always -p 80:80 -v /etc/nginx/nginx.conf:/etc/nginx/nginx.conf:ro -v /etc/nginx/passwd:/etc/nginx/passwd:ro -v /var/log/nginx:/var/log/nginx -d nginx</p>
+</blockquote>
+<p>其中nginx.conf使用正常的配置即可，需要挂载配置文件、日志目录、密码文件等，有需要还可以挂载html目录 -v /some/content:/usr/share/nginx/html:ro；</p>
+<p> </p>
+<p>参考：https://docs.docker.com/samples/library/nginx/</p>
+<p> </p>
+<h1>3 docker部署tomcat</h1>
+<blockquote>
+<p>$ docker run -d --name tomcat -p 8080:8080 -v /dir/webapps:/usr/local/tomcat/webapps -v /dir/logs:/usr/local/tomcat/logs tomcat:8.0</p>
+</blockquote>
+<p> </p>
+<p>参考：https://docs.docker.com/samples/library/tomcat/</p>
+<p> </p>
+<h1>4 docker部署redis</h1>
+<blockquote>
+<p>$ docker run -d --name redis -p 6379:6379 -v /redis/data/dir:/data redis redis-server --appendonly yes</p>
+</blockquote>
+<p> </p>
+<p>参考：https://docs.docker.com/samples/library/redis/</p>
+<p> </p>
+<h1>5 docker部署java应用</h1>
+<blockquote>
+<p>$ docker run -d --name java_app -v /dir/app:/app openjdk java -cp /app/app.jar app.AppClass</p>
+</blockquote>
+<p>参考： https://hub.docker.com/_/openjdk</p>
+<p> </p>
+<h1>6 docker部署elk</h1>
+<p>由于kibana、elasticsearch、logstash3个image内部分别使用各自的用户启动，并且uid和gid均为1000，为了避免冲突，使用一个新的elk组，gid为1000，将3个用户都添加到组中，保证对目录的写权限</p>
+<blockquote>
+<p># groupadd -g 1000 elk<br/># usermod -G elk elasticsearch<br/># usermod -G elk logstash<br/># usermod -G elk kibana<br/># chgrp elk $dir</p>
+</blockquote>
+<h2>kibana</h2>
+<blockquote>
+<p># usermod -G docker kibana<br/># su - kibana<br/>$ docker run --name kibana -p 5601:5601 -v /var/log/kibana:/usr/share/kibana/log -v /etc/kibana/kibana.yml:/usr/share/kibana/config/kibana.yml -d kibana:6.6.0</p>
+</blockquote>
+<p>其中kibana.yml使用正常配置即可，需要挂载配置文件等；</p>
+<p>如果分配的内存太少，kibana可能进程直接消失，而且查不到任何logs，至少512m以上；</p>
+<p> </p>
+<p>参考：</p>
+<p>https://docs.docker.com/samples/library/kibana/</p>
+<p>https://www.elastic.co/guide/en/kibana/current/docker.html </p>
+<h2>elasticsearch</h2>
+<blockquote>
+<p># usermod -G docker elasticsearch<br/># chgrp -R elk /opt/lmm/es_data/<br/># su - elasticsearch<br/>$ docker run -d --name logstash -p 9600:9600 -v /var/log/nginx:/var/log/nginx:ro -v /var/log/logstash:/usr/share/logstash/logs -v /etc/logstash/GeoLite2-City.mmdb:/usr/share/logstash/config/GeoLite2-City.mmdb -v /etc/logstash/nginx_access.conf:/usr/share/logstash/pipeline/logstash.conf docker.elastic.co/logstash/logstash:6.6.0</p>
+</blockquote>
+<p>其中elasticsearch.yml使用正常配置即可，需要设置宿主机ip，挂载配置文件、数据目录、日志目录等；</p>
+<p>注意：<br/>1）一定要保证索引目录的owner或者group的id为1000（此处设置group为1000），否则会报failed to obtain node locks或者AccessDeniedException<br/>2）一定要设置network.publish_host为宿主机ip</p>
+<p>The container runs Elasticsearch as user elasticsearch using uid:gid 1000:1000. Bind mounted host directories and files, such as custom_elasticsearch.yml above, need to be accessible by this user. For the data and log dirs, such as /usr/share/elasticsearch/data, write access is required as well.</p>
+<p> </p>
+<p>参考：</p>
+<p>https://docs.docker.com/samples/library/elasticsearch/</p>
+<p>https://www.elastic.co/guide/en/elasticsearch/reference/6.6/docker.html</p>
+<h2>logstash</h2>
+<blockquote>
+<p># usermod -G docker logstash<br/># chgrp -R elk /var/log/logstash<br/># su - logstash<br/>$ docker run -d --name logstash -p 9600:9600 -v /var/log/nginx:/var/log/nginx:ro -v /var/log/logstash:/usr/share/logstash/logs -v /etc/logstash/GeoLite2-City.mmdb:/usr/share/logstash/config/GeoLite2-City.mmdb -v /etc/logstash/nginx_access.conf:/usr/share/logstash/pipeline/logstash.conf docker.elastic.co/logstash/logstash:6.6.0</p>
+</blockquote>
+<p>其中logstash.conf使用正常的配置即可；要保证对日志目录可写；</p>
+<p>Bind-mounted configuration files will retain the same permissions and ownership within the container that they have on the host system. Be sure to set permissions such that the files will be readable and, ideally, not writeable by the container’s logstash user (UID 1000). </p>
+<p> </p>
+<p>参考：</p>
+<p>https://docs.docker.com/samples/library/logstash/</p>
+<p>https://www.elastic.co/guide/en/logstash/current/docker-config.html</p>
+<p> </p>
+<h1>7 docker部署mysql</h1>
+<blockquote>
+<p>$ docker run -d --name mysql -p 3306:3306 -v /var/lib/mysql:/var/lib/mysql -v /etc/my.cnf:/etc/mysql/my.cnf -e MYSQL_ROOT_PASSWORD=my-secret-pw mysql:5.7.25</p>
+</blockquote>
+<p>其中my.cnf使用正常配置即可，需要挂载数据目录；</p>
+<p> </p>
+<p>参考：https://docs.docker.com/samples/library/mysql/</p>
+<p> </p>
+<h1>8 docker部署kafka</h1>
+<blockquote>
+<p>$ docker run -d --name kafka -p 9092:9092 -e KAFKA_BROKER_ID=1 -e KAFKA_LOG_DIRS=/kafka/kafka-logs -e KAFKA_ZOOKEEPER_CONNECT=$zk_server:2181 -e KAFKA_ADVERTISED_HOST_NAME=$host_ip -e KAFKA_AUTO_CREATE_TOPICS_ENABLE=true -v /data/kafka-logs:/kafka/kafka-logs wurstmeister/kafka</p>
+</blockquote>
+<p>不使用配置文件，配置通过参数传递，需要挂载数据目录；</p>
+<p> </p>
+<p>参考：https://hub.docker.com/r/wurstmeister/kafka</p>
+<p> </p>
+<h1>9 docker部署mesos</h1>
+<h2>mesos-master</h2>
+<blockquote>
+<p>$ docker run -d --name mesos-master1 --net=host --restart=always -p 5050:5050 -e MESOS_HOSTNAME=192.168.0.1 -e MESOS_IP=192.168.0.1 -e MESOS_ZK=zk://192.168.0.1:2181,192.168.0.2:2181,192.168.0.3:2181/mesos -e MESOS_PORT=5050 -e MESOS_LOG_DIR=/var/log/mesos -e MESOS_QUORUM=1 -e MESOS_REGISTRY=in_memory -e MESOS_WORK_DIR=/var/lib/mesos mesoscloud/mesos-master</p>
+</blockquote>
+<p>逐台修改MESOS_HOSTNAME、MESOS_IP</p>
+<p> </p>
+<p>参考：https://hub.docker.com/r/mesosphere/mesos-master</p>
+<h2>mesos-slave</h2>
+<blockquote>
+<p>$ docker run -d --name=mesos-slave1 --net=host --restart=always --pid=host --privileged=true -e MESOS_HOSTNAME=192.168.0.1 -e MESOS_IP=192.168.0.1 -e MESOS_MASTER=zk://192.168.0.1:2181,192.168.0.2:2181,192.168.0.3:2181/mesos -e MESOS_CONTAINERIZERS=docker,mesos -v /usr/bin/docker:/usr/bin/docker -v /dev:/dev -v /var/run/docker.sock:/var/run/docker.sock -v /var/log/mesos:/var/log/mesos -v /tmp/mesos:/tmp/mesos mesoscloud/mesos-slave</p>
+</blockquote>
+<p>逐台修改MESOS_HOSTNAME、MESOS_IP</p>
+<p> </p>
+<p>参考：https://hub.docker.com/r/mesosphere/mesos-slave</p>
+<h2>marathon</h2>
+<blockquote>
+<p>$ docker run -d --name marathon --net host --restart=always -e MARATHON_HOSTNAME=192.168.0.1 -e MARATHON_HTTPS_ADDRESS=192.168.0.1 -e MARATHON_HTTP_ADDRESS=192.168.0.1 -e MARATHON_MASTER=zk://192.168.0.1:2181,192.168.0.2:2181,192.168.0.3:2181/mesos -e MARATHON_ZK=zk://192.168.0.1:2181,192.168.0.2:2181,192.168.0.3:2181/marathon mesoscloud/marathon</p>
+</blockquote>
+<p>逐台修改MARATHON_HOSTNAME、MARATHON_HTTPS_ADDRESS、MARATHON_HTTP_ADDRESS</p>
+<p> </p>
+<p>参考：https://hub.docker.com/r/mesosphere/marathon</p>
+<p> </p>
+<h1>10 docker部署ftp</h1>
+<blockquote>
+<p>$ docker run -d --name ftp --restart always -v $ftp_dir:/home/vsftpd -p 20:20 -p 21:21 -p 47400-47470:47400-47470 -e FTP_USER=user -e FTP_PASS=pass -e PASV_ADDRESS=$ip bogem/ftp</p>
+</blockquote>
+<p> </p>
+<p>参考：https://hub.docker.com/r/bogem/ftp</p>
+<p> </p>
+<h1>11 docker部署git</h1>
+<p>docker pull store/gitlab/gitlab-ce:11.10.4-ce.0</p>
+<p>参考：</p>
+<p>https://hub.docker.com/_/gitlab-community-edition?tab=description</p>
+<p> </p>
+<h1>12 其他</h1>
+<p>https://docs.docker.com/samples/library/cassandra/</p>
+<p>https://docs.docker.com/samples/library/flink/</p>
+<p>https://docs.docker.com/samples/library/influxdb/</p>
+<p>https://docs.docker.com/samples/library/alpine/</p>
+<p> </p>
+</div>
+            </div>
+
+            <!-- Post Footer -->
+            <div class="post-footer">
+                <div class="post-navigation">
+                    <a href="../blog_cn.html" class="nav-button">← Back to Home</a>
+                    <a href="0231.html" class="nav-button">Next Post →</a>
+                </div>
+            </div>
+        </article>
+    </div>
+</body>
+</html>

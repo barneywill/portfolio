@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>hive开启ldap认证</title>
+    <link rel="stylesheet" href="../css/style3.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header Navigation -->
+        <div class="header">
+            <h1><a href="../blog_cn.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+        </div>
+
+        <!-- Post Container -->
+        <article class="post">
+            <!-- Post Header -->
+            <div class="post-header">
+                <h1>hive开启ldap认证</h1>
+                <div class="post-meta">
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📅</span>
+                        <span>May 20, 2022</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📖</span>
+                        <span>1 min read</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">👁️</span>
+                        <span>949 views</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Post Content -->
+            <div class="post-content">
+                <div class="blogpost-body cnblogs-markdown" id="cnblogs_post_body">
+<h1 id="hive-sitexml">hive-site.xml</h1>
+<h3 id="1-接入ldap或ad域">1 接入ldap或ad域</h3>
+<pre><code>&lt;property&gt;
+    &lt;name&gt;hive.server2.authentication&lt;/name&gt;
+    &lt;value&gt;LDAP&lt;/value&gt;
+&lt;/property&gt;
+&lt;property&gt;
+    &lt;name&gt;hive.server2.authentication.ldap.url&lt;/name&gt;
+&lt;value&gt;ldap://test.com&lt;/value&gt;
+&lt;/property&gt;
+&lt;property&gt;
+    &lt;name&gt;hive.server2.authentication.ldap.Domain&lt;/name&gt;
+    &lt;value&gt;test.com&lt;/value&gt;
+&lt;/property&gt;
+</code></pre>
+<h3 id="2-执行sql使用登录账号而不是hive进程启动账号">2 执行sql使用登录账号而不是hive进程启动账号</h3>
+<pre><code>&lt;property&gt;
+    &lt;name&gt;hive.server2.enable.doAs&lt;/name&gt;
+    &lt;value&gt;true&lt;/value&gt;
+&lt;/property&gt;
+</code></pre>
+<h3 id="3-添加账号到admin">3 添加账号到admin</h3>
+<pre><code>&lt;property&gt;
+    &lt;name&gt;hive.users.in.admin.role&lt;/name&gt;
+    &lt;value&gt;username&lt;/value&gt;
+&lt;/property&gt;
+</code></pre>
+<h3 id="4-改为sql授权">4 改为sql授权</h3>
+<pre><code>&lt;property&gt;
+    &lt;name&gt;hive.security.authorization.manager&lt;/name&gt;
+    &lt;value&gt;org.apache.hadoop.hive.ql.security.authorization.plugin.sqlstd.SQLStdConfOnlyAuthorizerFactory&lt;/value&gt;
+&lt;/property&gt;
+</code></pre>
+<p>以上改完重启hive server</p>
+<h1 id="core-sitexml">core-site.xml</h1>
+<h3 id="1-允许hive进程启动账号切换到登录账号">1 允许hive进程启动账号切换到登录账号</h3>
+<pre><code>&lt;property&gt;
+   &lt;name&gt;hadoop.proxyuser.hive.hosts&lt;/name&gt;
+   &lt;value&gt;*&lt;/value&gt;
+&lt;/property&gt;
+&lt;property&gt;
+   &lt;name&gt;hadoop.proxyuser.hive.groups&lt;/name&gt;
+   &lt;value&gt;*&lt;/value&gt;
+&lt;/property&gt;
+</code></pre>
+<p>以上改完重启namenode</p>
+<h1 id="客户端连接">客户端连接</h1>
+<p>先进beeline，在用!connect命令连接</p>
+<pre><code># beeline
+beeline&gt; !connect jdbc:hive2://$server:10000
+Connecting to jdbc:hive2://$server:10000
+Enter username for jdbc:hive2://$server:10000: username
+Enter password for jdbc:hive2://$server:10000: *********
+Connected to: Apache Hive (version 2.3.8)
+Driver: Hive JDBC (version 2.3.8)
+Transaction isolation: TRANSACTION_REPEATABLE_READ
+ 
+0: jdbc:hive2://$server:10000&gt; set role admin
+</code></pre>
+<p>参考：<br/>
+<a href="https://cwiki.apache.org/confluence/display/hive/languagemanual+authorization" rel="noopener nofollow" target="_blank">https://cwiki.apache.org/confluence/display/hive/languagemanual+authorization</a><br/>
+<a href="https://cwiki.apache.org/confluence/display/Hive/Setting+Up+HiveServer2#SettingUpHiveServer2-Authentication/SecurityConfiguration" rel="noopener nofollow" target="_blank">https://cwiki.apache.org/confluence/display/Hive/Setting+Up+HiveServer2#SettingUpHiveServer2-Authentication/SecurityConfiguration</a><br/>
+<a href="https://cwiki.apache.org/confluence/display/Hive/SQL+Standard+Based+Hive+Authorization" rel="noopener nofollow" target="_blank">https://cwiki.apache.org/confluence/display/Hive/SQL+Standard+Based+Hive+Authorization</a><br/>
+<a href="https://docs.cloudera.com/HDPDocuments/HDP2/HDP-2.6.5/bk_data-access/content/ch02s05s02.html" rel="noopener nofollow" target="_blank">https://docs.cloudera.com/HDPDocuments/HDP2/HDP-2.6.5/bk_data-access/content/ch02s05s02.html</a></p>
+</div>
+            </div>
+
+            <!-- Post Footer -->
+            <div class="post-footer">
+                <div class="post-navigation">
+                    <a href="../blog_cn.html" class="nav-button">← Back to Home</a>
+                    <a href="0018.html" class="nav-button">Next Post →</a>
+                </div>
+            </div>
+        </article>
+    </div>
+</body>
+</html>

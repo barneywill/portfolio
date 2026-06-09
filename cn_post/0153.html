@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>oozie中通过shell执行impala</title>
+    <link rel="stylesheet" href="../css/style3.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header Navigation -->
+        <div class="header">
+            <h1><a href="../blog_cn.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+        </div>
+
+        <!-- Post Container -->
+        <article class="post">
+            <!-- Post Header -->
+            <div class="post-header">
+                <h1>oozie中通过shell执行impala</h1>
+                <div class="post-meta">
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📅</span>
+                        <span>April 01, 2019</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📖</span>
+                        <span>2 min read</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">👁️</span>
+                        <span>1282 views</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Post Content -->
+            <div class="post-content">
+                <div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<p>oozie中通过shell执行impala，脚本如下：</p>
+<div class="cnblogs_code">
+<pre>$<span style="color: rgba(0, 0, 0, 1)"> cat test_impala.sh
+</span><span style="color: rgba(0, 128, 0, 1)">#</span><span style="color: rgba(0, 128, 0, 1)">!/bin/sh</span>
+/usr/bin/kinit - kt /tmp/impala.keytab impala/<span style="color: rgba(0, 0, 0, 1)">server04
+</span>/usr/bin/impala-shell - i server04:21000 - q 'show databases'</pre>
+</div>
+<p>直接执行shell脚本正常，在oozie中执行报错：</p>
+<div class="cnblogs_code">
+<pre><span style="color: rgba(0, 0, 0, 1)">Traceback (most recent call last):
+  File </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">/usr/lib/impala-shell/impala_shell.py</span><span style="color: rgba(128, 0, 0, 1)">"</span>, line 38, <span style="color: rgba(0, 0, 255, 1)">in</span> &lt;module&gt;<span style="color: rgba(0, 0, 0, 1)">
+    from impala_client import (ImpalaClient, DisconnectedException, QueryStateException,
+  File </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">/usr/lib/impala-shell/lib/impala_client.py</span><span style="color: rgba(128, 0, 0, 1)">"</span>, line 20, <span style="color: rgba(0, 0, 255, 1)">in</span> &lt;module&gt;<span style="color: rgba(0, 0, 0, 1)">
+    import sasl
+  File </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">/usr/lib/impala-shell/ext-py/sasl-0.1.1-py2.7-linux-x86_64.egg/sasl/__init__.py</span><span style="color: rgba(128, 0, 0, 1)">"</span>, line 1, <span style="color: rgba(0, 0, 255, 1)">in</span> &lt;module&gt;<span style="color: rgba(0, 0, 0, 1)">
+
+  File </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">/usr/lib/impala-shell/ext-py/sasl-0.1.1-py2.7-linux-x86_64.egg/sasl/saslwrapper.py</span><span style="color: rgba(128, 0, 0, 1)">"</span>, line 7, <span style="color: rgba(0, 0, 255, 1)">in</span> &lt;module&gt;<span style="color: rgba(0, 0, 0, 1)">
+  File </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">/usr/lib/impala-shell/ext-py/sasl-0.1.1-py2.7-linux-x86_64.egg/_saslwrapper.py</span><span style="color: rgba(128, 0, 0, 1)">"</span>, line 7, <span style="color: rgba(0, 0, 255, 1)">in</span> &lt;module&gt;<span style="color: rgba(0, 0, 0, 1)">
+  File </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">/usr/lib/impala-shell/ext-py/sasl-0.1.1-py2.7-linux-x86_64.egg/_saslwrapper.py</span><span style="color: rgba(128, 0, 0, 1)">"</span>, line 4, <span style="color: rgba(0, 0, 255, 1)">in</span><span style="color: rgba(0, 0, 0, 1)"> __bootstrap__
+  File </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">/usr/lib/impala-shell/lib/pkg_resources.py</span><span style="color: rgba(128, 0, 0, 1)">"</span>, line 874, <span style="color: rgba(0, 0, 255, 1)">in</span><span style="color: rgba(0, 0, 0, 1)"> resource_filename
+    self, resource_name
+  File </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">/usr/lib/impala-shell/lib/pkg_resources.py</span><span style="color: rgba(128, 0, 0, 1)">"</span>, line 1349, <span style="color: rgba(0, 0, 255, 1)">in</span><span style="color: rgba(0, 0, 0, 1)"> get_resource_filename
+    self._extract_resource(manager, self._eager_to_zip(name))
+  File </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">/usr/lib/impala-shell/lib/pkg_resources.py</span><span style="color: rgba(128, 0, 0, 1)">"</span>, line 1375, <span style="color: rgba(0, 0, 255, 1)">in</span><span style="color: rgba(0, 0, 0, 1)"> _extract_resource
+    self.egg_name, self._parts(zip_path)
+  File </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">/usr/lib/impala-shell/lib/pkg_resources.py</span><span style="color: rgba(128, 0, 0, 1)">"</span>, line 954, <span style="color: rgba(0, 0, 255, 1)">in</span><span style="color: rgba(0, 0, 0, 1)"> get_cache_path
+    self.extraction_error()
+  File </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">/usr/lib/impala-shell/lib/pkg_resources.py</span><span style="color: rgba(128, 0, 0, 1)">"</span>, line 920, <span style="color: rgba(0, 0, 255, 1)">in</span><span style="color: rgba(0, 0, 0, 1)"> extraction_error
+    raise err
+pkg_resources.ExtractionError: Can't extract file(s) to egg cache
+
+The following error occurred </span><span style="color: rgba(0, 0, 255, 1)">while</span><span style="color: rgba(0, 0, 0, 1)"> trying to extract file(s) to the Python egg
+cache:
+
+  [Errno </span>13] Permission denied: '/home/.python-<span style="color: rgba(0, 0, 0, 1)">eggs'
+
+The Python egg cache directory is currently set to:
+
+  </span>/home/.python-<span style="color: rgba(0, 0, 0, 1)">eggs
+
+Perhaps your account does not have write access to this directory</span>?<span style="color: rgba(0, 0, 0, 1)">  You can
+change the cache directory by setting the PYTHON_EGG_CACHE environment
+variable to point to an accessible directory.
+
+Failing Oozie Launcher, Main class [org.apache.oozie.action.hadoop.ShellMain], exit code [</span>1]</pre>
+</div>
+<p>按照提示修改PYTHON_EGG_CACHE即可</p>
+<div class="cnblogs_code">
+<pre>$<span style="color: rgba(0, 0, 0, 1)"> cat test_impala.sh
+</span><span style="color: rgba(0, 128, 0, 1)">#</span><span style="color: rgba(0, 128, 0, 1)">!/bin/sh</span>
+export PYTHON_EGG_CACHE=/tmp/.python-<span style="color: rgba(0, 0, 0, 1)">eggs
+</span>/usr/bin/kinit - kt /tmp/impala.keytab impala/<span style="color: rgba(0, 0, 0, 1)">server04
+</span>/usr/bin/impala-shell - i server04:21000 - q 'show databases'</pre>
+</div>
+<p>另外还可以通过beeline连接，则没有python的问题，</p>
+<p>详见：<a href="https://www.cnblogs.com/barneywill/p/10296502.html" target="_blank">https://www.cnblogs.com/barneywill/p/10296502.html</a></p>
+<p> </p>
+</div>
+            </div>
+
+            <!-- Post Footer -->
+            <div class="post-footer">
+                <div class="post-navigation">
+                    <a href="../blog_cn.html" class="nav-button">← Back to Home</a>
+                    <a href="0154.html" class="nav-button">Next Post →</a>
+                </div>
+            </div>
+        </article>
+    </div>
+</body>
+</html>

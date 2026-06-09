@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>openresty（nginx+lua）发http请求</title>
+    <link rel="stylesheet" href="../css/style3.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header Navigation -->
+        <div class="header">
+            <h1><a href="../blog_cn.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+        </div>
+
+        <!-- Post Container -->
+        <article class="post">
+            <!-- Post Header -->
+            <div class="post-header">
+                <h1>openresty（nginx+lua）发http请求</h1>
+                <div class="post-meta">
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📅</span>
+                        <span>July 29, 2019</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📖</span>
+                        <span>1 min read</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">👁️</span>
+                        <span>1454 views</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Post Content -->
+            <div class="post-content">
+                <div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<p>openresty（nginx+lua）发http请求</p>
+<p>利用location+proxy_pass间接实现</p>
+<div class="cnblogs_code">
+<pre>    location ^~ /test/<span style="color: rgba(0, 0, 0, 1)">http {
+        internal;
+        proxy_pass http:</span>//test.com/<span style="color: rgba(0, 0, 0, 1)">path;
+    }</span></pre>
+</div>
+<p>lua代码</p>
+<div class="cnblogs_code">
+<pre><span style="color: rgba(0, 0, 255, 1)">local</span> res, err = ngx.location.capture(<span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">/test/http</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">, {
+    method </span>=<span style="color: rgba(0, 0, 0, 1)"> ngx.HTTP_POST,
+    body </span>=<span style="color: rgba(0, 0, 0, 1)"> body
+});
+</span><span style="color: rgba(0, 0, 255, 1)">if</span> res <span style="color: rgba(0, 0, 255, 1)">then</span><span style="color: rgba(0, 0, 0, 1)">
+  ngx.log(ngx.INFO, </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">response:</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">..res.body)
+</span><span style="color: rgba(0, 0, 255, 1)">else</span><span style="color: rgba(0, 0, 0, 1)">
+  ngx.log(ngx.INFO, </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">error:</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">..err)
+</span><span style="color: rgba(0, 0, 255, 1)">end</span></pre>
+</div>
+<p> </p>
+</div>
+            </div>
+
+            <!-- Post Footer -->
+            <div class="post-footer">
+                <div class="post-navigation">
+                    <a href="../blog_cn.html" class="nav-button">← Back to Home</a>
+                    <a href="0098.html" class="nav-button">Next Post →</a>
+                </div>
+            </div>
+        </article>
+    </div>
+</body>
+</html>

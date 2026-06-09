@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>linux服务器服务器间拷贝文件</title>
+    <link rel="stylesheet" href="../css/style3.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header Navigation -->
+        <div class="header">
+            <h1><a href="../blog_cn.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+        </div>
+
+        <!-- Post Container -->
+        <article class="post">
+            <!-- Post Header -->
+            <div class="post-header">
+                <h1>linux服务器服务器间拷贝文件</h1>
+                <div class="post-meta">
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📅</span>
+                        <span>December 13, 2018</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📖</span>
+                        <span>1 min read</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">👁️</span>
+                        <span>1232 views</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Post Content -->
+            <div class="post-content">
+                <div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<p>linux服务器服务器间拷贝文件，有几种方式：</p>
+<p>1 如果是定时任务，可以用rsync</p>
+<p>2 如果是基于ssh登录，可以用scp，优点是可以实现远程到远程的拷贝，缺点是需要账号密码</p>
+<blockquote>
+<p>upload: scp $local_file $remote_username@$remote_ip:$remote_folder</p>
+<p>download: scp $remote_username@$remote_ip:$remote_file $local_folder</p>
+</blockquote>
+<p>3 如果只是临时传文件，而且已经登录到两台服务器上，有一种更简单的方式，可以用nc</p>
+<blockquote>
+<p>接收服务器A：nc -l $receive_port &gt; $file_name<br/>发送服务器B：nc $receive_ip $receive_port &lt; $file_name</p>
+</blockquote>
+<p>可以将服务器上的$file_name文件拷贝到服务器A上；<br/>例如：</p>
+<blockquote>
+<p>1.1.1.1: nc -l 8888 &gt; test.log<br/>1.1.1.2: nc 1.1.1.1 8888 &lt; test.log</p>
+</blockquote>
+<p>将1.1.1.2上的test.log拷贝到1.1.1.1上</p>
+<p>想要拷贝目录？也很简单：</p>
+<blockquote>
+<p>接收服务器A：nc -l $receive_port |tar -zxvf -<br/>发送服务器B：tar -zcvf - $dir_name |nc $receive_ip $receive_port</p>
+</blockquote>
+<p> </p>
+</div>
+            </div>
+
+            <!-- Post Footer -->
+            <div class="post-footer">
+                <div class="post-navigation">
+                    <a href="../blog_cn.html" class="nav-button">← Back to Home</a>
+                    <a href="0321.html" class="nav-button">Next Post →</a>
+                </div>
+            </div>
+        </article>
+    </div>
+</body>
+</html>

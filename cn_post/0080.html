@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>jdbc连接mysql、sqlserver、oracle</title>
+    <link rel="stylesheet" href="../css/style3.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header Navigation -->
+        <div class="header">
+            <h1><a href="../blog_cn.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+        </div>
+
+        <!-- Post Container -->
+        <article class="post">
+            <!-- Post Header -->
+            <div class="post-header">
+                <h1>jdbc连接mysql、sqlserver、oracle</h1>
+                <div class="post-meta">
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📅</span>
+                        <span>December 19, 2019</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📖</span>
+                        <span>2 min read</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">👁️</span>
+                        <span>673 views</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Post Content -->
+            <div class="post-content">
+                <div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<h1>Mysql</h1>
+<p>driver下载：https://mvnrepository.com/artifact/mysql/mysql-connector-java</p>
+<div class="cnblogs_code">
+<pre><span style="color: rgba(0, 0, 255, 1)">import</span> java.sql.*<span style="color: rgba(0, 0, 0, 1)">;
+</span><span style="color: rgba(0, 0, 255, 1)">public</span> <span style="color: rgba(0, 0, 255, 1)">class</span><span style="color: rgba(0, 0, 0, 1)"> SqlServerTest {
+         </span><span style="color: rgba(0, 0, 255, 1)">public</span> <span style="color: rgba(0, 0, 255, 1)">static</span> <span style="color: rgba(0, 0, 255, 1)">void</span><span style="color: rgba(0, 0, 0, 1)"> main(String []args) {
+         String driverName</span>="com.mysql.jdbc.Driver"<span style="color: rgba(0, 0, 0, 1)">;
+         String dbURL</span>="jdbc:mysql://$ip:3306/$db"<span style="color: rgba(0, 0, 0, 1)">;
+         String userName</span>="$user"<span style="color: rgba(0, 0, 0, 1)">;
+         String userPwd</span>="$password"<span style="color: rgba(0, 0, 0, 1)">;
+          </span><span style="color: rgba(0, 0, 255, 1)">try</span><span style="color: rgba(0, 0, 0, 1)">
+        {
+            Class.forName(driverName);
+            Connection dbConn</span>=<span style="color: rgba(0, 0, 0, 1)">DriverManager.getConnection(dbURL,userName,userPwd);
+            Statement st </span>=<span style="color: rgba(0, 0, 0, 1)"> dbConn.createStatement();
+            ResultSet rs </span>= st.executeQuery("select * from user"<span style="color: rgba(0, 0, 0, 1)">);
+            </span><span style="color: rgba(0, 0, 255, 1)">while</span><span style="color: rgba(0, 0, 0, 1)"> (rs.next()) {
+              System.out.println(rs.getString(</span>1<span style="color: rgba(0, 0, 0, 1)">));
+            }
+            System.out.println(</span>"success!"<span style="color: rgba(0, 0, 0, 1)">);
+         }
+          </span><span style="color: rgba(0, 0, 255, 1)">catch</span><span style="color: rgba(0, 0, 0, 1)">(Exception e)
+       {
+            e.printStackTrace();
+            System.out.print(</span>"fail!"<span style="color: rgba(0, 0, 0, 1)">);
+       }
+    }
+ }</span></pre>
+</div>
+<p> </p>
+<h1>SqlServer</h1>
+<p>driver下载：https://mvnrepository.com/artifact/com.microsoft.sqlserver/sqljdbc4/4.0</p>
+<div class="cnblogs_code">
+<pre><span style="color: rgba(0, 0, 255, 1)">import</span> java.sql.*<span style="color: rgba(0, 0, 0, 1)">;
+</span><span style="color: rgba(0, 0, 255, 1)">public</span> <span style="color: rgba(0, 0, 255, 1)">class</span><span style="color: rgba(0, 0, 0, 1)"> SqlServerTest {
+         </span><span style="color: rgba(0, 0, 255, 1)">public</span> <span style="color: rgba(0, 0, 255, 1)">static</span> <span style="color: rgba(0, 0, 255, 1)">void</span><span style="color: rgba(0, 0, 0, 1)"> main(String []args) {
+         String driverName</span>="com.microsoft.sqlserver.jdbc.SQLServerDriver"<span style="color: rgba(0, 0, 0, 1)">;
+         String dbURL</span>="jdbc:sqlserver://$ip:1433;DatabaseName=$db"<span style="color: rgba(0, 0, 0, 1)">;
+         String userName</span>="$user"<span style="color: rgba(0, 0, 0, 1)">;
+         String userPwd</span>="$password"<span style="color: rgba(0, 0, 0, 1)">;
+          </span><span style="color: rgba(0, 0, 255, 1)">try</span><span style="color: rgba(0, 0, 0, 1)">
+        {
+            Class.forName(driverName);
+            Connection dbConn</span>=<span style="color: rgba(0, 0, 0, 1)">DriverManager.getConnection(dbURL,userName,userPwd);
+            Statement st </span>=<span style="color: rgba(0, 0, 0, 1)"> dbConn.createStatement();
+            ResultSet rs </span>= st.executeQuery("select * from sysobjects where xtype='U'"<span style="color: rgba(0, 0, 0, 1)">);
+            </span><span style="color: rgba(0, 0, 255, 1)">while</span><span style="color: rgba(0, 0, 0, 1)"> (rs.next()) {
+              System.out.println(rs.getString(</span>1<span style="color: rgba(0, 0, 0, 1)">));
+            }
+            System.out.println(</span>"success!"<span style="color: rgba(0, 0, 0, 1)">);
+         }
+          </span><span style="color: rgba(0, 0, 255, 1)">catch</span><span style="color: rgba(0, 0, 0, 1)">(Exception e)
+       {
+            e.printStackTrace();
+            System.out.print(</span>"fail!"<span style="color: rgba(0, 0, 0, 1)">);
+       }
+    }
+ }</span></pre>
+</div>
+<p> </p>
+<h1>Oracle</h1>
+<p>driver下载：https://www.oracle.com/database/technologies/jdbc-drivers-12c-downloads.html</p>
+<div class="cnblogs_code">
+<pre><span style="color: rgba(0, 0, 255, 1)">import</span> java.sql.*<span style="color: rgba(0, 0, 0, 1)">;
+</span><span style="color: rgba(0, 0, 255, 1)">public</span> <span style="color: rgba(0, 0, 255, 1)">class</span><span style="color: rgba(0, 0, 0, 1)"> SqlServerTest {
+         </span><span style="color: rgba(0, 0, 255, 1)">public</span> <span style="color: rgba(0, 0, 255, 1)">static</span> <span style="color: rgba(0, 0, 255, 1)">void</span><span style="color: rgba(0, 0, 0, 1)"> main(String []args) {
+         String driverName</span>="oracle.jdbc.driver.OracleDriver"<span style="color: rgba(0, 0, 0, 1)">;
+         String dbURL</span>="jdbc:oracle:thin:@//$ip:1521/$db"<span style="color: rgba(0, 0, 0, 1)">;
+         String userName</span>="$user"<span style="color: rgba(0, 0, 0, 1)">;
+         String userPwd</span>="$password"<span style="color: rgba(0, 0, 0, 1)">;
+          </span><span style="color: rgba(0, 0, 255, 1)">try</span><span style="color: rgba(0, 0, 0, 1)">
+        {
+            Class.forName(driverName);
+            Connection dbConn</span>=<span style="color: rgba(0, 0, 0, 1)">DriverManager.getConnection(dbURL,userName,userPwd);
+            Statement st </span>=<span style="color: rgba(0, 0, 0, 1)"> dbConn.createStatement();
+            ResultSet rs </span>= st.executeQuery("select * from all_tab_comments"<span style="color: rgba(0, 0, 0, 1)">);
+            </span><span style="color: rgba(0, 0, 255, 1)">while</span><span style="color: rgba(0, 0, 0, 1)"> (rs.next()) {
+              System.out.println(rs.getString(</span>1<span style="color: rgba(0, 0, 0, 1)">));
+            }
+            System.out.println(</span>"success!"<span style="color: rgba(0, 0, 0, 1)">);
+         }
+          </span><span style="color: rgba(0, 0, 255, 1)">catch</span><span style="color: rgba(0, 0, 0, 1)">(Exception e)
+       {
+            e.printStackTrace();
+            System.out.print(</span>"fail!"<span style="color: rgba(0, 0, 0, 1)">);
+       }
+    }
+ }</span></pre>
+</div>
+</div>
+            </div>
+
+            <!-- Post Footer -->
+            <div class="post-footer">
+                <div class="post-navigation">
+                    <a href="../blog_cn.html" class="nav-button">← Back to Home</a>
+                    <a href="0081.html" class="nav-button">Next Post →</a>
+                </div>
+            </div>
+        </article>
+    </div>
+</body>
+</html>

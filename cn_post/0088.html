@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ssh秘钥之创建和使用</title>
+    <link rel="stylesheet" href="../css/style3.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header Navigation -->
+        <div class="header">
+            <h1><a href="../blog_cn.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+        </div>
+
+        <!-- Post Container -->
+        <article class="post">
+            <!-- Post Header -->
+            <div class="post-header">
+                <h1>ssh秘钥之创建和使用</h1>
+                <div class="post-meta">
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📅</span>
+                        <span>October 03, 2019</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📖</span>
+                        <span>1 min read</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">👁️</span>
+                        <span>999 views</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Post Content -->
+            <div class="post-content">
+                <div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<h1 id="ssh秘钥登录-一生成秘钥">一 创建秘钥</h1>
+<h2 id="ssh秘钥登录-1Macbook">1 Macbook</h2>
+<p><strong>$ ssh-keygen - t rsa</strong><br/>Generating public/private rsa key pair.<br/>Enter file in which to save the key ($HOME/.ssh/id_rsa): <br/>Enter passphrase (empty for no passphrase): <br/>Enter same passphrase again: <br/>Your identification has been saved in $HOME/.ssh/id_rsa.<br/>Your public key has been saved in $HOME/.ssh/id_rsa.pub.<br/>The key fingerprint is:<br/>SHA256:HqDbdb3SyrM2pPj+rrZt0F34GUjVIlDpEKuTOT473KU you@HOST<br/>The key's randomart image is:<br/>+---[RSA 2048]----+<br/>| o+.o.. |<br/>| ..+ . .|<br/>| . .+ + . |<br/>| . . + .+ o |<br/>| . S....o o |<br/>| o +.=o.o.o |<br/>| . .o+=.oo |<br/>| . ==Eo |<br/>| +*OB+ |<br/>+----[SHA256]-----+</p>
+<p>$ ls - l .ssh<br/>total 24<br/>-rw------- 1 you staff 1876 Sep 11 23:07 id_rsa<br/><strong>-rw-r--r-- 1 you staff 404 Sep 11 23:07 id_rsa.pub</strong><br/>-rw-r--r-- 1 you staff 1046 Aug 3 10:06 known_hosts</p>
+<h2 id="ssh秘钥登录-2Windows">2 Windows</h2>
+<h3 id="ssh秘钥登录-2.1XShell">2.1 XShell</h3>
+<p><picture>
+  <source srcset="../img/1509647-20191003220343687-1293180837.webp" type="image/webp">
+  <img alt="" src="../img/1509647-20191003220343687-1293180837.png">
+</picture></p>
+<p> </p>
+<p> </p>
+<p> </p>
+<p><picture>
+  <source srcset="../img/1509647-20191003220406614-955808315.webp" type="image/webp">
+  <img alt="" src="../img/1509647-20191003220406614-955808315.png">
+</picture></p>
+<p> </p>
+<p> </p>
+<p> </p>
+<p><picture>
+  <source srcset="../img/1509647-20191003220424927-1315078048.webp" type="image/webp">
+  <img alt="" src="../img/1509647-20191003220424927-1315078048.png">
+</picture></p>
+<p> </p>
+<p> </p>
+<p> </p>
+<p><picture>
+  <source srcset="../img/1509647-20191003220441175-498568229.webp" type="image/webp">
+  <img alt="" src="../img/1509647-20191003220441175-498568229.png">
+</picture></p>
+<p> </p>
+<h3 id="ssh秘钥登录-2.2SecureCRT">2.2 SecureCRT</h3>
+<p><picture>
+  <source srcset="../img/1509647-20191003220513401-1968385514.webp" type="image/webp">
+  <img alt="" src="../img/1509647-20191003220513401-1968385514.png">
+</picture></p>
+<p> </p>
+<p> </p>
+<p> </p>
+<p><picture>
+  <source srcset="../img/1509647-20191003220529253-1749106090.webp" type="image/webp">
+  <img alt="" src="../img/1509647-20191003220529253-1749106090.png">
+</picture></p>
+<p> </p>
+<p> </p>
+<p><picture>
+  <source srcset="../img/1509647-20191003220541556-422703498.webp" type="image/webp">
+  <img alt="" src="../img/1509647-20191003220541556-422703498.png">
+</picture></p>
+<p> </p>
+<p> </p>
+<p><picture>
+  <source srcset="../img/1509647-20191003220553944-105499208.webp" type="image/webp">
+  <img alt="" src="../img/1509647-20191003220553944-105499208.png">
+</picture></p>
+<p> </p>
+<p> </p>
+<p> </p>
+<p><picture>
+  <source srcset="../img/1509647-20191003220606553-651898882.webp" type="image/webp">
+  <img alt="" src="../img/1509647-20191003220606553-651898882.png">
+</picture></p>
+<p> </p>
+<h1 id="ssh秘钥登录-二使用秘钥登录">二 使用秘钥登录</h1>
+<h2 id="ssh秘钥登录-1Macbook.1">1 Macbook</h2>
+<p>秘钥默认文件名及路径</p>
+<p>$ vi /etc/ssh/ssh_config<br/># IdentityFile ~/.ssh/id_rsa<br/># IdentityFile ~/.ssh/id_dsa</p>
+<p>如果秘钥在以上路径，直接登录即可</p>
+<p>$ ssh you@1.1.1.1</p>
+<p>如果秘钥不在以上路径，有两种方法：</p>
+<p>1）通过-i指定秘钥路径</p>
+<p>$ ssh - i /path/to/id_rsa you<a class="external-link" href="mailto:www@39.100.3.162" rel="noopener nofollow">@1</a>.1.1.1</p>
+<p>2）修改/etc/ssh/ssh_config</p>
+<h2 id="ssh秘钥登录-2Windows.1">2 Windows</h2>
+<h3 id="ssh秘钥登录-2.1XShell.1">2.1 XShell</h3>
+<p><picture>
+  <source srcset="../img/1509647-20191003220712687-1353592688.webp" type="image/webp">
+  <img alt="" src="../img/1509647-20191003220712687-1353592688.png">
+</picture></p>
+<p> </p>
+<h3 id="ssh秘钥登录-2.2SecureCRT.1">2.2 SecureCRT</h3>
+<p><picture>
+  <source srcset="../img/1509647-20191003220735936-816782486.webp" type="image/webp">
+  <img alt="" src="../img/1509647-20191003220735936-816782486.png">
+</picture></p>
+<p> </p>
+</div>
+            </div>
+
+            <!-- Post Footer -->
+            <div class="post-footer">
+                <div class="post-navigation">
+                    <a href="../blog_cn.html" class="nav-button">← Back to Home</a>
+                    <a href="0089.html" class="nav-button">Next Post →</a>
+                </div>
+            </div>
+        </article>
+    </div>
+</body>
+</html>

@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>上传下载</title>
+    <link rel="stylesheet" href="../css/style3.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header Navigation -->
+        <div class="header">
+            <h1><a href="../blog_cn.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+        </div>
+
+        <!-- Post Container -->
+        <article class="post">
+            <!-- Post Header -->
+            <div class="post-header">
+                <h1>上传下载</h1>
+                <div class="post-meta">
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📅</span>
+                        <span>January 14, 2019</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📖</span>
+                        <span>1 min read</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">👁️</span>
+                        <span>219 views</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Post Content -->
+            <div class="post-content">
+                <div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<h1>1 rz sz</h1>
+<p>安装</p>
+<blockquote>
+<p>yum install - y lrzsz</p>
+</blockquote>
+<p>上传</p>
+<blockquote>
+<p>rz ，对话框操作</p>
+</blockquote>
+<p>下载</p>
+<blockquote>
+<p>sz $filename</p>
+</blockquote>
+<p>注意：rz不能上传大于4g的文件，此时可以改为scp或sftp上传，其中sftp url为：sftp://user:passwd@host:22</p>
+<h1>2 scp</h1>
+<p>安装</p>
+<blockquote>
+<p>yum install scp</p>
+</blockquote>
+<p>上传</p>
+<blockquote>
+<p>scp /local_dir/filename user@server_ip:/remote/path </p>
+</blockquote>
+<p>下载</p>
+<blockquote>
+<p>scp user@server_ip:/remote/path/filename /local_dir</p>
+</blockquote>
+<p> </p>
+<h1>3 windows pscp</h1>
+<blockquote>
+<p>pscp /local_dir/filename user@server_ip:/remote/path </p>
+</blockquote>
+<p> </p>
+</div>
+            </div>
+
+            <!-- Post Footer -->
+            <div class="post-footer">
+                <div class="post-navigation">
+                    <a href="../blog_cn.html" class="nav-button">← Back to Home</a>
+                    <a href="0275.html" class="nav-button">Next Post →</a>
+                </div>
+            </div>
+        </article>
+    </div>
+</body>
+</html>

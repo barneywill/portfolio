@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>spark on yarn提交任务到集群后spark-submit进程一直等待</title>
+    <link rel="stylesheet" href="../css/style3.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header Navigation -->
+        <div class="header">
+            <h1><a href="../blog_cn.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+        </div>
+
+        <!-- Post Container -->
+        <article class="post">
+            <!-- Post Header -->
+            <div class="post-header">
+                <h1>spark on yarn提交任务到集群后spark-submit进程一直等待</h1>
+                <div class="post-meta">
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📅</span>
+                        <span>December 21, 2018</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📖</span>
+                        <span>1 min read</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">👁️</span>
+                        <span>2967 views</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Post Content -->
+            <div class="post-content">
+                <div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<p>spark on yarn通过--deploy-mode cluster提交任务之后，应用已经在yarn上执行了，但是spark-submit提交进程还在，直到应用执行结束，提交进程才会退出，有时这会很不方便，并且不注意的话还会占用很多资源，比如提交spark streaming应用；</p>
+<p>最近发现spark里有一个配置可以修改这种行为，提交任务的时候加长一个conf就可以</p>
+<blockquote>
+<p>--conf spark.yarn.submit.waitAppCompletion=false</p>
+</blockquote>
+<p>org.apache.spark.deploy.yarn.config</p>
+<div class="cnblogs_code">
+<pre>  <span style="color: rgba(0, 0, 255, 1)">private</span>[spark] val WAIT_FOR_APP_COMPLETION = ConfigBuilder("spark.yarn.submit.waitAppCompletion"<span style="color: rgba(0, 0, 0, 1)">)
+    .doc(</span>"In cluster mode, whether to wait for the application to finish before exiting the " +
+      "launcher process."<span style="color: rgba(0, 0, 0, 1)">)
+    .booleanConf
+    .createWithDefault(</span><span style="color: rgba(0, 0, 255, 1)">true</span>)</pre>
+</div>
+<p> </p>
+</div>
+            </div>
+
+            <!-- Post Footer -->
+            <div class="post-footer">
+                <div class="post-navigation">
+                    <a href="../blog_cn.html" class="nav-button">← Back to Home</a>
+                    <a href="0303.html" class="nav-button">Next Post →</a>
+                </div>
+            </div>
+        </article>
+    </div>
+</body>
+</html>

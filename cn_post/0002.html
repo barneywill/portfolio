@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>hbase有一个region一直处于rit状态（非超时）</title>
+    <link rel="stylesheet" href="../css/style3.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header Navigation -->
+        <div class="header">
+            <h1><a href="../blog_cn.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+        </div>
+
+        <!-- Post Container -->
+        <article class="post">
+            <!-- Post Header -->
+            <div class="post-header">
+                <h1>hbase有一个region一直处于rit状态（非超时）</h1>
+                <div class="post-meta">
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📅</span>
+                        <span>June 16, 2022</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📖</span>
+                        <span>1 min read</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">👁️</span>
+                        <span>564 views</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Post Content -->
+            <div class="post-content">
+                <div class="blogpost-body cnblogs-markdown" id="cnblogs_post_body">
+<p>HMaster页面上Regions In Transition部分有一个region一直处于transition状态，但是没有超时，而是不断重试，1s会重试4-5次，region信息</p>
+<blockquote>
+<p>NS1:TB1,4120J5402AAD3N76TRTffUlocation1618464157000,1637905603483.47f541c30ccfd046c5366274fdf56e7d.</p>
+</blockquote>
+<p>master报错日志如下</p>
+<pre><code>2022-05-26 17:58:18,934 WARN org.apache.hadoop.hbase.master.balancer.RegionLocationFinder: IOException during HDFSBlocksDistribution computation. for region = 47f541c30ccfd046c5366274fdf56e7d
+java.io.FileNotFoundException: File does not exist: hdfs://nameservice1/user/hbase/data/NS1/TB1/e4da96749cbc1d574a78365b77590a25/cf/0b4c33a2ff4440ecb5b67005d33dfd12
+	at org.apache.hadoop.hdfs.DistributedFileSystem$29.doCall(DistributedFileSystem.java:1499)
+	at org.apache.hadoop.hdfs.DistributedFileSystem$29.doCall(DistributedFileSystem.java:1492)
+	at org.apache.hadoop.fs.FileSystemLinkResolver.resolve(FileSystemLinkResolver.java:81)
+	at org.apache.hadoop.hdfs.DistributedFileSystem.getFileStatus(DistributedFileSystem.java:1507)
+	at org.apache.hadoop.hbase.regionserver.StoreFileInfo.getReferencedFileStatus(StoreFileInfo.java:352)
+	at org.apache.hadoop.hbase.regionserver.StoreFileInfo.computeHDFSBlocksDistributionInternal(StoreFileInfo.java:321)
+	at org.apache.hadoop.hbase.regionserver.StoreFileInfo.computeHDFSBlocksDistribution(StoreFileInfo.java:315)
+	at org.apache.hadoop.hbase.regionserver.HRegion.computeHDFSBlocksDistribution(HRegion.java:1221)
+	at org.apache.hadoop.hbase.regionserver.HRegion.computeHDFSBlocksDistribution(HRegion.java:1189)
+	at org.apache.hadoop.hbase.master.balancer.RegionLocationFinder.internalGetTopBlockLocation(RegionLocationFinder.java:198)
+	at org.apache.hadoop.hbase.master.balancer.RegionLocationFinder$1$1.call(RegionLocationFinder.java:81)
+	at org.apache.hadoop.hbase.master.balancer.RegionLocationFinder$1$1.call(RegionLocationFinder.java:78)
+	at org.apache.hbase.thirdparty.com.google.common.util.concurrent.TrustedListenableFutureTask$TrustedFutureInterruptibleTask.runInterruptibly(TrustedListenableFutureTask.java:111)
+	at org.apache.hbase.thirdparty.com.google.common.util.concurrent.InterruptibleTask.run(InterruptibleTask.java:58)
+	at org.apache.hbase.thirdparty.com.google.common.util.concurrent.TrustedListenableFutureTask.run(TrustedListenableFutureTask.java:75)
+	at java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:511)
+	at java.util.concurrent.FutureTask.run(FutureTask.java:266)
+	at java.util.concurrent.ScheduledThreadPoolExecutor$ScheduledFutureTask.access$201(ScheduledThreadPoolExecutor.java:180)
+	at java.util.concurrent.ScheduledThreadPoolExecutor$ScheduledFutureTask.run(ScheduledThreadPoolExecutor.java:293)
+	at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1149)
+	at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:624)
+	at java.lang.Thread.run(Thread.java:748)
+</code></pre>
+<p>进入hdfs查看，目标文件不存在</p>
+<blockquote>
+<p>hdfs dfs - ls /user/hbase/data/NS1/TB1/e4da96749cbc1d574a78365b77590a25/cf/<br/>
+-rw-r–r– 3 hbase hbase 8686520819 2021-11-26 17:57 /user/hbase/data/NS1/TB1/e4da96749cbc1d574a78365b77590a25/cf/187f2a9fd2354e71a5fb916a6a7d40f8</p>
+</blockquote>
+<p>尝试重新建一个空文件</p>
+<blockquote>
+<p>hdfs dfs - touch /user/hbase/data/IOT_PROD/T_LOCATION/e4da96749cbc1d574a78365b77590a25/cf/0b4c33a2ff4440ecb5b67005d33dfd12</p>
+</blockquote>
+<p>发现有报错，因为空文件不是合法的hfile文件，报格式错误</p>
+<pre><code>2022-05-26 22:10:49,499 WARN org.apache.hadoop.hbase.regionserver.HRegion: Failed initialize of region= NS1:TB1,4120J5402AAD3N76TRTffUlocation1618464157000,1637905603483.47f541c30ccfd046c5366274fdf56e7d., star
+ting to roll back memstore
+java.io.IOException: java.io.IOException: org.apache.hadoop.hbase.io.hfile.CorruptHFileException: Problem reading HFile Trailer from file hdfs://nameservice1/user/hbase/data/NS1/TB1/47f541c30ccfd046c5366274fdf
+56e7d/cf/0b4c33a2ff4440ecb5b67005d33dfd12.e4da96749cbc1d574a78365b77590a25
+	at org.apache.hadoop.hbase.regionserver.HRegion.initializeStores(HRegion.java:1079)
+	at org.apache.hadoop.hbase.regionserver.HRegion.initializeRegionInternals(HRegion.java:940)
+	at org.apache.hadoop.hbase.regionserver.HRegion.initialize(HRegion.java:896)
+	at org.apache.hadoop.hbase.regionserver.HRegion.openHRegion(HRegion.java:7221)
+	at org.apache.hadoop.hbase.regionserver.HRegion.openHRegion(HRegion.java:7180)
+	at org.apache.hadoop.hbase.regionserver.HRegion.openHRegion(HRegion.java:7152)
+	at org.apache.hadoop.hbase.regionserver.HRegion.openHRegion(HRegion.java:7110)
+	at org.apache.hadoop.hbase.regionserver.HRegion.openHRegion(HRegion.java:7061)
+	at org.apache.hadoop.hbase.regionserver.handler.OpenRegionHandler.openRegion(OpenRegionHandler.java:283)
+	at org.apache.hadoop.hbase.regionserver.handler.OpenRegionHandler.process(OpenRegionHandler.java:108)
+	at org.apache.hadoop.hbase.executor.EventHandler.run(EventHandler.java:104)
+	at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1149)
+	at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:624)
+	at java.lang.Thread.run(Thread.java:748)
+Caused by: java.io.IOException: org.apache.hadoop.hbase.io.hfile.CorruptHFileException: Problem reading HFile Trailer from file hdfs://nameservice1/user/hbase/data/NS1/TB1/47f541c30ccfd046c5366274fdf56e7d/cf/0
+b4c33a2ff4440ecb5b67005d33dfd12.e4da96749cbc1d574a78365b77590a25
+	at org.apache.hadoop.hbase.regionserver.HStore.openStoreFiles(HStore.java:590)
+	at org.apache.hadoop.hbase.regionserver.HStore.loadStoreFiles(HStore.java:557)
+	at org.apache.hadoop.hbase.regionserver.HStore.&lt;init&gt;(HStore.java:303)
+	at org.apache.hadoop.hbase.regionserver.HRegion.instantiateHStore(HRegion.java:5708)
+	at org.apache.hadoop.hbase.regionserver.HRegion$1.call(HRegion.java:1043)
+	at org.apache.hadoop.hbase.regionserver.HRegion$1.call(HRegion.java:1040)
+	at java.util.concurrent.FutureTask.run(FutureTask.java:266)
+	at java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:511)
+	at java.util.concurrent.FutureTask.run(FutureTask.java:266)
+	... 3 more
+Caused by: org.apache.hadoop.hbase.io.hfile.CorruptHFileException: Problem reading HFile Trailer from file hdfs://nameservice1/user/hbase/data/NS1/TB1/47f541c30ccfd046c5366274fdf56e7d/cf/0b4c33a2ff4440ecb5b670
+05d33dfd12.e4da96749cbc1d574a78365b77590a25
+	at org.apache.hadoop.hbase.io.hfile.HFile.openReader(HFile.java:545)
+	at org.apache.hadoop.hbase.io.hfile.HFile.createReader(HFile.java:579)
+	at org.apache.hadoop.hbase.regionserver.StoreFileReader.&lt;init&gt;(StoreFileReader.java:108)
+	at org.apache.hadoop.hbase.io.HalfStoreFileReader.&lt;init&gt;(HalfStoreFileReader.java:108)
+	at org.apache.hadoop.hbase.regionserver.StoreFileInfo.open(StoreFileInfo.java:282)
+	at org.apache.hadoop.hbase.regionserver.HStoreFile.open(HStoreFile.java:368)
+	at org.apache.hadoop.hbase.regionserver.HStoreFile.initReader(HStoreFile.java:476)
+	at org.apache.hadoop.hbase.regionserver.HStore.createStoreFileAndReader(HStore.java:703)
+	at org.apache.hadoop.hbase.regionserver.HStore.lambda$openStoreFiles$1(HStore.java:573)
+	... 6 more
+Caused by: java.lang.IllegalArgumentException
+	at java.nio.Buffer.position(Buffer.java:244)
+	at org.apache.hadoop.hbase.io.hfile.FixedFileTrailer.readFromStream(FixedFileTrailer.java:405)
+	at org.apache.hadoop.hbase.io.hfile.HFile.openReader(HFile.java:532)
+	... 14 more
+</code></pre>
+<p>开始查看hbase源码，尝试写空的hfile</p>
+<pre><code>import junit.framework.TestCase
+import org.apache.hadoop.fs.Path
+import org.apache.hadoop.hbase.HBaseConfiguration
+import org.apache.hadoop.hbase.fs.HFileSystem
+import org.apache.hadoop.hbase.io.hfile.{CacheConfig, HFile, HFileContextBuilder}
+
+class HFileGenerator extends TestCase {
+  var conf = HBaseConfiguration.create();
+  var fs = HFileSystem.get(conf);
+  def testGenerate : Unit = {
+    var cacheConf = new CacheConfig(conf);
+    var f = new Path("/tmp", "test");
+    var context = new HFileContextBuilder().withIncludesTags(false).build();
+    var w = HFile.getWriterFactory(conf, cacheConf).withPath(fs, f).withFileContext(context).create();
+    w.close();
+  }
+}
+</code></pre>
+<p>将空hfile写入到</p>
+<blockquote>
+<p>/user/hbase/data/NS1/TB1/e4da96749cbc1d574a78365b77590a25/cf/0b4c33a2ff4440ecb5b67005d33dfd12</p>
+</blockquote>
+<p>又有新的报错</p>
+<blockquote>
+<p>java.io.IOException: java.io.IOException: java.io.FileNotFoundException: File does not exist: /user/hbase/data/NS1/TB1/e4da96749cbc1d574a78365b77590a25/cf/1d6a7331097b40268c214d3b1260cb68</p>
+</blockquote>
+<p>重复上述过程，region初始化成功，解决rit状态</p>
+</div>
+            </div>
+
+            <!-- Post Footer -->
+            <div class="post-footer">
+                <div class="post-navigation">
+                    <a href="../blog_cn.html" class="nav-button">← Back to Home</a>
+                    <a href="0003.html" class="nav-button">Next Post →</a>
+                </div>
+            </div>
+        </article>
+    </div>
+</body>
+</html>

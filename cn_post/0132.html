@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>hive和spark读取kudu表</title>
+    <link rel="stylesheet" href="../css/style3.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header Navigation -->
+        <div class="header">
+            <h1><a href="../blog_cn.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+        </div>
+
+        <!-- Post Container -->
+        <article class="post">
+            <!-- Post Header -->
+            <div class="post-header">
+                <h1>hive和spark读取kudu表</h1>
+                <div class="post-meta">
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📅</span>
+                        <span>May 22, 2019</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📖</span>
+                        <span>1 min read</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">👁️</span>
+                        <span>5440 views</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Post Content -->
+            <div class="post-content">
+                <div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<p>从impala中创建kudu表之后，如果想从hive或spark sql直接读取，会报错：</p>
+<div class="cnblogs_code">
+<pre><span style="color: rgba(0, 0, 0, 1)">Caused by: java.lang.ClassNotFoundException: com.cloudera.kudu.hive.KuduStorageHandler
+    at java.net.URLClassLoader.findClass(URLClassLoader.java:</span>381<span style="color: rgba(0, 0, 0, 1)">)
+    at java.lang.ClassLoader.loadClass(ClassLoader.java:</span>424<span style="color: rgba(0, 0, 0, 1)">)
+    at java.lang.ClassLoader.loadClass(ClassLoader.java:</span>357<span style="color: rgba(0, 0, 0, 1)">)
+    at java.lang.Class.forName0(Native Method)
+    at java.lang.Class.forName(Class.java:</span>348<span style="color: rgba(0, 0, 0, 1)">)
+    at org.apache.hadoop.hive.ql.metadata.HiveUtils.getStorageHandler(HiveUtils.java:</span>309)</pre>
+</div>
+<p>官方的解释是：</p>
+<div class="body conbody">
+<blockquote>
+<p class="p"><em>You will encounter this exception when you try to access a Kudu table using Hive. This is not a case of a missing jar, but simply that Impala stores Kudu metadata in Hive in a format that is unreadable to other tools, including Hive itself. and Spark. Currently, there is no workaround for Hive users. Spark users can work around this by creating temporary tables.</em></p>
+</blockquote>
+<p>所以不能直接从hive或spark sql读取impala创建的kudu表，但是spark有个稍微简单的方法是</p>
+<div class="cnblogs_code">
+<pre>spark.read.format(<span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">kudu</span><span style="color: rgba(128, 0, 0, 1)">"</span>).options(Map(<span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">kudu.master</span><span style="color: rgba(128, 0, 0, 1)">"</span> - &gt; kuduMaster, <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">kudu.table</span><span style="color: rgba(128, 0, 0, 1)">"</span> - &gt; kuduTableName)).load.createOrReplaceTempView(<span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">tmp_kudu_table</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">)
+spark.sql(</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">select * from tmp_kudu_table limit 5</span><span style="color: rgba(128, 0, 0, 1)">"</span>)</pre>
+</div>
+<p> </p>
+</div>
+<p>参考：</p>
+<p>https://www.cloudera.com/documentation/enterprise/5-14-x/topics/kudu_troubleshooting.html</p>
+</div>
+            </div>
+
+            <!-- Post Footer -->
+            <div class="post-footer">
+                <div class="post-navigation">
+                    <a href="../blog_cn.html" class="nav-button">← Back to Home</a>
+                    <a href="0133.html" class="nav-button">Next Post →</a>
+                </div>
+            </div>
+        </article>
+    </div>
+</body>
+</html>

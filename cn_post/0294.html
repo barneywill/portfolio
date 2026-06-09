@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>hive同时执行多个insert overwrite table只有1个可以执行</title>
+    <link rel="stylesheet" href="../css/style3.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header Navigation -->
+        <div class="header">
+            <h1><a href="../blog_cn.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+        </div>
+
+        <!-- Post Container -->
+        <article class="post">
+            <!-- Post Header -->
+            <div class="post-header">
+                <h1>hive同时执行多个insert overwrite table只有1个可以执行</h1>
+                <div class="post-meta">
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📅</span>
+                        <span>December 27, 2018</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📖</span>
+                        <span>5 min read</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">👁️</span>
+                        <span>10207 views</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Post Content -->
+            <div class="post-content">
+                <div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<p>hive 2.1</p>
+<h1>一 问题</h1>
+<p>最近有一个场景，要向一个表的多个分区写数据，为了缩短执行时间，采用并发的方式，多个sql同时执行，分别写不同的分区，同时开启动态分区：</p>
+<blockquote>
+<p>set hive.exec.dynamic.partition=true</p>
+<p>insert overwrite table test_table partition(dt) select * from test_table_another where dt = 1;</p>
+</blockquote>
+<p>结果发现只有1个sql运行，其他sql都会卡住；<br/>查看hive thrift server线程堆栈发现请求都卡在DbTxnManager上，hive关键配置如下：</p>
+<blockquote>
+<p>hive.support.concurrency=true<br/>hive.txn.manager=org.apache.hadoop.hive.ql.lockmgr.DbTxnManager</p>
+</blockquote>
+<p>配置对应的默认值及注释：</p>
+<p>org.apache.hadoop.hive.conf.HiveConf</p>
+<div class="cnblogs_code">
+<pre>    HIVE_SUPPORT_CONCURRENCY("hive.support.concurrency", <span style="color: rgba(0, 0, 255, 1)">false</span><span style="color: rgba(0, 0, 0, 1)">,
+        </span>"Whether Hive supports concurrency control or not. \n" +
+        "A ZooKeeper instance must be up and running when using zookeeper Hive lock manager "<span style="color: rgba(0, 0, 0, 1)">),
+
+    HIVE_TXN_MANAGER(</span>"hive.txn.manager"<span style="color: rgba(0, 0, 0, 1)">,
+        </span>"org.apache.hadoop.hive.ql.lockmgr.DummyTxnManager"<span style="color: rgba(0, 0, 0, 1)">,
+        </span>"Set to org.apache.hadoop.hive.ql.lockmgr.DbTxnManager as part of turning on Hive\n" +
+        "transactions, which also requires appropriate settings for hive.compactor.initiator.on,\n" +
+        "hive.compactor.worker.threads, hive.support.concurrency (true), hive.enforce.bucketing\n" +
+        "(true), and hive.exec.dynamic.partition.mode (nonstrict).\n" +
+        "The default DummyTxnManager replicates pre-Hive-0.13 behavior and provides\n" +
+        "no transactions."),</pre>
+</div>
+<h1>二 代码分析</h1>
+<p>hive执行sql的详细过程详见：<a href="https://www.cnblogs.com/barneywill/p/10185168.html" target="_blank">https://www.cnblogs.com/barneywill/p/10185168.html</a></p>
+<p> </p>
+<p>hive中执行sql最终都会调用到Driver.run，run会调用runInternal，下面直接看runInternal代码：</p>
+<p>org.apache.hadoop.hive.ql.Driver</p>
+<div class="cnblogs_code">
+<pre>  <span style="color: rgba(0, 0, 255, 1)">private</span> CommandProcessorResponse runInternal(String command, <span style="color: rgba(0, 0, 255, 1)">boolean</span><span style="color: rgba(0, 0, 0, 1)"> alreadyCompiled)
+      </span><span style="color: rgba(0, 0, 255, 1)">throws</span><span style="color: rgba(0, 0, 0, 1)"> CommandNeedRetryException {
+...
+      </span><span style="color: rgba(0, 0, 255, 1)">if</span><span style="color: rgba(0, 0, 0, 1)"> (requiresLock()) {
+        </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> a checkpoint to see if the thread is interrupted or not before an expensive operation</span>
+        <span style="color: rgba(0, 0, 255, 1)">if</span><span style="color: rgba(0, 0, 0, 1)"> (isInterrupted()) {
+          ret </span>= handleInterruption("at acquiring the lock."<span style="color: rgba(0, 0, 0, 1)">);
+        } </span><span style="color: rgba(0, 0, 255, 1)">else</span><span style="color: rgba(0, 0, 0, 1)"> {
+          ret </span>=<span style="color: rgba(0, 0, 0, 1)"> acquireLocksAndOpenTxn(startTxnImplicitly);
+        }
+...
+
+  </span><span style="color: rgba(0, 0, 255, 1)">private</span> <span style="color: rgba(0, 0, 255, 1)">boolean</span><span style="color: rgba(0, 0, 0, 1)"> requiresLock() {
+    </span><span style="color: rgba(0, 0, 255, 1)">if</span> (!<span style="color: rgba(0, 0, 0, 1)">checkConcurrency()) {
+      </span><span style="color: rgba(0, 0, 255, 1)">return</span> <span style="color: rgba(0, 0, 255, 1)">false</span><span style="color: rgba(0, 0, 0, 1)">;
+    }
+    </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> Lock operations themselves don't require the lock.</span>
+    <span style="color: rgba(0, 0, 255, 1)">if</span><span style="color: rgba(0, 0, 0, 1)"> (isExplicitLockOperation()){
+      </span><span style="color: rgba(0, 0, 255, 1)">return</span> <span style="color: rgba(0, 0, 255, 1)">false</span><span style="color: rgba(0, 0, 0, 1)">;
+    }
+    </span><span style="color: rgba(0, 0, 255, 1)">if</span> (!<span style="color: rgba(0, 0, 0, 1)">HiveConf.getBoolVar(conf, ConfVars.HIVE_LOCK_MAPRED_ONLY)) {
+      </span><span style="color: rgba(0, 0, 255, 1)">return</span> <span style="color: rgba(0, 0, 255, 1)">true</span><span style="color: rgba(0, 0, 0, 1)">;
+    }
+    Queue</span>&lt;Task&lt;? <span style="color: rgba(0, 0, 255, 1)">extends</span> Serializable&gt;&gt; taskQueue = <span style="color: rgba(0, 0, 255, 1)">new</span> LinkedList&lt;Task&lt;? <span style="color: rgba(0, 0, 255, 1)">extends</span> Serializable&gt;&gt;<span style="color: rgba(0, 0, 0, 1)">();
+    taskQueue.addAll(plan.getRootTasks());
+    </span><span style="color: rgba(0, 0, 255, 1)">while</span> (taskQueue.peek() != <span style="color: rgba(0, 0, 255, 1)">null</span><span style="color: rgba(0, 0, 0, 1)">) {
+      Task</span>&lt;? <span style="color: rgba(0, 0, 255, 1)">extends</span> Serializable&gt; tsk =<span style="color: rgba(0, 0, 0, 1)"> taskQueue.remove();
+      </span><span style="color: rgba(0, 0, 255, 1)">if</span><span style="color: rgba(0, 0, 0, 1)"> (tsk.requireLock()) {
+        </span><span style="color: rgba(0, 0, 255, 1)">return</span> <span style="color: rgba(0, 0, 255, 1)">true</span><span style="color: rgba(0, 0, 0, 1)">;
+      }
+...
+
+  </span><span style="color: rgba(0, 0, 255, 1)">private</span> <span style="color: rgba(0, 0, 255, 1)">boolean</span><span style="color: rgba(0, 0, 0, 1)"> checkConcurrency() {
+    </span><span style="color: rgba(0, 0, 255, 1)">boolean</span> supportConcurrency =<span style="color: rgba(0, 0, 0, 1)"> conf.getBoolVar(HiveConf.ConfVars.HIVE_SUPPORT_CONCURRENCY);
+    </span><span style="color: rgba(0, 0, 255, 1)">if</span> (!<span style="color: rgba(0, 0, 0, 1)">supportConcurrency) {
+      LOG.info(</span>"Concurrency mode is disabled, not creating a lock manager"<span style="color: rgba(0, 0, 0, 1)">);
+      </span><span style="color: rgba(0, 0, 255, 1)">return</span> <span style="color: rgba(0, 0, 255, 1)">false</span><span style="color: rgba(0, 0, 0, 1)">;
+    }
+    </span><span style="color: rgba(0, 0, 255, 1)">return</span> <span style="color: rgba(0, 0, 255, 1)">true</span><span style="color: rgba(0, 0, 0, 1)">;
+  }
+
+  </span><span style="color: rgba(0, 0, 255, 1)">private</span> <span style="color: rgba(0, 0, 255, 1)">int</span> acquireLocksAndOpenTxn(<span style="color: rgba(0, 0, 255, 1)">boolean</span><span style="color: rgba(0, 0, 0, 1)"> startTxnImplicitly) {
+...
+      txnMgr.acquireLocks(plan, ctx, userFromUGI);
+...</span></pre>
+</div>
+<p>runInternal会调用requiresLock判断是否需要lock，requiresLock有两个判断：</p>
+<ul>
+<li>调用checkConcurrency，checkConcurrency会检查hive.support.concurrency=true才需要lock;</li>
+<li>调用Task.requireLock，只有部分task才需要lock；</li>
+</ul>
+<p>如果判断需要lock，会调用acquireLocksAndOpenTxn，acquireLocksAndOpenTxn会调用HiveTxnManager.acquireLocks来获取lock；</p>
+<p> </p>
+<p>1）先看那些task需要lock：</p>
+<p>org.apache.hadoop.hive.ql.parse.DDLSemanticAnalyzer</p>
+<div class="cnblogs_code">
+<pre>  <span style="color: rgba(0, 0, 255, 1)">private</span> <span style="color: rgba(0, 0, 255, 1)">void</span><span style="color: rgba(0, 0, 0, 1)"> analyzeAlterTablePartMergeFiles(ASTNode ast,
+      String tableName, HashMap</span>&lt;String, String&gt;<span style="color: rgba(0, 0, 0, 1)"> partSpec)
+      </span><span style="color: rgba(0, 0, 255, 1)">throws</span><span style="color: rgba(0, 0, 0, 1)"> SemanticException {
+...
+      DDLWork ddlWork </span>= <span style="color: rgba(0, 0, 255, 1)">new</span><span style="color: rgba(0, 0, 0, 1)"> DDLWork(getInputs(), getOutputs(), mergeDesc);
+      ddlWork.setNeedLock(</span><span style="color: rgba(0, 0, 255, 1)">true</span><span style="color: rgba(0, 0, 0, 1)">);
+...</span></pre>
+</div>
+<p>可见DDL操作需要；</p>
+<p>2）再看怎样获取lock：</p>
+<p>org.apache.hadoop.hive.ql.lockmgr.DbTxnManager</p>
+<div class="cnblogs_code">
+<pre>  <span style="color: rgba(0, 0, 255, 1)">public</span> <span style="color: rgba(0, 0, 255, 1)">void</span> acquireLocks(QueryPlan plan, Context ctx, String username) <span style="color: rgba(0, 0, 255, 1)">throws</span><span style="color: rgba(0, 0, 0, 1)"> LockException {
+    </span><span style="color: rgba(0, 0, 255, 1)">try</span><span style="color: rgba(0, 0, 0, 1)"> {
+      acquireLocksWithHeartbeatDelay(plan, ctx, username, </span>0<span style="color: rgba(0, 0, 0, 1)">);
+...
+
+  </span><span style="color: rgba(0, 0, 255, 1)">void</span> acquireLocksWithHeartbeatDelay(QueryPlan plan, Context ctx, String username, <span style="color: rgba(0, 0, 255, 1)">long</span> delay) <span style="color: rgba(0, 0, 255, 1)">throws</span><span style="color: rgba(0, 0, 0, 1)"> LockException {
+    LockState ls </span>= acquireLocks(plan, ctx, username, <span style="color: rgba(0, 0, 255, 1)">true</span><span style="color: rgba(0, 0, 0, 1)">);
+...
+
+  LockState acquireLocks(QueryPlan plan, Context ctx, String username, </span><span style="color: rgba(0, 0, 255, 1)">boolean</span> isBlocking) <span style="color: rgba(0, 0, 255, 1)">throws</span><span style="color: rgba(0, 0, 0, 1)"> LockException {
+...
+      </span><span style="color: rgba(0, 0, 255, 1)">switch</span><span style="color: rgba(0, 0, 0, 1)"> (output.getType()) {
+        </span><span style="color: rgba(0, 0, 255, 1)">case</span><span style="color: rgba(0, 0, 0, 1)"> DATABASE:
+          compBuilder.setDbName(output.getDatabase().getName());
+          </span><span style="color: rgba(0, 0, 255, 1)">break</span><span style="color: rgba(0, 0, 0, 1)">;
+
+        </span><span style="color: rgba(0, 0, 255, 1)">case</span><span style="color: rgba(0, 0, 0, 1)"> TABLE:
+        </span><span style="color: rgba(0, 0, 255, 1)">case</span> DUMMYPARTITION:   <span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> in case of dynamic partitioning lock the table</span>
+          t =<span style="color: rgba(0, 0, 0, 1)"> output.getTable();
+          compBuilder.setDbName(t.getDbName());
+          compBuilder.setTableName(t.getTableName());
+          </span><span style="color: rgba(0, 0, 255, 1)">break</span><span style="color: rgba(0, 0, 0, 1)">;
+
+        </span><span style="color: rgba(0, 0, 255, 1)">case</span><span style="color: rgba(0, 0, 0, 1)"> PARTITION:
+          compBuilder.setPartitionName(output.getPartition().getName());
+          t </span>=<span style="color: rgba(0, 0, 0, 1)"> output.getPartition().getTable();
+          compBuilder.setDbName(t.getDbName());
+          compBuilder.setTableName(t.getTableName());
+          </span><span style="color: rgba(0, 0, 255, 1)">break</span><span style="color: rgba(0, 0, 0, 1)">;
+
+        </span><span style="color: rgba(0, 0, 255, 1)">default</span><span style="color: rgba(0, 0, 0, 1)">:
+          </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> This is a file or something we don't hold locks for.</span>
+          <span style="color: rgba(0, 0, 255, 1)">continue</span><span style="color: rgba(0, 0, 0, 1)">;
+      }
+...
+    LockState lockState </span>=<span style="color: rgba(0, 0, 0, 1)"> lockMgr.lock(rqstBuilder.build(), queryId, isBlocking, locks);
+    ctx.setHiveLocks(locks);
+    </span><span style="color: rgba(0, 0, 255, 1)">return</span><span style="color: rgba(0, 0, 0, 1)"> lockState;
+  }</span></pre>
+</div>
+<p>可见当开启动态分区时，锁的粒度是DbName+TableName，这样就会导致多个sql只有1个sql可以拿到lock，其他sql只能等待；</p>
+<h1>三 总结</h1>
+<p>解决问题的方式有几种：</p>
+<ol>
+<li id="__mceDel">关闭动态分区：set hive.exec.dynamic.partition=false</li>
+<li id="__mceDel">关闭并发：set hive.support.concurrency=false</li>
+<li id="__mceDel">关闭事务：set hive.txn.manager=org.apache.hadoop.hive.ql.lockmgr.DummyTxnManager</li>
+</ol>
+<p>三者任选其一，推荐第1种，因为在刚才的场景下，不需要动态分区；</p>
+<p> </p>
+</div>
+            </div>
+
+            <!-- Post Footer -->
+            <div class="post-footer">
+                <div class="post-navigation">
+                    <a href="../blog_cn.html" class="nav-button">← Back to Home</a>
+                    <a href="0295.html" class="nav-button">Next Post →</a>
+                </div>
+            </div>
+        </article>
+    </div>
+</body>
+</html>

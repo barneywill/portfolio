@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>impala报错内存不足</title>
+    <link rel="stylesheet" href="../css/style3.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header Navigation -->
+        <div class="header">
+            <h1><a href="../blog_cn.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+        </div>
+
+        <!-- Post Container -->
+        <article class="post">
+            <!-- Post Header -->
+            <div class="post-header">
+                <h1>impala报错内存不足</h1>
+                <div class="post-meta">
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📅</span>
+                        <span>August 10, 2020</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📖</span>
+                        <span>2 min read</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">👁️</span>
+                        <span>3765 views</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Post Content -->
+            <div class="post-content">
+                <div class="blogpost-body cnblogs-markdown" id="cnblogs_post_body">
+<p>impala有时查询报错内存不足,并持续一段时间后自动恢复,报错时日志如下:</p>
+<pre><code>org.apache.hive.service.cli.HiveSQLException: ExecQueryFInstances rpc query_id=834c3b2376181f0e:a901620f00000000 failed: Failed to get minimum memory reservation of 204.00 MB on daemon 192.168.0.1:22000 for query 834c3b2376181f0e:a901620f00000000 due to following error: Failed to increase reservation by 204.00 MB because it would exceed the applicable reservation limit for the "Process" ReservationTracker: reservation_limit=8.50 GB reservation=8.50 GB used_reservation=0 child_reservations=8.50 GB
+The top 5 queries that allocated memory under this tracker are:
+Query(404fa28252334daf:5bb8cef500000000): Reservation=974.00 MB ReservationLimit=8.00 GB OtherMemory=31.14 MB Total=1005.14 MB Peak=1.00 GB
+Query(3443bd95eb37b73a:885bbe6f00000000): Reservation=784.00 MB ReservationLimit=8.00 GB OtherMemory=31.14 MB Total=815.14 MB Peak=826.21 MB
+Query(894b4caf9b397385:16df941300000000): Reservation=558.00 MB ReservationLimit=8.00 GB OtherMemory=15.77 MB Total=573.77 MB Peak=595.57 MB
+Query(6c42b50ef6e5ba57:42aa5de200000000): Reservation=558.00 MB ReservationLimit=8.00 GB OtherMemory=15.77 MB Total=573.77 MB Peak=595.57 MB
+Query(6142bb9f76823b8a:97e6451900000000): Reservation=508.00 MB ReservationLimit=8.00 GB OtherMemory=15.77 MB Total=523.77 MB Peak=534.67 MB
+Memory is likely oversubscribed. Reducing query concurrency or configuring admission control may help avoid this error.
+at org.apache.hive.jdbc.Utils.verifySuccess(Utils.java:231)
+at org.apache.hive.jdbc.Utils.verifySuccessWithInfo(Utils.java:217)
+at org.apache.hive.jdbc.HiveStatement.execute(HiveStatement.java:254)
+at org.apache.hive.jdbc.HiveStatement.executeQuery(HiveStatement.java:392)
+at org.apache.hive.jdbc.HivePreparedStatement.executeQuery(HivePreparedStatement.java:109)
+at com.alibaba.druid.pool.DruidPooledPreparedStatement.executeQuery(DruidPooledPreparedStatement.java:227)
+at com.dataone.xishaoye.backend.dataoneapi.config.impala.RoundRobinPattern.winning(RoundRobinPattern.java:56)
+at com.dataone.xishaoye.backend.dataoneapi.common.util.ConvertQueryUtils.convertcustomerexecQueryMapList(ConvertQueryUtils.java:92)
+at com.dataone.xishaoye.backend.dataoneapi.businessAnalysis_v2.timingTasks.RealTimeTotalYear.realTimeTotalYear(RealTimeTotalYear.java:48)
+at sun.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+at sun.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:62)
+at sun.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+at java.lang.reflect.Method.invoke(Method.java:498)
+at com.dataone.xishaoye.backend.dataoneapi.config.quartz.SystemJobFactory.execute(SystemJobFactory.java:29)
+at org.quartz.core.JobRunShell.run(JobRunShell.java:202)
+at org.quartz.simpl.SimpleThreadPool$WorkerThread.run(SimpleThreadPool.java:573)
+</code></pre>
+<p>可以看到有5个query正在进行导致当前query获取不到足够的资源,查看impala日志 /var/log/impalad/impalad.INFO,<br/>
+这5个query执行简略过程为:<br/>
+第1个</p>
+<pre><code>I0731 13:15:03.254120 11667 impala-server.cc:972] Registered query query_id=404fa28252334daf:5bb8cef500000000 session_id=ea422a1e110dec91:7de05e982c2b4c90
+...
+I0731 13:15:04.135802 11720 query-exec-mgr.cc:155] ReleaseQueryState(): query_id=404fa28252334daf:5bb8cef500000000 refcnt=4
+I0731 13:21:35.669724 22421 coordinator.cc:956] Backend completed: host=192.168.0.1:22000 remaining=3 query_id=404fa28252334daf:5bb8cef500000000
+...
+I0731 13:22:09.125800 11667 query-exec-mgr.cc:155] ReleaseQueryState(): query_id=404fa28252334daf:5bb8cef500000000 refcnt=1
+</code></pre>
+<p>第2个</p>
+<pre><code>I0731 13:09:02.447206 22390 impala-server.cc:972] Registered query query_id=3443bd95eb37b73a:885bbe6f00000000 session_id=ff4e12e38ce19b8d:56bef858ad9def93
+...
+I0731 13:09:02.657199 22396 query-exec-mgr.cc:155] ReleaseQueryState(): query_id=3443bd95eb37b73a:885bbe6f00000000 refcnt=4
+I0731 13:21:30.155854 9378 coordinator.cc:956] Backend completed: host=192.168.0.1:22000 remaining=3 query_id=3443bd95eb37b73a:885bbe6f00000000
+...
+I0731 13:22:13.168628 22390 query-exec-mgr.cc:155] ReleaseQueryState(): query_id=3443bd95eb37b73a:885bbe6f00000000 refcnt=1
+</code></pre>
+<p>第3个</p>
+<pre><code>I0731 13:14:02.140969 3886 impala-server.cc:972] Registered query query_id=894b4caf9b397385:16df941300000000 session_id=6e47d4c6c94a8e19:b6384942e957718c
+...
+I0731 13:14:02.598412 3927 query-exec-mgr.cc:155] ReleaseQueryState(): query_id=894b4caf9b397385:16df941300000000 refcnt=7
+I0731 13:21:18.426283 3931 krpc-data-stream-mgr.cc:293] DeregisterRecvr(): fragment_instance_id=894b4caf9b397385:16df941300000011, node=18
+...
+I0731 13:22:06.124980 3886 query-exec-mgr.cc:155] ReleaseQueryState(): query_id=894b4caf9b397385:16df941300000000 refcnt=1
+</code></pre>
+<p>第4个</p>
+<pre><code>I0731 13:07:01.442411 20737 impala-server.cc:972] Registered query query_id=6c42b50ef6e5ba57:42aa5de200000000 session_id=ba4cab33df74b6e4:94e56665c8bf36a1
+...
+I0731 13:07:01.692301 20752 query-exec-mgr.cc:155] ReleaseQueryState(): query_id=6c42b50ef6e5ba57:42aa5de200000000 refcnt=7
+I0731 13:21:18.492522 20755 krpc-data-stream-mgr.cc:293] DeregisterRecvr(): fragment_instance_id=6c42b50ef6e5ba57:42aa5de200000011, node=18
+...
+I0731 13:22:03.314045 20737 query-exec-mgr.cc:155] ReleaseQueryState(): query_id=6c42b50ef6e5ba57:42aa5de200000000 refcnt=1
+</code></pre>
+<p>第5个</p>
+<pre><code>I0731 13:12:02.287282 29199 impala-server.cc:972] Registered query query_id=6142bb9f76823b8a:97e6451900000000 session_id=6b497f1f4c2a1000:2fca9a9feb8a268d
+...
+I0731 13:12:02.876965 29214 query-exec-mgr.cc:155] ReleaseQueryState(): query_id=6142bb9f76823b8a:97e6451900000000 refcnt=7
+I0731 13:21:18.524863 29219 krpc-data-stream-mgr.cc:293] DeregisterRecvr(): fragment_instance_id=6142bb9f76823b8a:97e6451900000011, node=18
+...
+I0731 13:22:08.481279 29199 query-exec-mgr.cc:155] ReleaseQueryState(): query_id=6142bb9f76823b8a:97e6451900000000 refcnt=1
+</code></pre>
+<p>每个query具体执行的sql都可以在所有impalad中的一台的impalad.INFO中找到,这里不再列举<br/>
+发现一些规律:这5个query都持续十几分钟,而且查询过程中都有很长的空白(没有任何日志输出),都从13点21开始陆续恢复,进一步查看空白过程的日志,发现有很多报错</p>
+<pre><code>java.net.SocketTimeoutException: 60000 millis timeout while waiting for channel to be ready for read. ch : java.nio.channels.SocketChannel[connected local=/192.168.0.1:42194 remote=/192.168.0.2:50010]
+</code></pre>
+<p>在impala日志查看发现异常SocketTimeoutException持续时间从13点06到13点21</p>
+<pre><code># tail - 400000 impalad.INFO|grep SocketTimeoutException - B 2
+W0731 13:06:00.506495 31507 BlockReaderFactory.java:570] BlockReaderFactory(fileName=/part-00001-a55afd98-d28f-4493-985d-0cf1f8577cfe.c000, block=BP-692799849-192.168.0.2-1556106550
+816:blk_1084633665_10894033): I/O error requesting file descriptors.  Disabling domain socket DomainSocket(fd=800,path=/var/run/hdfs-sockets/dn)
+Java exception follows:
+java.net.SocketTimeoutException: read(2) error: Resource temporarily unavailable
+...
+W0731 13:21:09.401382 31508 DFSInputStream.java:704] Failed to connect to /192.168.0.1:50010 for block BP-692799849-192.168.0.2-1556106550816:blk_1084742948_11003322, add to deadNodes and continue. 
+Java exception follows:
+java.net.SocketTimeoutException: 60000 millis timeout while waiting for channel to be ready for read. ch : java.nio.channels.SocketChannel[connected local=/192.168.0.2:35019 remote=/192.168.0.1:50010]
+</code></pre>
+<p>192.168.0.1上的datanode在这段时间响应异常,查看datanode日志 /var/log/hadoop-hdfs/hadoop-cmf-hdfs-DATANODE-192.168.0.1.log.out<br/>
+在这段时间有很多异常</p>
+<pre><code>2020-07-31 13:02:50,431 INFO org.apache.hadoop.util.JvmPauseMonitor: Detected pause in JVM or host machine (eg GC): pause of approximately 1306ms
+</code></pre>
+<p>在datanode日志查看发现异常持续时间从13点02到13点21</p>
+<pre><code># tail - 347000 hadoop-cmf-hdfs-DATANODE-192.168.0.1.log.out.1|grep JvmPauseMonitor
+2020-07-31 13:02:50,431 INFO org.apache.hadoop.util.JvmPauseMonitor: Detected pause in JVM or host machine (eg GC): pause of approximately 1306ms
+...
+2020-07-31 13:21:16,102 INFO org.apache.hadoop.util.JvmPauseMonitor: Detected pause in JVM or host machine (eg GC): pause of approximately 2399ms
+</code></pre>
+<p>调整datanode内存(Java Heap Size of DataNode in Bytes),问题解决</p>
+<p>总结: datanode内存不足导致gc,进而导致impala查询中部分查询(用到该datanode上数据的查询)卡住,进而导致impala大量内存被占用,进而导致impala查询报错内存不足</p>
+</div>
+            </div>
+
+            <!-- Post Footer -->
+            <div class="post-footer">
+                <div class="post-navigation">
+                    <a href="../blog_cn.html" class="nav-button">← Back to Home</a>
+                    <a href="0052.html" class="nav-button">Next Post →</a>
+                </div>
+            </div>
+        </article>
+    </div>
+</body>
+</html>

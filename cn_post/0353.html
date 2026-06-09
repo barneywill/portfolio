@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>spark任务一定几率报错java.lang.NoSuchFieldError: HIVE_MOVE_FILES_THREAD_COUNT</title>
+    <link rel="stylesheet" href="../css/style3.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header Navigation -->
+        <div class="header">
+            <h1><a href="../blog_cn.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+        </div>
+
+        <!-- Post Container -->
+        <article class="post">
+            <!-- Post Header -->
+            <div class="post-header">
+                <h1>spark任务一定几率报错java.lang.NoSuchFieldError: HIVE_MOVE_FILES_THREAD_COUNT</h1>
+                <div class="post-meta">
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📅</span>
+                        <span>November 02, 2018</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📖</span>
+                        <span>2 min read</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">👁️</span>
+                        <span>2706 views</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Post Content -->
+            <div class="post-content">
+                <div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<p>最近用yarn cluster方式提交spark任务时，有时会报错，报错几率是40%，报错如下：</p>
+<blockquote>
+<p>18/03/15 21:50:36 116 ERROR ApplicationMaster91: User class threw exception: org.apache.spark.sql.AnalysisException: java.lang.NoSuchFieldError: HIVE_MOVE_FILES_THREAD_COUNT;</p>
+<p>org.apache.spark.sql.AnalysisException: java.lang.NoSuchFieldError: HIVE_MOVE_FILES_THREAD_COUNT;</p>
+<p>         at org.apache.spark.sql.hive.HiveExternalCatalog.withClient(HiveExternalCatalog.scala:106)</p>
+<p>         <strong>at org.apache.spark.sql.hive.HiveExternalCatalog.loadTable(HiveExternalCatalog.scala:766)</strong></p>
+<p>         at org.apache.spark.sql.hive.execution.InsertIntoHiveTable.sideEffectResult$lzycompute(InsertIntoHiveTable.scala:374)</p>
+<p>         at org.apache.spark.sql.hive.execution.InsertIntoHiveTable.sideEffectResult(InsertIntoHiveTable.scala:221)</p>
+<p>         <strong>at org.apache.spark.sql.hive.execution.InsertIntoHiveTable.doExecute(InsertIntoHiveTable.scala:407)</strong></p>
+<p>         at org.apache.spark.sql.execution.SparkPlan$$anonfun$execute$1.apply(SparkPlan.scala:114)</p>
+<p>         at org.apache.spark.sql.execution.SparkPlan$$anonfun$execute$1.apply(SparkPlan.scala:114)</p>
+<p>         at org.apache.spark.sql.execution.SparkPlan$$anonfun$executeQuery$1.apply(SparkPlan.scala:135)</p>
+<p>         at org.apache.spark.rdd.RDDOperationScope$.withScope(RDDOperationScope.scala:151)</p>
+<p>         at org.apache.spark.sql.execution.SparkPlan.executeQuery(SparkPlan.scala:132)</p>
+<p>         at org.apache.spark.sql.execution.SparkPlan.execute(SparkPlan.scala:113)</p>
+<p>         at org.apache.spark.sql.execution.QueryExecution.toRdd$lzycompute(QueryExecution.scala:92)</p>
+<p>         at org.apache.spark.sql.execution.QueryExecution.toRdd(QueryExecution.scala:92)</p>
+<p>         at org.apache.spark.sql.Dataset.&lt;init&gt;(Dataset.scala:185)</p>
+<p>         at org.apache.spark.sql.Dataset$.ofRows(Dataset.scala:64)</p>
+<p>         <strong>at org.apache.spark.sql.SparkSession.sql(SparkSession.scala:592)</strong></p>
+<p>         at scala.util.control.Breaks.breakable(Breaks.scala:38)</p>
+<p>         at app.package.APPClass$.main(APPClass.scala:177)</p>
+<p>         at sun.reflect.NativeMethodAccessorImpl.invoke0(Native Method)</p>
+<p>         at sun.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:62)</p>
+<p>         at sun.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)</p>
+<p>         at java.lang.reflect.Method.invoke(Method.java:497)</p>
+<p>         at org.apache.spark.deploy.yarn.ApplicationMaster$$anon$2.run(ApplicationMaster.scala:637)</p>
+<p>Caused by: java.lang.NoSuchFieldError: HIVE_MOVE_FILES_THREAD_COUNT</p>
+<p>         <strong>at org.apache.hadoop.hive.ql.metadata.Hive.trashFilesUnderDir(Hive.java:1389)</strong></p>
+<p><strong>         at org.apache.hadoop.hive.ql.metadata.Hive.replaceFiles(Hive.java:2873)</strong></p>
+<p><strong>         at org.apache.hadoop.hive.ql.metadata.Hive.loadTable(Hive.java:1621)</strong></p>
+<p>         at sun.reflect.NativeMethodAccessorImpl.invoke0(Native Method)</p>
+<p>         at sun.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:62)</p>
+<p>         at sun.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)</p>
+<p>         at java.lang.reflect.Method.invoke(Method.java:497)</p>
+<p>         <strong>at org.apache.spark.sql.hive.client.Shim_v0_14.loadTable(HiveShim.scala:728)</strong></p>
+<p>         at org.apache.spark.sql.hive.client.HiveClientImpl$$anonfun$loadTable$1.apply$mcV$sp(HiveClientImpl.scala:676)</p>
+<p>         at org.apache.spark.sql.hive.client.HiveClientImpl$$anonfun$loadTable$1.apply(HiveClientImpl.scala:676)</p>
+<p>         at org.apache.spark.sql.hive.client.HiveClientImpl$$anonfun$loadTable$1.apply(HiveClientImpl.scala:676)</p>
+<p>         at org.apache.spark.sql.hive.client.HiveClientImpl$$anonfun$withHiveState$1.apply(HiveClientImpl.scala:279)</p>
+<p>         at org.apache.spark.sql.hive.client.HiveClientImpl.liftedTree1$1(HiveClientImpl.scala:226)</p>
+<p>         at org.apache.spark.sql.hive.client.HiveClientImpl.retryLocked(HiveClientImpl.scala:225)</p>
+<p>         at org.apache.spark.sql.hive.client.HiveClientImpl.withHiveState(HiveClientImpl.scala:268)</p>
+<p>         at org.apache.spark.sql.hive.client.HiveClientImpl.loadTable(HiveClientImpl.scala:675)</p>
+<p>         at org.apache.spark.sql.hive.HiveExternalCatalog$$anonfun$loadTable$1.apply$mcV$sp(HiveExternalCatalog.scala:768)</p>
+<p>         at org.apache.spark.sql.hive.HiveExternalCatalog$$anonfun$loadTable$1.apply(HiveExternalCatalog.scala:766)</p>
+<p>         at org.apache.spark.sql.hive.HiveExternalCatalog$$anonfun$loadTable$1.apply(HiveExternalCatalog.scala:766)</p>
+<p>         at org.apache.spark.sql.hive.HiveExternalCatalog.withClient(HiveExternalCatalog.scala:97)</p>
+<p>         ... 25 more</p>
+</blockquote>
+<p>大概流程是spark sql在执行InsertIntoHiveTable时会调用loadTable，这个操作最终会通过反射调用hive代码的loadTable方法</p>
+<ol>
+<li><strong>org.apache.spark.sql.hive.execution.InsertIntoHiveTable.doExecute(InsertIntoHiveTable.scala:407)</strong></li>
+<li><strong>org.apache.spark.sql.hive.HiveExternalCatalog.loadTable(HiveExternalCatalog.scala:766)</strong></li>
+<li><strong>org.apache.spark.sql.hive.client.Shim_v0_14.loadTable(HiveShim.scala:728)</strong></li>
+<li><strong>java.lang.reflect.Method.invoke(Method.java:497)</strong></li>
+<li><strong>org.apache.hadoop.hive.ql.metadata.Hive.loadTable(Hive.java:1621)</strong></li>
+<li><strong>org.apache.hadoop.hive.ql.metadata.Hive.trashFilesUnderDir(Hive.java:1389)</strong></li>
+</ol>
+<p>在第6步中报错 java.lang.NoSuchFieldError: HIVE_MOVE_FILES_THREAD_COUNT</p>
+<p> </p>
+<p>这个问题通常会认为是hive-site.xml缺少配置</p>
+<blockquote>
+<p>  &lt;property&gt;</p>
+<p>    &lt;name&gt;<strong>hive.mv.files.thread</strong>&lt;/name&gt;</p>
+<p>    &lt;value&gt;15&lt;/value&gt;</p>
+<p>  &lt;/property&gt;</p>
+</blockquote>
+<p>但是查看代码会发现spark2.1.1依赖的是hive1.2.1，在hive1.2.1中是没有<strong>hive.mv.files.thread</strong>这个配置的，这个配置从hive2才开始出现，而且报错的类<strong>org.apache.hadoop.hive.ql.metadata.Hive</strong>在hive1.2.1和hive2的相关代码完全不同，具体分写如下：</p>
+<p> </p>
+<p>在hive1.2.1的代码是：（<strong>trashFilesUnderDir</strong><strong>方法是FileUtils</strong><strong>类的</strong>）</p>
+<div class="cnblogs_code">
+<pre>            <span style="color: rgba(0, 0, 255, 1)">if</span><span style="color: rgba(0, 0, 0, 1)"> (FileUtils.isSubDir(oldPath, destf, fs2)) {
+
+              FileUtils.trashFilesUnderDir(fs2, oldPath, conf);
+
+            }</span></pre>
+</div>
+<p>在hive2的代码是：（<strong>trashFilesUnderDir</strong><strong>方法是Hive</strong><strong>类的</strong>）</p>
+<div class="cnblogs_code">
+<pre>  <span style="color: rgba(0, 0, 255, 1)">private</span> <span style="color: rgba(0, 0, 255, 1)">boolean</span> trashFilesUnderDir(<span style="color: rgba(0, 0, 255, 1)">final</span> FileSystem fs, Path f, <span style="color: rgba(0, 0, 255, 1)">final</span><span style="color: rgba(0, 0, 0, 1)"> Configuration conf)
+
+      </span><span style="color: rgba(0, 0, 255, 1)">throws</span><span style="color: rgba(0, 0, 0, 1)"> IOException {
+
+    FileStatus[] statuses </span>=<span style="color: rgba(0, 0, 0, 1)"> fs.listStatus(f, FileUtils.HIDDEN_FILES_PATH_FILTER);
+
+    </span><span style="color: rgba(0, 0, 255, 1)">boolean</span> result = <span style="color: rgba(0, 0, 255, 1)">true</span><span style="color: rgba(0, 0, 0, 1)">;
+
+    </span><span style="color: rgba(0, 0, 255, 1)">final</span> List&lt;Future&lt;Boolean&gt;&gt; futures = <span style="color: rgba(0, 0, 255, 1)">new</span> LinkedList&lt;&gt;<span style="color: rgba(0, 0, 0, 1)">();
+
+    </span><span style="color: rgba(0, 0, 255, 1)">final</span> ExecutorService pool = conf.getInt(ConfVars.HIVE_MOVE_FILES_THREAD_COUNT.varname, 25) &gt; 0 ?<span style="color: rgba(0, 0, 0, 1)">
+
+        Executors.newFixedThreadPool(conf.getInt(ConfVars.HIVE_MOVE_FILES_THREAD_COUNT.varname, </span>25<span style="color: rgba(0, 0, 0, 1)">),
+
+        </span><span style="color: rgba(0, 0, 255, 1)">new</span> ThreadFactoryBuilder().setDaemon(<span style="color: rgba(0, 0, 255, 1)">true</span>).setNameFormat("Delete-Thread-%d").build()) : <span style="color: rgba(0, 0, 255, 1)">null</span>;</pre>
+</div>
+<p> </p>
+<p>所以第6步的报错，执行的应该是hive2的代码，所以猜测问题可能是：</p>
+<p>1）由于jar包污染，启动jvm的时候classpath里同时有hive1和hive2的jar，有时加载类用到hive1的jar（可以正常运行），有时用到hive2的jar（会报错）；</p>
+<p>2）集群服务器环境配置差异，有的服务器classpath中没有hive2的jar（可以正常运行），有的服务器classpath有hive2的jar（可能报错）；</p>
+<p> </p>
+<p>对比正常和报错的服务器的环境配置以及启动命令发现都是一样的，没有发现hive2的jar，</p>
+<p>通过在启动任务时增加-verbose:class，发现正常和报错的情况下，Hive类都是从Hive1.2.1的jar加载出来的，</p>
+<blockquote>
+<p><strong>[Loaded org.apache.hadoop.hive.ql.metadata.Hive from file:/export/Data/tmp/hadoop-tmp/nm-local-dir/filecache/98/hive-exec-1.2.1.spark2.jar]</strong></p>
+</blockquote>
+<p>否定了上边的两种猜测；</p>
+<p> </p>
+<p>分析提交任务命令发现，用到了<strong>spark.yarn.jars</strong>，避免每次都上传spark的jar，这些jar会被作为filecache缓存在<strong>yarn.nodemanager.local-dirs</strong>下，</p>
+<p>反编译正常和报错服务器上filecache里的<strong>hive-exec-1.2.1.spark2.jar</strong>最终发现问题，</p>
+<p>正常服务器上Hive类代码是：</p>
+<div class="cnblogs_code">
+<pre>    <span style="color: rgba(0, 0, 255, 1)">if</span><span style="color: rgba(0, 0, 0, 1)"> (FileUtils.isSubDir(oldPath, destf, fs2))
+
+        FileUtils.trashFilesUnderDir(fs2, oldPath, conf);</span></pre>
+</div>
+<p>报错服务器上的Hive类代码是：</p>
+<div class="cnblogs_code">
+<pre>    <span style="color: rgba(0, 0, 255, 1)">private</span> <span style="color: rgba(0, 0, 255, 1)">static</span> <span style="color: rgba(0, 0, 255, 1)">boolean</span> trashFilesUnderDir(<span style="color: rgba(0, 0, 255, 1)">final</span> FileSystem fs, Path f, <span style="color: rgba(0, 0, 255, 1)">final</span> Configuration conf) <span style="color: rgba(0, 0, 255, 1)">throws</span><span style="color: rgba(0, 0, 0, 1)"> IOException {
+
+        FileStatus[] statuses </span>=<span style="color: rgba(0, 0, 0, 1)"> fs.listStatus(f, FileUtils.HIDDEN_FILES_PATH_FILTER);
+
+        </span><span style="color: rgba(0, 0, 255, 1)">boolean</span> result = <span style="color: rgba(0, 0, 255, 1)">true</span><span style="color: rgba(0, 0, 0, 1)">;
+
+        List</span>&lt;Future&lt;Boolean&gt;&gt; futures = <span style="color: rgba(0, 0, 255, 1)">new</span><span style="color: rgba(0, 0, 0, 1)"> LinkedList();
+
+        ExecutorService pool </span>= conf.getInt(ConfVars.HIVE_MOVE_FILES_THREAD_COUNT.varname, 25) &gt; 0 ? Executors.newFixedThreadPool(conf.getInt(ConfVars.HIVE_MOVE_FILES_THREAD_COUNT.varname, 25), (<span style="color: rgba(0, 0, 255, 1)">new</span> ThreadFactoryBuilder()).setDaemon(<span style="color: rgba(0, 0, 255, 1)">true</span>).setNameFormat("Delete-Thread-%d").build()) : <span style="color: rgba(0, 0, 255, 1)">null</span>;</pre>
+</div>
+<p>报错服务器上的Hive类用到<strong>ConfVars.HIVE_MOVE_FILES_THREAD_COUNT</strong>，但是在hive-common-1.2.1.jar中的ConfVars不存在这个属性，所以报错<strong>java.lang.NoSuchFieldError</strong>，</p>
+<p>所以问题应该是hdfs上的<strong>hive-exec-1.2.1.spark2.jar</strong>一开始是对的，然后所有nodemanager下载到本地作为filecache，后来这个jar被改错了（使用hive2编译spark），然后新加的nodemanager会下载有问题的jar作为filecache，这样结果就是有的服务器执行正常，有的服务器执行报错；</p>
+<p> </p>
+<p>yarn中的filecache清理有两个配置</p>
+<blockquote>
+<p><strong>yarn.nodemanager.localizer.cache.cleanup.interval-ms</strong>：600000  Interval in between cache cleanups.</p>
+<p><strong>yarn.nodemanager.localizer.cache.target-size-mb</strong>：10240    Target size of localizer cache in MB, per local directory.</p>
+</blockquote>
+<p>每隔cleanup.interval-ms会检查本地filecache大小是否超过target-size-mb，超过才清理，不超过就一直使用filecache；</p>
+<p> </p>
+</div>
+            </div>
+
+            <!-- Post Footer -->
+            <div class="post-footer">
+                <div class="post-navigation">
+                    <a href="../blog_cn.html" class="nav-button">← Back to Home</a>
+                    <a href="0354.html" class="nav-button">Next Post →</a>
+                </div>
+            </div>
+        </article>
+    </div>
+</body>
+</html>

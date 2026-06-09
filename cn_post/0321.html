@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Oozie 3 - Oozie从4.3升级到5.0</title>
+    <link rel="stylesheet" href="../css/style3.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header Navigation -->
+        <div class="header">
+            <h1><a href="../blog_cn.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+        </div>
+
+        <!-- Post Container -->
+        <article class="post">
+            <!-- Post Header -->
+            <div class="post-header">
+                <h1>Oozie 3 - Oozie从4.3升级到5.0</h1>
+                <div class="post-meta">
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📅</span>
+                        <span>December 13, 2018</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📖</span>
+                        <span>1 min read</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">👁️</span>
+                        <span>596 views</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Post Content -->
+            <div class="post-content">
+                <div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<p>官方文档如下：</p>
+<p>http://oozie.apache.org/docs/5.0.0/AG_OozieUpgrade.html</p>
+<p>这里写的比较简单，大概过程如下：<br/>1 下载5.0代码并编译；<br/>2 解压5.0包并替换oozie-site.xml；<br/>3 停掉所有的流程；<br/>4 按照官方文档说的升级DB；<br/>5 重新启动oozie；<br/>6 恢复所有的流程；</p>
+<p><br/>这时升级就完成了，如果你足够细心的话，会发现还有一点小问题，Job DAG显示不出来，在5.0里oozie的Job DAG图片实现改为使用graphviz，需要安装</p>
+<blockquote>
+<p>yum install graphviz</p>
+</blockquote>
+<p> </p>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201812/1509647-20181213162956877-1635587739.png"/></p>
+<p> </p>
+</div>
+            </div>
+
+            <!-- Post Footer -->
+            <div class="post-footer">
+                <div class="post-navigation">
+                    <a href="../blog_cn.html" class="nav-button">← Back to Home</a>
+                    <a href="0322.html" class="nav-button">Next Post →</a>
+                </div>
+            </div>
+        </article>
+    </div>
+</body>
+</html>

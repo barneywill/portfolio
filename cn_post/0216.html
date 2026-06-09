@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kerberos 1 - 简介、安装、使用</title>
+    <link rel="stylesheet" href="../css/style3.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header Navigation -->
+        <div class="header">
+            <h1><a href="../blog_cn.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+        </div>
+
+        <!-- Post Container -->
+        <article class="post">
+            <!-- Post Header -->
+            <div class="post-header">
+                <h1>Kerberos 1 - 简介、安装、使用</h1>
+                <div class="post-meta">
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📅</span>
+                        <span>February 19, 2019</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📖</span>
+                        <span>7 min read</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">👁️</span>
+                        <span>1309 views</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Post Content -->
+            <div class="post-content">
+                <div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<p>kerberos5-1.17</p>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201902/1509647-20190218183415676-110417039.png"/></p>
+<p>官方：https://kerberos.org/</p>
+<p> </p>
+<h1>一 简介</h1>
+<p>The Kerberos protocol is designed to provide reliable authentication over open and insecure networks where communications between the hosts belonging to it may be intercepted. However, one should be aware that Kerberos does not provide any guarantees if the computers being used are vulnerable: the authentication servers, application servers (imap, pop, smtp, telnet, ftp, ssh , AFS, lpr, ...) and clients must be kept constantly updated so that the authenticity of the requesting users and service providers can be guaranteed.</p>
+<p>The above points justify the sentence: "Kerberos is an authentication protocol for trusted hosts on untrusted networks". By way of example, and to reiterate the concept: Kerberos' strategies are useless if someone who obtains privileged access to a server, can copy the file containing the secret key. Indeed, the intruder will put this key on another machine, and will only have to obtain a simple spoof DNS or IP address for that server to appear to clients as the authentic server.</p>
+<p> </p>
+<p>Kerberos is a network authentication protocol. It is designed to provide strong authentication for client/server applications by using secret-key cryptography. A free implementation of this protocol is available from the Massachusetts Institute of Technology. Kerberos is available in many commercial products as well.</p>
+<p><em>kerberos是一个网络身份认证协议，使用密钥加密算法为CS应用提供安全的身份认证；</em></p>
+<p>The Internet is an insecure place. Many of the protocols used in the Internet do not provide any security. Tools to "sniff" passwords off of the network are in common use by malicious hackers. Thus, applications which send an unencrypted password over the network are extremely vulnerable. Worse yet, other client/server applications rely on the client program to be "honest" about the identity of the user who is using it. Other applications rely on the client to restrict its activities to those which it is allowed to do, with no other enforcement by the server.</p>
+<p><em>互联网是非安全的，互联网的很多协议并没有提供任何安全机制，嗅探密码的工具在网络上被黑客广泛使用，因此，在网络上发送明文密码的应用是非常脆弱的；更糟糕的是，有些CS应用相信client的用户是honest的，有些应用依赖client来进行安全限制；</em></p>
+<p>Some sites attempt to use firewalls to solve their network security problems. Unfortunately, firewalls assume that "the bad guys" are on the outside, which is often a very bad assumption. Most of the really damaging incidents of computer crime are carried out by insiders. Firewalls also have a significant disadvantage in that they restrict how your users can use the Internet. (After all, firewalls are simply a less extreme example of the dictum that there is nothing more secure than a computer which is not connected to the network --- and powered off!) In many places, these restrictions are simply unrealistic and unacceptable.</p>
+<p><em>很多网站使用firewall来解决网络安全问题，不幸的是，firewall假设the bad guys在外部，这是一个非常不好的假设，绝大部分的计算机犯罪是从内部进行；</em></p>
+<p>Kerberos was created by MIT as a solution to these network security problems. The Kerberos protocol uses strong cryptography so that a client can prove its identity to a server (and vice versa) across an insecure network connection. After a client and server has used Kerberos to prove their identity, they can also encrypt all of their communications to assure privacy and data integrity as they go about their business.</p>
+<p><em>kerberos是MIT提出的一个应对网络安全问题的解决方案；kerberos协议使用强加密算法所以client可以通过不安全的网络连接来验证身份；当client和server使用kerberos来验证身份之后，他们可以加密所有的连接信息来保证数据隐私和完整性；</em></p>
+<p>Kerberos is freely available from MIT, under copyright permissions very similar those used for the BSD operating system and the X Window System. MIT provides Kerberos in source form so that anyone who wishes to use it may look over the code for themselves and assure themselves that the code is trustworthy. In addition, for those who prefer to rely on a professionally supported product, Kerberos is available as a product from many different vendors.</p>
+<p><em>kerberos是免费的开源的；</em></p>
+<p>In summary, Kerberos is a solution to your network security problems. It provides the tools of authentication and strong cryptography over the network to help you secure your information systems across your entire enterprise. We hope you find Kerberos as useful as it has been to us. At MIT, Kerberos has been invaluable to our Information/Technology architecture.</p>
+<p><em>kerberos提供了很多身份验证和强加密算法的工具；</em></p>
+<p> </p>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201902/1509647-20190218205553763-1218018747.png"/></p>
+<h2>角色</h2>
+<h3>Key Distribution Center (KDC)</h3>
+<p>The authentication server in a Kerberos environment, based on its ticket distribution function for access to the services, is called Key Distribution Center or more briefly KDC. Since it resides entirely on a single physical server (it often coincides with a single process) it can be logically considered divided into three parts: Database, Authentication Server (AS) and Ticket Granting Server (TGS).</p>
+<h4>1）Database</h4>
+<p>The database is the container for entries associated with users and services.</p>
+<h4>2）Authentication Server (AS)</h4>
+<p>The Authentication Server is the part of the KDC which replies to the initial authentication request from the client, when the user, not yet authenticated, must enter the password. In response to an authentication request, the AS issues a special ticket known as the Ticket Granting Ticket, or more briefly TGT, the principal associated with which is krbtgt/REALM@REALM. If the users are actually who they say they are (and we'll see later how they demonstrate this) they can use the TGT to obtain other service tickets, without having to re-enter their password.</p>
+<h4>3）Ticket Granting Server (TGS)</h4>
+<p>The Ticket Granting Server is the KDC component which distributes service tickets to clients with a valid TGT, guaranteeing the authenticity of the identity for obtaining the requested resource on the application servers. The TGS can be considered as an application server (given that to access it it is necessary to present the TGT) which provides the issuing of service tickets as a service. It is important not to confuse the abbreviations TGT and TGS: the first indicates a ticket and the second a service.</p>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201902/1509647-20190219224635990-92948094.png"/></p>
+<p> </p>
+<h2>概念</h2>
+<h3>realm</h3>
+<p>The term realm indicates an authentication administrative domain. Its intention is to establish the boundaries within which an authentication server has the authority to authenticate a user, host or service.<br/>Basically, a user/service belongs to a realm if and only if he/it shares a secret (password/key) with the authentication server of that realm.<br/>The name of a realm is case sensitive, i.e. there is a difference between upper and lower case letters, but normally realms always appear in upper case letters.</p>
+<h3>principal</h3>
+<p>A principal is the name used to refer to the entries in the authentication server database. A principal is associated with each user, host or service of a given realm. A principal in Kerberos 5 is of the following type:<br/>component1/component2/.../componentN@REALM<br/>However, in practice a maximum of two components are used. For an entry referring to a user the principal is the following type:<br/>Name[/Instance]@REALM<br/>The instance is optional and is normally used to better qualify the type of user. For example administrator users normally have the admin instance. The following are examples of principals referred to users:<br/>pippo@EXAMPLE.COM    admin/admin@EXAMPLE.COM    pluto/admin@EXAMPLE.COM</p>
+<h3>Ticket</h3>
+<p>A ticket is something a client presents to an application server to demonstrate the authenticity of its identity. Tickets are issued by the authentication server and are encrypted using the secret key of the service they are intended for. Since this key is a secret shared only between the authentication server and the server providing the service, not even the client which requested the ticket can know it or change its contents. The main information contained in a ticket includes:</p>
+<ul>
+<li>The requesting user's principal (generally the username);</li>
+<li>The principal of the service it is intended for;</li>
+<li>The IP address of the client machine from which the ticket can be used. In Kerberos 5 this field is optional and may also be multiple in order to be able to run clients under NAT or multihomed.</li>
+<li>The date and time (in timestamp format) when the tickets validity commences;</li>
+<li>The ticket's maximum lifetime</li>
+<li>The session key (this has a fundamental role which is described below);</li>
+</ul>
+<h1>二 安装</h1>
+<h2>kdc</h2>
+<blockquote>
+<p># yum install krb5-libs krb5-server krb5-workstation</p>
+</blockquote>
+<h2>client</h2>
+<blockquote>
+<p># yum install krb5-devel krb5-workstation</p>
+</blockquote>
+<h1>三 使用</h1>
+<h2>kdc</h2>
+<p>1 修改配置：替换域名、修改ip、注释default_ccache_name</p>
+<blockquote>
+<p># vi /etc/krb5.conf<br/>default_realm = ANYTHING.COM<br/>#default_ccache_name = KEYRING:persistent:%{uid}<br/>[realms]<br/>ANYTHING.COM = {<br/>kdc = 192.168.0.1<br/>admin_server = 192.168.0.1<br/>}<br/>[domain_realm]<br/>.anything.com = ANYTHING.COM<br/>anything.com = ANYTHING.COM</p>
+<p># vi /var/kerberos/krb5kdc/kdc.conf<br/>ANYTHING.COM = {<br/>  #master_key_type = aes256-cts<br/>  max_renewable_life = 7d 0h 0m 0s<br/>  default_principal_flags = +renewable</p>
+<p># vi /var/kerberos/krb5kdc/kadm5.acl<br/>*/admin@ANYTHING.COM *</p>
+</blockquote>
+<p>2 创建数据库</p>
+<blockquote>
+<p># kdb5_util create - r ANYTHING.COM - s</p>
+</blockquote>
+<p>3 创建管理员用户admin</p>
+<blockquote>
+<p># /usr/sbin/kadmin.local - q "addprinc admin/admin"</p>
+</blockquote>
+<p>4 启动kdc</p>
+<blockquote>
+<p>systemctl start krb5kdc <br/>systemctl start kadmin </p>
+<p>systemctl enable krb5kdc <br/>systemctl enable kadmin</p>
+</blockquote>
+<p>5 本机ticket验证</p>
+<blockquote>
+<p># kinit admin/admin<br/># klist</p>
+</blockquote>
+<p>7 本机admin验证（kdc上无需密码）</p>
+<blockquote>
+<p># kadmin.local<br/>kadmin.local:  ?<br/>Available kadmin.local requests:</p>
+<p>add_principal, addprinc, ank<br/>                         Add principal<br/>delete_principal, delprinc<br/>                         Delete principal<br/>modify_principal, modprinc<br/>                         Modify principal<br/>rename_principal, renprinc<br/>                         Rename principal<br/>change_password, cpw     Change password<br/>get_principal, getprinc  Get principal<br/>list_principals, listprincs, get_principals, getprincs<br/>                         List principals<br/>add_policy, addpol       Add policy<br/>modify_policy, modpol    Modify policy<br/>delete_policy, delpol    Delete policy<br/>get_policy, getpol       Get policy<br/>list_policies, listpols, get_policies, getpols<br/>                         List policies<br/>get_privs, getprivs      Get privileges<br/>ktadd, xst               Add entry(s) to a keytab<br/>ktremove, ktrem          Remove entry(s) from a keytab<br/>lock                     Lock database exclusively (use with extreme caution!)<br/>unlock                   Release exclusive database lock<br/>purgekeys                Purge previously retained old keys from a principal<br/>get_strings, getstrs     Show string attributes on a principal<br/>set_string, setstr       Set a string attribute on a principal<br/>del_string, delstr       Delete a string attribute on a principal<br/>list_requests, lr, ?     List available requests.<br/>quit, exit, q            Exit program.</p>
+</blockquote>
+<p>也可以直接通过参数执行命令，比如</p>
+<blockquote>
+<p># kadmin.local - q 'listprincs'</p>
+</blockquote>
+<p>非kdc服务器上使用kadmin</p>
+<h2>client</h2>
+<p>1 同步kdc上的/etc/krb5.conf</p>
+<p>2 远程admin验证</p>
+<blockquote>
+<p># kadmin - p 'admin/admin'</p>
+</blockquote>
+<p>3 远程ticket验证</p>
+<blockquote>
+<p># kinit admin/admin<br/># klist</p>
+</blockquote>
+<p> </p>
+<h2>其他常用命令</h2>
+<p>1）直接登录</p>
+<blockquote>
+<p># kinit admin/admin@ANYTHING.COM</p>
+</blockquote>
+<p>2）查看</p>
+<blockquote>
+<p># klist</p>
+</blockquote>
+<p>3）退出</p>
+<blockquote>
+<p># kdestroy</p>
+</blockquote>
+<p>4）导出keytab</p>
+<blockquote>
+<p># kadmin.local - q 'ktadd - k /path/to/test.keytab - norandkey admin/admin@ANYTHING.COM'</p>
+</blockquote>
+<p>5）查看keytab</p>
+<blockquote>
+<p># klist - k /path/to/test.keytab</p>
+</blockquote>
+<p>6）使用keytab登录</p>
+<blockquote>
+<p># kinit - kt /path/to/test.keytab admin/admin@ANYTHING.COM</p>
+</blockquote>
+<p>7）修改密码</p>
+<blockquote>
+<p># kadmin.local<br/>kadmin.local:  change_password admin/admin@ANYTHING.COM</p>
+</blockquote>
+<p>也可以通过kpasswd修改，上边使用kadmin.local的方式相当于重置密码</p>
+<p>8）添加principal</p>
+<blockquote>
+<p># kadmin.local - q 'addprinc $user/$host@$REALM'</p>
+</blockquote>
+<p>增加参数-randkey则使用随机密码</p>
+<p> </p>
+<p>参考：https://web.mit.edu/kerberos/</p>
+<p> </p>
+</div>
+            </div>
+
+            <!-- Post Footer -->
+            <div class="post-footer">
+                <div class="post-navigation">
+                    <a href="../blog_cn.html" class="nav-button">← Back to Home</a>
+                    <a href="0217.html" class="nav-button">Next Post →</a>
+                </div>
+            </div>
+        </article>
+    </div>
+</body>
+</html>

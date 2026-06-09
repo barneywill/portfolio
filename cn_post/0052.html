@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>easyexcel下载有时报错NoClassDefFoundError</title>
+    <link rel="stylesheet" href="../css/style3.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header Navigation -->
+        <div class="header">
+            <h1><a href="../blog_cn.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+        </div>
+
+        <!-- Post Container -->
+        <article class="post">
+            <!-- Post Header -->
+            <div class="post-header">
+                <h1>easyexcel下载有时报错NoClassDefFoundError</h1>
+                <div class="post-meta">
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📅</span>
+                        <span>August 10, 2020</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📖</span>
+                        <span>2 min read</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">👁️</span>
+                        <span>5413 views</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Post Content -->
+            <div class="post-content">
+                <div class="blogpost-body cnblogs-markdown" id="cnblogs_post_body">
+<p>使用easyexcel实现excel导出功能,有时会报错</p>
+<pre><code>com.alibaba.excel.exception.ExcelGenerateException: java.lang.NoClassDefFoundError: Could not initialize class net.sf.cglib.beans.BeanMap$Generator
+at com.alibaba.excel.write.ExcelBuilderImpl.addContent(ExcelBuilderImpl.java:99) ~[easyexcel-2.0.2.jar:na]
+at com.alibaba.excel.ExcelWriter.write(ExcelWriter.java:155) ~[easyexcel-2.0.2.jar:na]
+at com.alibaba.excel.ExcelWriter.write(ExcelWriter.java:140) ~[easyexcel-2.0.2.jar:na]
+at com.alibaba.excel.write.builder.ExcelWriterSheetBuilder.doWrite(ExcelWriterSheetBuilder.java:134) ~[easyexcel-2.0.2.jar:na]
+...
+Caused by: java.lang.NoClassDefFoundError: Could not initialize class net.sf.cglib.beans.BeanMap$Generator
+at net.sf.cglib.beans.BeanMap.create(BeanMap.java:56) ~[cglib-3.1.jar:na]
+at com.alibaba.excel.write.ExcelBuilderImpl.addJavaObjectToExcel(ExcelBuilderImpl.java:201) ~[easyexcel-2.0.2.jar:na]
+at com.alibaba.excel.write.ExcelBuilderImpl.addOneRowOfDataToExcel(ExcelBuilderImpl.java:128) ~[easyexcel-2.0.2.jar:na]
+at com.alibaba.excel.write.ExcelBuilderImpl.doAddContent(ExcelBuilderImpl.java:79) ~[easyexcel-2.0.2.jar:na]
+at com.alibaba.excel.write.ExcelBuilderImpl.addContent(ExcelBuilderImpl.java:93) ~[easyexcel-2.0.2.jar:na]
+... 142 common frames omitted
+</code></pre>
+<p>经确认服务器上的war包含报错的class</p>
+<pre><code># ls - l /app.war
+-rw-r--r-- 1 root root 161587776 Apr 10 09:32 /app.war
+
+# unzip - l /app.war|grep cglib
+   283080  03-25-2020 10:57   WEB-INF/lib/cglib-3.1.jar
+
+# unzip - l cglib-3.1.jar |grep BeanMap$Generator
+      336  12-07-2013 11:28   net/sf/cglib/beans/BeanMap$Generator$BeanMapKey.class
+     3219  12-07-2013 11:28   net/sf/cglib/beans/BeanMap$Generator.class
+     5008  12-07-2013 11:28   net/sf/cglib/beans/BeanMap.class
+     1825  12-07-2013 11:28   net/sf/cglib/beans/BeanMapEmitter$1.class
+     2090  12-07-2013 11:28   net/sf/cglib/beans/BeanMapEmitter$2.class
+     1546  12-07-2013 11:28   net/sf/cglib/beans/BeanMapEmitter$3.class
+     6339  12-07-2013 11:28   net/sf/cglib/beans/BeanMapEmitter.class
+</code></pre>
+<p>继续看日志发现另外一个异常</p>
+<pre><code>com.alibaba.excel.exception.ExcelGenerateException: java.lang.IncompatibleClassChangeError: class net.sf.cglib.core.DebuggingClassWriter has interface org.objectweb.asm.ClassVisitor as super 
+class
+at com.alibaba.excel.write.ExcelBuilderImpl.addContent(ExcelBuilderImpl.java:99) ~[easyexcel-2.0.2.jar:na]
+at com.alibaba.excel.ExcelWriter.write(ExcelWriter.java:155) ~[easyexcel-2.0.2.jar:na]
+at com.alibaba.excel.ExcelWriter.write(ExcelWriter.java:140) ~[easyexcel-2.0.2.jar:na]
+at com.alibaba.excel.write.builder.ExcelWriterSheetBuilder.doWrite(ExcelWriterSheetBuilder.java:134) ~[easyexcel-2.0.2.jar:na]
+...
+Caused by: java.lang.IncompatibleClassChangeError: class net.sf.cglib.core.DebuggingClassWriter has interface org.objectweb.asm.ClassVisitor as super class
+at java.lang.ClassLoader.defineClass1(Native Method) ~[na:1.8.0_242]
+at java.lang.ClassLoader.defineClass(ClassLoader.java:757) ~[na:1.8.0_242]
+at java.security.SecureClassLoader.defineClass(SecureClassLoader.java:142) ~[na:1.8.0_242]
+at org.apache.catalina.loader.WebappClassLoaderBase.findClassInternal(WebappClassLoaderBase.java:2419) ~[catalina.jar:9.0.33]
+at org.apache.catalina.loader.WebappClassLoaderBase.findClass(WebappClassLoaderBase.java:865) ~[catalina.jar:9.0.33]
+at org.apache.catalina.loader.WebappClassLoaderBase.loadClass(WebappClassLoaderBase.java:1334) ~[catalina.jar:9.0.33]
+at org.apache.catalina.loader.WebappClassLoaderBase.loadClass(WebappClassLoaderBase.java:1188) ~[catalina.jar:9.0.33]
+at net.sf.cglib.core.DefaultGeneratorStrategy.getClassVisitor(DefaultGeneratorStrategy.java:30) ~[cglib-3.1.jar:na]
+at net.sf.cglib.core.DefaultGeneratorStrategy.generate(DefaultGeneratorStrategy.java:24) ~[cglib-3.1.jar:na]
+at net.sf.cglib.core.AbstractClassGenerator.create(AbstractClassGenerator.java:216) ~[cglib-3.1.jar:na]
+at net.sf.cglib.core.KeyFactory$Generator.create(KeyFactory.java:144) ~[cglib-3.1.jar:na]
+at net.sf.cglib.core.KeyFactory.create(KeyFactory.java:116) ~[cglib-3.1.jar:na]
+at net.sf.cglib.core.KeyFactory.create(KeyFactory.java:108) ~[cglib-3.1.jar:na]
+at net.sf.cglib.beans.BeanMap$Generator.&lt;clinit&gt;(BeanMap.java:64) ~[cglib-3.1.jar:na]
+at net.sf.cglib.beans.BeanMap.create(BeanMap.java:56) ~[cglib-3.1.jar:na]
+at com.alibaba.excel.write.ExcelBuilderImpl.addJavaObjectToExcel(ExcelBuilderImpl.java:201) ~[easyexcel-2.0.2.jar:na]
+at com.alibaba.excel.write.ExcelBuilderImpl.addOneRowOfDataToExcel(ExcelBuilderImpl.java:128) ~[easyexcel-2.0.2.jar:na]
+at com.alibaba.excel.write.ExcelBuilderImpl.doAddContent(ExcelBuilderImpl.java:79) ~[easyexcel-2.0.2.jar:na]
+at com.alibaba.excel.write.ExcelBuilderImpl.addContent(ExcelBuilderImpl.java:93) ~[easyexcel-2.0.2.jar:na]
+... 142 common frames omitted
+</code></pre>
+<p>检查发现DebuggingClassWriter继承了ClassVisitor</p>
+<pre><code># javap - cp cglib-3.1.jar net.sf.cglib.core.DebuggingClassWriter
+Compiled from "DebuggingClassWriter.java"
+public class net.sf.cglib.core.DebuggingClassWriter extends org.objectweb.asm.ClassVisitor {
+  public static final java.lang.String DEBUG_LOCATION_PROPERTY;
+  static java.lang.Class class$org$objectweb$asm$ClassVisitor;
+  static java.lang.Class class$java$io$PrintWriter;
+  public net.sf.cglib.core.DebuggingClassWriter(int);
+  public void visit(int, int, java.lang.String, java.lang.String, java.lang.String, java.lang.String[]);
+  public java.lang.String getClassName();
+  public java.lang.String getSuperName();
+  public byte[] toByteArray();
+  static java.lang.Class class$(java.lang.String);
+  static org.objectweb.asm.ClassVisitor access$001(net.sf.cglib.core.DebuggingClassWriter);
+  static java.lang.String access$100();
+  static java.lang.String access$200(net.sf.cglib.core.DebuggingClassWriter);
+  static java.lang.reflect.Constructor access$300();
+  static {};
+}
+</code></pre>
+<p>报错信息为：</p>
+<pre><code>class net.sf.cglib.core.DebuggingClassWriter has interface org.objectweb.asm.ClassVisitor as super class
+</code></pre>
+<p>翻译过来是：ClassVisitor本来应该是一个interface，但是却作为class被继承（extends），说明可能有jar包冲突，ClassVisitor在一个jar包中是interface，在一个jar包中是class</p>
+<pre><code># unzip - l /data/dataone-api/webapps/dataone-api.war|grep asm
+    47895  03-25-2020 10:57   WEB-INF/lib/asm-4.2.jar
+    32693  08-03-2019 20:19   WEB-INF/lib/asm-commons-3.1.jar
+    21879  08-03-2019 20:19   WEB-INF/lib/asm-tree-3.1.jar
+    43033  08-03-2019 20:19   WEB-INF/lib/asm-3.1.jar
+</code></pre>
+<p>发现asm有两个版本，一个3.1，一个4.2，查看maven的依赖树</p>
+<pre><code># mvn dependency:tree
+...
+[INFO] \- com.alibaba:easyexcel:jar:2.0.2:compile
+[INFO]    +- cglib:cglib:jar:3.1:compile
+[INFO]    |  \- org.ow2.asm:asm:jar:4.2:compile
+[INFO]    \- org.ehcache:ehcache:jar:3.6.3:compile
+...
+[INFO] +- org.apache.hive:hive-jdbc:jar:1.1.0:compile
+[INFO] |  +- org.apache.hive:hive-common:jar:1.1.0:compile
+[INFO] |  |  +- log4j:apache-log4j-extras:jar:1.2.17:compile
+[INFO] |  |  \- org.apache.ant:ant:jar:1.9.1:compile
+[INFO] |  |     \- org.apache.ant:ant-launcher:jar:1.9.1:compile
+[INFO] |  +- org.apache.hive:hive-service:jar:1.1.0:compile
+[INFO] |  |  +- net.sf.jpam:jpam:jar:1.1:compile
+[INFO] |  |  \- org.eclipse.jetty.aggregate:jetty-all:jar:7.6.0.v20120127:compile
+[INFO] |  |     +- org.apache.geronimo.specs:geronimo-jta_1.1_spec:jar:1.1.1:compile
+[INFO] |  |     +- javax.mail:mail:jar:1.4.1:compile
+[INFO] |  |     +- org.apache.geronimo.specs:geronimo-jaspic_1.0_spec:jar:1.0:compile
+[INFO] |  |     +- org.apache.geronimo.specs:geronimo-annotation_1.0_spec:jar:1.1.1:compile
+[INFO] |  |     \- asm:asm-commons:jar:3.1:compile
+[INFO] |  |        \- asm:asm-tree:jar:3.1:compile
+[INFO] |  |           \- asm:asm:jar:3.1:compile
+</code></pre>
+<p>4.2是是easyexcel-2.0.2.jar依赖，3.1是hive-jdbc-1.1.0.jar依赖，修改pom去掉3.1的依赖</p>
+<pre><code>        &lt;dependency&gt;
+            &lt;groupId&gt;org.apache.hive&lt;/groupId&gt;
+            &lt;artifactId&gt;hive-jdbc&lt;/artifactId&gt;
+            &lt;version&gt;1.1.0&lt;/version&gt;
+            &lt;exclusions&gt;
+                &lt;exclusion&gt;
+                    &lt;groupId&gt;org.slf4j&lt;/groupId&gt;
+                    &lt;artifactId&gt;slf4j-log4j12&lt;/artifactId&gt;
+                &lt;/exclusion&gt;
+                &lt;exclusion&gt;
+                    &lt;groupId&gt;asm&lt;/groupId&gt;
+                    &lt;artifactId&gt;asm&lt;/artifactId&gt;
+                &lt;/exclusion&gt;
+            &lt;/exclusions&gt;
+        &lt;/dependency&gt;
+</code></pre>
+<p>问题解决</p>
+</div>
+            </div>
+
+            <!-- Post Footer -->
+            <div class="post-footer">
+                <div class="post-navigation">
+                    <a href="../blog_cn.html" class="nav-button">← Back to Home</a>
+                    <a href="0053.html" class="nav-button">Next Post →</a>
+                </div>
+            </div>
+        </article>
+    </div>
+</body>
+</html>

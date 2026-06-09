@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>常用组件日志清理</title>
+    <link rel="stylesheet" href="../css/style3.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header Navigation -->
+        <div class="header">
+            <h1><a href="../blog_cn.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+        </div>
+
+        <!-- Post Container -->
+        <article class="post">
+            <!-- Post Header -->
+            <div class="post-header">
+                <h1>常用组件日志清理</h1>
+                <div class="post-meta">
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📅</span>
+                        <span>July 03, 2019</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📖</span>
+                        <span>3 min read</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">👁️</span>
+                        <span>663 views</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Post Content -->
+            <div class="post-content">
+                <div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<p>包括cloudera-manager、hdfs、impala、kudu、oozie以及系统日志等；</p>
+<div class="cnblogs_code">
+<pre><span style="color: rgba(0, 128, 0, 1)">#</span><span style="color: rgba(0, 128, 0, 1)">cloudera-service-monitor log</span>
+/bin/rm /var/lib/cloudera-service-monitor/ts/*/partition*/* - <span style="color: rgba(0, 0, 0, 1)">rf
+</span>/bin/rm /var/lib/cloudera-host-monitor/ts/*/partition*/* - <span style="color: rgba(0, 0, 0, 1)">rf
+
+</span><span style="color: rgba(0, 128, 0, 1)">#</span><span style="color: rgba(0, 128, 0, 1)">hdfs log</span>
+/bin/rm /var/log/hadoop-hdfs/*.out.*
+/bin/rm /var/log/hadoop-hdfs/hdfs-audit.log.*
+
+<span style="color: rgba(0, 128, 0, 1)">#</span><span style="color: rgba(0, 128, 0, 1)">impala log</span>
+num=`ls /var/log/impalad/|grep <span style="color: rgba(128, 0, 0, 1)">'</span><span style="color: rgba(128, 0, 0, 1)">impala.log.INFO</span><span style="color: rgba(128, 0, 0, 1)">'</span>|wc - <span style="color: rgba(0, 0, 0, 1)">l`
+ls </span>/var/log/impalad/|grep <span style="color: rgba(128, 0, 0, 1)">'</span><span style="color: rgba(128, 0, 0, 1)">impala.log.INFO</span><span style="color: rgba(128, 0, 0, 1)">'</span>|sed $num<span style="color: rgba(128, 0, 0, 1)">'</span><span style="color: rgba(128, 0, 0, 1)">d</span><span style="color: rgba(128, 0, 0, 1)">'</span>|xargs - i /bin/rm /var/log/impalad/<span style="color: rgba(0, 0, 0, 1)">{}
+num</span>=`ls /var/log/impalad/|grep <span style="color: rgba(128, 0, 0, 1)">'</span><span style="color: rgba(128, 0, 0, 1)">impala.log.WARNING</span><span style="color: rgba(128, 0, 0, 1)">'</span>|wc - <span style="color: rgba(0, 0, 0, 1)">l`
+ls </span>/var/log/impalad/|grep <span style="color: rgba(128, 0, 0, 1)">'</span><span style="color: rgba(128, 0, 0, 1)">impala.log.WARNING</span><span style="color: rgba(128, 0, 0, 1)">'</span>|sed $num<span style="color: rgba(128, 0, 0, 1)">'</span><span style="color: rgba(128, 0, 0, 1)">d</span><span style="color: rgba(128, 0, 0, 1)">'</span>|xargs - i /bin/rm /var/log/impalad/<span style="color: rgba(0, 0, 0, 1)">{}
+num</span>=`ls /var/log/impalad/|grep <span style="color: rgba(128, 0, 0, 1)">'</span><span style="color: rgba(128, 0, 0, 1)">impala.log.ERROR</span><span style="color: rgba(128, 0, 0, 1)">'</span>|wc - <span style="color: rgba(0, 0, 0, 1)">l`
+ls </span>/var/log/impalad/|grep <span style="color: rgba(128, 0, 0, 1)">'</span><span style="color: rgba(128, 0, 0, 1)">impala.log.ERROR</span><span style="color: rgba(128, 0, 0, 1)">'</span>|sed $num<span style="color: rgba(128, 0, 0, 1)">'</span><span style="color: rgba(128, 0, 0, 1)">d</span><span style="color: rgba(128, 0, 0, 1)">'</span>|xargs - i /bin/rm /var/log/impalad/<span style="color: rgba(0, 0, 0, 1)">{}
+
+num</span>=`ls /var/log/impalad/profiles/|wc - <span style="color: rgba(0, 0, 0, 1)">l`
+ls </span>/var/log/impalad/profiles/|sed $num<span style="color: rgba(128, 0, 0, 1)">'</span><span style="color: rgba(128, 0, 0, 1)">d</span><span style="color: rgba(128, 0, 0, 1)">'</span>|xargs - i /bin/rm /var/log/impalad/profiles/<span style="color: rgba(0, 0, 0, 1)">{}
+
+</span><span style="color: rgba(0, 128, 0, 1)">#</span><span style="color: rgba(0, 128, 0, 1)">kudu log</span>
+num=`ls /var/log/kudu/|grep <span style="color: rgba(128, 0, 0, 1)">'</span><span style="color: rgba(128, 0, 0, 1)">log.INFO</span><span style="color: rgba(128, 0, 0, 1)">'</span>|wc - <span style="color: rgba(0, 0, 0, 1)">l`
+ls </span>/var/log/kudu/|grep <span style="color: rgba(128, 0, 0, 1)">'</span><span style="color: rgba(128, 0, 0, 1)">log.INFO</span><span style="color: rgba(128, 0, 0, 1)">'</span>|sed $num<span style="color: rgba(128, 0, 0, 1)">'</span><span style="color: rgba(128, 0, 0, 1)">d</span><span style="color: rgba(128, 0, 0, 1)">'</span>|xargs - i /bin/rm /var/log/kudu/<span style="color: rgba(0, 0, 0, 1)">{}
+num</span>=`ls /var/log/kudu/|grep <span style="color: rgba(128, 0, 0, 1)">'</span><span style="color: rgba(128, 0, 0, 1)">log.ERROR</span><span style="color: rgba(128, 0, 0, 1)">'</span>|wc - <span style="color: rgba(0, 0, 0, 1)">l`
+ls </span>/var/log/kudu/|grep <span style="color: rgba(128, 0, 0, 1)">'</span><span style="color: rgba(128, 0, 0, 1)">log.ERROR</span><span style="color: rgba(128, 0, 0, 1)">'</span>|sed $num<span style="color: rgba(128, 0, 0, 1)">'</span><span style="color: rgba(128, 0, 0, 1)">d</span><span style="color: rgba(128, 0, 0, 1)">'</span>|xargs - i /bin/rm /var/log/kudu/<span style="color: rgba(0, 0, 0, 1)">{}
+num</span>=`ls /var/log/kudu/|grep <span style="color: rgba(128, 0, 0, 1)">'</span><span style="color: rgba(128, 0, 0, 1)">log.FATAL</span><span style="color: rgba(128, 0, 0, 1)">'</span>|wc - <span style="color: rgba(0, 0, 0, 1)">l`
+ls </span>/var/log/kudu/|grep <span style="color: rgba(128, 0, 0, 1)">'</span><span style="color: rgba(128, 0, 0, 1)">log.FATAL</span><span style="color: rgba(128, 0, 0, 1)">'</span>|sed $num<span style="color: rgba(128, 0, 0, 1)">'</span><span style="color: rgba(128, 0, 0, 1)">d</span><span style="color: rgba(128, 0, 0, 1)">'</span>|xargs - i /bin/rm /var/log/kudu/<span style="color: rgba(0, 0, 0, 1)">{}
+num</span>=`ls /var/log/kudu/|grep <span style="color: rgba(128, 0, 0, 1)">'</span><span style="color: rgba(128, 0, 0, 1)">log.WARNING</span><span style="color: rgba(128, 0, 0, 1)">'</span>|wc - <span style="color: rgba(0, 0, 0, 1)">l`
+ls </span>/var/log/kudu/|grep <span style="color: rgba(128, 0, 0, 1)">'</span><span style="color: rgba(128, 0, 0, 1)">log.WARNING</span><span style="color: rgba(128, 0, 0, 1)">'</span>|sed $num<span style="color: rgba(128, 0, 0, 1)">'</span><span style="color: rgba(128, 0, 0, 1)">d</span><span style="color: rgba(128, 0, 0, 1)">'</span>|xargs - i /bin/rm /var/log/kudu/<span style="color: rgba(0, 0, 0, 1)">{}<br/>
+</span>/bin/rm /var/log/kudu/*<span style="color: rgba(0, 0, 0, 1)">.gz
+
+</span><span style="color: rgba(0, 128, 0, 1)">#</span><span style="color: rgba(0, 128, 0, 1)">oozie log</span>
+num=`ls /var/log/oozie/|grep <span style="color: rgba(128, 0, 0, 1)">'</span><span style="color: rgba(128, 0, 0, 1)">log.out-</span><span style="color: rgba(128, 0, 0, 1)">'</span>|wc - <span style="color: rgba(0, 0, 0, 1)">l`
+ls </span>/var/log/oozie/|grep <span style="color: rgba(128, 0, 0, 1)">'</span><span style="color: rgba(128, 0, 0, 1)">log.out-</span><span style="color: rgba(128, 0, 0, 1)">'</span>|sed $num<span style="color: rgba(128, 0, 0, 1)">'</span><span style="color: rgba(128, 0, 0, 1)">d</span><span style="color: rgba(128, 0, 0, 1)">'</span>|xargs - i /bin/rm /var/log/oozie/<span style="color: rgba(0, 0, 0, 1)">{}
+</span>/bin/rm /var/log/oozie/oozie-instrumentation.log.*
+
+<span style="color: rgba(0, 128, 0, 1)">#</span><span style="color: rgba(0, 128, 0, 1)">system journal</span>
+/bin/rm /var/log/journal/*/system@00000000000000000000000000000000-*<span style="color: rgba(0, 0, 0, 1)">.journal
+</span>/bin/rm - rf /var/log/messages-*</pre>
+</div>
+<p> </p>
+</div>
+            </div>
+
+            <!-- Post Footer -->
+            <div class="post-footer">
+                <div class="post-navigation">
+                    <a href="../blog_cn.html" class="nav-button">← Back to Home</a>
+                    <a href="0105.html" class="nav-button">Next Post →</a>
+                </div>
+            </div>
+        </article>
+    </div>
+</body>
+</html>

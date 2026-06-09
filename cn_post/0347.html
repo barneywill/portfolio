@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Java基础之Freemarker 1 - 模板加载及清空机制</title>
+    <link rel="stylesheet" href="../css/style3.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header Navigation -->
+        <div class="header">
+            <h1><a href="../blog_cn.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+        </div>
+
+        <!-- Post Container -->
+        <article class="post">
+            <!-- Post Header -->
+            <div class="post-header">
+                <h1>Java基础之Freemarker 1 - 模板加载及清空机制</h1>
+                <div class="post-meta">
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📅</span>
+                        <span>November 07, 2018</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📖</span>
+                        <span>1 min read</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">👁️</span>
+                        <span>3466 views</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Post Content -->
+            <div class="post-content">
+                <div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<h1>一 freemarker加载模版机制</h1>
+<p>freemarker中的配置项template_update_delay表明模版的缓存时间，单位是s，超过缓存时间则从磁盘加载最新的模版，具体细节如下：</p>
+<p>1）freemarker中获取模版的方法在Configuration中：</p>
+<p> <img alt="" src="https://img2018.cnblogs.com/blog/1509647/201811/1509647-20181107172226160-240783676.png"/></p>
+<p>2）Configuration的getTemplate方法直接代理给TemplateCache：</p>
+<p> <img alt="" src="https://img2018.cnblogs.com/blog/1509647/201811/1509647-20181107172241778-2034310978.png"/></p>
+<p>3）TemplateCache中首先会尝试从缓存中加载模版：</p>
+<p> <img alt="" src="https://img2018.cnblogs.com/blog/1509647/201811/1509647-20181107172259572-476141683.png"/></p>
+<p>然后根据template_update_delay来判断缓存中的模版是否需要刷新；</p>
+<p> <img alt="" src="https://img2018.cnblogs.com/blog/1509647/201811/1509647-20181107172325315-769495802.png"/></p>
+<p><strong> </strong></p>
+<h1>二 Freemarker自带刷新接口</h1>
+<p>Freemarker本身提供的刷新接口是Configuration的<strong>clearTemplateCache</strong>方法，可以用来清空所有的模版缓存；</p>
+<h2>1 使用spring mvc</h2>
+<h3>1.1 配置template_update_delay</h3>
+<p> <img alt="" src="https://img2018.cnblogs.com/blog/1509647/201811/1509647-20181107172348530-1704731241.png"/></p>
+<h3>1.2 手工刷新</h3>
+<p> <img alt="" src="https://img2018.cnblogs.com/blog/1509647/201811/1509647-20181107172400727-1289748336.png"/></p>
+<p> </p>
+<h2>2 直接使用freemarker</h2>
+<h3>2.1 配置template_update_delay</h3>
+<p> <img alt="" src="https://img2018.cnblogs.com/blog/1509647/201811/1509647-20181107172414541-136297871.png"/></p>
+<h3>2.2 手工刷新</h3>
+<p> <img alt="" src="https://img2018.cnblogs.com/blog/1509647/201811/1509647-20181107172425949-607091647.png"/></p>
+<p> 以上手工刷新方法的优点是不需要修改源代码，直接利用freemarker原有功能，缺点是所有模版缓存都会被刷新；如果希望只刷新指定的模版，只能二次开发；</p>
+</div>
+            </div>
+
+            <!-- Post Footer -->
+            <div class="post-footer">
+                <div class="post-navigation">
+                    <a href="../blog_cn.html" class="nav-button">← Back to Home</a>
+                    <a href="0348.html" class="nav-button">Next Post →</a>
+                </div>
+            </div>
+        </article>
+    </div>
+</body>
+</html>

@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hadoop 3 - hdfs diskbalancer</title>
+    <link rel="stylesheet" href="../css/style3.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header Navigation -->
+        <div class="header">
+            <h1><a href="../blog_cn.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+        </div>
+
+        <!-- Post Container -->
+        <article class="post">
+            <!-- Post Header -->
+            <div class="post-header">
+                <h1>Hadoop 3 - hdfs diskbalancer</h1>
+                <div class="post-meta">
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📅</span>
+                        <span>September 04, 2021</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📖</span>
+                        <span>2 min read</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">👁️</span>
+                        <span>661 views</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Post Content -->
+            <div class="post-content">
+                <div class="blogpost-body cnblogs-markdown" id="cnblogs_post_body">
+<p>hdfs单个节点内多个磁盘不均衡时（比如新加磁盘），需要手工进行diskbalancer操作，命令如下</p>
+<pre><code># hdfs diskbalancer -help plan
+usage: hdfs diskbalancer -plan &lt;hostname&gt; [options]
+Creates a plan that describes how much data should be moved between disks.
+ 
+ 
+    --bandwidth &lt;arg&gt;             Maximum disk bandwidth (MB/s) in integer
+                                  to be consumed by diskBalancer. e.g. 10
+                                  MB/s.
+    --maxerror &lt;arg&gt;              Describes how many errors can be
+                                  tolerated while copying between a pair
+                                  of disks.
+    --out &lt;arg&gt;                   Local path of file to write output to,
+                                  if not specified defaults will be used.
+    --plan &lt;arg&gt;                  Hostname, IP address or UUID of datanode
+                                  for which a plan is created.
+    --thresholdPercentage &lt;arg&gt;   Percentage of data skew that is
+                                  tolerated before disk balancer starts
+                                  working. For example, if total data on a
+                                  2 disk node is 100 GB then disk balancer
+                                  calculates the expected value on each
+                                  disk, which is 50 GB. If the tolerance
+                                  is 10% then data on a single disk needs
+                                  to be more than 60 GB (50 GB + 10%
+                                  tolerance value) for Disk balancer to
+                                  balance the disks.
+    --v                           Print out the summary of the plan on
+                                  console
+</code></pre>
+<p>其中thresholdPercentage的注释有歧义，看起来是根据绝对值进行均衡的，查看代码</p>
+<p>org.apache.hadoop.hdfs.server.diskbalancer.datamodel.DiskBalancerVolumeSet</p>
+<pre><code>/**
+ * Computes Volume Data Density. Adding a new volume changes
+ * the volumeDataDensity for all volumes. So we throw away
+ * our priority queue and recompute everything.
+ *
+ * we discard failed volumes from this computation.
+ *
+ * totalCapacity = totalCapacity of this volumeSet
+ * totalUsed = totalDfsUsed for this volumeSet
+ * idealUsed = totalUsed / totalCapacity
+ * dfsUsedRatio = dfsUsedOnAVolume / Capacity On that Volume
+ * volumeDataDensity = idealUsed - dfsUsedRatio
+ */
+public void computeVolumeDataDensity() {
+  long totalCapacity = 0;
+  long totalUsed = 0;
+  sortedQueue.clear();
+ 
+  // when we plan to re-distribute data we need to make
+  // sure that we skip failed volumes.
+  for (DiskBalancerVolume volume : volumes) {
+    if (!volume.isFailed() &amp;&amp; !volume.isSkip()) {
+ 
+      if (volume.computeEffectiveCapacity() &lt; 0) {
+        skipMisConfiguredVolume(volume);
+        continue;
+      }
+ 
+      totalCapacity += volume.computeEffectiveCapacity();
+      totalUsed += volume.getUsed();
+    }
+  }
+ 
+  if (totalCapacity != 0) {
+    this.idealUsed = truncateDecimals(totalUsed /
+        (double) totalCapacity);
+  }
+ 
+  for (DiskBalancerVolume volume : volumes) {
+    if (!volume.isFailed() &amp;&amp; !volume.isSkip()) {
+      double dfsUsedRatio =
+          truncateDecimals(volume.getUsed() /
+              (double) volume.computeEffectiveCapacity());
+ 
+      volume.setVolumeDataDensity(this.idealUsed - dfsUsedRatio);
+      sortedQueue.add(volume);
+    }
+  }
+}
+ 
+ 
+/**
+ * Computes whether we need to do any balancing on this volume Set at all.
+ * It checks if any disks are out of threshold value
+ *
+ * @param thresholdPercentage - threshold - in percentage
+ *
+ * @return true if balancing is needed false otherwise.
+ */
+public boolean isBalancingNeeded(double thresholdPercentage) {
+  double threshold = thresholdPercentage / 100.0d;
+ 
+  if(volumes == null || volumes.size() &lt;= 1) {
+    // there is nothing we can do with a single volume.
+    // so no planning needed.
+    return false;
+  }
+ 
+  for (DiskBalancerVolume vol : volumes) {
+    boolean notSkip = !vol.isFailed() &amp;&amp; !vol.isTransient() &amp;&amp; !vol.isSkip();
+    Double absDensity =
+        truncateDecimals(Math.abs(vol.getVolumeDataDensity()));
+ 
+    if ((absDensity &gt; threshold) &amp;&amp; notSkip) {
+      return true;
+    }
+  }
+  return false;
+}
+</code></pre>
+<p>主要有两个函数，</p>
+<p>computeVolumeDataDensity：查看一个盘的数据密度，计算方法为 当前盘的空间占用比例（dfsUsedRatio）- 所有盘的空间占用比例（idealUsed）<br/>
+isBalancingNeeded：判断一个盘是否需要均衡，即数据密度的绝对值是否超过参数设置（thresholdPercentage）</p>
+<p>所以实际均衡的时候考虑的是空间占用比例，而不是空间占用绝对值</p>
+</div>
+            </div>
+
+            <!-- Post Footer -->
+            <div class="post-footer">
+                <div class="post-navigation">
+                    <a href="../blog_cn.html" class="nav-button">← Back to Home</a>
+                    <a href="0034.html" class="nav-button">Next Post →</a>
+                </div>
+            </div>
+        </article>
+    </div>
+</body>
+</html>

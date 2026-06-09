@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>hbase集群重启后master初始化失败</title>
+    <link rel="stylesheet" href="../css/style3.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header Navigation -->
+        <div class="header">
+            <h1><a href="../blog_cn.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+        </div>
+
+        <!-- Post Container -->
+        <article class="post">
+            <!-- Post Header -->
+            <div class="post-header">
+                <h1>hbase集群重启后master初始化失败</h1>
+                <div class="post-meta">
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📅</span>
+                        <span>June 16, 2022</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📖</span>
+                        <span>1 min read</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">👁️</span>
+                        <span>837 views</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Post Content -->
+            <div class="post-content">
+                <div class="blogpost-body cnblogs-markdown" id="cnblogs_post_body">
+<p>hbase集群重启后异常，发现是master初始化失败导致的，在master启动日志中发现问题原因为</p>
+<blockquote>
+<p>2022-05-26 14:06:15,645 WARN org.apache.hadoop.hbase.master.HMaster: hbase:namespace,,1607716627354.56dafb9f3eadaae9e95d5b05f3142a34. is NOT online; state={56dafb9f3eadaae9e95d5b05f3142a34 state=OPEN, ts=1637906648217, server=hadoop-server1,16020,1637905629938}; ServerCrashProcedures=false. Master startup cannot progress, in holding-pattern until region onlined.</p>
+</blockquote>
+<p>问题原因是hbase非常关键的一个表 hbase:namespace 的region无法online，查看该region的详细信息如下：</p>
+<pre><code>hbase(main):003:0&gt; get 'hbase:meta', 'hbase:namespace,,1607716627354.56dafb9f3eadaae9e95d5b05f3142a34.'
+COLUMN                                                 CELL                                                                                                                                                        
+ info:regioninfo                                       timestamp=1637905641937, value={ENCODED =&gt; 56dafb9f3eadaae9e95d5b05f3142a34, NAME =&gt; 'hbase:namespace,,1607716627354.56dafb9f3eadaae9e95d5b05f3142a34.', STARTKEY =&gt; '', ENDKEY =&gt; ''}                                                                                                                                   
+ info:seqnumDuringOpen                                 timestamp=1637905641937, value=\x00\x00\x00\x00\x00\x00\x00o                                                                                                
+ info:server                                           timestamp=1637905641937, value=hadoop-server1:16020                                                                                                               
+ info:serverstartcode                                  timestamp=1637905641937, value=1637905629938                                                                                                                
+ info:sn                                               timestamp=1637905640873, value=hadoop-server1,16020,1637905629938                                                                                                 
+ info:state                                            timestamp=1637905641937, value=OPEN                                                                                                                         
+1 row(s)
+Took 0.0737 seconds
+</code></pre>
+<p>尝试手工将该region恢复online</p>
+<pre><code>hbase(main):034:0&gt; assign '56dafb9f3eadaae9e95d5b05f3142a34'
+ERROR: org.apache.hadoop.hbase.PleaseHoldException: Master is initializing
+    at org.apache.hadoop.hbase.master.HMaster.checkInitialized(HMaster.java:2998)
+    at org.apache.hadoop.hbase.master.MasterRpcServices.assignRegion(MasterRpcServices.java:564)
+    at org.apache.hadoop.hbase.shaded.protobuf.generated.MasterProtos$MasterService$2.callBlockingMethod(MasterProtos.java)
+    at org.apache.hadoop.hbase.ipc.RpcServer.call(RpcServer.java:413)
+    at org.apache.hadoop.hbase.ipc.CallRunner.run(CallRunner.java:130)
+    at org.apache.hadoop.hbase.ipc.RpcExecutor$Handler.run(RpcExecutor.java:324)
+    at org.apache.hadoop.hbase.ipc.RpcExecutor$Handler.run(RpcExecutor.java:304)
+For usage try 'help "assign"'
+</code></pre>
+<p>陷入死循环，要想恢复region，需要master先启动，但是master要启动，有需要该region是online状态</p>
+<p>这时有两种方法，</p>
+<ul>
+<li>一种是备份namespace目录/user/hbase/data/hbase/namespace，从hbase:meta中先删除再恢复hbase:namespace，操作难度较大；</li>
+<li>一种是使用hbck2工具</li>
+</ul>
+<p>下载地址：<a href="https://github.com/apache/hbase-operator-tools/tree/master/hbase-hbck2" rel="noopener nofollow" target="_blank">https://github.com/apache/hbase-operator-tools/tree/master/hbase-hbck2</a></p>
+<p>执行命令</p>
+<blockquote>
+<p>hbase hbck - j hbase-hbck2-1.1.0.jar assigns 56dafb9f3eadaae9e95d5b05f3142a34</p>
+</blockquote>
+<p>操作之后hbase:namespace恢复，master启动成功。</p>
+</div>
+            </div>
+
+            <!-- Post Footer -->
+            <div class="post-footer">
+                <div class="post-navigation">
+                    <a href="../blog_cn.html" class="nav-button">← Back to Home</a>
+                    <a href="0004.html" class="nav-button">Next Post →</a>
+                </div>
+            </div>
+        </article>
+    </div>
+</body>
+</html>

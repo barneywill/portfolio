@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spark任务中Job进度卡住不动</title>
+    <link rel="stylesheet" href="../css/style3.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header Navigation -->
+        <div class="header">
+            <h1><a href="../blog_cn.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+        </div>
+
+        <!-- Post Container -->
+        <article class="post">
+            <!-- Post Header -->
+            <div class="post-header">
+                <h1>Spark任务中Job进度卡住不动</h1>
+                <div class="post-meta">
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📅</span>
+                        <span>December 03, 2018</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📖</span>
+                        <span>6 min read</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">👁️</span>
+                        <span>7538 views</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Post Content -->
+            <div class="post-content">
+                <div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<p> Spark2.1.1</p>
+<p> </p>
+<p>最近运行spark任务时会发现任务经常运行很久，具体job如下：</p>
+<table border="1" cellpadding="0" cellspacing="3" style="width: 0">
+<thead>
+<tr>
+<td valign="bottom">
+<p align="left"><strong><a href="http://kf-hadoop-rm01.jcloud.com/proxy/application_1542879939729_20435/jobs/?&amp;activeJob.sort=Job+Id&amp;activeJob.desc=false&amp;activeJob.pageSize=100#active" rel="noopener nofollow">Job Id  ▾</a></strong></p>
+</td>
+<td valign="bottom">
+<p align="left"><strong><a href="http://kf-hadoop-rm01.jcloud.com/proxy/application_1542879939729_20435/jobs/?&amp;activeJob.sort=Description&amp;activeJob.pageSize=100#active" rel="noopener nofollow">Description</a></strong></p>
+</td>
+<td valign="bottom">
+<p align="left"><strong><a href="http://kf-hadoop-rm01.jcloud.com/proxy/application_1542879939729_20435/jobs/?&amp;activeJob.sort=Submitted&amp;activeJob.pageSize=100#active" rel="noopener nofollow">Submitted</a></strong></p>
+</td>
+<td valign="bottom">
+<p align="left"><strong><a href="http://kf-hadoop-rm01.jcloud.com/proxy/application_1542879939729_20435/jobs/?&amp;activeJob.sort=Duration&amp;activeJob.pageSize=100#active" rel="noopener nofollow">Duration</a></strong></p>
+</td>
+<td valign="bottom">
+<p align="left"><strong>Stages: Succeeded/Total</strong></p>
+</td>
+<td valign="bottom">
+<p align="left"><strong>Tasks (for all stages): Succeeded/Total</strong></p>
+</td>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td valign="top">
+<p align="left">16</p>
+</td>
+<td valign="top">
+<p align="left"><a href="http://kf-hadoop-rm01.jcloud.com/proxy/application_1542879939729_20435/jobs/job/kill/?id=16" rel="noopener nofollow">(kill)</a><a href="http://kf-hadoop-rm01.jcloud.com/proxy/application_1542879939729_20435/jobs/job?id=16" rel="noopener nofollow">treeReduce at CRFWithLBFGS.scala:160</a></p>
+</td>
+<td valign="top">
+<p align="left">2018/12/03 12:39:50</p>
+</td>
+<td valign="top">
+<p align="left">2.3 h</p>
+</td>
+<td valign="top">
+<p align="left">0/5</p>
+</td>
+<td valign="top">
+<p align="left">196/4723</p>
+</td>
+</tr>
+</tbody>
+</table>
+<p> job中正在运行的stage如下：</p>
+<table border="1" cellpadding="0" cellspacing="3" style="width: 0">
+<thead>
+<tr>
+<td valign="bottom">
+<p align="left"><strong><a href="http://kf-hadoop-rm01.jcloud.com/proxy/application_1542879939729_20435/jobs/job/?id=16&amp;activeStage.sort=Stage+Id&amp;activeStage.desc=false&amp;activeStage.pageSize=100#active" rel="noopener nofollow">Stage Id  ▾</a></strong></p>
+</td>
+<td valign="bottom">
+<p align="left"><strong><a href="http://kf-hadoop-rm01.jcloud.com/proxy/application_1542879939729_20435/jobs/job/?id=16&amp;activeStage.sort=Description&amp;activeStage.pageSize=100#active" rel="noopener nofollow">Description</a></strong></p>
+</td>
+<td valign="bottom">
+<p align="left"><strong><a href="http://kf-hadoop-rm01.jcloud.com/proxy/application_1542879939729_20435/jobs/job/?id=16&amp;activeStage.sort=Submitted&amp;activeStage.pageSize=100#active" rel="noopener nofollow">Submitted</a></strong></p>
+</td>
+<td valign="bottom">
+<p align="left"><strong><a href="http://kf-hadoop-rm01.jcloud.com/proxy/application_1542879939729_20435/jobs/job/?id=16&amp;activeStage.sort=Duration&amp;activeStage.pageSize=100#active" rel="noopener nofollow">Duration</a></strong></p>
+</td>
+<td valign="bottom">
+<p align="left"><strong>Tasks: Succeeded/Total</strong></p>
+</td>
+<td valign="bottom">
+<p align="left"><strong><a href="http://kf-hadoop-rm01.jcloud.com/proxy/application_1542879939729_20435/jobs/job/?id=16&amp;activeStage.sort=Input&amp;activeStage.pageSize=100#active" rel="noopener nofollow">Input</a></strong></p>
+</td>
+<td valign="bottom">
+<p align="left"><strong><a href="http://kf-hadoop-rm01.jcloud.com/proxy/application_1542879939729_20435/jobs/job/?id=16&amp;activeStage.sort=Output&amp;activeStage.pageSize=100#active" rel="noopener nofollow">Output</a></strong></p>
+</td>
+<td valign="bottom">
+<p align="left"><strong><a href="http://kf-hadoop-rm01.jcloud.com/proxy/application_1542879939729_20435/jobs/job/?id=16&amp;activeStage.sort=Shuffle+Read&amp;activeStage.pageSize=100#active" rel="noopener nofollow">Shuffle Read</a></strong></p>
+</td>
+<td valign="bottom">
+<p align="left"><strong><a href="http://kf-hadoop-rm01.jcloud.com/proxy/application_1542879939729_20435/jobs/job/?id=16&amp;activeStage.sort=Shuffle+Write&amp;activeStage.pageSize=100#active" rel="noopener nofollow">Shuffle Write</a></strong></p>
+</td>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td valign="top">
+<p align="left">60</p>
+</td>
+<td valign="top">
+<p align="left"><a href="http://kf-hadoop-rm01.jcloud.com/proxy/application_1542879939729_20435/stages/stage/kill/?id=60" rel="noopener nofollow">(kill)</a><a href="http://kf-hadoop-rm01.jcloud.com/proxy/application_1542879939729_20435/stages/stage?id=60&amp;attempt=0" rel="noopener nofollow">treeReduce at CRFWithLBFGS.scala:160</a>+details</p>
+</td>
+<td valign="top">
+<p align="left">2018/12/03 12:39:57</p>
+</td>
+<td valign="top">
+<p align="left">2.3 h</p>
+</td>
+<td valign="top">
+<p align="left">196/200</p>
+</td>
+<td valign="top">
+<p align="left">4.5 GB</p>
+</td>
+<td valign="top"> </td>
+<td valign="top"> </td>
+<td valign="top">
+<p align="left">1455.1 MB</p>
+</td>
+</tr>
+</tbody>
+</table>
+<p> 该stage中有4个task一直处于running状态，这些task的统计信息异常（<a href="http://kf-hadoop-rm01.jcloud.com/proxy/application_1542879939729_21550/stages/stage?id=25&amp;attempt=0&amp;task.sort=Input+Size+%2F+Records&amp;task.pageSize=100" rel="noopener nofollow"><strong>Input Size / Records</strong></a>和<a href="http://kf-hadoop-rm01.jcloud.com/proxy/application_1542879939729_21550/stages/stage?id=25&amp;attempt=0&amp;task.sort=Shuffle+Write+Size+%2F+Records&amp;task.pageSize=100" rel="noopener nofollow"><strong>Shuffle Write Size / Records</strong></a>均为0.0B/0），并且这4个task都位于同一个executor上：</p>
+<table border="1" cellpadding="0" cellspacing="3" style="width: 0">
+<tbody>
+<tr>
+<td valign="top">
+<p align="left">33</p>
+</td>
+<td valign="top">
+<p align="left">8938</p>
+</td>
+<td valign="top">
+<p align="left">0</p>
+</td>
+<td valign="top">
+<p align="left">RUNNING</p>
+</td>
+<td valign="top">
+<p align="left">PROCESS_LOCAL</p>
+</td>
+<td valign="top">
+<p align="left">12 / $executor_server_ip</p>
+<p align="left"><a href="http://10-229-28-171.xdata.jcloud.com:8042/node/containerlogs/container_1542879939729_20435_01_000025/hadoop/stdout?start=-4096" rel="noopener nofollow">stdout</a></p>
+<p align="left"><a href="http://10-229-28-171.xdata.jcloud.com:8042/node/containerlogs/container_1542879939729_20435_01_000025/hadoop/stderr?start=-4096" rel="noopener nofollow">stderr</a></p>
+</td>
+<td valign="top">
+<p align="left">2018/12/03 12:39:57</p>
+</td>
+<td valign="top">
+<p align="left">2.3 h</p>
+</td>
+<td valign="top"> </td>
+<td valign="top">
+<p align="left">0.0 B / 0</p>
+</td>
+<td valign="top"> </td>
+<td valign="top">
+<p align="left">0.0 B / 0</p>
+</td>
+</tr>
+</tbody>
+</table>
+<p> 有问题的task所在的executor统计信息也有异常（<strong>Total Tasks</strong><strong>为</strong><strong>0</strong>），该executor如下：</p>
+<table border="1" cellpadding="0" cellspacing="3" style="width: 0">
+<tbody>
+<tr>
+<td valign="top">
+<p align="left">12</p>
+<p align="left"><a href="http://10-229-28-171.xdata.jcloud.com:8042/node/containerlogs/container_1542879939729_20435_01_000025/hadoop/stdout?start=-4096" rel="noopener nofollow">stdout</a></p>
+<p align="left"><a href="http://10-229-28-171.xdata.jcloud.com:8042/node/containerlogs/container_1542879939729_20435_01_000025/hadoop/stderr?start=-4096" rel="noopener nofollow">stderr</a></p>
+</td>
+<td valign="top">
+<p align="left">$executor_server_ip:36755</p>
+</td>
+<td valign="top">
+<p align="left">0 ms</p>
+</td>
+<td valign="top">
+<p align="left">0</p>
+</td>
+<td valign="top">
+<p align="left">0</p>
+</td>
+<td valign="top">
+<p align="left">0</p>
+</td>
+<td valign="top">
+<p align="left">0</p>
+</td>
+<td valign="top">
+<p align="left">0.0 B / 0</p>
+</td>
+<td valign="top">
+<p align="left">0.0 B / 0</p>
+</td>
+</tr>
+</tbody>
+</table>
+<p> </p>
+<p> 此时Driver堆栈信息如下：</p>
+<blockquote>
+<p>"Driver" #26 prio=5 os_prio=0 tid=0x00007f163a116000 nid=0x5192 waiting on condition [0x00007f15bb9a0000]</p>
+<p>   java.lang.Thread.State: WAITING (parking)</p>
+<p>        at sun.misc.Unsafe.park(Native Method)</p>
+<p>        - parking to wait for  &lt;0x00000001a8c4f9e0&gt; (a scala.concurrent.impl.Promise$CompletionLatch)</p>
+<p>        at java.util.concurrent.locks.LockSupport.park(LockSupport.java:175)</p>
+<p>        at java.util.concurrent.locks.AbstractQueuedSynchronizer.parkAndCheckInterrupt(AbstractQueuedSynchronizer.java:836)</p>
+<p>        at java.util.concurrent.locks.AbstractQueuedSynchronizer.doAcquireSharedInterruptibly(AbstractQueuedSynchronizer.java:997)</p>
+<p>        at java.util.concurrent.locks.AbstractQueuedSynchronizer.acquireSharedInterruptibly(AbstractQueuedSynchronizer.java:1304)</p>
+<p>        at scala.concurrent.impl.Promise$DefaultPromise.tryAwait(Promise.scala:202)</p>
+<p>        at scala.concurrent.impl.Promise$DefaultPromise.ready(Promise.scala:218)</p>
+<p>        at scala.concurrent.impl.Promise$DefaultPromise.ready(Promise.scala:153)</p>
+<p>        at org.apache.spark.scheduler.DAGScheduler.runJob(DAGScheduler.scala:619)</p>
+<p>        at org.apache.spark.SparkContext.runJob(SparkContext.scala:1925)</p>
+<p>        at org.apache.spark.SparkContext.runJob(SparkContext.scala:1988)</p>
+<p>        at org.apache.spark.rdd.RDD$$anonfun$reduce$1.apply(RDD.scala:1026)</p>
+<p>        at org.apache.spark.rdd.RDDOperationScope$.withScope(RDDOperationScope.scala:151)</p>
+<p>        at org.apache.spark.rdd.RDDOperationScope$.withScope(RDDOperationScope.scala:112)</p>
+<p>        at org.apache.spark.rdd.RDD.withScope(RDD.scala:362)</p>
+<p>        at org.apache.spark.rdd.RDD.reduce(RDD.scala:1008)</p>
+<p>        at org.apache.spark.rdd.RDD$$anonfun$treeAggregate$1.apply(RDD.scala:1151)</p>
+<p>        at org.apache.spark.rdd.RDDOperationScope$.withScope(RDDOperationScope.scala:151)</p>
+<p>        at org.apache.spark.rdd.RDDOperationScope$.withScope(RDDOperationScope.scala:112)</p>
+<p>        at org.apache.spark.rdd.RDD.withScope(RDD.scala:362)</p>
+<p>        at org.apache.spark.rdd.RDD.treeAggregate(RDD.scala:1128)</p>
+<p>        at org.apache.spark.rdd.RDD$$anonfun$treeReduce$1.apply(RDD.scala:1059)</p>
+<p>        at org.apache.spark.rdd.RDDOperationScope$.withScope(RDDOperationScope.scala:151)</p>
+<p>        at org.apache.spark.rdd.RDDOperationScope$.withScope(RDDOperationScope.scala:112)</p>
+<p>        at org.apache.spark.rdd.RDD.withScope(RDD.scala:362)</p>
+<p>        at org.apache.spark.rdd.RDD.treeReduce(RDD.scala:1037)</p>
+<p>        at breeze.optimize.CachedDiffFunction.calculate(CachedDiffFunction.scala:23)</p>
+<p>        at breeze.optimize.LineSearch$$anon$1.calculate(LineSearch.scala:41)</p>
+<p>        at breeze.optimize.LineSearch$$anon$1.calculate(LineSearch.scala:30)</p>
+<p>        at breeze.optimize.StrongWolfeLineSearch.breeze$optimize$StrongWolfeLineSearch$$phi$1(StrongWolfe.scala:69)</p>
+<p>        at breeze.optimize.StrongWolfeLineSearch$$anonfun$minimize$1.apply$mcVI$sp(StrongWolfe.scala:142)</p>
+<p>        at scala.collection.immutable.Range.foreach$mVc$sp(Range.scala:160)</p>
+<p>        at breeze.optimize.StrongWolfeLineSearch.minimize(StrongWolfe.scala:141)</p>
+<p>        at breeze.optimize.LBFGS.determineStepSize(LBFGS.scala:78)</p>
+<p>        at breeze.optimize.LBFGS.determineStepSize(LBFGS.scala:40)</p>
+<p>        at breeze.optimize.FirstOrderMinimizer$$anonfun$infiniteIterations$1.apply(FirstOrderMinimizer.scala:64)</p>
+<p>        at breeze.optimize.FirstOrderMinimizer$$anonfun$infiniteIterations$1.apply(FirstOrderMinimizer.scala:62)</p>
+<p>        at scala.collection.Iterator$$anon$7.next(Iterator.scala:129)</p>
+<p>        at breeze.util.IteratorImplicits$RichIterator$$anon$2.next(Implicits.scala:71)</p>
+<p>        at scala.collection.TraversableLike$WithFilter$$anonfun$foreach$1.apply(TraversableLike.scala:733)</p>
+<p>        at scala.collection.immutable.Range.foreach(Range.scala:160)</p>
+<p>        at scala.collection.TraversableLike$WithFilter.foreach(TraversableLike.scala:732)</p>
+<p>        at app.package.AppClass.main(AppClass.scala)</p>
+<p>        at sun.reflect.NativeMethodAccessorImpl.invoke0(Native Method)</p>
+<p>        at sun.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:62)</p>
+<p>        at sun.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)</p>
+<p>        at java.lang.reflect.Method.invoke(Method.java:497)</p>
+<p>        at org.apache.spark.deploy.yarn.ApplicationMaster$$anon$2.run(ApplicationMaster.scala:637)</p>
+</blockquote>
+<p>可见正在runJob，并且等待executor执行结果；</p>
+<p> </p>
+<p>有问题的executor上堆栈信息有一个可疑的thread长时间一直在running:</p>
+<blockquote>
+<p>"shuffle-client-5-4" #94 daemon prio=5 os_prio=0 tid=0x00007fbae0e42800 nid=0x2a3a runnable [0x00007fbae4760000]</p>
+<p>   java.lang.Thread.State: RUNNABLE</p>
+<p>        <strong>at io.netty.util.Recycler$Stack.scavengeSome(Recycler.java:476)</strong></p>
+<p>        at io.netty.util.Recycler$Stack.scavenge(Recycler.java:454)</p>
+<p>        at io.netty.util.Recycler$Stack.pop(Recycler.java:435)</p>
+<p>        at io.netty.util.Recycler.get(Recycler.java:144)</p>
+<p>        at io.netty.buffer.PooledUnsafeDirectByteBuf.newInstance(PooledUnsafeDirectByteBuf.java:39)</p>
+<p>        at io.netty.buffer.PoolArena$DirectArena.newByteBuf(PoolArena.java:727)</p>
+<p>        at io.netty.buffer.PoolArena.allocate(PoolArena.java:140)</p>
+<p>        at io.netty.buffer.PooledByteBufAllocator.newDirectBuffer(PooledByteBufAllocator.java:271)</p>
+<p>        at io.netty.buffer.AbstractByteBufAllocator.directBuffer(AbstractByteBufAllocator.java:177)</p>
+<p>        at io.netty.buffer.AbstractByteBufAllocator.directBuffer(AbstractByteBufAllocator.java:168)</p>
+<p>        at io.netty.buffer.AbstractByteBufAllocator.ioBuffer(AbstractByteBufAllocator.java:129)</p>
+<p>        at io.netty.channel.AdaptiveRecvByteBufAllocator$HandleImpl.allocate(AdaptiveRecvByteBufAllocator.java:104)</p>
+<p>        at io.netty.channel.nio.AbstractNioByteChannel$NioByteUnsafe.read(AbstractNioByteChannel.java:117)</p>
+<p>        at io.netty.channel.nio.NioEventLoop.processSelectedKey(NioEventLoop.java:652)</p>
+<p>        at io.netty.channel.nio.NioEventLoop.processSelectedKeysOptimized(NioEventLoop.java:575)</p>
+<p>        at io.netty.channel.nio.NioEventLoop.processSelectedKeys(NioEventLoop.java:489)</p>
+<p>        at io.netty.channel.nio.NioEventLoop.run(NioEventLoop.java:451)</p>
+<p>        at io.netty.util.concurrent.SingleThreadEventExecutor$2.run(SingleThreadEventExecutor.java:140)</p>
+<p>        at io.netty.util.concurrent.DefaultThreadFactory$DefaultRunnableDecorator.run(DefaultThreadFactory.java:144)</p>
+<p>        at java.lang.Thread.run(Thread.java:745)</p>
+</blockquote>
+<p> </p>
+<p>ps：出问题的executor上当时的内存资源很空闲，进程状态也正常：</p>
+<blockquote>
+<p>-bash-4.2$ free -m</p>
+<p>              total        used        free      shared  buff/cache   available</p>
+<p>Mem:         257676       29251        5274         517      223150      226669</p>
+<p>Swap:             0           0           0</p>
+</blockquote>
+<p> </p>
+<p>怀疑此处可能有死循环，spark2.1.1使用的netty版本是4.0.42，查看netty代码：</p>
+<p><strong>io.netty.util.Recycler</strong></p>
+<div class="cnblogs_code">
+<pre>        <span style="color: rgba(0, 0, 255, 1)">boolean</span><span style="color: rgba(0, 0, 0, 1)"> scavengeSome() {
+
+            WeakOrderQueue cursor </span>= <span style="color: rgba(0, 0, 255, 1)">this</span><span style="color: rgba(0, 0, 0, 1)">.cursor;
+
+            </span><span style="color: rgba(0, 0, 255, 1)">if</span> (cursor == <span style="color: rgba(0, 0, 255, 1)">null</span><span style="color: rgba(0, 0, 0, 1)">) {
+
+                cursor </span>=<span style="color: rgba(0, 0, 0, 1)"> head;
+
+                </span><span style="color: rgba(0, 0, 255, 1)">if</span> (cursor == <span style="color: rgba(0, 0, 255, 1)">null</span><span style="color: rgba(0, 0, 0, 1)">) {
+
+                    </span><span style="color: rgba(0, 0, 255, 1)">return</span> <span style="color: rgba(0, 0, 255, 1)">false</span><span style="color: rgba(0, 0, 0, 1)">;
+
+                }
+
+            }
+
+ 
+
+            </span><span style="color: rgba(0, 0, 255, 1)">boolean</span> success = <span style="color: rgba(0, 0, 255, 1)">false</span><span style="color: rgba(0, 0, 0, 1)">;
+
+            WeakOrderQueue prev </span>= <span style="color: rgba(0, 0, 255, 1)">this</span><span style="color: rgba(0, 0, 0, 1)">.prev;
+
+            </span><span style="color: rgba(0, 0, 255, 1)">do</span><span style="color: rgba(0, 0, 0, 1)"> {
+
+                </span><span style="color: rgba(0, 0, 255, 1)">if</span> (cursor.transfer(<span style="color: rgba(0, 0, 255, 1)">this</span><span style="color: rgba(0, 0, 0, 1)">)) {
+
+                    success </span>= <span style="color: rgba(0, 0, 255, 1)">true</span><span style="color: rgba(0, 0, 0, 1)">;
+
+                    </span><span style="color: rgba(0, 0, 255, 1)">break</span><span style="color: rgba(0, 0, 0, 1)">;
+
+                }
+
+ 
+
+                WeakOrderQueue next </span>=<span style="color: rgba(0, 0, 0, 1)"> cursor.next;
+
+                </span><span style="color: rgba(0, 0, 255, 1)">if</span> (cursor.owner.get() == <span style="color: rgba(0, 0, 255, 1)">null</span><span style="color: rgba(0, 0, 0, 1)">) {
+
+                    </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> If the thread associated with the queue is gone, unlink it, after
+
+                    </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> performing a volatile read to confirm there is no data left to collect.
+
+                    </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> We never unlink the first queue, as we don't want to synchronize on updating the head.</span>
+
+                    <span style="color: rgba(0, 0, 255, 1)">if</span><span style="color: rgba(0, 0, 0, 1)"> (cursor.hasFinalData()) {
+
+                        </span><span style="color: rgba(0, 0, 255, 1)">for</span><span style="color: rgba(0, 0, 0, 1)"> (;;) {
+
+                            </span><span style="color: rgba(0, 0, 255, 1)">if</span> (cursor.transfer(<span style="color: rgba(0, 0, 255, 1)">this</span><span style="color: rgba(0, 0, 0, 1)">)) {
+
+                                success </span>= <span style="color: rgba(0, 0, 255, 1)">true</span><span style="color: rgba(0, 0, 0, 1)">;
+
+                            } </span><span style="color: rgba(0, 0, 255, 1)">else</span><span style="color: rgba(0, 0, 0, 1)"> {
+
+                                </span><span style="color: rgba(0, 0, 255, 1)">break</span><span style="color: rgba(0, 0, 0, 1)">;
+
+                            }
+
+                        }
+
+                    }
+
+                    </span><span style="color: rgba(0, 0, 255, 1)">if</span> (prev != <span style="color: rgba(0, 0, 255, 1)">null</span><span style="color: rgba(0, 0, 0, 1)">) {
+
+                        prev.next </span>=<span style="color: rgba(0, 0, 0, 1)"> next;
+
+                    }
+
+                } </span><span style="color: rgba(0, 0, 255, 1)">else</span><span style="color: rgba(0, 0, 0, 1)"> {
+
+                    prev </span>=<span style="color: rgba(0, 0, 0, 1)"> cursor;
+
+                }
+
+ 
+
+                cursor </span>=<span style="color: rgba(0, 0, 0, 1)"> next;
+
+ 
+
+            } </span><span style="color: rgba(0, 0, 255, 1)">while</span> (cursor != <span style="color: rgba(0, 0, 255, 1)">null</span> &amp;&amp; !<span style="color: rgba(0, 0, 0, 1)">success);
+
+ 
+
+            </span><span style="color: rgba(0, 0, 255, 1)">this</span>.prev =<span style="color: rgba(0, 0, 0, 1)"> prev;
+
+            </span><span style="color: rgba(0, 0, 255, 1)">this</span>.cursor =<span style="color: rgba(0, 0, 0, 1)"> cursor;
+
+            </span><span style="color: rgba(0, 0, 255, 1)">return</span><span style="color: rgba(0, 0, 0, 1)"> success;
+
+        }
+
+ </span></pre>
+</div>
+<p> </p>
+<p>问题在于cursor初始化的时候没有清空prev：</p>
+<blockquote>
+<p>            if (cursor == null) {</p>
+<p>                cursor = head;</p>
+</blockquote>
+<p>该问题在4.0.43中被修复，升级spark2.1.1中的netty到4.0.43或以上版本可以修复问题；</p>
+<p> </p>
+<p>官方issues位于：https://github.com/netty/netty/issues/6153</p>
+<p> </p>
+</div>
+            </div>
+
+            <!-- Post Footer -->
+            <div class="post-footer">
+                <div class="post-navigation">
+                    <a href="../blog_cn.html" class="nav-button">← Back to Home</a>
+                    <a href="0345.html" class="nav-button">Next Post →</a>
+                </div>
+            </div>
+        </article>
+    </div>
+</body>
+</html>

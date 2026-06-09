@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>cdh5使用已存在的metastore数据库部署hive</title>
+    <link rel="stylesheet" href="../css/style3.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header Navigation -->
+        <div class="header">
+            <h1><a href="../blog_cn.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+        </div>
+
+        <!-- Post Container -->
+        <article class="post">
+            <!-- Post Header -->
+            <div class="post-header">
+                <h1>cdh5使用已存在的metastore数据库部署hive</h1>
+                <div class="post-meta">
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📅</span>
+                        <span>February 17, 2019</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📖</span>
+                        <span>1 min read</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">👁️</span>
+                        <span>1058 views</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Post Content -->
+            <div class="post-content">
+                <div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<p>cdh5.16.1使用的hive版本是hive-1.1.0+cdh5.16.1+1431，详见：https://www.cloudera.com/documentation/enterprise/release-notes/topics/cdh_vd_cdh_package_tarball_516.html<br/>如果想将直接使用之前已有的hive metastore的数据库，比如hive1.2，要做如下操作：</p>
+<p>1）修改元数据的version</p>
+<blockquote>
+<p>mysql&gt; update VERSION set schema_version = '1.1.0';</p>
+</blockquote>
+<p>修改version之后部署hive还会报错：</p>
+<blockquote>
+<p>Table(s) [ [metastore_db_properties] ] are missing from the metastore database schema.</p>
+</blockquote>
+<p>这个表metastore_db_properties在apache hive里是没有的，需要到cdh hive里找</p>
+<blockquote>
+<p># grep - i metastore_db_properties /opt/cloudera/parcels/CDH-5.16.1-1.cdh5.16.1.p0.3/lib/hive/scripts/metastore/upgrade/mysql/*<br/>/opt/cloudera/parcels/CDH-5.16.1-1.cdh5.16.1.p0.3/lib/hive/scripts/metastore/upgrade/mysql/041-HIVE-16556.mysql.sql:-- Table structure for table METASTORE_DB_PROPERTIES<br/>/opt/cloudera/parcels/CDH-5.16.1-1.cdh5.16.1.p0.3/lib/hive/scripts/metastore/upgrade/mysql/041-HIVE-16556.mysql.sql:CREATE TABLE IF NOT EXISTS `METASTORE_DB_PROPERTIES` (</p>
+</blockquote>
+<p>2）建表metastore_db_properties</p>
+<blockquote>
+<p>mysql&gt; CREATE TABLE IF NOT EXISTS `METASTORE_DB_PROPERTIES` (<br/>  `PROPERTY_KEY` varchar(255) NOT NULL,<br/>  `PROPERTY_VALUE` varchar(1000) NOT NULL,<br/>  `DESCRIPTION` varchar(1000),<br/> PRIMARY KEY(`PROPERTY_KEY`)<br/>) ENGINE=InnoDB DEFAULT CHARSET=latin1;</p>
+</blockquote>
+<p>部署还有报错：</p>
+<blockquote>
+<p>com.mysql.jdbc.exceptions.jdbc4.MySQLSyntaxErrorException: Unknown column 'A0.SCHEMA_VERSION_V2' in 'field list'</p>
+</blockquote>
+<p>查找</p>
+<blockquote>
+<p># grep - i SCHEMA_VERSION_V2 /opt/cloudera/parcels/CDH-5.16.1-1.cdh5.16.1.p0.3/lib/hive/scripts/metastore/upgrade/mysql/*</p>
+</blockquote>
+<p>3）修改表结构version</p>
+<blockquote>
+<p>mysql&gt; ALTER TABLE VERSION ADD COLUMN SCHEMA_VERSION_V2 VARCHAR(255);<br/>mysql&gt; UPDATE VERSION SET SCHEMA_VERSION='1.1.0', VERSION_COMMENT='Hive release version 1.1.0', SCHEMA_VERSION_V2='1.1.0-cdh5.16.1' where VER_ID=1;</p>
+</blockquote>
+<p>还有异常</p>
+<blockquote>
+<p>com.mysql.jdbc.exceptions.jdbc4.MySQLSyntaxErrorException: Unknown column 'A0.OWNER_TYPE' in 'field list'</p>
+</blockquote>
+<p>查找</p>
+<blockquote>
+<p># grep - i OWNER_TYPE /opt/cloudera/parcels/CDH-5.16.1-1.cdh5.16.1.p0.3/lib/hive/scripts/metastore/upgrade/mysql/*</p>
+</blockquote>
+<p>4）修改表结构</p>
+<blockquote>
+<p>ALTER TABLE `DBS` ADD `OWNER_TYPE` varchar(10);<br/>ALTER TABLE `TBLS` ADD COLUMN `OWNER_TYPE` VARCHAR(10) CHARACTER SET latin1 COLLATE latin1_bin DEFAULT NULL;</p>
+</blockquote>
+<p>然后cdh的hive可以部署成功，直接使用之前的metastore数据库，并且hive功能正常；</p>
+<p> </p>
+</div>
+            </div>
+
+            <!-- Post Footer -->
+            <div class="post-footer">
+                <div class="post-navigation">
+                    <a href="../blog_cn.html" class="nav-button">← Back to Home</a>
+                    <a href="0219.html" class="nav-button">Next Post →</a>
+                </div>
+            </div>
+        </article>
+    </div>
+</body>
+</html>

@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>spark2.4升级3.1后执行spark-sql报错</title>
+    <link rel="stylesheet" href="../css/style3.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header Navigation -->
+        <div class="header">
+            <h1><a href="../blog_cn.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+        </div>
+
+        <!-- Post Container -->
+        <article class="post">
+            <!-- Post Header -->
+            <div class="post-header">
+                <h1>spark2.4升级3.1后执行spark-sql报错</h1>
+                <div class="post-meta">
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📅</span>
+                        <span>May 19, 2022</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📖</span>
+                        <span>1 min read</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">👁️</span>
+                        <span>1030 views</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Post Content -->
+            <div class="post-content">
+                <div class="blogpost-body cnblogs-markdown" id="cnblogs_post_body">
+<h1 id="背景">背景</h1>
+<p>2个节点分别升级spark版本，从2.4升级到3.1，升级后一个节点执行spark-sql正常，另一个节点执行报错，报错信息如下：</p>
+<pre><code>spark-sql&gt; select * from $table where dt = '$dt' limit 5;
+Error in query: org.apache.hadoop.hive.ql.metadata.HiveException: Unable to fetch table $table. Invalid method name: 'get_table_req'
+org.apache.spark.sql.AnalysisException: org.apache.hadoop.hive.ql.metadata.HiveException: Unable to fetch table $table. Invalid method name: 'get_table_req'
+        at org.apache.spark.sql.hive.HiveExternalCatalog.withClient(HiveExternalCatalog.scala:112)
+        at org.apache.spark.sql.hive.HiveExternalCatalog.tableExists(HiveExternalCatalog.scala:854)
+        at org.apache.spark.sql.catalyst.catalog.ExternalCatalogWithListener.tableExists(ExternalCatalogWithListener.scala:146)
+        at org.apache.spark.sql.catalyst.catalog.SessionCatalog.tableExists(SessionCatalog.scala:462)
+        at org.apache.spark.sql.catalyst.catalog.SessionCatalog.requireTableExists(SessionCatalog.scala:197)
+        at org.apache.spark.sql.catalyst.catalog.SessionCatalog.getTableRawMetadata(SessionCatalog.scala:488)
+        at org.apache.spark.sql.catalyst.catalog.SessionCatalog.getTableMetadata(SessionCatalog.scala:474)
+        at org.apache.spark.sql.execution.datasources.v2.V2SessionCatalog.loadTable(V2SessionCatalog.scala:65)
+        at org.apache.spark.sql.connector.catalog.CatalogV2Util$.loadTable(CatalogV2Util.scala:282)
+...
+Caused by: org.apache.hadoop.hive.ql.metadata.HiveException: Unable to fetch table $table. Invalid method name: 'get_table_req'
+        at org.apache.hadoop.hive.ql.metadata.Hive.getTable(Hive.java:1282)
+        at org.apache.spark.sql.hive.client.HiveClientImpl.getRawTableOption(HiveClientImpl.scala:392)
+        at org.apache.spark.sql.hive.client.HiveClientImpl.$anonfun$tableExists$1(HiveClientImpl.scala:406)
+        at scala.runtime.java8.JFunction0$mcZ$sp.apply(JFunction0$mcZ$sp.java:23)
+        at org.apache.spark.sql.hive.client.HiveClientImpl.$anonfun$withHiveState$1(HiveClientImpl.scala:291)
+        at org.apache.spark.sql.hive.client.HiveClientImpl.liftedTree1$1(HiveClientImpl.scala:224)
+        at org.apache.spark.sql.hive.client.HiveClientImpl.retryLocked(HiveClientImpl.scala:223)
+        at org.apache.spark.sql.hive.client.HiveClientImpl.withHiveState(HiveClientImpl.scala:273)
+        at org.apache.spark.sql.hive.client.HiveClientImpl.tableExists(HiveClientImpl.scala:406)
+        at org.apache.spark.sql.hive.HiveExternalCatalog.$anonfun$tableExists$1(HiveExternalCatalog.scala:854)
+        at scala.runtime.java8.JFunction0$mcZ$sp.apply(JFunction0$mcZ$sp.java:23)
+        at org.apache.spark.sql.hive.HiveExternalCatalog.withClient(HiveExternalCatalog.scala:102)
+        ... 126 more
+Caused by: org.apache.thrift.TApplicationException: Invalid method name: 'get_table_req'
+        at org.apache.thrift.TServiceClient.receiveBase(TServiceClient.java:79)
+        at org.apache.hadoop.hive.metastore.api.ThriftHiveMetastore$Client.recv_get_table_req(ThriftHiveMetastore.java:1567)
+        at org.apache.hadoop.hive.metastore.api.ThriftHiveMetastore$Client.get_table_req(ThriftHiveMetastore.java:1554)
+        at org.apache.hadoop.hive.metastore.HiveMetaStoreClient.getTable(HiveMetaStoreClient.java:1350)
+        at org.apache.hadoop.hive.ql.metadata.SessionHiveMetaStoreClient.getTable(SessionHiveMetaStoreClient.java:127)
+        at sun.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+        at sun.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:62)
+        at sun.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+        at java.lang.reflect.Method.invoke(Method.java:498)
+        at org.apache.hadoop.hive.metastore.RetryingMetaStoreClient.invoke(RetryingMetaStoreClient.java:173)
+        at com.sun.proxy.$Proxy31.getTable(Unknown Source)
+        at sun.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+        at sun.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:62)
+        at sun.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+        at java.lang.reflect.Method.invoke(Method.java:498)
+        at org.apache.hadoop.hive.metastore.HiveMetaStoreClient$SynchronizedHandler.invoke(HiveMetaStoreClient.java:2336)
+        at com.sun.proxy.$Proxy31.getTable(Unknown Source)
+        at org.apache.hadoop.hive.ql.metadata.Hive.getTable(Hive.java:1274)
+        ... 137 more
+</code></pre>
+<h1 id="定位">定位</h1>
+<p>以上报错说明spark连接hive metastore时存在版本兼容问题。<br/>
+在两个节点上分别使用spark-sql执行同样的sql，对比两个spark应用后发现，有个配置不一样</p>
+<p><picture>
+  <source srcset="../img/1509647-20220519164946370-558760251.webp" type="image/webp">
+  <img alt="" src="../img/1509647-20220519164946370-558760251.png">
+</picture></p>
+<p>正常的节点有一行配置如下：</p>
+<blockquote>
+<p>spark.sql.hive.metastore.jars=/opt/cloudera/parcels/CDH/lib/hive/lib/*</p>
+</blockquote>
+<p>在异常节点上修改spark-default.conf后，测试正常</p>
+<h1 id="原因">原因</h1>
+<p>spark有一个buildin的hive，3.1.1中对应的是2.3.6，如果想连接其他版本的hive metastore，不需要重新打包，只需要修改变量配置</p>
+<p><picture>
+  <source srcset="../img/1509647-20220519165051965-1479832639.webp" type="image/webp">
+  <img alt="" src="../img/1509647-20220519165051965-1479832639.png">
+</picture></p>
+<p><a href="http://spark.apache.org/docs/latest/sql-data-sources-hive-tables.html#interacting-with-different-versions-of-hive-metastore" rel="noopener nofollow" target="_blank">官方文档参考</a></p>
+</div>
+            </div>
+
+            <!-- Post Footer -->
+            <div class="post-footer">
+                <div class="post-navigation">
+                    <a href="../blog_cn.html" class="nav-button">← Back to Home</a>
+                    <a href="0021.html" class="nav-button">Next Post →</a>
+                </div>
+            </div>
+        </article>
+    </div>
+</body>
+</html>

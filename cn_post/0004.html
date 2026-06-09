@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>分布式系统文章汇总</title>
+    <link rel="stylesheet" href="../css/style3.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header Navigation -->
+        <div class="header">
+            <h1><a href="../blog_cn.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+        </div>
+
+        <!-- Post Container -->
+        <article class="post">
+            <!-- Post Header -->
+            <div class="post-header">
+                <h1>分布式系统文章汇总</h1>
+                <div class="post-meta">
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📅</span>
+                        <span>June 10, 2022</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📖</span>
+                        <span>1 min read</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">👁️</span>
+                        <span>122 views</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Post Content -->
+            <div class="post-content">
+                <div class="blogpost-body cnblogs-markdown" id="cnblogs_post_body">
+<h3 id="write-ahead-log">Write-Ahead Log</h3>
+<blockquote>
+<p>Provide durability guarantee without the storage data structures to be flushed to disk, by persisting every state change as a command to the append only log.<br/>
+<a href="https://martinfowler.com/articles/patterns-of-distributed-systems/wal.html" rel="noopener nofollow" target="_blank">https://martinfowler.com/articles/patterns-of-distributed-systems/wal.html</a></p>
+</blockquote>
+<h3 id="segmented-log">Segmented Log</h3>
+<blockquote>
+<p>Split log into multiple smaller files instead of a single large file for easier operations.<br/>
+<a href="https://martinfowler.com/articles/patterns-of-distributed-systems/log-segmentation.html" rel="noopener nofollow" target="_blank">https://martinfowler.com/articles/patterns-of-distributed-systems/log-segmentation.html</a></p>
+</blockquote>
+<h3 id="replicated-log">Replicated Log</h3>
+<blockquote>
+<p>Keep the state of multiple nodes synchronized by using a write-ahead log that is replicated to all the cluster nodes.<br/>
+<a href="https://martinfowler.com/articles/patterns-of-distributed-systems/replicated-log.html" rel="noopener nofollow" target="_blank">https://martinfowler.com/articles/patterns-of-distributed-systems/replicated-log.html</a></p>
+</blockquote>
+<h3 id="high-water-mark">High-Water Mark</h3>
+<blockquote>
+<p>An index in the write ahead log showing the last successful replication.<br/>
+<a href="https://martinfowler.com/articles/patterns-of-distributed-systems/high-watermark.html" rel="noopener nofollow" target="_blank">https://martinfowler.com/articles/patterns-of-distributed-systems/high-watermark.html</a></p>
+</blockquote>
+<h3 id="low-water-mark">Low-Water Mark</h3>
+<blockquote>
+<p>An index in the write ahead log showing which portion of the log can be discarded.<br/>
+<a href="https://martinfowler.com/articles/patterns-of-distributed-systems/low-watermark.html" rel="noopener nofollow" target="_blank">https://martinfowler.com/articles/patterns-of-distributed-systems/low-watermark.html</a></p>
+</blockquote>
+<h3 id="paxos">Paxos</h3>
+<blockquote>
+<p>Use two consensus building phases to reach safe consensus even when nodes disconnect<br/>
+<a href="https://martinfowler.com/articles/patterns-of-distributed-systems/paxos.html" rel="noopener nofollow" target="_blank">https://martinfowler.com/articles/patterns-of-distributed-systems/paxos.html</a></p>
+</blockquote>
+<h3 id="quorum">Quorum</h3>
+<blockquote>
+<p>Avoid two groups of servers making independent decisions, by requiring majority for taking every decision.<br/>
+<a href="https://martinfowler.com/articles/patterns-of-distributed-systems/quorum.html" rel="noopener nofollow" target="_blank">https://martinfowler.com/articles/patterns-of-distributed-systems/quorum.html</a></p>
+</blockquote>
+<h3 id="leader-and-followers">Leader and Followers</h3>
+<blockquote>
+<p>Have a single server to coordinate replication across a set of servers.<br/>
+<a href="https://martinfowler.com/articles/patterns-of-distributed-systems/leader-follower.html" rel="noopener nofollow" target="_blank">https://martinfowler.com/articles/patterns-of-distributed-systems/leader-follower.html</a></p>
+</blockquote>
+<h3 id="generation-clock">Generation Clock</h3>
+<blockquote>
+<p>A monotonically increasing number indicating the generation of the server.<br/>
+<a href="https://martinfowler.com/articles/patterns-of-distributed-systems/generation.html" rel="noopener nofollow" target="_blank">https://martinfowler.com/articles/patterns-of-distributed-systems/generation.html</a></p>
+</blockquote>
+<h3 id="two-phase-commit">Two Phase Commit</h3>
+<blockquote>
+<p>Update resources on multiple nodes in one atomic operation.<br/>
+<a href="https://martinfowler.com/articles/patterns-of-distributed-systems/two-phase-commit.html" rel="noopener nofollow" target="_blank">https://martinfowler.com/articles/patterns-of-distributed-systems/two-phase-commit.html</a></p>
+</blockquote>
+<h3 id="the-log-what-every-software-engineer-should-know-about-real-time-datas-unifying-abstraction">The Log: What every software engineer should know about real-time data's unifying abstraction</h3>
+<blockquote>
+<p><a href="https://engineering.linkedin.com/distributed-systems/log-what-every-software-engineer-should-know-about-real-time-datas-unifying" rel="noopener nofollow" target="_blank">https://engineering.linkedin.com/distributed-systems/log-what-every-software-engineer-should-know-about-real-time-datas-unifying</a></p>
+</blockquote>
+<h3 id="on-disk-io-part-1-flavors-of-io">On Disk IO, Part 1: Flavors of IO</h3>
+<blockquote>
+<p><a href="https://medium.com/databasss/on-disk-io-part-1-flavours-of-io-8e1ace1de017" rel="noopener nofollow" target="_blank">https://medium.com/databasss/on-disk-io-part-1-flavours-of-io-8e1ace1de017</a></p>
+</blockquote>
+<h3 id="on-disk-io-part-2-more-flavours-of-io">On Disk IO, Part 2: More Flavours of IO</h3>
+<blockquote>
+<p><a href="https://medium.com/databasss/on-disk-io-part-2-more-flavours-of-io-c945db3edb13" rel="noopener nofollow" target="_blank">https://medium.com/databasss/on-disk-io-part-2-more-flavours-of-io-c945db3edb13</a></p>
+</blockquote>
+<h3 id="skiplist">SkipList</h3>
+<blockquote>
+<p><a href="https://www.epaperpress.com/sortsearch/download/skiplist.pdf" rel="noopener nofollow" target="_blank">https://www.epaperpress.com/sortsearch/download/skiplist.pdf</a></p>
+</blockquote>
+</div>
+            </div>
+
+            <!-- Post Footer -->
+            <div class="post-footer">
+                <div class="post-navigation">
+                    <a href="../blog_cn.html" class="nav-button">← Back to Home</a>
+                    <a href="0005.html" class="nav-button">Next Post →</a>
+                </div>
+            </div>
+        </article>
+    </div>
+</body>
+</html>

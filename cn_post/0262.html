@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ambari 3 - 通过Ambari部署Airflow</title>
+    <link rel="stylesheet" href="../css/style3.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header Navigation -->
+        <div class="header">
+            <h1><a href="../blog_cn.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+        </div>
+
+        <!-- Post Container -->
+        <article class="post">
+            <!-- Post Header -->
+            <div class="post-header">
+                <h1>Ambari 3 - 通过Ambari部署Airflow</h1>
+                <div class="post-meta">
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📅</span>
+                        <span>January 17, 2019</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📖</span>
+                        <span>1 min read</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">👁️</span>
+                        <span>2065 views</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Post Content -->
+            <div class="post-content">
+                <div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<p>ambari2.7.3（hdp3.1） 安装 airflow1.10</p>
+<p>ambari的hdp中原生不支持airflow安装，下面介绍如何通过mpack方式使ambari支持airflow安装：</p>
+<h2>1 下载</h2>
+<blockquote>
+<p># wget https://github.com/miho120/ambari-airflow-mpack/raw/master/airflow-service-mpack.tar.gz</p>
+</blockquote>
+<h2>2 安装</h2>
+<blockquote>
+<p># ambari-server install-mpack --mpack airflow-service-mpack.tar.gz --verbose</p>
+</blockquote>
+<h2>3 重启</h2>
+<blockquote>
+<p># ambari-server restart</p>
+</blockquote>
+<h2>4 ambari页面没有出现ambari，检查mpack.json</h2>
+<p>/var/lib/ambari-server/resources/mpacks/airflow-ambari-mpack-1.5.4/mpack.json</p>
+<blockquote>
+<p>      "service_versions_map": [</p>
+<p>        {</p>
+<p>          "service_name" : "AIRFLOW",</p>
+<p>          "service_version" : "1.10.0",</p>
+<p>          "applicable_stacks" : [</p>
+<p>            {</p>
+<p>              "stack_name" : "HDP",</p>
+<p>              "stack_version" : "2.4"</p>
+<p>            },</p>
+<p>            {</p>
+<p>              "stack_name" : "HDP",</p>
+<p>              "stack_version" : "2.5"</p>
+<p>            },</p>
+<p>            {</p>
+<p>              "stack_name" : "HDP",</p>
+<p>              "stack_version" : "2.6"</p>
+<p>            },</p>
+<p>            {</p>
+<p>              "stack_name" : "HDP",</p>
+<p>              "stack_version" : "3.0"</p>
+<p>            }</p>
+<p>          ]</p>
+<p>        }</p>
+<p>      ]</p>
+</blockquote>
+<p>需要增加HDP3.1，修改完重新打包</p>
+<h2>4 卸载</h2>
+<blockquote>
+<p>ambari-server uninstall-mpack --mpack-name=airflow-ambari-mpack</p>
+</blockquote>
+<h2>5 安装（同上）</h2>
+<h2>6 重启（同上）</h2>
+<p>打开ambari页面</p>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201901/1509647-20190117215336192-734251756.png"/></p>
+<p> </p>
+<p>启动worker时可能失败，查看启动命令</p>
+<blockquote>
+<pre class="stdout">2019-01-18 19:09:48,159 - Execute['service airflow-worker start'] {}</pre>
+</blockquote>
+<p>查看日志</p>
+<blockquote>
+<p>journalctl -xe</p>
+</blockquote>
+<p>发现有报错</p>
+<blockquote>
+<p>Jan 18 19:04:05 cdp-test-server-01.bj python[15246]: detected unhandled Python exception in '/var/lib/ambari-agent/cache/common-services/AIRFLOW/1.10.0/package/scripts/airflow_worker_control.py'<br/>Jan 18 19:04:05 cdp-test-server-01.bj abrt-server[15254]: Executable '/var/lib/ambari-agent/cache/common-services/AIRFLOW/1.10.0/package/scripts/airflow_worker_control.py' doesn't belong to any package and ProcessUnpackaged is set t<br/>Jan 18 19:04:05 cdp-test-server-01.bj abrt-server[15254]: 'post-create' on '/var/spool/abrt/Python-2019-01-18-19:04:05-15246' exited with 1<br/>Jan 18 19:04:05 cdp-test-server-01.bj abrt-server[15254]: Deleting problem directory '/var/spool/abrt/Python-2019-01-18-19:04:05-15246'</p>
+</blockquote>
+<p>可以通过修改配置解决</p>
+<blockquote>
+<p># grep ProcessUnpackaged /etc/abrt/abrt-action-save-package-data.conf<br/>no</p>
+</blockquote>
+<p>改为yes</p>
+<p> </p>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201901/1509647-20190126173117989-739135988.png"/></p>
+<p> </p>
+<p> </p>
+<p>ambari具体使用详见：<a href="https://www.cnblogs.com/barneywill/p/10268501.html" target="_blank">https://www.cnblogs.com/barneywill/p/10268501.html</a></p>
+<p> </p>
+<p>参考：</p>
+<p>https://github.com/miho120/ambari-airflow-mpack</p>
+<p> </p>
+</div>
+            </div>
+
+            <!-- Post Footer -->
+            <div class="post-footer">
+                <div class="post-navigation">
+                    <a href="../blog_cn.html" class="nav-button">← Back to Home</a>
+                    <a href="0263.html" class="nav-button">Next Post →</a>
+                </div>
+            </div>
+        </article>
+    </div>
+</body>
+</html>

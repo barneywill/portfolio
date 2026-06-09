@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hadoop 2 - hdfs和yarn最简绿色部署</title>
+    <link rel="stylesheet" href="../css/style3.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header Navigation -->
+        <div class="header">
+            <h1><a href="../blog_cn.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+        </div>
+
+        <!-- Post Container -->
+        <article class="post">
+            <!-- Post Header -->
+            <div class="post-header">
+                <h1>Hadoop 2 - hdfs和yarn最简绿色部署</h1>
+                <div class="post-meta">
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📅</span>
+                        <span>February 25, 2019</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📖</span>
+                        <span>1 min read</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">👁️</span>
+                        <span>343 views</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Post Content -->
+            <div class="post-content">
+                <div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<p>环境：3结点集群</p>
+<blockquote>
+<p>192.168.0.1<br/>192.168.0.2<br/>192.168.0.3</p>
+</blockquote>
+<p> </p>
+<h1>1 配置root用户服务期间免密登录</h1>
+<p>参考：https://www.cnblogs.com/barneywill/p/10271679.html</p>
+<h1>2 安装ansible</h1>
+<p>参考：https://www.cnblogs.com/barneywill/p/10263278.html</p>
+<h1>3 在所有服务器上创建hadoop用户，配置hadoop用户服务期间免密登录</h1>
+<p>参考：https://www.cnblogs.com/barneywill/p/10271679.html</p>
+<h1>4 同步host</h1>
+<blockquote>
+<p># echo "" &gt; /tmp/hosts<br/># echo "192.168.0.1 node0" &gt; /tmp/hosts<br/># echo "192.168.0.2 node1" &gt; /tmp/hosts<br/># echo "192.168.0.3 node2" &gt; /tmp/hosts</p>
+<p># ansible all-servers -m copy -a "src=/tmp/hosts dest=/tmp"<br/># ansible all-servers -m shell -a "cat /tmp/hosts &gt;&gt; /etc/hosts &amp;&amp; cat /etc/hosts"</p>
+</blockquote>
+<h1>5 拷贝到所有服务器上并解压</h1>
+<blockquote>
+<p># ansible all-servers -m copy -a 'src=/src/path/to/hadoop-2.6.5.tar.gz dest=/dest/path/to/'<br/># ansible all-servers -m shell -a 'tar xvf /dest/path/to/hadoop-2.6.5.tar.gz -C /app/path'</p>
+</blockquote>
+<h1>6 准备目录：tmp、namenode、datanode</h1>
+<blockquote>
+<p># ansible all-servers -m shell -a 'mkdir -p /data/hadoop/tmp &amp;&amp; mkdir -p /data/hadoop/hdfs/namenode &amp;&amp; mkdir -p /data/hadoop/hdfs/datanode &amp;&amp; chown -R hadoop.hadoop /data/hadoop'</p>
+</blockquote>
+<h1>7 准备配置文件</h1>
+<p>slaves</p>
+<blockquote>
+<p>node0<br/>node1<br/>node2</p>
+</blockquote>
+<p>core-site.xml</p>
+<blockquote>
+<p>&lt;configuration&gt;</p>
+<p>  &lt;property&gt;</p>
+<p>     &lt;name&gt;fs.defaultFS&lt;/name&gt;</p>
+<p>     &lt;value&gt;hdfs://node0:9000&lt;/value&gt;</p>
+<p>  &lt;/property&gt;</p>
+<p>  &lt;property&gt;</p>
+<p>     &lt;name&gt;hadoop.tmp.dir&lt;/name&gt;</p>
+<p>     &lt;value&gt;/data/hadoop/tmp&lt;/value&gt;</p>
+<p>  &lt;/property&gt;</p>
+<p>&lt;/configuration&gt;</p>
+</blockquote>
+<p>hdfs-site.xml</p>
+<blockquote>
+<p>&lt;configuration&gt;</p>
+<p> &lt;property&gt;</p>
+<p>   &lt;name&gt;dfs.replication&lt;/name&gt;</p>
+<p>   &lt;value&gt;3&lt;/value&gt;</p>
+<p> &lt;/property&gt;</p>
+<p> &lt;property&gt;</p>
+<p>    &lt;name&gt;dfs.name.dir&lt;/name&gt;</p>
+<p>    &lt;value&gt;/data/hadoop/hdfs/namenode&lt;/value&gt;</p>
+<p>  &lt;/property&gt;</p>
+<p> &lt;property&gt;</p>
+<p>    &lt;name&gt;dfs.data.dir&lt;/name&gt;</p>
+<p>    &lt;value&gt;/data/hadoop/hdfs/datanode&lt;/value&gt;</p>
+<p> &lt;/property&gt;</p>
+<p>&lt;/configuration&gt;</p>
+</blockquote>
+<p>mapred-site.xml</p>
+<blockquote>
+<p>&lt;configuration&gt;</p>
+<p>    &lt;property&gt;</p>
+<p>        &lt;name&gt;mapreduce.framework.name&lt;/name&gt;</p>
+<p>        &lt;value&gt;yarn&lt;/value&gt;</p>
+<p>    &lt;/property&gt;</p>
+<p>&lt;/configuration&gt;</p>
+</blockquote>
+<p>yarn-site.xml</p>
+<blockquote>
+<p>&lt;configuration&gt;</p>
+<p>    &lt;property&gt;</p>
+<p>        &lt;name&gt;yarn.resourcemanager.hostname&lt;/name&gt;</p>
+<p>        &lt;value&gt;node0&lt;/value&gt;</p>
+<p>    &lt;/property&gt;</p>
+<p>    &lt;property&gt;</p>
+<p>        &lt;name&gt;yarn.nodemanager.aux-services&lt;/name&gt;</p>
+<p>        &lt;value&gt;mapreduce_shuffle&lt;/value&gt;</p>
+<p>    &lt;/property&gt;</p>
+<p>    &lt;property&gt;</p>
+<p>        &lt;name&gt;yarn.nodemanager.aux-services.mapreduce_shuffle.class&lt;/name&gt;</p>
+<p>        &lt;value&gt;org.apache.hadoop.mapred.ShuffleHandler&lt;/value&gt;</p>
+<p>    &lt;/property&gt;</p>
+<p>&lt;/configuration&gt;</p>
+</blockquote>
+<p>1）默认管理8G 8core资源，如下修改</p>
+<blockquote>
+<p>    &lt;property&gt;</p>
+<p>        &lt;name&gt;yarn.nodemanager.resource.memory-mb&lt;/name&gt;</p>
+<p>        &lt;value&gt;8196&lt;/value&gt;</p>
+<p>    &lt;/property&gt;</p>
+<p>    &lt;property&gt;</p>
+<p>        &lt;name&gt;yarn.nodemanager.resource.cpu-vcores&lt;/name&gt;</p>
+<p>        &lt;value&gt;8&lt;/value&gt;</p>
+<p>    &lt;/property&gt;</p>
+</blockquote>
+<p>2）开启日志聚合</p>
+<blockquote>
+<p>    &lt;property&gt;</p>
+<p>        &lt;name&gt;yarn.log-aggregation-enable&lt;/name&gt;</p>
+<p>        &lt;value&gt;true&lt;/value&gt;</p>
+<p>    &lt;/property&gt;</p>
+</blockquote>
+<p>3）如果由于虚拟内存原因导致container被kill报错，比如</p>
+<blockquote>
+<p>2019-02-25 17:54:19,481 WARN org.apache.hadoop.yarn.server.nodemanager.containermanager.monitor.ContainersMonitorImpl: Container [pid=48342,containerID=container_1551078668160_0012_02_000001] is running beyond virtual memory limits. Current usage: 380.9 MB of 1 GB physical memory used; 2.5 GB of 2.1 GB virtual memory used. Killing container.</p>
+</blockquote>
+<p>增加配置</p>
+<blockquote>
+<p>    &lt;property&gt;</p>
+<p>        &lt;name&gt;yarn.nodemanager.vmem-check-enabled&lt;/name&gt;</p>
+<p>        &lt;value&gt;false&lt;/value&gt;</p>
+<p>    &lt;/property&gt;</p>
+</blockquote>
+<p> or</p>
+<blockquote>
+<p>    &lt;property&gt;</p>
+<p>        &lt;name&gt;yarn.nodemanager.vmem-pmem-ratio&lt;/name&gt;</p>
+<p>        &lt;value&gt;4&lt;/value&gt;</p>
+<p>    &lt;/property&gt;</p>
+</blockquote>
+<p> </p>
+<p> </p>
+<h1>8 将配置同步到所有服务器上</h1>
+<blockquote>
+<p># ansible all-servers -m copy -a 'src=/path/to/config/ dest=/app/path/hadoop-2.6.5/etc/hadoop/'</p>
+</blockquote>
+<h1>9 同步环境变量</h1>
+<blockquote>
+<p># echo '' &gt; /tmp/profile<br/># echo 'export HADOOP_HOME=/app/path/hadoop-2.6.5' &gt;&gt; /tmp/profile<br/># echo 'export JAVA_HOME=/app/path/jdk1.8.0_141/' &gt;&gt; /tmp/profile<br/># echo 'export PATH=$JAVA_HOME/bin:$HADOOP_HOME/bin:$PATH' &gt;&gt; /tmp/profile<br/># ansible all-servers -m copy -a 'src=/tmp/profile dest=/tmp/'<br/># ansible all-servers -m shell -a 'cat /tmp/profile &gt;&gt; /etc/bashrc'</p>
+</blockquote>
+<h1>10 启动hdfs</h1>
+<blockquote>
+<p># su - hadoop<br/>$ /app/path/hadoop-2.6.5/bin/hadoop namenode -format<br/>$ /app/path/hadoop-2.6.5/sbin/start-dfs.sh<br/>$ hdfs dfsadmin -report</p>
+</blockquote>
+<h1>11 启动yarn</h1>
+<blockquote>
+<p># su - hadoop<br/>$ /app/path/hadoop-2.6.5/sbin/start-yarn.sh<br/>$ yarn node -list</p>
+</blockquote>
+<p> </p>
+</div>
+            </div>
+
+            <!-- Post Footer -->
+            <div class="post-footer">
+                <div class="post-navigation">
+                    <a href="../blog_cn.html" class="nav-button">← Back to Home</a>
+                    <a href="0208.html" class="nav-button">Next Post →</a>
+                </div>
+            </div>
+        </article>
+    </div>
+</body>
+</html>

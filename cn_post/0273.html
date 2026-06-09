@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>后台运行</title>
+    <link rel="stylesheet" href="../css/style3.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header Navigation -->
+        <div class="header">
+            <h1><a href="../blog_cn.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+        </div>
+
+        <!-- Post Container -->
+        <article class="post">
+            <!-- Post Header -->
+            <div class="post-header">
+                <h1>后台运行</h1>
+                <div class="post-meta">
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📅</span>
+                        <span>January 14, 2019</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📖</span>
+                        <span>1 min read</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">👁️</span>
+                        <span>345 views</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Post Content -->
+            <div class="post-content">
+                <div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<p>linux服务器通常都是远程登录的，执行命令或者脚本时，如果连接断掉（执行时间较长或者网络不稳定时），那么进程也就没了，这时只能重新连接重新执行，这时可以使用后台执行：</p>
+<h1>1 nohup</h1>
+<p>命令</p>
+<blockquote>
+<p>nohup $command $args &amp;</p>
+</blockquote>
+<p>这时会生成一个nohup.out文件，内容是命令执行的控制台输出，也可以自己重定向到另一个文件：</p>
+<blockquote>
+<p>nohup $command $args 1&gt;test.log 2&gt;&amp;1 &amp;</p>
+</blockquote>
+<h1>2 screen</h1>
+<p>安装</p>
+<blockquote>
+<p>yum install screen</p>
+</blockquote>
+<p>session详细参数详见</p>
+<blockquote>
+<p>screen - h</p>
+</blockquote>
+<p> </p>
+<p>下面列举一些常用的参数：</p>
+<p> </p>
+<p>列出当前所有session</p>
+<blockquote>
+<p>screen - list</p>
+</blockquote>
+<p>新建session</p>
+<blockquote>
+<p>screen - S $session_name</p>
+</blockquote>
+<p>进入session后执行任意命令，然后可以直接关闭连接，或者临时退出当前session（临时退出后还可以再重新进入），临时退出命令是：</p>
+<blockquote>
+<p>Ctrl+A d</p>
+</blockquote>
+<p>kill当前session（永久退出）命令：</p>
+<blockquote>
+<p>Ctrl+A k</p>
+</blockquote>
+<p>重新进入session</p>
+<blockquote>
+<p>screen - r $session_name</p>
+</blockquote>
+<p>注意，重新进入的session必须是detached状态，如果是attached状态，必须先detach：</p>
+<blockquote>
+<p>screen - d $session_name</p>
+</blockquote>
+<p> </p>
+<p>如果在执行screen时报错</p>
+<blockquote>
+<p>Cannot open your terminal ‘/dev/pts/0’ – please check.</p>
+</blockquote>
+<p>先执行即可</p>
+<blockquote>
+<p>script /dev/null</p>
+</blockquote>
+<h1>3 Tmux</h1>
+<p>三个概念:session/window/pane,一个session有多个window,一个windows有多个pane.</p>
+<h2>帮助</h2>
+<p>进入tmux之后</p>
+<blockquote>
+<p>Ctrl+d ? (显示所有命令帮助)<br/>Exc or q (离开帮助)</p>
+</blockquote>
+<h2>3.1 session相关</h2>
+<blockquote>
+<p>tmux ls (显示所有的session)</p>
+<p>tmux new - s myname (新建session,命名为myname)</p>
+<p>Ctrl+d or exit (退出当前session)</p>
+<p>Ctrl+b d or tmux detach (分离当前session,暂时离开)</p>
+<p>tmux a (返回上次的session)</p>
+<p>tmux a - t myname (返回名称为myname的session)</p>
+<p>tmux attach - t myname </p>
+<p>tmux kill-session - t myname (关闭名称为myname的session)</p>
+<p>tmux rename - t myname1 myname2 (将名称为myname1的session重命名为myname2)</p>
+<p>Ctrl+b s (显示所有的session,可以使用0-9切换)</p>
+<p>tmux switch - t myname (切换到名称为myname的session)</p>
+<p>Ctrl+b $ (重命名当前session)</p>
+</blockquote>
+<h2>3.2 window相关</h2>
+<blockquote>
+<p>Ctrl+b c (创建新window)</p>
+<p>Ctrl+b n (切换到下一个window)</p>
+<p>Ctrl+b p (切换到上一个window)</p>
+<p>Ctrl+b 0-9 (切换到指定的window)</p>
+<p>Ctrl+b , (重命名当前window)</p>
+<p>Ctrl+b w (显示所有的window)</p>
+<p>Ctrl+b &amp; (关闭当前的window)</p>
+</blockquote>
+<h2>3.3 pane相关</h2>
+<blockquote>
+<p>Ctrl+b % (垂直拆分pane)</p>
+<p> tmux split-window</p>
+<p>Ctrl+b " (水平拆分pane)</p>
+<p>tmux split-window - h</p>
+<p><br/>Ctrl+b q (显示每个pane的编号,显示编号时直接输入数字键选中panel)</p>
+<p>Ctrl+b Left|Right|Up|Down (在pane间切换光标)</p>
+<p>tmux select-pane - L|R|U|D </p>
+<p>Ctrl+b ; (返回上一个pane)</p>
+<p>Ctrl+b o (切换到下一个pane)</p>
+<p><br/>Ctrl+b x (关闭当前pane)</p>
+<p>Ctrl+b space (重新调整所有pane的布局)</p>
+<p>Ctrl+b z (将当前pane调整到全屏,再次调整回原来大小)</p>
+<p>Ctrl+b t (当前pane显示时间)</p>
+<p>Ctrl+b Ctrl+o (逆时针旋转所有窗格)</p>
+<p>tmux resize-pane - L|R|U|D (调整当前窗格的大小)</p>
+<p> </p>
+<p>Ctrl+b PageUp|PageDown (上下翻页)</p>
+<p>q (退出翻页)</p>
+<p> </p>
+<p>Ctrl+b [ (进入复制模式)</p>
+<p>q (退出复制模式)</p>
+</blockquote>
+<h2> 3.4 配置文件</h2>
+<p>修改配置</p>
+<blockquote>
+<p># vi ~/.tmux.conf</p>
+<p>setw - g mode-keys vi</p>
+<p>set - g default-command /bin/zsh</p>
+<p>set - g default-terminal "screen-256color"</p>
+<p>set - g pane-active-border-fg black                                                                                                     </p>
+<p>set - g pane-active-border-bg red</p>
+</blockquote>
+<p>生效配置</p>
+<blockquote>
+<p># tmux (进入tmux)</p>
+<p>Ctrl+b : source-file ~/.tmux.conf</p>
+<p>or</p>
+<p># tmux source ~/.tmux.conf </p>
+</blockquote>
+<p> </p>
+</div>
+            </div>
+
+            <!-- Post Footer -->
+            <div class="post-footer">
+                <div class="post-navigation">
+                    <a href="../blog_cn.html" class="nav-button">← Back to Home</a>
+                    <a href="0274.html" class="nav-button">Next Post →</a>
+                </div>
+            </div>
+        </article>
+    </div>
+</body>
+</html>

@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ElasticSearch 1 - 简介、安装、使用</title>
+    <link rel="stylesheet" href="../css/style3.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header Navigation -->
+        <div class="header">
+            <h1><a href="../blog_cn.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+        </div>
+
+        <!-- Post Container -->
+        <article class="post">
+            <!-- Post Header -->
+            <div class="post-header">
+                <h1>ElasticSearch 1 - 简介、安装、使用</h1>
+                <div class="post-meta">
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📅</span>
+                        <span>January 21, 2019</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📖</span>
+                        <span>6 min read</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">👁️</span>
+                        <span>655 views</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Post Content -->
+            <div class="post-content">
+                <div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<p>ElasticSearch 6.6.0</p>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201901/1509647-20190120223444562-2105334535.png"/></p>
+<p>官方：https://www.elastic.co/</p>
+<p> </p>
+<h1>一 简介</h1>
+<p>ElasticSearch简单来说是对lucene的分布式封装，增加了shard（每个shard是一个子索引，也是一个lucene的index）和replica的概念；所以在ElasticSearch也可以见到lucene中的概念，比如index、document等。</p>
+<p> </p>
+<p>Elasticsearch is a highly scalable open-source full-text search and analytics engine. It allows you to store, search, and analyze big volumes of data quickly and in near real time. It is generally used as the underlying engine/technology that powers applications that have complex search features and requirements.</p>
+<p><em>es是一个可扩展、开源的全文检索和分析引擎。es可以近乎实时的存储、搜索和分析大规模数据；es通常作为底层的技术或者引擎使得应用可以实现复杂查询的需求和场景。</em></p>
+<p> </p>
+<h2>核心概念</h2>
+<h3>1 集群概念</h3>
+<h4>Cluster</h4>
+<p>A cluster is a collection of one or more nodes (servers) that together holds your entire data and provides federated indexing and search capabilities across all nodes. A cluster is identified by a unique name which by default is "elasticsearch". This name is important because a node can only be part of a cluster if the node is set up to join the cluster by its name.</p>
+<p><em>Cluster（集群）由一个或多个Node组成，Cluster作为一个整体持有所有的数据，同时提供索引和查询功能；cluster有一个唯一的名字，默认是elasticsearch。</em></p>
+<h4>Node</h4>
+<p>A node is a single server that is part of your cluster, stores your data, and participates in the cluster’s indexing and search capabilities. Just like a cluster, a node is identified by a name which by default is a random Universally Unique IDentifier (UUID) that is assigned to the node at startup. You can define any node name you want if you do not want the default. This name is important for administration purposes where you want to identify which servers in your network correspond to which nodes in your Elasticsearch cluster.<br/>A node can be configured to join a specific cluster by the cluster name. By default, each node is set up to join a cluster named elasticsearch which means that if you start up a number of nodes on your network and—assuming they can discover each other—they will all automatically form and join a single cluster named elasticsearch.</p>
+<p><em>一个Node（节点）是一台服务器，作为集群的组成部分，存储数据同时参与集群的索引和查询功能；每个Node也有一个唯一的名字，默认是UUID。</em><br/><em>每个Node都可以通过指定一个集群的名字来加入cluster；</em></p>
+<h3>2 索引概念</h3>
+<h4>Index</h4>
+<p>An index is a collection of documents that have somewhat similar characteristics. An index is identified by a name (that must be all lowercase) and this name is used to refer to the index when performing indexing, search, update, and delete operations against the documents in it.</p>
+<p><em>一个Index是多个具有相似特征的document的集合；一个Index也有一个名字（全小写）。</em></p>
+<h4>Type（废弃）</h4>
+<p>A type used to be a logical category/partition of your index to allow you to store different types of documents in the same index. It is no longer possible to create multiple types in an index, and the whole concept of types will be removed in a later version. </p>
+<p><em>一个type是一个逻辑概念，表示index中的category或者partition，未来会被废弃掉；</em></p>
+<p>废弃进度：<br/>Indices created in Elasticsearch 6.0.0 or later may only contain a single mapping type. Indices created in 5.x with multiple mapping types will continue to function as before in Elasticsearch 6.x. Types will be deprecated in APIs in Elasticsearch 7.0.0, and completely removed in 8.0.0.</p>
+<p>废弃原因：<br/>Initially, we spoke about an “index” being similar to a “database” in an SQL database, and a “type” being equivalent to a “table”.<br/>This was a bad analogy that led to incorrect assumptions. In an SQL database, tables are independent of each other. The columns in one table have no bearing on columns with the same name in another table. This is not the case for fields in a mapping type.</p>
+<h4>Document</h4>
+<p>A document is a basic unit of information that can be indexed. This document is expressed in JSON (JavaScript Object Notation) which is a ubiquitous internet data interchange format.</p>
+<p><em>一个document是一个索引的基本信息单元，格式为json；</em></p>
+<h3>3 其他</h3>
+<h4>Near Realtime (NRT)</h4>
+<p>Elasticsearch is a near-realtime search platform. What this means is there is a slight latency (normally one second) from the time you index a document until the time it becomes searchable.</p>
+<p><em>es是一个近乎实时的搜索平台，近乎实时的含义是从插入document到可以搜索到document的延迟很小，通常是1s。</em></p>
+<h4>Shards</h4>
+<p>An index can potentially store a large amount of data that can exceed the hardware limits of a single node. For example, a single index of a billion documents taking up 1TB of disk space may not fit on the disk of a single node or may be too slow to serve search requests from a single node alone.<br/>To solve this problem, Elasticsearch provides the ability to subdivide your index into multiple pieces called shards. When you create an index, you can simply define the number of shards that you want. Each shard is in itself a fully-functional and independent "index" that can be hosted on any node in the cluster.</p>
+<p>Sharding is important for two primary reasons:</p>
+<p>It allows you to horizontally split/scale your content volume<br/>It allows you to distribute and parallelize operations across shards (potentially on multiple nodes) thus increasing performance/throughput</p>
+<p>The mechanics of how a shard is distributed and also how its documents are aggregated back into search requests are completely managed by Elasticsearch and is transparent to you as the user.</p>
+<p><em>一个索引如果非常大可能会超出单机硬件限制，es的解决方案是将索引划分为多个子索引，每个子索引也叫shard（分片）。当创建索引的时候，可以指定shard的数量，每个shard都是独立的索引；</em><br/><em>shard很重要：1）水平扩展；2）分布式和并行操作；</em></p>
+<h4>Replicas</h4>
+<p>In a network/cloud environment where failures can be expected anytime, it is very useful and highly recommended to have a failover mechanism in case a shard/node somehow goes offline or disappears for whatever reason. To this end, Elasticsearch allows you to make one or more copies of your index’s shards into what are called replica shards, or replicas for short.</p>
+<p>Replication is important for two primary reasons:</p>
+<p>It provides high availability in case a shard/node fails. For this reason, it is important to note that a replica shard is never allocated on the same node as the original/primary shard that it was copied from.<br/>It allows you to scale out your search volume/throughput since searches can be executed on all replicas in parallel.</p>
+<p><em>网络环境中失败（硬件故障或网络故障）在所难免，所以failover就很重要；es允许你配置每个shard有0个或多个备份，也叫replica（副本）；</em><br/><em>replica很重要：1）高可用；2）并行操作；</em></p>
+<h4>Summary</h4>
+<p>To summarize, each index can be split into multiple shards. An index can also be replicated zero (meaning no replicas) or more times. Once replicated, each index will have primary shards (the original shards that were replicated from) and replica shards (the copies of the primary shards).</p>
+<p>The number of shards and replicas can be defined per index at the time the index is created. After the index is created, you may also change the number of replicas dynamically anytime. You can change the number of shards for an existing index using the _shrink and _split APIs, however this is not a trivial task and pre-planning for the correct number of shards is the optimal approach.</p>
+<p>By default, each index in Elasticsearch is allocated 5 primary shards and 1 replica which means that if you have at least two nodes in your cluster, your index will have 5 primary shards and another 5 replica shards (1 complete replica) for a total of 10 shards per index.</p>
+<p><em>每个index可以被拆分为多个shard，每个索引都可以被复制0或多次；一旦被复制，每个索引都会有primary shard（主分片，被复制数据）和replica shard（复制分片，从主分片复制数据）；</em><br/><em>shard和replica的数量可以在创建索引的时候配置，后续也可以修改；</em><br/><em>默认的shard数量是5，默认的replica数量是1；</em></p>
+<p>Each Elasticsearch shard is a Lucene index. There is a maximum number of documents you can have in a single Lucene index. As of LUCENE-5843, the limit is 2,147,483,519 (= Integer.MAX_VALUE - 128) documents. You can monitor shard sizes using the _cat/shards API.</p>
+<p><em>每个es的shard都是一个lucene的index，lucene的index中有document数量限制，如果超出数量，es需要增加更多的分片；</em></p>
+<p> </p>
+<h1>二 安装</h1>
+<h2>1 docker安装</h2>
+<blockquote>
+<p># docker run elasticsearch</p>
+</blockquote>
+<h2>2 ambari安装</h2>
+<p>详见：<a href="https://www.cnblogs.com/barneywill/p/10281678.html" target="_blank">https://www.cnblogs.com/barneywill/p/10281678.html</a></p>
+<h2>3 手工tar安装 </h2>
+<blockquote>
+<p># curl -L -O https://artifacts.elastic.co/downloads/elasticsearch/elasticsearch-6.6.2.tar.gz<br/># tar -xvf elasticsearch-6.6.2.tar.gz<br/># cd elasticsearch-6.6.2</p>
+</blockquote>
+<p>配置文件</p>
+<blockquote>
+<p>config/elasticsearch.yml</p>
+</blockquote>
+<p>可以配置集群名称，数据目录（和hdfs一样，可以配置多个硬盘提升性能）等；</p>
+<p>启动</p>
+<blockquote>
+<p># bin/elasticsearch</p>
+</blockquote>
+<h2>4 手工yum安装</h2>
+<blockquote>
+<p># yum install elasticsearch</p>
+</blockquote>
+<p>配置文件</p>
+<blockquote>
+<p>/etc/elasticsearch/elasticsearch.yml</p>
+</blockquote>
+<p>启动</p>
+<blockquote>
+<p># service elasticsearch start</p>
+</blockquote>
+<p> </p>
+<p>启动之后访问</p>
+<blockquote>
+<p># curl http://$es_server:9200</p>
+<p>{<br/>  "name" : "y8NAQ9f",<br/>  "cluster_name" : "es_jdc",<br/>  "cluster_uuid" : "fZU17hfjTKO2IDUwnGmbEg",<br/>  "version" : {<br/>    "number" : "6.6.0",<br/>    "build_flavor" : "default",<br/>    "build_type" : "tar",<br/>    "build_hash" : "a9861f4",<br/>    "build_date" : "2019-01-24T11:27:09.439740Z",<br/>    "build_snapshot" : false,<br/>    "lucene_version" : "7.6.0",<br/>    "minimum_wire_compatibility_version" : "5.6.0",<br/>    "minimum_index_compatibility_version" : "5.0.0"<br/>  },<br/>  "tagline" : "You Know, for Search"<br/>}</p>
+</blockquote>
+<p>如果启动报错</p>
+<blockquote>
+<p>ERROR: [1] bootstrap checks failed<br/>[1]: max virtual memory areas vm.max_map_count [65530] is too low, increase to at least [262144]</p>
+</blockquote>
+<p>当前配置</p>
+<blockquote>
+<p># sysctl -a|grep vm.max_map_count<br/>vm.max_map_count = 65530</p>
+</blockquote>
+<p>修改方法</p>
+<blockquote>
+<p>sysctl -w vm.max_map_count=262144</p>
+<p>or</p>
+<p>echo 'vm.max_map_count=262144' &gt;&gt; /etc/sysctl.conf</p>
+</blockquote>
+<p> </p>
+<p>重要配置：https://www.elastic.co/guide/en/elasticsearch/reference/current/important-settings.html</p>
+<h1>三 使用</h1>
+<p>Elasticsearch uses standard RESTful APIs and JSON. We also build and maintain clients in many languages such as Java, Python, .NET, SQL, and PHP. </p>
+<p>其中rest api方式，详见 <a href="https://www.cnblogs.com/barneywill/p/10296419.html" target="_blank">https://www.cnblogs.com/barneywill/p/10296419.html</a></p>
+<p> </p>
+<p>在hadoop和es之间进行数据迁移，参考：https://www.elastic.co/products/hadoop</p>
+<p> </p>
+<h1>四 开启security</h1>
+<p>参考：https://www.netiq.com/documentation/sentinel-84/s84-install/data/t4e6i397w7if.html</p>
+<p> </p>
+</div>
+            </div>
+
+            <!-- Post Footer -->
+            <div class="post-footer">
+                <div class="post-navigation">
+                    <a href="../blog_cn.html" class="nav-button">← Back to Home</a>
+                    <a href="0258.html" class="nav-button">Next Post →</a>
+                </div>
+            </div>
+        </article>
+    </div>
+</body>
+</html>

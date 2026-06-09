@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spark 8 - Spark中Join实现原理</title>
+    <link rel="stylesheet" href="../css/style3.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header Navigation -->
+        <div class="header">
+            <h1><a href="../blog_cn.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+        </div>
+
+        <!-- Post Container -->
+        <article class="post">
+            <!-- Post Header -->
+            <div class="post-header">
+                <h1>Spark 8 - Spark中Join实现原理</h1>
+                <div class="post-meta">
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📅</span>
+                        <span>January 09, 2019</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📖</span>
+                        <span>18 min read</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">👁️</span>
+                        <span>3485 views</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Post Content -->
+            <div class="post-content">
+                <div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<p> </p>
+<p>spark中join有两种，一种是RDD的join，一种是sql中的join，分别来看：</p>
+<h1>1 RDD join</h1>
+<p>org.apache.spark.rdd.PairRDDFunctions</p>
+<div class="cnblogs_code">
+<pre>  <span style="color: rgba(0, 128, 0, 1)">/**</span><span style="color: rgba(0, 128, 0, 1)">
+   * Return an RDD containing all pairs of elements with matching keys in `this` and `other`. Each
+   * pair of elements will be returned as a (k, (v1, v2)) tuple, where (k, v1) is in `this` and
+   * (k, v2) is in `other`. Performs a hash join across the cluster.
+   </span><span style="color: rgba(0, 128, 0, 1)">*/</span><span style="color: rgba(0, 0, 0, 1)">
+  def join[W](other: RDD[(K, W)]): RDD[(K, (V, W))] </span>=<span style="color: rgba(0, 0, 0, 1)"> self.withScope {
+    join(other, defaultPartitioner(self, other))
+  }
+
+  </span><span style="color: rgba(0, 128, 0, 1)">/**</span><span style="color: rgba(0, 128, 0, 1)">
+   * Return an RDD containing all pairs of elements with matching keys in `this` and `other`. Each
+   * pair of elements will be returned as a (k, (v1, v2)) tuple, where (k, v1) is in `this` and
+   * (k, v2) is in `other`. Uses the given Partitioner to partition the output RDD.
+   </span><span style="color: rgba(0, 128, 0, 1)">*/</span><span style="color: rgba(0, 0, 0, 1)">
+  def join[W](other: RDD[(K, W)], partitioner: Partitioner): RDD[(K, (V, W))] </span>=<span style="color: rgba(0, 0, 0, 1)"> self.withScope {
+    </span><span style="color: rgba(0, 0, 255, 1)">this</span>.cogroup(other, partitioner).flatMapValues( pair =&gt;
+      <span style="color: rgba(0, 0, 255, 1)">for</span> (v &lt;- pair._1.iterator; w &lt;-<span style="color: rgba(0, 0, 0, 1)"> pair._2.iterator) yield (v, w)
+    )
+  }
+
+  </span><span style="color: rgba(0, 128, 0, 1)">/**</span><span style="color: rgba(0, 128, 0, 1)">
+   * For each key k in `this` or `other`, return a resulting RDD that contains a tuple with the
+   * list of values for that key in `this` as well as `other`.
+   </span><span style="color: rgba(0, 128, 0, 1)">*/</span><span style="color: rgba(0, 0, 0, 1)">
+  def cogroup[W](other: RDD[(K, W)], partitioner: Partitioner)
+      : RDD[(K, (Iterable[V], Iterable[W]))] </span>=<span style="color: rgba(0, 0, 0, 1)"> self.withScope {
+    </span><span style="color: rgba(0, 0, 255, 1)">if</span> (partitioner.isInstanceOf[HashPartitioner] &amp;&amp;<span style="color: rgba(0, 0, 0, 1)"> keyClass.isArray) {
+      </span><span style="color: rgba(0, 0, 255, 1)">throw</span> <span style="color: rgba(0, 0, 255, 1)">new</span> SparkException("HashPartitioner cannot partition array keys."<span style="color: rgba(0, 0, 0, 1)">)
+    }
+    val cg </span>= <span style="color: rgba(0, 0, 255, 1)">new</span><span style="color: rgba(0, 0, 0, 1)"> CoGroupedRDD[K](Seq(self, other), partitioner)
+    cg.mapValues { </span><span style="color: rgba(0, 0, 255, 1)">case</span> Array(vs, w1s) =&gt;<span style="color: rgba(0, 0, 0, 1)">
+      (vs.asInstanceOf[Iterable[V]], w1s.asInstanceOf[Iterable[W]])
+    }
+  }</span></pre>
+</div>
+<p>join操作会返回CoGroupedRDD，CoGroupedRDD构造参数为rdd数组，即多个需要join的rdd，下面看CoGroupedRDD：</p>
+<p>org.apache.spark.rdd.CoGroupedRDD</p>
+<div class="cnblogs_code">
+<pre><span style="color: rgba(0, 0, 255, 1)">class</span><span style="color: rgba(0, 0, 0, 1)"> CoGroupedRDD[K: ClassTag](
+    @</span><span style="color: rgba(0, 0, 255, 1)">transient</span> var rdds: Seq[RDD[_ &lt;<span style="color: rgba(0, 0, 0, 1)">: Product2[K, _]]],
+    part: Partitioner)
+  </span><span style="color: rgba(0, 0, 255, 1)">extends</span><span style="color: rgba(0, 0, 0, 1)"> RDD[(K, Array[Iterable[_]])](rdds.head.context, Nil) {
+
+  override def getDependencies: Seq[Dependency[_]] </span>=<span style="color: rgba(0, 0, 0, 1)"> {
+    rdds.map { rdd: RDD[_] </span>=&gt;
+      <span style="color: rgba(0, 0, 255, 1)">if</span> (rdd.partitioner ==<span style="color: rgba(0, 0, 0, 1)"> Some(part)) {
+        logDebug(</span>"Adding one-to-one dependency with " +<span style="color: rgba(0, 0, 0, 1)"> rdd)
+        </span><span style="color: rgba(0, 0, 255, 1)">new</span><span style="color: rgba(0, 0, 0, 1)"> OneToOneDependency(rdd)
+      } </span><span style="color: rgba(0, 0, 255, 1)">else</span><span style="color: rgba(0, 0, 0, 1)"> {
+        logDebug(</span>"Adding shuffle dependency with " +<span style="color: rgba(0, 0, 0, 1)"> rdd)
+        </span><span style="color: rgba(0, 0, 255, 1)">new</span><span style="color: rgba(0, 0, 0, 1)"> ShuffleDependency[K, Any, CoGroupCombiner](
+          rdd.asInstanceOf[RDD[_ </span>&lt;<span style="color: rgba(0, 0, 0, 1)">: Product2[K, _]]], part, serializer)
+      }
+    }
+  }
+
+  override def compute(s: Partition, context: TaskContext): Iterator[(K, Array[Iterable[_]])] </span>=<span style="color: rgba(0, 0, 0, 1)"> {
+    val split </span>=<span style="color: rgba(0, 0, 0, 1)"> s.asInstanceOf[CoGroupPartition]
+    val numRdds </span>=<span style="color: rgba(0, 0, 0, 1)"> dependencies.length
+
+    </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> A list of (rdd iterator, dependency number) pairs</span>
+    val rddIterators = <span style="color: rgba(0, 0, 255, 1)">new</span><span style="color: rgba(0, 0, 0, 1)"> ArrayBuffer[(Iterator[Product2[K, Any]], Int)]
+    </span><span style="color: rgba(0, 0, 255, 1)">for</span> ((dep, depNum) &lt;-<span style="color: rgba(0, 0, 0, 1)"> dependencies.zipWithIndex) dep match {
+      </span><span style="color: rgba(0, 0, 255, 1)">case</span> oneToOneDependency: OneToOneDependency[Product2[K, Any]] @unchecked =&gt;<span style="color: rgba(0, 0, 0, 1)">
+        val dependencyPartition </span>=<span style="color: rgba(0, 0, 0, 1)"> split.narrowDeps(depNum).get.split
+        </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> Read them from the parent</span>
+        val it =<span style="color: rgba(0, 0, 0, 1)"> oneToOneDependency.rdd.iterator(dependencyPartition, context)
+        rddIterators </span>+=<span style="color: rgba(0, 0, 0, 1)"> ((it, depNum))
+
+      </span><span style="color: rgba(0, 0, 255, 1)">case</span> shuffleDependency: ShuffleDependency[_, _, _] =&gt;
+        <span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> Read map outputs of shuffle</span>
+        val it =<span style="color: rgba(0, 0, 0, 1)"> SparkEnv.get.shuffleManager
+          .getReader(shuffleDependency.shuffleHandle, split.index, split.index </span>+ 1<span style="color: rgba(0, 0, 0, 1)">, context)
+          .read()
+        rddIterators </span>+=<span style="color: rgba(0, 0, 0, 1)"> ((it, depNum))
+    }
+
+    val map </span>=<span style="color: rgba(0, 0, 0, 1)"> createExternalMap(numRdds)
+    </span><span style="color: rgba(0, 0, 255, 1)">for</span> ((it, depNum) &lt;-<span style="color: rgba(0, 0, 0, 1)"> rddIterators) {
+      map.insertAll(it.map(pair </span>=&gt; (pair._1, <span style="color: rgba(0, 0, 255, 1)">new</span><span style="color: rgba(0, 0, 0, 1)"> CoGroupValue(pair._2, depNum))))
+    }
+    context.taskMetrics().incMemoryBytesSpilled(map.memoryBytesSpilled)
+    context.taskMetrics().incDiskBytesSpilled(map.diskBytesSpilled)
+    context.taskMetrics().incPeakExecutionMemory(map.peakMemoryUsedBytes)
+    </span><span style="color: rgba(0, 0, 255, 1)">new</span><span style="color: rgba(0, 0, 0, 1)"> InterruptibleIterator(context,
+      map.iterator.asInstanceOf[Iterator[(K, Array[Iterable[_]])]])
+  }
+
+  </span><span style="color: rgba(0, 0, 255, 1)">private</span><span style="color: rgba(0, 0, 0, 1)"> def createExternalMap(numRdds: Int)
+    : ExternalAppendOnlyMap[K, CoGroupValue, CoGroupCombiner] </span>=<span style="color: rgba(0, 0, 0, 1)"> {
+
+    val createCombiner: (CoGroupValue </span>=&gt; CoGroupCombiner) = value =&gt;<span style="color: rgba(0, 0, 0, 1)"> {
+      val newCombiner </span>= Array.fill(numRdds)(<span style="color: rgba(0, 0, 255, 1)">new</span><span style="color: rgba(0, 0, 0, 1)"> CoGroup)
+      newCombiner(value._2) </span>+=<span style="color: rgba(0, 0, 0, 1)"> value._1
+      newCombiner
+    }
+    val mergeValue: (CoGroupCombiner, CoGroupValue) </span>=&gt; CoGroupCombiner =<span style="color: rgba(0, 0, 0, 1)">
+      (combiner, value) </span>=&gt;<span style="color: rgba(0, 0, 0, 1)"> {
+      combiner(value._2) </span>+=<span style="color: rgba(0, 0, 0, 1)"> value._1
+      combiner
+    }
+    val mergeCombiners: (CoGroupCombiner, CoGroupCombiner) </span>=&gt; CoGroupCombiner =<span style="color: rgba(0, 0, 0, 1)">
+      (combiner1, combiner2) </span>=&gt;<span style="color: rgba(0, 0, 0, 1)"> {
+        var depNum </span>= 0
+        <span style="color: rgba(0, 0, 255, 1)">while</span> (depNum &lt;<span style="color: rgba(0, 0, 0, 1)"> numRdds) {
+          combiner1(depNum) </span>++=<span style="color: rgba(0, 0, 0, 1)"> combiner2(depNum)
+          depNum </span>+= 1<span style="color: rgba(0, 0, 0, 1)">
+        }
+        combiner1
+      }
+    </span><span style="color: rgba(0, 0, 255, 1)">new</span><span style="color: rgba(0, 0, 0, 1)"> ExternalAppendOnlyMap[K, CoGroupValue, CoGroupCombiner](
+      createCombiner, mergeValue, mergeCombiners)
+  }</span></pre>
+</div>
+<p>CoGroupedRDD首先将rdds逐个转化为dependency，然后将所有的dependency转化为rddIterators，最后通过ExternalAppendOnlyMap来实现合并；</p>
+<p>如果rdd需要shuffle，是通过ShuffleManager实现，ShuffleManager实现类为SortShuffleManager，shuffle过程详见：<a href="https://www.cnblogs.com/barneywill/p/10158457.html" target="_blank">https://www.cnblogs.com/barneywill/p/10158457.html</a></p>
+<p> </p>
+<p>附：spark中dependency结构，即常说的宽依赖、窄依赖：</p>
+<p>org.apache.spark.Dependency</p>
+<blockquote>
+<p>Dependency</p>
+<p>         NarrowDependency</p>
+<p>                  OneToOneDependency</p>
+<p>                  RangeDependency</p>
+<p>         ShuffleDependency</p>
+</blockquote>
+<p>区别就是shuffle，不需要shuffle就是NarrowDependency，需要就是ShuffleDependency；</p>
+<h1>2 sql join</h1>
+<p>sql中的join有一个选择策略：</p>
+<p>org.apache.spark.sql.execution.SparkStrategies.JoinSelection</p>
+<div class="cnblogs_code">
+<pre>    def apply(plan: LogicalPlan): Seq[SparkPlan] =<span style="color: rgba(0, 0, 0, 1)"> plan match {
+
+      </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> --- BroadcastHashJoin --------------------------------------------------------------------</span>
+
+      <span style="color: rgba(0, 0, 255, 1)">case</span><span style="color: rgba(0, 0, 0, 1)"> ExtractEquiJoinKeys(joinType, leftKeys, rightKeys, condition, left, right)
+        </span><span style="color: rgba(0, 0, 255, 1)">if</span> canBuildRight(joinType) &amp;&amp; canBroadcast(right) =&gt;<span style="color: rgba(0, 0, 0, 1)">
+        Seq(joins.BroadcastHashJoinExec(
+          leftKeys, rightKeys, joinType, BuildRight, condition, planLater(left), planLater(right)))
+
+      </span><span style="color: rgba(0, 0, 255, 1)">case</span><span style="color: rgba(0, 0, 0, 1)"> ExtractEquiJoinKeys(joinType, leftKeys, rightKeys, condition, left, right)
+        </span><span style="color: rgba(0, 0, 255, 1)">if</span> canBuildLeft(joinType) &amp;&amp; canBroadcast(left) =&gt;<span style="color: rgba(0, 0, 0, 1)">
+        Seq(joins.BroadcastHashJoinExec(
+          leftKeys, rightKeys, joinType, BuildLeft, condition, planLater(left), planLater(right)))
+
+      </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> --- ShuffledHashJoin ---------------------------------------------------------------------</span>
+
+      <span style="color: rgba(0, 0, 255, 1)">case</span><span style="color: rgba(0, 0, 0, 1)"> ExtractEquiJoinKeys(joinType, leftKeys, rightKeys, condition, left, right)
+         </span><span style="color: rgba(0, 0, 255, 1)">if</span> !conf.preferSortMergeJoin &amp;&amp; canBuildRight(joinType) &amp;&amp;<span style="color: rgba(0, 0, 0, 1)"> canBuildLocalHashMap(right)
+           </span>&amp;&amp; muchSmaller(right, left) ||
+           !RowOrdering.isOrderable(leftKeys) =&gt;<span style="color: rgba(0, 0, 0, 1)">
+        Seq(joins.ShuffledHashJoinExec(
+          leftKeys, rightKeys, joinType, BuildRight, condition, planLater(left), planLater(right)))
+
+      </span><span style="color: rgba(0, 0, 255, 1)">case</span><span style="color: rgba(0, 0, 0, 1)"> ExtractEquiJoinKeys(joinType, leftKeys, rightKeys, condition, left, right)
+         </span><span style="color: rgba(0, 0, 255, 1)">if</span> !conf.preferSortMergeJoin &amp;&amp; canBuildLeft(joinType) &amp;&amp;<span style="color: rgba(0, 0, 0, 1)"> canBuildLocalHashMap(left)
+           </span>&amp;&amp; muchSmaller(left, right) ||
+           !RowOrdering.isOrderable(leftKeys) =&gt;<span style="color: rgba(0, 0, 0, 1)">
+        Seq(joins.ShuffledHashJoinExec(
+          leftKeys, rightKeys, joinType, BuildLeft, condition, planLater(left), planLater(right)))
+
+      </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> --- SortMergeJoin ------------------------------------------------------------</span>
+
+      <span style="color: rgba(0, 0, 255, 1)">case</span><span style="color: rgba(0, 0, 0, 1)"> ExtractEquiJoinKeys(joinType, leftKeys, rightKeys, condition, left, right)
+        </span><span style="color: rgba(0, 0, 255, 1)">if</span> RowOrdering.isOrderable(leftKeys) =&gt;<span style="color: rgba(0, 0, 0, 1)">
+        joins.SortMergeJoinExec(
+          leftKeys, rightKeys, joinType, condition, planLater(left), planLater(right)) :: Nil
+...</span></pre>
+</div>
+<p>其中conf.preferSortMergeJoin</p>
+<p>org.apache.spark.sql.internal.SQLConf</p>
+<div class="cnblogs_code">
+<pre>  val PREFER_SORTMERGEJOIN = SQLConfigBuilder("spark.sql.join.preferSortMergeJoin"<span style="color: rgba(0, 0, 0, 1)">)
+    .internal()
+    .doc(</span>"When true, prefer sort merge join over shuffle hash join."<span style="color: rgba(0, 0, 0, 1)">)
+    .booleanConf
+    .createWithDefault(</span><span style="color: rgba(0, 0, 255, 1)">true</span>)</pre>
+</div>
+<p>配置spark.sql.join.preferSortMergeJoin，默认为true，即是否优先使用SortMergeJoin；</p>
+<p> </p>
+<p>可以看到join实现主要有3种，即BroadcastHashJoinExec、ShuffledHashJoinExec和SortMergeJoinExec，优先级为</p>
+<ul>
+<li>1 如果canBroadcast，则BroadcastHashJoinExec；</li>
+<li>2 如果spark.sql.join.preferSortMergeJoin=false，则ShuffledHashJoinExec；</li>
+<li>3 否则为SortMergeJoinExec；</li>
+</ul>
+<p>其中BroadcastHashJoinExec和ShuffledHashJoinExec都会用到HashJoin，先看HashJoin：</p>
+<h2>2.1 HashJoin</h2>
+<p>org.apache.spark.sql.execution.joins.HashJoin</p>
+<div class="cnblogs_code">
+<pre>  <span style="color: rgba(0, 0, 255, 1)">protected</span><span style="color: rgba(0, 0, 0, 1)"> def join(
+      streamedIter: Iterator[InternalRow],
+      hashed: HashedRelation,
+      numOutputRows: SQLMetric): Iterator[InternalRow] </span>=<span style="color: rgba(0, 0, 0, 1)"> {
+
+    val joinedIter </span>=<span style="color: rgba(0, 0, 0, 1)"> joinType match {
+      </span><span style="color: rgba(0, 0, 255, 1)">case</span> _: InnerLike =&gt;<span style="color: rgba(0, 0, 0, 1)">
+        innerJoin(streamedIter, hashed)
+      </span><span style="color: rgba(0, 0, 255, 1)">case</span> LeftOuter | RightOuter =&gt;<span style="color: rgba(0, 0, 0, 1)">
+        outerJoin(streamedIter, hashed)
+      </span><span style="color: rgba(0, 0, 255, 1)">case</span> LeftSemi =&gt;<span style="color: rgba(0, 0, 0, 1)">
+        semiJoin(streamedIter, hashed)
+      </span><span style="color: rgba(0, 0, 255, 1)">case</span> LeftAnti =&gt;<span style="color: rgba(0, 0, 0, 1)">
+        antiJoin(streamedIter, hashed)
+      </span><span style="color: rgba(0, 0, 255, 1)">case</span> j: ExistenceJoin =&gt;<span style="color: rgba(0, 0, 0, 1)">
+        existenceJoin(streamedIter, hashed)
+      </span><span style="color: rgba(0, 0, 255, 1)">case</span> x =&gt;
+        <span style="color: rgba(0, 0, 255, 1)">throw</span> <span style="color: rgba(0, 0, 255, 1)">new</span><span style="color: rgba(0, 0, 0, 1)"> IllegalArgumentException(
+          s</span>"BroadcastHashJoin should not take $x as the JoinType"<span style="color: rgba(0, 0, 0, 1)">)
+    }
+
+    val resultProj </span>=<span style="color: rgba(0, 0, 0, 1)"> createResultProjection
+    joinedIter.map { r </span>=&gt;<span style="color: rgba(0, 0, 0, 1)">
+      numOutputRows </span>+= 1<span style="color: rgba(0, 0, 0, 1)">
+      resultProj(r)
+    }
+  }
+
+  </span><span style="color: rgba(0, 0, 255, 1)">private</span><span style="color: rgba(0, 0, 0, 1)"> def innerJoin(
+      streamIter: Iterator[InternalRow],
+      hashedRelation: HashedRelation): Iterator[InternalRow] </span>=<span style="color: rgba(0, 0, 0, 1)"> {
+    val joinRow </span>= <span style="color: rgba(0, 0, 255, 1)">new</span><span style="color: rgba(0, 0, 0, 1)"> JoinedRow
+    val joinKeys </span>=<span style="color: rgba(0, 0, 0, 1)"> streamSideKeyGenerator()
+    streamIter.flatMap { srow </span>=&gt;<span style="color: rgba(0, 0, 0, 1)">
+      joinRow.withLeft(srow)
+      val matches </span>=<span style="color: rgba(0, 0, 0, 1)"> hashedRelation.get(joinKeys(srow))
+      </span><span style="color: rgba(0, 0, 255, 1)">if</span> (matches != <span style="color: rgba(0, 0, 255, 1)">null</span><span style="color: rgba(0, 0, 0, 1)">) {
+        matches.map(joinRow.withRight(_)).filter(boundCondition)
+      } </span><span style="color: rgba(0, 0, 255, 1)">else</span><span style="color: rgba(0, 0, 0, 1)"> {
+        Seq.empty
+      }
+    }
+  }</span></pre>
+</div>
+<p>这里只贴出内关联，即innerJoin，代码比较简单，注意这里是内存操作，会在单个partition内部进行；</p>
+<h2>2.2 BroadcastHashJoinExec</h2>
+<p>org.apache.spark.sql.execution.joins.BroadcastHashJoinExec</p>
+<div class="cnblogs_code">
+<pre>  <span style="color: rgba(0, 0, 255, 1)">protected</span> override def doExecute(): RDD[InternalRow] =<span style="color: rgba(0, 0, 0, 1)"> {
+    val numOutputRows </span>= longMetric("numOutputRows"<span style="color: rgba(0, 0, 0, 1)">)
+
+    val broadcastRelation </span>=<span style="color: rgba(0, 0, 0, 1)"> buildPlan.executeBroadcast[HashedRelation]()
+    streamedPlan.execute().mapPartitions { streamedIter </span>=&gt;<span style="color: rgba(0, 0, 0, 1)">
+      val hashed </span>=<span style="color: rgba(0, 0, 0, 1)"> broadcastRelation.value.asReadOnlyCopy()
+      TaskContext.get().taskMetrics().incPeakExecutionMemory(hashed.estimatedSize)
+      join(streamedIter, hashed, numOutputRows)
+    }
+  }</span></pre>
+</div>
+<p>这里会将buildPlan广播出去，然后在streamedPlan上通过mapPartitions在1个分区内部进行join，join方法见HashJoin；</p>
+<h2>2.3 ShuffledHashJoinExec</h2>
+<p>org.apache.spark.sql.execution.joins.ShuffledHashJoinExec</p>
+<div class="cnblogs_code">
+<pre>  <span style="color: rgba(0, 0, 255, 1)">protected</span> override def doExecute(): RDD[InternalRow] =<span style="color: rgba(0, 0, 0, 1)"> {
+    val numOutputRows </span>= longMetric("numOutputRows"<span style="color: rgba(0, 0, 0, 1)">)
+    streamedPlan.execute().zipPartitions(buildPlan.execute()) { (streamIter, buildIter) </span>=&gt;<span style="color: rgba(0, 0, 0, 1)">
+      val hashed </span>=<span style="color: rgba(0, 0, 0, 1)"> buildHashedRelation(buildIter)
+      join(streamIter, hashed, numOutputRows)
+    }
+  }</span></pre>
+</div>
+<p>join过程为先将两个rdd（streamedPlan和buildPlan）进行zipPartitions，然后在1个partition内部join，join方法见HashJoin；</p>
+<h2>2.4 SortMergeJoinExec</h2>
+<p>org.apache.spark.sql.execution.joins.SortMergeJoinExec</p>
+<div class="cnblogs_code">
+<pre>  <span style="color: rgba(0, 0, 255, 1)">protected</span> override def doExecute(): RDD[InternalRow] =<span style="color: rgba(0, 0, 0, 1)"> {
+    val numOutputRows </span>= longMetric("numOutputRows"<span style="color: rgba(0, 0, 0, 1)">)
+
+    left.execute().zipPartitions(right.execute()) { (leftIter, rightIter) </span>=&gt;<span style="color: rgba(0, 0, 0, 1)">
+      val boundCondition: (InternalRow) </span>=&gt; Boolean =<span style="color: rgba(0, 0, 0, 1)"> {
+        condition.map { cond </span>=&gt;<span style="color: rgba(0, 0, 0, 1)">
+          newPredicate(cond, left.output </span>++<span style="color: rgba(0, 0, 0, 1)"> right.output).eval _
+        }.getOrElse {
+          (r: InternalRow) </span>=&gt; <span style="color: rgba(0, 0, 255, 1)">true</span><span style="color: rgba(0, 0, 0, 1)">
+        }
+      }
+
+      </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> An ordering that can be used to compare keys from both sides.</span>
+      val keyOrdering =<span style="color: rgba(0, 0, 0, 1)"> newNaturalAscendingOrdering(leftKeys.map(_.dataType))
+      val resultProj: InternalRow </span>=&gt; InternalRow =<span style="color: rgba(0, 0, 0, 1)"> UnsafeProjection.create(output, output)
+
+      joinType match {
+        </span><span style="color: rgba(0, 0, 255, 1)">case</span> _: InnerLike =&gt;
+          <span style="color: rgba(0, 0, 255, 1)">new</span><span style="color: rgba(0, 0, 0, 1)"> RowIterator {
+            </span><span style="color: rgba(0, 0, 255, 1)">private</span>[<span style="color: rgba(0, 0, 255, 1)">this</span>] var currentLeftRow: InternalRow =<span style="color: rgba(0, 0, 0, 1)"> _
+            </span><span style="color: rgba(0, 0, 255, 1)">private</span>[<span style="color: rgba(0, 0, 255, 1)">this</span>] var currentRightMatches: ArrayBuffer[InternalRow] =<span style="color: rgba(0, 0, 0, 1)"> _
+            </span><span style="color: rgba(0, 0, 255, 1)">private</span>[<span style="color: rgba(0, 0, 255, 1)">this</span>] var currentMatchIdx: Int = - 1
+            <span style="color: rgba(0, 0, 255, 1)">private</span>[<span style="color: rgba(0, 0, 255, 1)">this</span>] val smjScanner = <span style="color: rgba(0, 0, 255, 1)">new</span><span style="color: rgba(0, 0, 0, 1)"> SortMergeJoinScanner(
+              createLeftKeyGenerator(),
+              createRightKeyGenerator(),
+              keyOrdering,
+              RowIterator.fromScala(leftIter),
+              RowIterator.fromScala(rightIter)
+            )
+            </span><span style="color: rgba(0, 0, 255, 1)">private</span>[<span style="color: rgba(0, 0, 255, 1)">this</span>] val joinRow = <span style="color: rgba(0, 0, 255, 1)">new</span><span style="color: rgba(0, 0, 0, 1)"> JoinedRow
+
+            </span><span style="color: rgba(0, 0, 255, 1)">if</span><span style="color: rgba(0, 0, 0, 1)"> (smjScanner.findNextInnerJoinRows()) {
+              currentRightMatches </span>=<span style="color: rgba(0, 0, 0, 1)"> smjScanner.getBufferedMatches
+              currentLeftRow </span>=<span style="color: rgba(0, 0, 0, 1)"> smjScanner.getStreamedRow
+              currentMatchIdx </span>= 0<span style="color: rgba(0, 0, 0, 1)">
+            }
+
+            override def advanceNext(): Boolean </span>=<span style="color: rgba(0, 0, 0, 1)"> {
+              </span><span style="color: rgba(0, 0, 255, 1)">while</span> (currentMatchIdx &gt;= 0<span style="color: rgba(0, 0, 0, 1)">) {
+                </span><span style="color: rgba(0, 0, 255, 1)">if</span> (currentMatchIdx ==<span style="color: rgba(0, 0, 0, 1)"> currentRightMatches.length) {
+                  </span><span style="color: rgba(0, 0, 255, 1)">if</span><span style="color: rgba(0, 0, 0, 1)"> (smjScanner.findNextInnerJoinRows()) {
+                    currentRightMatches </span>=<span style="color: rgba(0, 0, 0, 1)"> smjScanner.getBufferedMatches
+                    currentLeftRow </span>=<span style="color: rgba(0, 0, 0, 1)"> smjScanner.getStreamedRow
+                    currentMatchIdx </span>= 0<span style="color: rgba(0, 0, 0, 1)">
+                  } </span><span style="color: rgba(0, 0, 255, 1)">else</span><span style="color: rgba(0, 0, 0, 1)"> {
+                    currentRightMatches </span>= <span style="color: rgba(0, 0, 255, 1)">null</span><span style="color: rgba(0, 0, 0, 1)">
+                    currentLeftRow </span>= <span style="color: rgba(0, 0, 255, 1)">null</span><span style="color: rgba(0, 0, 0, 1)">
+                    currentMatchIdx </span>= - 1
+                    <span style="color: rgba(0, 0, 255, 1)">return</span> <span style="color: rgba(0, 0, 255, 1)">false</span><span style="color: rgba(0, 0, 0, 1)">
+                  }
+                }
+                joinRow(currentLeftRow, currentRightMatches(currentMatchIdx))
+                currentMatchIdx </span>+= 1
+                <span style="color: rgba(0, 0, 255, 1)">if</span><span style="color: rgba(0, 0, 0, 1)"> (boundCondition(joinRow)) {
+                  numOutputRows </span>+= 1
+                  <span style="color: rgba(0, 0, 255, 1)">return</span> <span style="color: rgba(0, 0, 255, 1)">true</span><span style="color: rgba(0, 0, 0, 1)">
+                }
+              }
+              </span><span style="color: rgba(0, 0, 255, 1)">false</span><span style="color: rgba(0, 0, 0, 1)">
+            }
+
+            override def getRow: InternalRow </span>=<span style="color: rgba(0, 0, 0, 1)"> resultProj(joinRow)
+          }.toScala
+...</span></pre>
+</div>
+<p>和ShuffledHashJoinExec一样，同样先zipPartitions，然后在1个partition内部根据joinType返回不同的RowIterator实现类，上边代码包含内关联实现，大部分工作通过SortMergeJoinScanner实现</p>
+<p>org.apache.spark.sql.execution.joins.SortMergeJoinScanner</p>
+<div class="cnblogs_code">
+<pre>  <span style="color: rgba(0, 0, 255, 1)">final</span> def findNextInnerJoinRows(): Boolean =<span style="color: rgba(0, 0, 0, 1)"> {
+    </span><span style="color: rgba(0, 0, 255, 1)">while</span> (advancedStreamed() &amp;&amp;<span style="color: rgba(0, 0, 0, 1)"> streamedRowKey.anyNull) {
+      </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> Advance the streamed side of the join until we find the next row whose join key contains
+      </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> no nulls or we hit the end of the streamed iterator.</span>
+<span style="color: rgba(0, 0, 0, 1)">    }
+    </span><span style="color: rgba(0, 0, 255, 1)">if</span> (streamedRow == <span style="color: rgba(0, 0, 255, 1)">null</span><span style="color: rgba(0, 0, 0, 1)">) {
+      </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> We have consumed the entire streamed iterator, so there can be no more matches.</span>
+      matchJoinKey = <span style="color: rgba(0, 0, 255, 1)">null</span><span style="color: rgba(0, 0, 0, 1)">
+      bufferedMatches.clear()
+      </span><span style="color: rgba(0, 0, 255, 1)">false</span><span style="color: rgba(0, 0, 0, 1)">
+    } </span><span style="color: rgba(0, 0, 255, 1)">else</span> <span style="color: rgba(0, 0, 255, 1)">if</span> (matchJoinKey != <span style="color: rgba(0, 0, 255, 1)">null</span> &amp;&amp; keyOrdering.compare(streamedRowKey, matchJoinKey) == 0<span style="color: rgba(0, 0, 0, 1)">) {
+      </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> The new streamed row has the same join key as the previous row, so return the same matches.</span>
+      <span style="color: rgba(0, 0, 255, 1)">true</span><span style="color: rgba(0, 0, 0, 1)">
+    } </span><span style="color: rgba(0, 0, 255, 1)">else</span> <span style="color: rgba(0, 0, 255, 1)">if</span> (bufferedRow == <span style="color: rgba(0, 0, 255, 1)">null</span><span style="color: rgba(0, 0, 0, 1)">) {
+      </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> The streamed row's join key does not match the current batch of buffered rows and there are
+      </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> no more rows to read from the buffered iterator, so there can be no more matches.</span>
+      matchJoinKey = <span style="color: rgba(0, 0, 255, 1)">null</span><span style="color: rgba(0, 0, 0, 1)">
+      bufferedMatches.clear()
+      </span><span style="color: rgba(0, 0, 255, 1)">false</span><span style="color: rgba(0, 0, 0, 1)">
+    } </span><span style="color: rgba(0, 0, 255, 1)">else</span><span style="color: rgba(0, 0, 0, 1)"> {
+      </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> Advance both the streamed and buffered iterators to find the next pair of matching rows.</span>
+      var comp =<span style="color: rgba(0, 0, 0, 1)"> keyOrdering.compare(streamedRowKey, bufferedRowKey)
+      </span><span style="color: rgba(0, 0, 255, 1)">do</span><span style="color: rgba(0, 0, 0, 1)"> {
+        </span><span style="color: rgba(0, 0, 255, 1)">if</span><span style="color: rgba(0, 0, 0, 1)"> (streamedRowKey.anyNull) {
+          advancedStreamed()
+        } </span><span style="color: rgba(0, 0, 255, 1)">else</span><span style="color: rgba(0, 0, 0, 1)"> {
+          </span><span style="color: rgba(0, 0, 255, 1)">assert</span>(!<span style="color: rgba(0, 0, 0, 1)">bufferedRowKey.anyNull)
+          comp </span>=<span style="color: rgba(0, 0, 0, 1)"> keyOrdering.compare(streamedRowKey, bufferedRowKey)
+          </span><span style="color: rgba(0, 0, 255, 1)">if</span> (comp &gt; 0<span style="color: rgba(0, 0, 0, 1)">) advancedBufferedToRowWithNullFreeJoinKey()
+          </span><span style="color: rgba(0, 0, 255, 1)">else</span> <span style="color: rgba(0, 0, 255, 1)">if</span> (comp &lt; 0<span style="color: rgba(0, 0, 0, 1)">) advancedStreamed()
+        }
+      } </span><span style="color: rgba(0, 0, 255, 1)">while</span> (streamedRow != <span style="color: rgba(0, 0, 255, 1)">null</span> &amp;&amp; bufferedRow != <span style="color: rgba(0, 0, 255, 1)">null</span> &amp;&amp; comp != 0<span style="color: rgba(0, 0, 0, 1)">)
+      </span><span style="color: rgba(0, 0, 255, 1)">if</span> (streamedRow == <span style="color: rgba(0, 0, 255, 1)">null</span> || bufferedRow == <span style="color: rgba(0, 0, 255, 1)">null</span><span style="color: rgba(0, 0, 0, 1)">) {
+        </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> We have either hit the end of one of the iterators, so there can be no more matches.</span>
+        matchJoinKey = <span style="color: rgba(0, 0, 255, 1)">null</span><span style="color: rgba(0, 0, 0, 1)">
+        bufferedMatches.clear()
+        </span><span style="color: rgba(0, 0, 255, 1)">false</span><span style="color: rgba(0, 0, 0, 1)">
+      } </span><span style="color: rgba(0, 0, 255, 1)">else</span><span style="color: rgba(0, 0, 0, 1)"> {
+        </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> The streamed row's join key matches the current buffered row's join, so walk through the
+        </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> buffered iterator to buffer the rest of the matching rows.</span>
+        <span style="color: rgba(0, 0, 255, 1)">assert</span>(comp == 0<span style="color: rgba(0, 0, 0, 1)">)
+        bufferMatchingRows()
+        </span><span style="color: rgba(0, 0, 255, 1)">true</span><span style="color: rgba(0, 0, 0, 1)">
+      }
+    }
+  }
+
+  </span><span style="color: rgba(0, 128, 0, 1)">/**</span><span style="color: rgba(0, 128, 0, 1)">
+   * Advance the streamed iterator and compute the new row's join key.
+   * </span><span style="color: rgba(128, 128, 128, 1)">@return</span><span style="color: rgba(0, 128, 0, 1)"> true if the streamed iterator returned a row and false otherwise.
+   </span><span style="color: rgba(0, 128, 0, 1)">*/</span>
+  <span style="color: rgba(0, 0, 255, 1)">private</span> def advancedStreamed(): Boolean =<span style="color: rgba(0, 0, 0, 1)"> {
+    </span><span style="color: rgba(0, 0, 255, 1)">if</span><span style="color: rgba(0, 0, 0, 1)"> (streamedIter.advanceNext()) {
+      streamedRow </span>=<span style="color: rgba(0, 0, 0, 1)"> streamedIter.getRow
+      streamedRowKey </span>=<span style="color: rgba(0, 0, 0, 1)"> streamedKeyGenerator(streamedRow)
+      </span><span style="color: rgba(0, 0, 255, 1)">true</span><span style="color: rgba(0, 0, 0, 1)">
+    } </span><span style="color: rgba(0, 0, 255, 1)">else</span><span style="color: rgba(0, 0, 0, 1)"> {
+      streamedRow </span>= <span style="color: rgba(0, 0, 255, 1)">null</span><span style="color: rgba(0, 0, 0, 1)">
+      streamedRowKey </span>= <span style="color: rgba(0, 0, 255, 1)">null</span>
+      <span style="color: rgba(0, 0, 255, 1)">false</span><span style="color: rgba(0, 0, 0, 1)">
+    }
+  }
+
+  </span><span style="color: rgba(0, 128, 0, 1)">/**</span><span style="color: rgba(0, 128, 0, 1)">
+   * Advance the buffered iterator until we find a row with join key that does not contain nulls.
+   * </span><span style="color: rgba(128, 128, 128, 1)">@return</span><span style="color: rgba(0, 128, 0, 1)"> true if the buffered iterator returned a row and false otherwise.
+   </span><span style="color: rgba(0, 128, 0, 1)">*/</span>
+  <span style="color: rgba(0, 0, 255, 1)">private</span> def advancedBufferedToRowWithNullFreeJoinKey(): Boolean =<span style="color: rgba(0, 0, 0, 1)"> {
+    var foundRow: Boolean </span>= <span style="color: rgba(0, 0, 255, 1)">false</span>
+    <span style="color: rgba(0, 0, 255, 1)">while</span> (!foundRow &amp;&amp;<span style="color: rgba(0, 0, 0, 1)"> bufferedIter.advanceNext()) {
+      bufferedRow </span>=<span style="color: rgba(0, 0, 0, 1)"> bufferedIter.getRow
+      bufferedRowKey </span>=<span style="color: rgba(0, 0, 0, 1)"> bufferedKeyGenerator(bufferedRow)
+      foundRow </span>= !<span style="color: rgba(0, 0, 0, 1)">bufferedRowKey.anyNull
+    }
+    </span><span style="color: rgba(0, 0, 255, 1)">if</span> (!<span style="color: rgba(0, 0, 0, 1)">foundRow) {
+      bufferedRow </span>= <span style="color: rgba(0, 0, 255, 1)">null</span><span style="color: rgba(0, 0, 0, 1)">
+      bufferedRowKey </span>= <span style="color: rgba(0, 0, 255, 1)">null</span>
+      <span style="color: rgba(0, 0, 255, 1)">false</span><span style="color: rgba(0, 0, 0, 1)">
+    } </span><span style="color: rgba(0, 0, 255, 1)">else</span><span style="color: rgba(0, 0, 0, 1)"> {
+      </span><span style="color: rgba(0, 0, 255, 1)">true</span><span style="color: rgba(0, 0, 0, 1)">
+    }
+  }
+
+  </span><span style="color: rgba(0, 128, 0, 1)">/**</span><span style="color: rgba(0, 128, 0, 1)">
+   * Called when the streamed and buffered join keys match in order to buffer the matching rows.
+   </span><span style="color: rgba(0, 128, 0, 1)">*/</span>
+  <span style="color: rgba(0, 0, 255, 1)">private</span> def bufferMatchingRows(): Unit =<span style="color: rgba(0, 0, 0, 1)"> {
+    </span><span style="color: rgba(0, 0, 255, 1)">assert</span>(streamedRowKey != <span style="color: rgba(0, 0, 255, 1)">null</span><span style="color: rgba(0, 0, 0, 1)">)
+    </span><span style="color: rgba(0, 0, 255, 1)">assert</span>(!<span style="color: rgba(0, 0, 0, 1)">streamedRowKey.anyNull)
+    </span><span style="color: rgba(0, 0, 255, 1)">assert</span>(bufferedRowKey != <span style="color: rgba(0, 0, 255, 1)">null</span><span style="color: rgba(0, 0, 0, 1)">)
+    </span><span style="color: rgba(0, 0, 255, 1)">assert</span>(!<span style="color: rgba(0, 0, 0, 1)">bufferedRowKey.anyNull)
+    </span><span style="color: rgba(0, 0, 255, 1)">assert</span>(keyOrdering.compare(streamedRowKey, bufferedRowKey) == 0<span style="color: rgba(0, 0, 0, 1)">)
+    </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> This join key may have been produced by a mutable projection, so we need to make a copy:</span>
+    matchJoinKey =<span style="color: rgba(0, 0, 0, 1)"> streamedRowKey.copy()
+    bufferedMatches.clear()
+    </span><span style="color: rgba(0, 0, 255, 1)">do</span><span style="color: rgba(0, 0, 0, 1)"> {
+      bufferedMatches </span>+= bufferedRow.copy() <span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> need to copy mutable rows before buffering them</span>
+<span style="color: rgba(0, 0, 0, 1)">      advancedBufferedToRowWithNullFreeJoinKey()
+    } </span><span style="color: rgba(0, 0, 255, 1)">while</span> (bufferedRow != <span style="color: rgba(0, 0, 255, 1)">null</span> &amp;&amp; keyOrdering.compare(streamedRowKey, bufferedRowKey) == 0<span style="color: rgba(0, 0, 0, 1)">)
+  }</span></pre>
+</div>
+<p>可以看到过程和二路归并排序Binary Merge Sort差不多；</p>
+<p> </p>
+<p>附：RowIterator是一个抽象类，本质是一个接口，是一个常见的Iterator定义，如下：</p>
+<p>org.apache.spark.sql.execution.RowIterator</p>
+<div class="cnblogs_code">
+<pre><span style="color: rgba(0, 0, 255, 1)">abstract</span> <span style="color: rgba(0, 0, 255, 1)">class</span><span style="color: rgba(0, 0, 0, 1)"> RowIterator {
+  </span><span style="color: rgba(0, 128, 0, 1)">/**</span><span style="color: rgba(0, 128, 0, 1)">
+   * Advance this iterator by a single row. Returns `false` if this iterator has no more rows
+   * and `true` otherwise. If this returns `true`, then the new row can be retrieved by calling
+   * [[getRow]].
+   </span><span style="color: rgba(0, 128, 0, 1)">*/</span><span style="color: rgba(0, 0, 0, 1)">
+  def advanceNext(): Boolean
+
+  </span><span style="color: rgba(0, 128, 0, 1)">/**</span><span style="color: rgba(0, 128, 0, 1)">
+   * Retrieve the row from this iterator. This method is idempotent. It is illegal to call this
+   * method after [[advanceNext()]] has returned `false`.
+   </span><span style="color: rgba(0, 128, 0, 1)">*/</span><span style="color: rgba(0, 0, 0, 1)">
+  def getRow: InternalRow
+
+  </span><span style="color: rgba(0, 128, 0, 1)">/**</span><span style="color: rgba(0, 128, 0, 1)">
+   * Convert this RowIterator into a [[scala.collection.Iterator]].
+   </span><span style="color: rgba(0, 128, 0, 1)">*/</span><span style="color: rgba(0, 0, 0, 1)">
+  def toScala: Iterator[InternalRow] </span>= <span style="color: rgba(0, 0, 255, 1)">new</span> RowIteratorToScala(<span style="color: rgba(0, 0, 255, 1)">this</span><span style="color: rgba(0, 0, 0, 1)">)
+}</span></pre>
+</div>
+<p> </p>
+</div>
+            </div>
+
+            <!-- Post Footer -->
+            <div class="post-footer">
+                <div class="post-navigation">
+                    <a href="../blog_cn.html" class="nav-button">← Back to Home</a>
+                    <a href="0282.html" class="nav-button">Next Post →</a>
+                </div>
+            </div>
+        </article>
+    </div>
+</body>
+</html>

@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>oozie提交spark任务报 java.lang.NoClassDefFoundError: org/apache/kafka/clients/producer/KafkaProducer</title>
+    <link rel="stylesheet" href="../css/style3.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header Navigation -->
+        <div class="header">
+            <h1><a href="../blog_cn.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+        </div>
+
+        <!-- Post Container -->
+        <article class="post">
+            <!-- Post Header -->
+            <div class="post-header">
+                <h1>oozie提交spark任务报 java.lang.NoClassDefFoundError: org/apache/kafka/clients/producer/KafkaProducer</h1>
+                <div class="post-meta">
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📅</span>
+                        <span>December 12, 2018</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📖</span>
+                        <span>1 min read</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">👁️</span>
+                        <span>3747 views</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Post Content -->
+            <div class="post-content">
+                <div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<p>oozie中支持很多的action类型，比如spark、hive，对应的标签为：</p>
+<blockquote>
+<p>&lt;spark xmlns="uri:oozie:spark-action:0.1"&gt; </p>
+</blockquote>
+<p>...</p>
+<p>oozie中sharelib用于存放每个action类型需要的依赖，可以查看当前所有的action类型以及每个action类型的依赖</p>
+<blockquote>
+<p><strong>oozie admin - shareliblist</strong><br/>[Available ShareLib]<br/>hive<br/>sparkbak<br/>distcp<br/>mapreduce-streaming<br/>spark<br/>oozie<br/>hcatalog<br/>hive2<br/>sqoop<br/>pig</p>
+</blockquote>
+<p> </p>
+<blockquote>
+<p><strong>oozie admin - shareliblist spark</strong></p>
+<p>...</p>
+</blockquote>
+<p>上述报错是由于oozie中spark依赖里的kafka基础依赖缺少kafka-clients-0.8.2.2.jar，将jar上传到sharelib目录，然后手动更新即可</p>
+<blockquote>
+<p><strong>oozie admin - sharelibupdate</strong></p>
+</blockquote>
+<p>更新之后可见：</p>
+<blockquote>
+<p> <strong>oozie admin -shareliblist spark|grep kafka</strong><br/>        <a rel="nofollow">hdfs://hdfs_name/oozie/share/lib_20180801121138/spark/kafka-clients-0.8.2.2.jar</a><br/>        <a rel="nofollow">hdfs://hdfs_name/oozie/share/lib_20180801121138/spark/kafka_2.11-0.8.2.1.jar</a><br/>        <a rel="nofollow">hdfs://hdfs_name/oozie/share/lib_20180801121138/spark/spark-streaming-kafka-0-8_2.11-2.1.0.jar</a> </p>
+</blockquote>
+<p>添加成功</p>
+</div>
+            </div>
+
+            <!-- Post Footer -->
+            <div class="post-footer">
+                <div class="post-navigation">
+                    <a href="../blog_cn.html" class="nav-button">← Back to Home</a>
+                    <a href="0341.html" class="nav-button">Next Post →</a>
+                </div>
+            </div>
+        </article>
+    </div>
+</body>
+</html>

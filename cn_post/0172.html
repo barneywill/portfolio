@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Logstash 1 - 简介、安装、使用</title>
+    <link rel="stylesheet" href="../css/style3.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header Navigation -->
+        <div class="header">
+            <h1><a href="../blog_cn.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+        </div>
+
+        <!-- Post Container -->
+        <article class="post">
+            <!-- Post Header -->
+            <div class="post-header">
+                <h1>Logstash 1 - 简介、安装、使用</h1>
+                <div class="post-meta">
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📅</span>
+                        <span>March 19, 2019</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📖</span>
+                        <span>2 min read</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">👁️</span>
+                        <span>420 views</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Post Content -->
+            <div class="post-content">
+                <div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<p>Logstash 6.6.2</p>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201901/1509647-20190123214945296-795860038.png"/></p>
+<p>官方：https://www.elastic.co/products/logstash</p>
+<p> </p>
+<h1>一 简介</h1>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201901/1509647-20190123221110307-1206888640.png"/></p>
+<p>Centralize, Transform &amp; Stash Your Data</p>
+<p>Logstash is an open source, server-side data processing pipeline that ingests data from a multitude of sources simultaneously, transforms it, and then sends it to your favorite “stash.” (Ours is Elasticsearch, naturally.)</p>
+<p>集中、转换、储存你的数据：logstash是一个开源的服务端数据处理管道，可以从非常多的数据源接受数据、转换格式、同时发送到你的数据仓库中；</p>
+<p> </p>
+<h2>结构</h2>
+<p>A Logstash pipeline has two required elements, <code class="literal">input</code> and <code class="literal">output</code>, and one optional element, <code class="literal">filter</code>. </p>
+<h3>1 INPUTS</h3>
+<p>Ingest Data of All Shapes, Sizes, and Sources</p>
+<p>Data is often scattered or siloed across many systems in many formats. Logstash supports a variety of inputs that pull in events from a multitude of common sources, all at the same time. Easily ingest from your logs, metrics, web applications, data stores, and various AWS services, all in continuous, streaming fashion.</p>
+<p>接收任何形式、大小和来源的数据：数据通常以各种格式分散在各个系统中，logstash支持很多类型的input可以从各种数据源中将数据拉取过来，这些数据源包括日志、监控、web应用、数据存储等；</p>
+<h3>2 FILTERS</h3>
+<p>Parse &amp; Transform Your Data On the Fly</p>
+<p>As data travels from source to store, Logstash filters parse each event, identify named fields to build structure, and transform them to converge on a common format for easier, accelerated analysis and business value.</p>
+<p>将你的数据进行解析并转换格式：当数据收集上来之后，logstash filter会解析每一条数据，识别数据格式，同时将数据转换为更通用的格，方便后续更简单快速的分析；</p>
+<p>最常用的filter包括grok（正则）和ruby（代码），另外还有mutate/date/json/kv，可以轻松解析你的任意数据；</p>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201903/1509647-20190320114135300-878262261.png"/></p>
+<p> </p>
+<h3>3 OUTPUTS</h3>
+<p>Choose Your Stash, Transport Your Data</p>
+<p>While Elasticsearch is our go-to output that opens up a world of search and analytics possibilities, it’s not the only one available.</p>
+<p>选择你的数据仓库，移动你的数据：elasticsearch提供了无限的搜索和分析的可能性，但es并不是唯一的output；</p>
+<h1>二 安装</h1>
+<h2>1 ambari安装</h2>
+<p>详见：<a href="https://www.cnblogs.com/barneywill/p/10281678.html" target="_blank">https://www.cnblogs.com/barneywill/p/10281678.html</a></p>
+<h2>2 docker安装</h2>
+<p>详见：<a href="https://www.cnblogs.com/barneywill/p/10367297.html" target="_blank">https://www.cnblogs.com/barneywill/p/10367297.html</a></p>
+<h2>3 手工tar安装</h2>
+<blockquote>
+<p>$ wget https://artifacts.elastic.co/downloads/logstash/logstash-6.6.2.tar.gz<br/>$ tar xvf logstash-6.6.2.tar.gz<br/>$ cd logstash-6.6.2</p>
+</blockquote>
+<p>logstash插件目录</p>
+<blockquote>
+<p>$LOGSTASH_HOME/vendor/bundle/jruby/2.3.0/gems/</p>
+</blockquote>
+<p>可以看到当前所有的插件以及对应的版本，手工查看和安装插件：</p>
+<blockquote>
+<p>$LOGSTASH_HOME/bin/logstash-plugin list<br/>$LOGSTASH_HOME/bin/logstash-plugin install logstash-input-jdbc</p>
+</blockquote>
+<p>插件源码：https://github.com/logstash-plugins</p>
+<h2>4 手工yum安装</h2>
+<blockquote>
+<p># rpm --import https://artifacts.elastic.co/GPG-KEY-elasticsearch<br/># yum install logstash</p>
+</blockquote>
+<p>注册服务：</p>
+<blockquote>
+<p>$ sudo /usr/share/logstash/bin/<span class="hljs-keyword">system-install /etc/logstash/startup.options systemd</span></p>
+</blockquote>
+<h1>三 使用 </h1>
+<h2>1 调试filter</h2>
+<h3>调试grok</h3>
+<p>http://grokdebug.herokuapp.com/</p>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201903/1509647-20190319160125632-964440906.png"/></p>
+<p>内置grok pattern</p>
+<p>https://github.com/elastic/logstash/blob/v1.4.2/patterns/grok-patterns</p>
+<h3>调试ruby</h3>
+<p>https://ruby.github.io/TryRuby/</p>
+<p> <img alt="" src="https://img2018.cnblogs.com/blog/1509647/201903/1509647-20190319160315210-2011061989.png"/></p>
+<h2>2 测试nginx日志的解析：file-&gt;grok-&gt;stdout</h2>
+<p>nginx日志默认格式：</p>
+<div class="cnblogs_code">
+<pre>    <span style="color: rgba(0, 128, 0, 1)">#</span><span style="color: rgba(0, 128, 0, 1)">log_format  main  '$remote_addr - $remote_user [$time_local] "$request" '</span>
+    <span style="color: rgba(0, 128, 0, 1)">#</span><span style="color: rgba(0, 128, 0, 1)">                  '$status $body_bytes_sent "$http_referer" '</span>
+    <span style="color: rgba(0, 128, 0, 1)">#</span><span style="color: rgba(0, 128, 0, 1)">                  '"$http_user_agent" "$http_x_forwarded_for"';</span></pre>
+</div>
+<p>nginx日志示例：</p>
+<blockquote>
+<p>1.119.132.168 - - [18/Mar/2019:09:13:50 +0000] "POST /cmf/services/6/healthStatusBar?timestamp=1552900429484&amp;currentMode=true HTTP/1.1" 200 929 "http://some.server/cmf/services/6/instances" "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/72.0.3626.119 Safari/537.36" "-"</p>
+</blockquote>
+<h3>配置文件</h3>
+<p>test.conf</p>
+<div class="cnblogs_code">
+<pre><span style="color: rgba(0, 0, 0, 1)">input {
+    file {
+        path </span>=&gt; [ <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">/tmp/test.log</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)"> ]
+        start_position </span>=&gt; <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">beginning</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">
+        ignore_older </span>=&gt;<span style="color: rgba(0, 0, 0, 1)"> 0
+    }
+}
+filter {
+    grok {
+        match </span>=&gt; { <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">message</span><span style="color: rgba(128, 0, 0, 1)">"</span> =&gt; <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">%{IPORHOST:client_ip} (%{USER:ident}|-) (%{USER:auth}|-) \[%{HTTPDATE:timestamp}\] \"(?:%{WORD:verb} (%{URIPATHPARAM:request}|-)(?: HTTP/%{NUMBER:http_version})?|-)\" (%{NUMBER:response}|-) (?:%{NUMBER:bytes}|-) %{QS:referrer} %{QS:agent} %{QS:x_forward_for}</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)"> }
+    }
+}
+output {
+    stdout {}
+}</span></pre>
+</div>
+<h3>启动</h3>
+<blockquote>
+<p>$LOGSTASH_HOME/bin/logstash -f /path/to/test.conf --path.data=/path/to/data --verbose --debug</p>
+</blockquote>
+<p>注意：如果一台机器上启动多个logstash，要通过--path.data来区分；通过--verbose --debug显示控制台中的output；</p>
+<h3>测试</h3>
+<blockquote>
+<p>$ head -5 /var/log/nginx/access.log &gt;&gt; /tmp/test.log</p>
+</blockquote>
+<p> </p>
+<p>更多input详见</p>
+<p>https://www.elastic.co/guide/en/logstash/current/input-plugins.html</p>
+<p>更多filter详见</p>
+<p>https://www.elastic.co/guide/en/logstash/current/filter-plugins.html</p>
+<p>最常用的filter：grok</p>
+<p>https://www.elastic.co/guide/en/logstash/current/plugins-filters-ruby.html</p>
+<p>最常用的filter：ruby</p>
+<p>https://www.elastic.co/guide/en/logstash/current/plugins-filters-ruby.html</p>
+<p>常用的filter：mutate</p>
+<p>https://www.elastic.co/guide/en/logstash/current/plugins-filters-mutate.html</p>
+<p>常用的filter：date</p>
+<p>https://www.elastic.co/guide/en/logstash/current/plugins-filters-date.html</p>
+<p>常用的filter：json</p>
+<p>https://www.elastic.co/guide/en/logstash/current/plugins-filters-json.html</p>
+<p>常用的filter：kv</p>
+<p>https://www.elastic.co/guide/en/logstash/current/plugins-filters-kv.html</p>
+<p>更多output详见</p>
+<p>https://www.elastic.co/guide/en/logstash/current/output-plugins.html</p>
+<p> </p>
+</div>
+            </div>
+
+            <!-- Post Footer -->
+            <div class="post-footer">
+                <div class="post-navigation">
+                    <a href="../blog_cn.html" class="nav-button">← Back to Home</a>
+                    <a href="0173.html" class="nav-button">Next Post →</a>
+                </div>
+            </div>
+        </article>
+    </div>
+</body>
+</html>

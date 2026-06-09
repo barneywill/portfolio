@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spark中对大表子查询加limit为什么会报Broadcast超时错误</title>
+    <link rel="stylesheet" href="../css/style3.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header Navigation -->
+        <div class="header">
+            <h1><a href="../blog_cn.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+        </div>
+
+        <!-- Post Container -->
+        <article class="post">
+            <!-- Post Header -->
+            <div class="post-header">
+                <h1>Spark中对大表子查询加limit为什么会报Broadcast超时错误</h1>
+                <div class="post-meta">
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📅</span>
+                        <span>December 12, 2018</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📖</span>
+                        <span>3 min read</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">👁️</span>
+                        <span>7139 views</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Post Content -->
+            <div class="post-content">
+                <div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<p>当两个表需要join时，如果一个是大表，一个是小表，正常的map-reduce流程需要shuffle，这会导致大表数据在节点间网络传输，常见的优化方式是将小表读到内存中并广播到大表处理，避免shuffle+reduce；</p>
+<p>在hive中叫mapjoin（map-side join），配置为 hive.auto.convert.join</p>
+<p>在spark中叫BroadcastHashJoin （broadcast hash join）</p>
+<div class="paragraph">
+<blockquote>
+<p class="comments-section">Spark SQL uses broadcast join (aka broadcast hash join) instead of hash join to optimize join queries when the size of one side data is below <a class="external-link" href="https://jaceklaskowski.gitbooks.io/mastering-spark-sql/spark-sql-properties.html#spark.sql.autoBroadcastJoinThreshold" rel="noopener nofollow">spark.sql.autoBroadcastJoinThreshold</a>.</p>
+<p class="comments-section">Broadcast join can be very efficient for joins between a large table (fact) with relatively small tables (dimensions) that could then be used to perform a star-schema join. It can avoid sending all data of the large table over the network.</p>
+</blockquote>
+</div>
+<p>有几种方式可以触发：</p>
+<p>1）sql hint （从spark 2.3版本开始支持）</p>
+<blockquote>
+<pre>SELECT /*+ MAPJOIN(b) */ ...
+
+SELECT /*+ BROADCASTJOIN(b) */ ...
+
+SELECT /*+ BROADCAST(b) */ ...</pre>
+</blockquote>
+<p>2）broadcast function：DataFrame.broadcast</p>
+<div class="cnblogs_code">
+<pre>testTable3= testTable1.join(broadcast(testTable2), Seq("id"), "right_outer")</pre>
+</div>
+<p>3）自动优化</p>
+<p><strong>org.apache.spark.sql.execution.SparkStrategies.JoinSelection</strong></p>
+<div class="cnblogs_code">
+<pre>    <span style="color: rgba(0, 0, 255, 1)">private</span> def canBroadcast(plan: LogicalPlan): Boolean =<span style="color: rgba(0, 0, 0, 1)"> {
+      plan.statistics.isBroadcastable </span>||<span style="color: rgba(0, 0, 0, 1)">
+
+        (plan.statistics.sizeInBytes </span>&gt;= 0 &amp;&amp;<span style="color: rgba(0, 0, 0, 1)">
+
+          plan.statistics.sizeInBytes </span>&lt;=<span style="color: rgba(0, 0, 0, 1)"> conf.autoBroadcastJoinThreshold)
+
+    }</span></pre>
+</div>
+<p> </p>
+<p> </p>
+<p>例如：</p>
+<blockquote>
+<p>spark-sql&gt; explain select * from big_table1 a, (select * from big_table2 <strong>limit 10</strong>) b where a.id = b.id;</p>
+<p>18/09/17 18:14:09 339 WARN Utils66: Truncated the string representation of a plan since it was too large. This behavior can be adjusted by setting 'spark.debug.maxToStringFields' in SparkEnv.conf.</p>
+<p>== Physical Plan ==</p>
+<p><strong>BroadcastHashJoin</strong> [id#5], [id#14], Inner, BuildRight</p>
+<p>:- *Filter isnotnull(id#5)</p>
+<p>:  +- HiveTableScan [name#4, id#5], MetastoreRelation big_table1</p>
+<p>+- <strong>BroadcastExchange</strong> HashedRelationBroadcastMode(List(input[6, string, false]))</p>
+<p>   +- Filter isnotnull(id#14)</p>
+<p>      +- GlobalLimit 10</p>
+<p>         +- Exchange SinglePartition</p>
+<p>            +- LocalLimit 10</p>
+<p>               +- HiveTableScan [id#14, ... 187 more fields], MetastoreRelation big_table2</p>
+<p>Time taken: 4.216 seconds, Fetched 1 row(s)</p>
+</blockquote>
+<p><strong>BroadcastExchange</strong> 执行过程为</p>
+<p><strong>org.apache.spark.sql.execution.exchange.BroadcastExchangeExec</strong></p>
+<div class="cnblogs_code">
+<pre>  override <span style="color: rgba(0, 0, 255, 1)">protected</span>[sql] def doExecuteBroadcast[T](): broadcast.Broadcast[T] =<span style="color: rgba(0, 0, 0, 1)"> {
+
+    ThreadUtils.awaitResultInForkJoinSafely(relationFuture, timeout)
+
+      .asInstanceOf[broadcast.Broadcast[T]]
+
+  }</span></pre>
+</div>
+<p>其中timeout是指spark.sql.broadcastTimeout，默认300s</p>
+<div class="cnblogs_code">
+<pre>  <span style="color: rgba(0, 0, 255, 1)">private</span> lazy val relationFuture: Future[broadcast.Broadcast[Any]] =<span style="color: rgba(0, 0, 0, 1)"> {
+
+    </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> broadcastFuture is used in "doExecute". Therefore we can get the execution id correctly here.</span>
+<span style="color: rgba(0, 0, 0, 1)">
+    val executionId </span>=<span style="color: rgba(0, 0, 0, 1)"> sparkContext.getLocalProperty(SQLExecution.EXECUTION_ID_KEY)
+
+    Future {
+
+      </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> This will run in another thread. Set the execution id so that we can connect these jobs
+
+      </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> with the correct execution.</span>
+<span style="color: rgba(0, 0, 0, 1)">
+      SQLExecution.withExecutionId(sparkContext, executionId) {
+
+        </span><span style="color: rgba(0, 0, 255, 1)">try</span><span style="color: rgba(0, 0, 0, 1)"> {
+
+          val beforeCollect </span>=<span style="color: rgba(0, 0, 0, 1)"> System.nanoTime()
+
+          </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> Note that we use .executeCollect() because we don't want to convert data to Scala types</span>
+<span style="color: rgba(0, 0, 0, 1)">
+          val input: Array[InternalRow] </span>=<span style="color: rgba(0, 0, 0, 1)"> child.executeCollect()
+
+          </span><span style="color: rgba(0, 0, 255, 1)">if</span> (input.length &gt;= 512000000<span style="color: rgba(0, 0, 0, 1)">) {
+
+            </span><span style="color: rgba(0, 0, 255, 1)">throw</span> <span style="color: rgba(0, 0, 255, 1)">new</span><span style="color: rgba(0, 0, 0, 1)"> SparkException(
+
+              s</span>"Cannot broadcast the table with more than 512 millions rows: ${input.length} rows"<span style="color: rgba(0, 0, 0, 1)">)
+
+          }
+
+          val beforeBuild </span>=<span style="color: rgba(0, 0, 0, 1)"> System.nanoTime()
+
+          longMetric(</span>"collectTime") += (beforeBuild - beforeCollect) / 1000000<span style="color: rgba(0, 0, 0, 1)">
+
+          val dataSize </span>=<span style="color: rgba(0, 0, 0, 1)"> input.map(_.asInstanceOf[UnsafeRow].getSizeInBytes.toLong).sum
+
+          longMetric(</span>"dataSize") +=<span style="color: rgba(0, 0, 0, 1)"> dataSize
+
+          </span><span style="color: rgba(0, 0, 255, 1)">if</span> (dataSize &gt;= (8L &lt;&lt; 30<span style="color: rgba(0, 0, 0, 1)">)) {
+
+            </span><span style="color: rgba(0, 0, 255, 1)">throw</span> <span style="color: rgba(0, 0, 255, 1)">new</span><span style="color: rgba(0, 0, 0, 1)"> SparkException(
+
+              s</span>"Cannot broadcast the table that is larger than 8GB: ${dataSize &gt;&gt; 30} GB"<span style="color: rgba(0, 0, 0, 1)">)
+
+          }
+
+ 
+
+          </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> Construct and broadcast the relation.</span>
+<span style="color: rgba(0, 0, 0, 1)">
+          val relation </span>=<span style="color: rgba(0, 0, 0, 1)"> mode.transform(input)
+
+          val beforeBroadcast </span>=<span style="color: rgba(0, 0, 0, 1)"> System.nanoTime()
+
+          longMetric(</span>"buildTime") += (beforeBroadcast - beforeBuild) / 1000000<span style="color: rgba(0, 0, 0, 1)">
+
+ 
+
+          val broadcasted </span>=<span style="color: rgba(0, 0, 0, 1)"> sparkContext.broadcast(relation)
+
+          longMetric(</span>"broadcastTime") += (System.nanoTime() - beforeBroadcast) / 1000000<span style="color: rgba(0, 0, 0, 1)">
+
+ 
+
+          SQLMetrics.postDriverMetricUpdates(sparkContext, executionId, metrics.values.toSeq)
+
+          broadcasted</span></pre>
+</div>
+<p>对一个表broadcast执行过程为首先计算然后collect，然后通过SparkContext broadcast出去，并且执行过程为线程异步执行，超时时间为spark.sql.broadcastTimeout；</p>
+<p> </p>
+</div>
+            </div>
+
+            <!-- Post Footer -->
+            <div class="post-footer">
+                <div class="post-navigation">
+                    <a href="../blog_cn.html" class="nav-button">← Back to Home</a>
+                    <a href="0335.html" class="nav-button">Next Post →</a>
+                </div>
+            </div>
+        </article>
+    </div>
+</body>
+</html>

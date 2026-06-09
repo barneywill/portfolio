@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Logstash 5 - 监控</title>
+    <link rel="stylesheet" href="../css/style3.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header Navigation -->
+        <div class="header">
+            <h1><a href="../blog_cn.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+        </div>
+
+        <!-- Post Container -->
+        <article class="post">
+            <!-- Post Header -->
+            <div class="post-header">
+                <h1>Logstash 5 - 监控</h1>
+                <div class="post-meta">
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📅</span>
+                        <span>April 08, 2019</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📖</span>
+                        <span>28 min read</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">👁️</span>
+                        <span>1930 views</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Post Content -->
+            <div class="post-content">
+                <div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<p>有两种方式来监控logstash：</p>
+<ul>
+<li>api</li>
+<li>ui（xpack）</li>
+</ul>
+<p>When you run Logstash, it automatically captures runtime metrics that you can use to monitor the health and performance of your Logstash deployment.<br/>You can use the basic monitoring APIs provided by Logstash to retrieve these metrics. These APIs are available by default without requiring any extra configuration.<br/>Alternatively, you can configure X-Pack monitoring to send data to a monitoring cluster.</p>
+<h1>1 api</h1>
+<h2>Node Info API</h2>
+<p>The node info API retrieves information about the node.</p>
+<div class="cnblogs_code">
+<pre><span style="color: rgba(0, 128, 0, 1)">#</span><span style="color: rgba(0, 128, 0, 1)"> curl http://127.0.0.1:9600/_node?pretty</span>
+<span style="color: rgba(0, 0, 0, 1)">{
+  </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">host</span><span style="color: rgba(128, 0, 0, 1)">"</span> : <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">server-05</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">,
+  </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">version</span><span style="color: rgba(128, 0, 0, 1)">"</span> : <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">6.5.4</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">,
+  </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">http_address</span><span style="color: rgba(128, 0, 0, 1)">"</span> : <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">127.0.0.1:9600</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">,
+  </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">id</span><span style="color: rgba(128, 0, 0, 1)">"</span> : <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">d9f6ac1d-26ab-442e-9353-c0fe3f0fe8cf</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">,
+  </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">name</span><span style="color: rgba(128, 0, 0, 1)">"</span> : <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">server-05</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">,
+  </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">pipelines</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)"> : {
+    </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">main</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)"> : {
+      </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">workers</span><span style="color: rgba(128, 0, 0, 1)">"</span> : 8<span style="color: rgba(0, 0, 0, 1)">,
+      </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">batch_size</span><span style="color: rgba(128, 0, 0, 1)">"</span> : 125<span style="color: rgba(0, 0, 0, 1)">,
+      </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">batch_delay</span><span style="color: rgba(128, 0, 0, 1)">"</span> : 50<span style="color: rgba(0, 0, 0, 1)">,
+      </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">config_reload_automatic</span><span style="color: rgba(128, 0, 0, 1)">"</span> : <span style="color: rgba(0, 0, 255, 1)">false</span><span style="color: rgba(0, 0, 0, 1)">,
+      </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">config_reload_interval</span><span style="color: rgba(128, 0, 0, 1)">"</span> : 3000000000<span style="color: rgba(0, 0, 0, 1)">,
+      </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">dead_letter_queue_enabled</span><span style="color: rgba(128, 0, 0, 1)">"</span> : <span style="color: rgba(0, 0, 255, 1)">false</span><span style="color: rgba(0, 0, 0, 1)">
+    }
+  },
+  </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">os</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)"> : {
+    </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">name</span><span style="color: rgba(128, 0, 0, 1)">"</span> : <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">Linux</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">,
+    </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">arch</span><span style="color: rgba(128, 0, 0, 1)">"</span> : <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">amd64</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">,
+    </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">version</span><span style="color: rgba(128, 0, 0, 1)">"</span> : <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">3.10.0-957.5.1.el7.x86_64</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">,
+    </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">available_processors</span><span style="color: rgba(128, 0, 0, 1)">"</span> : 8<span style="color: rgba(0, 0, 0, 1)">
+  },
+  </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">jvm</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)"> : {
+    </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">pid</span><span style="color: rgba(128, 0, 0, 1)">"</span> : 23133<span style="color: rgba(0, 0, 0, 1)">,
+    </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">version</span><span style="color: rgba(128, 0, 0, 1)">"</span> : <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">1.8.0_141</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">,
+    </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">vm_version</span><span style="color: rgba(128, 0, 0, 1)">"</span> : <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">1.8.0_141</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">,
+    </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">vm_vendor</span><span style="color: rgba(128, 0, 0, 1)">"</span> : <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">Oracle Corporation</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">,
+    </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">vm_name</span><span style="color: rgba(128, 0, 0, 1)">"</span> : <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">Java HotSpot(TM) 64-Bit Server VM</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">,
+    </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">start_time_in_millis</span><span style="color: rgba(128, 0, 0, 1)">"</span> : 1553667245630<span style="color: rgba(0, 0, 0, 1)">,
+    </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">mem</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)"> : {
+      </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">heap_init_in_bytes</span><span style="color: rgba(128, 0, 0, 1)">"</span> : 536870912<span style="color: rgba(0, 0, 0, 1)">,
+      </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">heap_max_in_bytes</span><span style="color: rgba(128, 0, 0, 1)">"</span> : 518979584<span style="color: rgba(0, 0, 0, 1)">,
+      </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">non_heap_init_in_bytes</span><span style="color: rgba(128, 0, 0, 1)">"</span> : 2555904<span style="color: rgba(0, 0, 0, 1)">,
+      </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">non_heap_max_in_bytes</span><span style="color: rgba(128, 0, 0, 1)">"</span> : 0<span style="color: rgba(0, 0, 0, 1)">
+    },
+    </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">gc_collectors</span><span style="color: rgba(128, 0, 0, 1)">"</span> : [ <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">ParNew</span><span style="color: rgba(128, 0, 0, 1)">"</span>, <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">ConcurrentMarkSweep</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)"> ]
+  }
+}</span></pre>
+</div>
+<h2>Plugins Info API</h2>
+<p>The plugins info API gets information about all Logstash plugins that are currently installed. This API basically returns the output of running the bin/logstash-plugin list --verbose command.</p>
+<div class="cnblogs_code">
+<pre><span style="color: rgba(0, 128, 0, 1)">#</span><span style="color: rgba(0, 128, 0, 1)"> curl http://127.0.0.1:9600/_node/plugins?pretty</span>
+<span style="color: rgba(0, 0, 0, 1)">{
+  </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">host</span><span style="color: rgba(128, 0, 0, 1)">"</span> : <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">server-05</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">,
+  </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">version</span><span style="color: rgba(128, 0, 0, 1)">"</span> : <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">6.5.4</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">,
+  </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">http_address</span><span style="color: rgba(128, 0, 0, 1)">"</span> : <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">127.0.0.1:9600</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">,
+  </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">id</span><span style="color: rgba(128, 0, 0, 1)">"</span> : <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">d9f6ac1d-26ab-442e-9353-c0fe3f0fe8cf</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">,
+  </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">name</span><span style="color: rgba(128, 0, 0, 1)">"</span> : <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">server-05</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">,
+  </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">total</span><span style="color: rgba(128, 0, 0, 1)">"</span> : 99<span style="color: rgba(0, 0, 0, 1)">,
+  </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">plugins</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)"> : [ {
+    </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">name</span><span style="color: rgba(128, 0, 0, 1)">"</span> : <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">logstash-codec-cef</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">,
+    </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">version</span><span style="color: rgba(128, 0, 0, 1)">"</span> : <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">5.0.6</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">
+  }, {
+    </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">name</span><span style="color: rgba(128, 0, 0, 1)">"</span> : <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">logstash-codec-collectd</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">,
+    </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">version</span><span style="color: rgba(128, 0, 0, 1)">"</span> : <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">3.0.8</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">
+  }, {
+    </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">name</span><span style="color: rgba(128, 0, 0, 1)">"</span> : <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">logstash-codec-dots</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">,
+    </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">version</span><span style="color: rgba(128, 0, 0, 1)">"</span> : <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">3.0.6</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">
+  },
+...</span></pre>
+</div>
+<h2>Node Stats API</h2>
+<p>The node stats API retrieves runtime stats about Logstash.</p>
+<div class="cnblogs_code">
+<pre><span style="color: rgba(0, 128, 0, 1)">#</span><span style="color: rgba(0, 128, 0, 1)"> curl http://127.0.0.1:9600/_node/stats?pretty</span>
+<span style="color: rgba(0, 0, 0, 1)">{
+  </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">host</span><span style="color: rgba(128, 0, 0, 1)">"</span> : <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">server-05</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">,
+  </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">version</span><span style="color: rgba(128, 0, 0, 1)">"</span> : <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">6.5.4</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">,
+  </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">http_address</span><span style="color: rgba(128, 0, 0, 1)">"</span> : <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">127.0.0.1:9600</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">,
+  </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">id</span><span style="color: rgba(128, 0, 0, 1)">"</span> : <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">d9f6ac1d-26ab-442e-9353-c0fe3f0fe8cf</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">,
+  </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">name</span><span style="color: rgba(128, 0, 0, 1)">"</span> : <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">server-05</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">,
+  </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">jvm</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)"> : {
+    </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">threads</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)"> : {
+      </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">count</span><span style="color: rgba(128, 0, 0, 1)">"</span> : 35<span style="color: rgba(0, 0, 0, 1)">,
+      </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">peak_count</span><span style="color: rgba(128, 0, 0, 1)">"</span> : 36<span style="color: rgba(0, 0, 0, 1)">
+    },
+    </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">mem</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)"> : {
+      </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">heap_used_percent</span><span style="color: rgba(128, 0, 0, 1)">"</span> : 50<span style="color: rgba(0, 0, 0, 1)">,
+      </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">heap_committed_in_bytes</span><span style="color: rgba(128, 0, 0, 1)">"</span> : 518979584<span style="color: rgba(0, 0, 0, 1)">,
+      </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">heap_max_in_bytes</span><span style="color: rgba(128, 0, 0, 1)">"</span> : 518979584<span style="color: rgba(0, 0, 0, 1)">,
+      </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">heap_used_in_bytes</span><span style="color: rgba(128, 0, 0, 1)">"</span> : 261155016<span style="color: rgba(0, 0, 0, 1)">,
+      </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">non_heap_used_in_bytes</span><span style="color: rgba(128, 0, 0, 1)">"</span> : 178053152<span style="color: rgba(0, 0, 0, 1)">,
+      </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">non_heap_committed_in_bytes</span><span style="color: rgba(128, 0, 0, 1)">"</span> : 218259456<span style="color: rgba(0, 0, 0, 1)">,
+      </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">pools</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)"> : {
+        </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">survivor</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)"> : {
+          </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">peak_used_in_bytes</span><span style="color: rgba(128, 0, 0, 1)">"</span> : 17891328<span style="color: rgba(0, 0, 0, 1)">,
+          </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">used_in_bytes</span><span style="color: rgba(128, 0, 0, 1)">"</span> : 8614928<span style="color: rgba(0, 0, 0, 1)">,
+          </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">peak_max_in_bytes</span><span style="color: rgba(128, 0, 0, 1)">"</span> : 17891328<span style="color: rgba(0, 0, 0, 1)">,
+          </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">max_in_bytes</span><span style="color: rgba(128, 0, 0, 1)">"</span> : 17891328<span style="color: rgba(0, 0, 0, 1)">,
+          </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">committed_in_bytes</span><span style="color: rgba(128, 0, 0, 1)">"</span> : 17891328<span style="color: rgba(0, 0, 0, 1)">
+        },
+        </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">old</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)"> : {
+          </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">peak_used_in_bytes</span><span style="color: rgba(128, 0, 0, 1)">"</span> : 163566944<span style="color: rgba(0, 0, 0, 1)">,
+          </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">used_in_bytes</span><span style="color: rgba(128, 0, 0, 1)">"</span> : 163566944<span style="color: rgba(0, 0, 0, 1)">,
+          </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">peak_max_in_bytes</span><span style="color: rgba(128, 0, 0, 1)">"</span> : 357957632<span style="color: rgba(0, 0, 0, 1)">,
+          </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">max_in_bytes</span><span style="color: rgba(128, 0, 0, 1)">"</span> : 357957632<span style="color: rgba(0, 0, 0, 1)">,
+          </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">committed_in_bytes</span><span style="color: rgba(128, 0, 0, 1)">"</span> : 357957632<span style="color: rgba(0, 0, 0, 1)">
+        },
+        </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">young</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)"> : {
+          </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">peak_used_in_bytes</span><span style="color: rgba(128, 0, 0, 1)">"</span> : 143130624<span style="color: rgba(0, 0, 0, 1)">,
+          </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">used_in_bytes</span><span style="color: rgba(128, 0, 0, 1)">"</span> : 88973144<span style="color: rgba(0, 0, 0, 1)">,
+          </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">peak_max_in_bytes</span><span style="color: rgba(128, 0, 0, 1)">"</span> : 143130624<span style="color: rgba(0, 0, 0, 1)">,
+          </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">max_in_bytes</span><span style="color: rgba(128, 0, 0, 1)">"</span> : 143130624<span style="color: rgba(0, 0, 0, 1)">,
+          </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">committed_in_bytes</span><span style="color: rgba(128, 0, 0, 1)">"</span> : 143130624<span style="color: rgba(0, 0, 0, 1)">
+        }
+      }
+    },
+    </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">gc</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)"> : {
+      </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">collectors</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)"> : {
+        </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">old</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)"> : {
+          </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">collection_time_in_millis</span><span style="color: rgba(128, 0, 0, 1)">"</span> : 151<span style="color: rgba(0, 0, 0, 1)">,
+          </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">collection_count</span><span style="color: rgba(128, 0, 0, 1)">"</span> : 2<span style="color: rgba(0, 0, 0, 1)">
+        },
+        </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">young</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)"> : {
+          </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">collection_time_in_millis</span><span style="color: rgba(128, 0, 0, 1)">"</span> : 11958<span style="color: rgba(0, 0, 0, 1)">,
+          </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">collection_count</span><span style="color: rgba(128, 0, 0, 1)">"</span> : 1255<span style="color: rgba(0, 0, 0, 1)">
+        }
+      }
+    },
+    </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">uptime_in_millis</span><span style="color: rgba(128, 0, 0, 1)">"</span> : 1049304126<span style="color: rgba(0, 0, 0, 1)">
+  },
+  </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">process</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)"> : {
+    </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">open_file_descriptors</span><span style="color: rgba(128, 0, 0, 1)">"</span> : 103<span style="color: rgba(0, 0, 0, 1)">,
+    </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">peak_open_file_descriptors</span><span style="color: rgba(128, 0, 0, 1)">"</span> : 104<span style="color: rgba(0, 0, 0, 1)">,
+    </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">max_file_descriptors</span><span style="color: rgba(128, 0, 0, 1)">"</span> : 4096<span style="color: rgba(0, 0, 0, 1)">,
+    </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">mem</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)"> : {
+      </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">total_virtual_in_bytes</span><span style="color: rgba(128, 0, 0, 1)">"</span> : 5936197632<span style="color: rgba(0, 0, 0, 1)">
+    },
+    </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">cpu</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)"> : {
+      </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">total_in_millis</span><span style="color: rgba(128, 0, 0, 1)">"</span> : 7796970<span style="color: rgba(0, 0, 0, 1)">,
+      </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">percent</span><span style="color: rgba(128, 0, 0, 1)">"</span> : 0<span style="color: rgba(0, 0, 0, 1)">,
+      </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">load_average</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)"> : {
+        </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">1m</span><span style="color: rgba(128, 0, 0, 1)">"</span> : 0.0<span style="color: rgba(0, 0, 0, 1)">,
+        </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">5m</span><span style="color: rgba(128, 0, 0, 1)">"</span> : 0.04<span style="color: rgba(0, 0, 0, 1)">,
+        </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">15m</span><span style="color: rgba(128, 0, 0, 1)">"</span> : 0.05<span style="color: rgba(0, 0, 0, 1)">
+      }
+    }
+  },
+  </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">events</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)"> : {
+    </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">in</span><span style="color: rgba(128, 0, 0, 1)">"</span> : 9135<span style="color: rgba(0, 0, 0, 1)">,
+    </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">filtered</span><span style="color: rgba(128, 0, 0, 1)">"</span> : 9135<span style="color: rgba(0, 0, 0, 1)">,
+    </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">out</span><span style="color: rgba(128, 0, 0, 1)">"</span> : 9135<span style="color: rgba(0, 0, 0, 1)">,
+    </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">duration_in_millis</span><span style="color: rgba(128, 0, 0, 1)">"</span> : 11314<span style="color: rgba(0, 0, 0, 1)">,
+    </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">queue_push_duration_in_millis</span><span style="color: rgba(128, 0, 0, 1)">"</span> : 0<span style="color: rgba(0, 0, 0, 1)">
+  },
+  </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">pipelines</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)"> : {
+    </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">main</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)"> : {
+      </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">events</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)"> : {
+        </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">duration_in_millis</span><span style="color: rgba(128, 0, 0, 1)">"</span> : 11314<span style="color: rgba(0, 0, 0, 1)">,
+        </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">in</span><span style="color: rgba(128, 0, 0, 1)">"</span> : 9135<span style="color: rgba(0, 0, 0, 1)">,
+        </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">out</span><span style="color: rgba(128, 0, 0, 1)">"</span> : 9135<span style="color: rgba(0, 0, 0, 1)">,
+        </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">filtered</span><span style="color: rgba(128, 0, 0, 1)">"</span> : 9135<span style="color: rgba(0, 0, 0, 1)">,
+        </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">queue_push_duration_in_millis</span><span style="color: rgba(128, 0, 0, 1)">"</span> : 0<span style="color: rgba(0, 0, 0, 1)">
+      },
+      </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">plugins</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)"> : {
+        </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">inputs</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)"> : [ {
+          </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">id</span><span style="color: rgba(128, 0, 0, 1)">"</span> : <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">0117e36c20fc4824ffb286255d03535acb0d462b00c0294651d48e2028315a6f</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">,
+          </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">events</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)"> : {
+            </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">out</span><span style="color: rgba(128, 0, 0, 1)">"</span> : 9135<span style="color: rgba(0, 0, 0, 1)">,
+            </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">queue_push_duration_in_millis</span><span style="color: rgba(128, 0, 0, 1)">"</span> : 0<span style="color: rgba(0, 0, 0, 1)">
+          },
+          </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">name</span><span style="color: rgba(128, 0, 0, 1)">"</span> : <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">jdbc</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">
+        } ],
+        </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">filters</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)"> : [ ],
+        </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">outputs</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)"> : [ {
+          </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">id</span><span style="color: rgba(128, 0, 0, 1)">"</span> : <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">791eb5d509a6269e6cbcbf1a8a6ffbbd12aab2924fee6e35fc70f79938534e76</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">,
+          </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">events</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)"> : {
+            </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">duration_in_millis</span><span style="color: rgba(128, 0, 0, 1)">"</span> : 10136<span style="color: rgba(0, 0, 0, 1)">,
+            </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">in</span><span style="color: rgba(128, 0, 0, 1)">"</span> : 9135<span style="color: rgba(0, 0, 0, 1)">,
+            </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">out</span><span style="color: rgba(128, 0, 0, 1)">"</span> : 9135<span style="color: rgba(0, 0, 0, 1)">
+          },
+          </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">name</span><span style="color: rgba(128, 0, 0, 1)">"</span> : <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">kafka</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">
+        }, {
+          </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">id</span><span style="color: rgba(128, 0, 0, 1)">"</span> : <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">3b968b786147f8809c823ca797ff6b78e60f6615794fc4716a0f52bb619bffc8</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">,
+          </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">events</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)"> : {
+            </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">duration_in_millis</span><span style="color: rgba(128, 0, 0, 1)">"</span> : 185<span style="color: rgba(0, 0, 0, 1)">,
+            </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">in</span><span style="color: rgba(128, 0, 0, 1)">"</span> : 9135<span style="color: rgba(0, 0, 0, 1)">,
+            </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">out</span><span style="color: rgba(128, 0, 0, 1)">"</span> : 9135<span style="color: rgba(0, 0, 0, 1)">
+          },
+          </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">name</span><span style="color: rgba(128, 0, 0, 1)">"</span> : <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">stdout</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">
+        } ]
+      },
+      </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">reloads</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)"> : {
+        </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">last_error</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)"> : null,
+        </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">successes</span><span style="color: rgba(128, 0, 0, 1)">"</span> : 0<span style="color: rgba(0, 0, 0, 1)">,
+        </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">last_success_timestamp</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)"> : null,
+        </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">last_failure_timestamp</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)"> : null,
+        </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">failures</span><span style="color: rgba(128, 0, 0, 1)">"</span> : 0<span style="color: rgba(0, 0, 0, 1)">
+      },
+      </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">queue</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)"> : {
+        </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">type</span><span style="color: rgba(128, 0, 0, 1)">"</span> : <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">memory</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">
+      }
+    }
+  },
+  </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">reloads</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)"> : {
+    </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">successes</span><span style="color: rgba(128, 0, 0, 1)">"</span> : 0<span style="color: rgba(0, 0, 0, 1)">,
+    </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">failures</span><span style="color: rgba(128, 0, 0, 1)">"</span> : 0<span style="color: rgba(0, 0, 0, 1)">
+  },
+  </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">os</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)"> : {
+    </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">cgroup</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)"> : {
+      </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">cpuacct</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)"> : {
+        </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">usage_nanos</span><span style="color: rgba(128, 0, 0, 1)">"</span> : 58556486084501<span style="color: rgba(0, 0, 0, 1)">,
+        </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">control_group</span><span style="color: rgba(128, 0, 0, 1)">"</span> : <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">/system.slice/sshd.service</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">
+      },
+      </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">cpu</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)"> : {
+        </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">cfs_quota_micros</span><span style="color: rgba(128, 0, 0, 1)">"</span> : - 1<span style="color: rgba(0, 0, 0, 1)">,
+        </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">control_group</span><span style="color: rgba(128, 0, 0, 1)">"</span> : <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">/system.slice/sshd.service</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">,
+        </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">stat</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)"> : {
+          </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">number_of_times_throttled</span><span style="color: rgba(128, 0, 0, 1)">"</span> : 0<span style="color: rgba(0, 0, 0, 1)">,
+          </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">time_throttled_nanos</span><span style="color: rgba(128, 0, 0, 1)">"</span> : 0<span style="color: rgba(0, 0, 0, 1)">,
+          </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">number_of_elapsed_periods</span><span style="color: rgba(128, 0, 0, 1)">"</span> : 0<span style="color: rgba(0, 0, 0, 1)">
+        },
+        </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">cfs_period_micros</span><span style="color: rgba(128, 0, 0, 1)">"</span> : 100000<span style="color: rgba(0, 0, 0, 1)">
+      }
+    }
+  }
+}</span></pre>
+</div>
+<h2>Hot Threads API</h2>
+<p>The hot threads API gets the current hot threads for Logstash. A hot thread is a Java thread that has high CPU usage and executes for a longer than normal period of time.</p>
+<div class="cnblogs_code">
+<pre><span style="color: rgba(0, 128, 0, 1)">#</span><span style="color: rgba(0, 128, 0, 1)"> curl http://127.0.0.1:9600/_node/hot_threads?pretty</span>
+<span style="color: rgba(0, 0, 0, 1)">{
+  </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">host</span><span style="color: rgba(128, 0, 0, 1)">"</span> : <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">server-05</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">,
+  </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">version</span><span style="color: rgba(128, 0, 0, 1)">"</span> : <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">6.5.4</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">,
+  </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">http_address</span><span style="color: rgba(128, 0, 0, 1)">"</span> : <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">127.0.0.1:9600</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">,
+  </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">id</span><span style="color: rgba(128, 0, 0, 1)">"</span> : <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">d9f6ac1d-26ab-442e-9353-c0fe3f0fe8cf</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">,
+  </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">name</span><span style="color: rgba(128, 0, 0, 1)">"</span> : <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">server-05</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">,
+  </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">hot_threads</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)"> : {
+    </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">time</span><span style="color: rgba(128, 0, 0, 1)">"</span> : <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">2019-04-08T17:42:53+08:00</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">,
+    </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">busiest_threads</span><span style="color: rgba(128, 0, 0, 1)">"</span> : 3<span style="color: rgba(0, 0, 0, 1)">,
+    </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">threads</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)"> : [ {
+      </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">name</span><span style="color: rgba(128, 0, 0, 1)">"</span> : <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">Ruby-0-Thread-10</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">,
+      </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">thread_id</span><span style="color: rgba(128, 0, 0, 1)">"</span> : 32<span style="color: rgba(0, 0, 0, 1)">,
+      </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">percent_of_cpu_time</span><span style="color: rgba(128, 0, 0, 1)">"</span> : 0.05<span style="color: rgba(0, 0, 0, 1)">,
+      </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">state</span><span style="color: rgba(128, 0, 0, 1)">"</span> : <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">timed_waiting</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">,
+      </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">path</span><span style="color: rgba(128, 0, 0, 1)">"</span> : <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">:1</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">,
+      </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">traces</span><span style="color: rgba(128, 0, 0, 1)">"</span> : [ <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">sun.misc.Unsafe.park(Native Method)</span><span style="color: rgba(128, 0, 0, 1)">"</span>, <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">java.util.concurrent.locks.LockSupport.parkNanos(LockSupport.java:215)</span><span style="color: rgba(128, 0, 0, 1)">"</span>, <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">java.util.concurrent.locks.AbstractQueuedSynchronizer$ConditionObject.awaitNanos(AbstractQueuedSynchronizer.java:2078)</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)"> ]
+    }, {
+      </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">name</span><span style="color: rgba(128, 0, 0, 1)">"</span> : <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">Ruby-0-Thread-11</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">,
+      </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">thread_id</span><span style="color: rgba(128, 0, 0, 1)">"</span> : 33<span style="color: rgba(0, 0, 0, 1)">,
+      </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">percent_of_cpu_time</span><span style="color: rgba(128, 0, 0, 1)">"</span> : 0.05<span style="color: rgba(0, 0, 0, 1)">,
+      </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">state</span><span style="color: rgba(128, 0, 0, 1)">"</span> : <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">timed_waiting</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">,
+      </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">path</span><span style="color: rgba(128, 0, 0, 1)">"</span> : <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">:1</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">,
+      </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">traces</span><span style="color: rgba(128, 0, 0, 1)">"</span> : [ <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">sun.misc.Unsafe.park(Native Method)</span><span style="color: rgba(128, 0, 0, 1)">"</span>, <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">java.util.concurrent.locks.LockSupport.parkNanos(LockSupport.java:215)</span><span style="color: rgba(128, 0, 0, 1)">"</span>, <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">java.util.concurrent.locks.AbstractQueuedSynchronizer$ConditionObject.awaitNanos(AbstractQueuedSynchronizer.java:2078)</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)"> ]
+    }, {
+      </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">name</span><span style="color: rgba(128, 0, 0, 1)">"</span> : <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">Ruby-0-Thread-6</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">,
+      </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">thread_id</span><span style="color: rgba(128, 0, 0, 1)">"</span> : 28<span style="color: rgba(0, 0, 0, 1)">,
+      </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">percent_of_cpu_time</span><span style="color: rgba(128, 0, 0, 1)">"</span> : 0.05<span style="color: rgba(0, 0, 0, 1)">,
+      </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">state</span><span style="color: rgba(128, 0, 0, 1)">"</span> : <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">timed_waiting</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">,
+      </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">path</span><span style="color: rgba(128, 0, 0, 1)">"</span> : <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">:1</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">,
+      </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">traces</span><span style="color: rgba(128, 0, 0, 1)">"</span> : [ <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">sun.misc.Unsafe.park(Native Method)</span><span style="color: rgba(128, 0, 0, 1)">"</span>, <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">java.util.concurrent.locks.LockSupport.parkNanos(LockSupport.java:215)</span><span style="color: rgba(128, 0, 0, 1)">"</span>, <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">java.util.concurrent.locks.AbstractQueuedSynchronizer$ConditionObject.awaitNanos(AbstractQueuedSynchronizer.java:2078)</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)"> ]
+    } ]
+  }
+}</span></pre>
+</div>
+<h1>2 ui（xpack）</h1>
+<p>You can use the monitoring UI in X-Pack to view the metrics and gain insight into how your Logstash deployment is running.<br/>Monitoring is an X-Pack feature under the Basic License and is therefore free to use.<br/>The pipeline viewer in X-Pack offers additional visibility into the behavior and performance of complex pipeline configurations. It shows a graph representation of the overall pipeline topology, data flow, and branching logic, overlaid with important metrics, like events per second, for each plugin in the view.</p>
+<h2>配置</h2>
+<p>1）logstash</p>
+<blockquote>
+<p>xpack.monitoring.enabled: true<br/>xpack.monitoring.elasticsearch.hosts: ["http://es-prod-node-1:9200", "http://es-prod-node-2:9200"]</p>
+</blockquote>
+<p>开启security或ssl会有更多配置</p>
+<p>2）elasticsearch</p>
+<blockquote>
+<p>xpack.monitoring.enabled: true<br/>xpack.monitoring.collection.enabled: true</p>
+</blockquote>
+<p>3）kibana</p>
+<blockquote>
+<p>xpack.monitoring.enabled: true</p>
+</blockquote>
+<p>Unlike X-Pack monitoring for Elasticsearch and Kibana, there is no xpack.monitoring.collection.enabled setting on Logstash. You must use the xpack.monitoring.enabled setting to enable and disable data collection.</p>
+<h2>kibana</h2>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201904/1509647-20190409150117226-1354217353.png"/></p>
+<p> </p>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201904/1509647-20190409151548195-1989304529.png"/></p>
+<p> </p>
+<p>A Logstash node is considered unique based on its persistent UUID, which is written to the path.data directory when the node starts.</p>
+<p> </p>
+<p>参考：<br/>https://www.elastic.co/guide/en/logstash/current/monitoring-logstash.html<br/>https://www.elastic.co/guide/en/logstash/current/monitoring.html<br/>https://www.elastic.co/guide/en/logstash/current/configuring-logstash.html<br/>https://www.elastic.co/guide/en/logstash/current/logstash-monitoring-ui.html</p>
+<p> </p>
+<p>https://www.elastic.co/guide/en/elasticsearch/reference/current/monitoring-settings.html<br/>https://www.elastic.co/guide/en/kibana/current/monitoring-settings-kb.html</p>
+<p> </p>
+</div>
+            </div>
+
+            <!-- Post Footer -->
+            <div class="post-footer">
+                <div class="post-navigation">
+                    <a href="../blog_cn.html" class="nav-button">← Back to Home</a>
+                    <a href="0149.html" class="nav-button">Next Post →</a>
+                </div>
+            </div>
+        </article>
+    </div>
+</body>
+</html>

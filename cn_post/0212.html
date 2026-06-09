@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Airflow 2 - 生产环境部署airflow研究</title>
+    <link rel="stylesheet" href="../css/style3.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header Navigation -->
+        <div class="header">
+            <h1><a href="../blog_cn.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+        </div>
+
+        <!-- Post Container -->
+        <article class="post">
+            <!-- Post Header -->
+            <div class="post-header">
+                <h1>Airflow 2 - 生产环境部署airflow研究</h1>
+                <div class="post-meta">
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📅</span>
+                        <span>February 20, 2019</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📖</span>
+                        <span>1 min read</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">👁️</span>
+                        <span>3380 views</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Post Content -->
+            <div class="post-content">
+                <div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<h1>一 官方</h1>
+<h2>airflow官方分布式部署结构图</h2>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201902/1509647-20190220004325814-429647563.png"/></p>
+<h2>airflow进程</h2>
+<ul>
+<li>webserver</li>
+<li>scheduler</li>
+<li>flower（非必须）</li>
+<li>worker</li>
+</ul>
+<h2>airflow缺点</h2>
+<ul>
+<li>scheduler单点</li>
+<li>通过在scheduler的dags目录变动dag文件来提交流程</li>
+</ul>
+<h2>官方分布式部署方案</h2>
+<ul>
+<li>多个webserver</li>
+<li>多个worker
+<ul>
+<li>CeleryExecutor（依赖redis或rabbitmq）</li>
+<li>MesosExecutor（依赖mesos）</li>
+</ul>
+</li>
+</ul>
+<h2>第三方开源方案ASFC</h2>
+<p>针对scheduler单点问题，有第三方方案：https://github.com/teamclairvoyant/airflow-scheduler-failover-controller</p>
+<p> </p>
+<p>The Airflow Scheduler Failover Controller (ASFC) is a mechanism that ensures that only one Scheduler instance is running in an Airflow Cluster at a time. This way you don't come across the issues we described in the "Motivation" section above.</p>
+<p>You will first need to startup the ASFC on each of the instances you want the scheduler to be running on. When you start up multiple instances of the ASFC one of them takes on the Active state and the other takes on a Standby state. There is a heart beat mechanism setup to track if the Active ASFC is still active. If the Active ASFC misses multiple heart beats, the Standby ASFC becomes active.</p>
+<p>The Active ASFC will poll every 10 seconds to see if the scheduler is running on the desired node. If it is not, the ASFC will try to restart the daemon. If the scheduler daemons still doesn't startup, the daemon is started on another node in the cluster.</p>
+<p> </p>
+<p>Airflow Scheduler Failover Controller (ASFC)，实现方式为：多个实例中只有一个处于active状态，处于active状态的实例会每10s检查一下scheduler进程是否存活并根据需要重启进程；</p>
+<p>坏消息是该方案和airflow新版本1.10不兼容</p>
+<h1>二 基于mesos+hdfs的airflow生产环境部署方案研究</h1>
+<h2>相同部分</h2>
+<p>和官方一致</p>
+<ul>
+<li>使用mysql数据库作为元数据库</li>
+</ul>
+<p>和官方不一致1</p>
+<ul>
+<li>所有对dags目录的修改同步到hdfs上，保证dags目录的高可用</li>
+<li>使用HDFS NFSGateway，将hdfs挂载到所有可能的scheduler节点上的，无论scheduler被部署在哪个节点上，都使用同一个dags目录</li>
+<li>使用nginx+marathon-lb向外暴露airflow的webserver，可以操作流程或查看流程执行情况等</li>
+</ul>
+<h2>1 airflow单实例容器部署方案</h2>
+<p>和官方不一致2</p>
+<ul>
+<li>webserver、scheduler、worker作为docker容器运行，在多个节点上只部署一个实例，由marathon保证可用性，由marathon-lb做服务发现</li>
+<li>worker使用LocalExecutor，即所有的任务都使用子进程执行
+<ul>
+<li>为了使容器内的worker的LocalExecutor能够访问外部集群功能，一种可行的方式是将各种组件的父目录挂载到容器中（比如各个组件目录为/app/java、/app/hive、/app/spark、/app/hdfs，则挂载/app目录到容器内），然后所有的任务脚本一开始统一引入执行一个初始化环境变量的公共脚本，设置各种Home和Path，然后就可以在容器内使用各种组件的客户端，比如java、hive、spark、hdfs等</li>
+</ul>
+</li>
+</ul>
+<h2>2 airflow分布式容器部署方案</h2>
+<p>和官方不一致2</p>
+<ul>
+<li>webserver和scheduler作为docker容器运行，在多个节点上只部署一个实例，由marathon保证可用性，由marathon-lb做服务发现</li>
+<li>worker使用MesosExecutor：</li>
+<ul>
+<li>直接在mesos agent上执行airflow任务，好处是可以保证具体任务能够访问到集群的功能，比如impala/flink，缺点是需要在所有mesos agent节点的宿主机上部署airflow</li>
+<li>在mesos agent上部署airflow worker的docker容器，然后在容器中执行airflow任务，好处是部署0成本，缺点是docker容器内只包含worker，不能使用外部集群的功能，不过这个缺点可以使用上一方案中LocalExecutor相同的方式解决</li>
+</ul>
+</ul>
+<p> </p>
+<p>airflow docker image：https://github.com/puckel/docker-airflow </p>
+<p> </p>
+</div>
+            </div>
+
+            <!-- Post Footer -->
+            <div class="post-footer">
+                <div class="post-navigation">
+                    <a href="../blog_cn.html" class="nav-button">← Back to Home</a>
+                    <a href="0213.html" class="nav-button">Next Post →</a>
+                </div>
+            </div>
+        </article>
+    </div>
+</body>
+</html>

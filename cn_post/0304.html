@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>spark task在executors上分布不均</title>
+    <link rel="stylesheet" href="../css/style3.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header Navigation -->
+        <div class="header">
+            <h1><a href="../blog_cn.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+        </div>
+
+        <!-- Post Container -->
+        <article class="post">
+            <!-- Post Header -->
+            <div class="post-header">
+                <h1>spark task在executors上分布不均</h1>
+                <div class="post-meta">
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📅</span>
+                        <span>December 20, 2018</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📖</span>
+                        <span>1 min read</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">👁️</span>
+                        <span>2246 views</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Post Content -->
+            <div class="post-content">
+                <div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<p>最近提交一个spark应用之后发现执行非常慢，点开spark web ui之后发现卡在一个job的一个stage上，这个stage有100000个task，但是绝大部分task都分配到两个executor上，其他executor非常空闲，what happened？</p>
+<p>查看spark task分配逻辑发现，有一个data locality即数据本地性的特性，详见 <a href="https://www.cnblogs.com/barneywill/p/10152497.html" target="_blank" title="【原创】大数据基础之Spark（4）RDD原理及代码解析">https://www.cnblogs.com/barneywill/p/10152497.html</a><br/>即会按照locality级别的优先级来分配任务，数据本地性的优先级是：PROCESS_LOCAL, NODE_LOCAL, NO_PREF, RACK_LOCAL, ANY，并且在优先级之间还有一个delay，</p>
+<blockquote>
+<p>spark.locality.wait</p>
+</blockquote>
+<p>进一步查看目前集群的部署结构，发现datanode和nodemanager并没有部署到一块，所以spark在分配NODE_LOCAL类型task的时候，只有两个executor满足条件，所以绝大部分任务都分配到这两个executor上，通过设置</p>
+<blockquote>
+<p>spark.locality.wait=0</p>
+</blockquote>
+<p>解决问题；</p>
+<p>ps：存储和计算（即datanode和nodemanager）要么完全分开独立部署，要么完全部署在一起，不要一部分分开部署，一部分部署在一起，如果一定要这样，不要开启数据本地化特性；</p>
+</div>
+            </div>
+
+            <!-- Post Footer -->
+            <div class="post-footer">
+                <div class="post-navigation">
+                    <a href="../blog_cn.html" class="nav-button">← Back to Home</a>
+                    <a href="0305.html" class="nav-button">Next Post →</a>
+                </div>
+            </div>
+        </article>
+    </div>
+</body>
+</html>

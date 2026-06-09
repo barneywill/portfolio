@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>yum离线环境安装软件</title>
+    <link rel="stylesheet" href="../css/style3.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header Navigation -->
+        <div class="header">
+            <h1><a href="../blog_cn.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+        </div>
+
+        <!-- Post Container -->
+        <article class="post">
+            <!-- Post Header -->
+            <div class="post-header">
+                <h1>yum离线环境安装软件</h1>
+                <div class="post-meta">
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📅</span>
+                        <span>February 15, 2019</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📖</span>
+                        <span>1 min read</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">👁️</span>
+                        <span>540 views</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Post Content -->
+            <div class="post-content">
+                <div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<p>首先查看系统版本号，然后根据版本号从 CentOS-7-x86_64-DVD-1708.iso 和 CentOS-7-x86_64-Everything-1708.iso 根据需要选择一个下载，我这里是7.4.1708</p>
+<blockquote>
+<p># cat /etc/redhat-release <br/>CentOS Linux release 7.4.1708 (Core) </p>
+<p># wget http://vault.centos.org/7.4.1708/isos/x86_64/CentOS-7-x86_64-DVD-1708.iso<br/># mkdir /mnt/centos7<br/># mount - o loop,ro CentOS-7-x86_64-DVD-1708.iso /mnt/centos7</p>
+</blockquote>
+<p>将之前的repo备份</p>
+<blockquote>
+<p># mkdir /etc/yum.repo.d/bak<br/># mv /etc/yum.repo.d/*.repo /etc/yum.repo.d/bak/</p>
+</blockquote>
+<p> </p>
+<p>以下任选其一</p>
+<h2>1 直接使用iso作为源</h2>
+<blockquote>
+<p># vi /etc/yum.repos.d/centos7_iso.repo<br/>[centos7-Server]<br/>name=ServerFault Answer<br/>baseurl=file:///mnt/centos7<br/>gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-7<br/>enabled=1<br/>gpgcheck=1</p>
+</blockquote>
+<h2>2 将iso拷贝到本地文件夹作为源</h2>
+<blockquote>
+<p># cp - a /mnt/centos7/ /yum/</p>
+<p># vi /etc/yum.repos.d/centos7_localhost.repo<br/>[centos7-Server]<br/>name=ServerFault Answer<br/>baseurl=file:///yum/centos7<br/>gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-7<br/>enabled=1<br/>gpgcheck=1</p>
+</blockquote>
+<h2>3 搭建nginx或httpd或ftpd服务作为局域网源</h2>
+<blockquote>
+<p># vi /etc/yum.repos.d/centos7_localnetwork.repo<br/>[centos7-Server]<br/>name=ServerFault Answer<br/>baseurl=http://192.168.0.1/<br/>gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-7<br/>enabled=1<br/>gpgcheck=1</p>
+</blockquote>
+<p>其中nginx配置如下（增加一个location）</p>
+<blockquote>
+<p> location / {<br/>            root   /yum/centos7;<br/>			autoindex on;<br/>        }</p>
+</blockquote>
+<p> </p>
+<p>测试</p>
+<blockquote>
+<p># yum repolist<br/># yum install $anything</p>
+</blockquote>
+<p> </p>
+</div>
+            </div>
+
+            <!-- Post Footer -->
+            <div class="post-footer">
+                <div class="post-navigation">
+                    <a href="../blog_cn.html" class="nav-button">← Back to Home</a>
+                    <a href="0228.html" class="nav-button">Next Post →</a>
+                </div>
+            </div>
+        </article>
+    </div>
+</body>
+</html>

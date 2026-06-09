@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>编程基础之Jekins</title>
+    <link rel="stylesheet" href="../css/style3.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header Navigation -->
+        <div class="header">
+            <h1><a href="../blog_cn.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+        </div>
+
+        <!-- Post Container -->
+        <article class="post">
+            <!-- Post Header -->
+            <div class="post-header">
+                <h1>编程基础之Jekins</h1>
+                <div class="post-meta">
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📅</span>
+                        <span>August 07, 2019</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📖</span>
+                        <span>1 min read</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">👁️</span>
+                        <span>492 views</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Post Content -->
+            <div class="post-content">
+                <div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<p>Jenkins 2.164.2</p>
+<p><picture>
+  <source srcset="../img/1509647-20190507182536828-1807469158.webp" type="image/webp">
+  <img alt="" src="../img/1509647-20190507182536828-1807469158.png">
+</picture></p>
+<p>官方：https://jenkins.io</p>
+<p> </p>
+<h1>一 简介 </h1>
+<p>Build great things at any scale</p>
+<p>The leading open source automation server, Jenkins provides hundreds of plugins to support building, deploying and automating any project.</p>
+<p>jenkins支持数百种插件支持构建、部署和自动化；</p>
+<p>Jenkins is a self-contained, open source automation server which can be used to automate all sorts of tasks related to building, testing, and delivering or deploying software.</p>
+<p>Jenkins can be installed through native system packages, Docker, or even run standalone by any machine with a Java Runtime Environment (JRE) installed.</p>
+<p> </p>
+<p>任何公司都面临项目部署的问题，而项目部署抽象起来包括：1）指定分支和版本；2）从代码库下载代码；3）编译和打包；4）发布到远程服务器；5）重启应用；6）回滚；</p>
+<p>发布到远程服务器的根据需要可以是jar、war、docker image或文件夹；</p>
+<p>jenkins让你通过插件、配置、脚本的方式完成上述的一切；</p>
+<p> </p>
+<h1>二 安装</h1>
+<div class="cnblogs_code">
+<pre>sudo wget -O /etc/yum.repos.d/jenkins.repo https://pkg.jenkins.io/redhat-stable/<span style="color: rgba(0, 0, 0, 1)">jenkins.repo
+sudo rpm </span>--<span style="color: rgba(0, 0, 255, 1)">import</span> https://pkg.jenkins.io/redhat-stable/<span style="color: rgba(0, 0, 0, 1)">jenkins.io.key
+yum install jenkins</span></pre>
+</div>
+<p>启动</p>
+<div class="cnblogs_code">
+<pre><span style="color: rgba(0, 0, 0, 1)">systemctl start jenkins
+systemctl enable jenkins
+systemctl status jenkins</span></pre>
+</div>
+<p>启动之后访问</p>
+<blockquote>
+<p>http://localhost:8080</p>
+</blockquote>
+<p>如果默认端口8080有冲突，可以修改</p>
+<div class="cnblogs_code">
+<pre>vi /etc/init.d/<span style="color: rgba(0, 0, 0, 1)">jenkins
+export JENKINS_PORT</span>=8080</pre>
+</div>
+<p>首次登录随机密码在这里</p>
+<blockquote>
+<p>/var/lib/jenkins/secrets/initialAdminPassword</p>
+</blockquote>
+<p>按照向导操作即可；</p>
+<h1>三 使用</h1>
+<h2>常用插件</h2>
+<p>Git （代码库）</p>
+<p>Maven （构建和打包）</p>
+<p>Publish Over SSH （远程拷贝文件并执行命令）</p>
+<p>SSH （远程执行命令）</p>
+<p>Zentimestamp （支持 ${BUILD_TIMESTAMP})</p>
+<p>Extended Choice Parameter Plug-In （用于回滚）</p>
+<h2>创建一个新的项目</h2>
+<p>1 先在Credentials中增加git账号和服务器ssh账号及密码；</p>
+<p>2 然后在Manage Jenkins - Configure System中配置ssh服务器相关；</p>
+<p>3 创建项目</p>
+<p>3.1 New Item</p>
+<p>3.2 Freestyle project</p>
+<p>3.3 Config</p>
+<p>3.3.1 Source Code Management</p>
+<p>  添加git repository url并选择刚才添加的git账号；</p>
+<p>3.3.2 Build</p>
+<p>  Invoke top-level Maven targets （执行maven goal）</p>
+<p>  Execute shell （本地执行shell）</p>
+<p>  Execute shell script on remote host using ssh （远程执行shell）</p>
+<p>3.3.3 Post-build Actions</p>
+<p>  Send build artifacts over SSH （远程拷贝文件并执行shell）</p>
+<p>这样一个简单的项目部署就完成了</p>
+<p> </p>
+<p>在shell中可以使用很多jenkins的环境变量，比如 WORKSPACE，JOB_NAME，BUILD_TAG，GIT_COMMIT等，详见：</p>
+<p>http://localhost:8080/env-vars.html/</p>
+<h2>目录结构</h2>
+<p>jenkins目录位于</p>
+<blockquote>
+<p>/var/lib/jenkins</p>
+</blockquote>
+<p>workspace目录位于</p>
+<blockquote>
+<p>/var/lib/jenkins/workspace</p>
+</blockquote>
+<p>job目录为</p>
+<blockquote>
+<p>/var/lib/jenkins/workspace/${JOB_NAME}</p>
+</blockquote>
+<p>代码下载和编译打包都在job目录中，比如target目录；</p>
+<p> </p>
+<p>参考：<br/>https://github.com/jenkinsci/docker/blob/master/README.md</p>
+<p>https://pkg.jenkins.io/redhat-stable/</p>
+<p> </p>
+</div>
+            </div>
+
+            <!-- Post Footer -->
+            <div class="post-footer">
+                <div class="post-navigation">
+                    <a href="../blog_cn.html" class="nav-button">← Back to Home</a>
+                    <a href="0094.html" class="nav-button">Next Post →</a>
+                </div>
+            </div>
+        </article>
+    </div>
+</body>
+</html>

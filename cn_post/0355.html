@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Oozie vs Azkaban</title>
+    <link rel="stylesheet" href="../css/style3.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header Navigation -->
+        <div class="header">
+            <h1><a href="../blog_cn.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+        </div>
+
+        <!-- Post Container -->
+        <article class="post">
+            <!-- Post Header -->
+            <div class="post-header">
+                <h1>Oozie vs Azkaban</h1>
+                <div class="post-meta">
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📅</span>
+                        <span>November 02, 2018</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📖</span>
+                        <span>1 min read</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">👁️</span>
+                        <span>1320 views</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Post Content -->
+            <div class="post-content">
+                <div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<h1>概括</h1>
+<p>Azkaban是一个非常轻量的开源调度框架，适合二次开发，但是无法直接用于生产环境，存在致命缺陷（比如AzkabanWebServer是单点，1年多时间没有修复），在一些情景下的行为简单粗暴（比如重启AzkabanExecutorServer会导致该server上正在运行的所有流程fail），很多时候需要人工干预，要达到生产环境的可靠性级别，至少大量二次开发，并且官方代码更新很快，合并代码有很大冲突风险，适合于一些对可靠性要求不高可以快速上手的小公司，不建议使用；</p>
+<p> </p>
+<p>Oozie作为apache顶级项目，使用广泛，功能丰富，代码质量高，成熟可靠，代码和部署相对复杂一点，建议使用；</p>
+<p> </p>
+<table class="confluenceTable">
+<tbody>
+<tr>
+<td class="confluenceTd">
+<p><strong> </strong></p>
+</td>
+<td class="confluenceTd">
+<p><strong>Oozie</strong></p>
+</td>
+<td class="confluenceTd">
+<p><strong>Azkaban</strong></p>
+</td>
+</tr>
+<tr>
+<td class="confluenceTd">
+<p><strong>版本</strong></p>
+</td>
+<td class="confluenceTd">
+<p><strong>4.3</strong></p>
+</td>
+<td class="confluenceTd">
+<p><strong>3.45</strong></p>
+</td>
+</tr>
+<tr>
+<td class="confluenceTd">
+<p><strong>开发语言</strong></p>
+</td>
+<td class="confluenceTd">
+<p>Java</p>
+</td>
+<td class="confluenceTd">
+<p>Java</p>
+</td>
+</tr>
+<tr>
+<td class="confluenceTd">
+<p><strong>任务配置</strong></p>
+</td>
+<td class="confluenceTd">
+<p>Xml文件（存放在hdfs）</p>
+<p>Properties文件</p>
+</td>
+<td class="confluenceTd">
+<p>Properties文件（打成Zip，上传后存放在DB）</p>
+</td>
+</tr>
+<tr>
+<td class="confluenceTd">
+<p><strong>添加任务</strong></p>
+</td>
+<td class="confluenceTd">
+<p>hdfs上传Xml文件后client通过Properties文件提交</p>
+</td>
+<td class="confluenceTd">
+<p>web上传Zip</p>
+<p>AJAX上传Zip</p>
+</td>
+</tr>
+<tr>
+<td class="confluenceTd">
+<p><strong>任务运行</strong></p>
+</td>
+<td class="confluenceTd">
+<p>Yarn</p>
+</td>
+<td class="confluenceTd">
+<p>AzkabanExecutorServer执行</p>
+</td>
+</tr>
+<tr>
+<td class="confluenceTd">
+<p><strong>分配粒度</strong></p>
+</td>
+<td class="confluenceTd">
+<p>任务</p>
+</td>
+<td class="confluenceTd">
+<p>工作流</p>
+</td>
+</tr>
+<tr>
+<td class="confluenceTd">
+<p><strong>失败重试</strong></p>
+</td>
+<td class="confluenceTd">
+<p>支持</p>
+</td>
+<td class="confluenceTd">
+<p>支持</p>
+</td>
+</tr>
+<tr>
+<td class="confluenceTd">
+<p><strong>扩展性</strong></p>
+</td>
+<td class="confluenceTd">
+<p>好，支持服务扩展、任务扩展</p>
+</td>
+<td class="confluenceTd">
+<p>好，支持插件化、任务扩展</p>
+</td>
+</tr>
+<tr>
+<td class="confluenceTd">
+<p><strong>接口</strong></p>
+</td>
+<td class="confluenceTd">
+<p>命令行</p>
+<p>Java API</p>
+</td>
+<td class="confluenceTd">
+<p>网页</p>
+<p>AJAX API</p>
+</td>
+</tr>
+<tr>
+<td class="confluenceTd">
+<p><strong>支持任务类型</strong></p>
+</td>
+<td class="confluenceTd">
+<p>HDFS、MapReduce、Java、Shell、SSH、Pig、Hive、E-Mail、Sub-Workflow、Sqoop、Distcp</p>
+</td>
+<td class="confluenceTd">
+<p>Shell、Java</p>
+<p>其他需要插件支持</p>
+</td>
+</tr>
+<tr>
+<td class="confluenceTd">
+<p><strong>部署</strong></p>
+</td>
+<td class="confluenceTd">
+<p>相对复杂</p>
+</td>
+<td class="confluenceTd">
+<p>简单</p>
+</td>
+</tr>
+<tr>
+<td class="confluenceTd">
+<p><strong>GUI</strong></p>
+</td>
+<td class="confluenceTd">
+<p>开源Hue提供GUI方式编辑流程定义</p>
+</td>
+<td class="confluenceTd">
+<p>不提供GUI编辑流程定义</p>
+</td>
+</tr>
+<tr>
+<td class="confluenceTd">
+<p><strong>可靠性</strong></p>
+</td>
+<td class="confluenceTd">
+<p>可靠</p>
+<p>通过Zookeeper实现HA</p>
+</td>
+<td class="confluenceTd">
+<p>不可靠</p>
+<p>AzkabanWebServer是单点，17年3月社区就提到该问题，但1年多过后还没有修复</p>
+<p><a href="https://github.com/azkaban/azkaban/issues/952" rel="noopener nofollow">https://github.com/azkaban/azkaban/issues/952</a></p>
+</td>
+</tr>
+<tr>
+<td class="confluenceTd">
+<p><strong>重启影响</strong></p>
+</td>
+<td class="confluenceTd">
+<p>无</p>
+</td>
+<td class="confluenceTd">
+<p>重启AzkabanExecutorServer会导致该server上正在运行的所有流程fail，还可能需要刷新executors状态</p>
+</td>
+</tr>
+<tr>
+<td class="confluenceTd">
+<p><strong>代码质量</strong></p>
+</td>
+<td class="confluenceTd">
+<p>非常好</p>
+</td>
+<td class="confluenceTd">
+<p>一般，并且代码中很多TODO</p>
+</td>
+</tr>
+<tr>
+<td class="confluenceTd">
+<p><strong>代码更新</strong></p>
+</td>
+<td class="confluenceTd">
+<p>慢</p>
+</td>
+<td class="confluenceTd">
+<p>很快，小版本很多</p>
+</td>
+</tr>
+<tr>
+<td class="confluenceTd">
+<p><strong>任务重复运行风险</strong></p>
+</td>
+<td class="confluenceTd">
+<p>无</p>
+</td>
+<td class="confluenceTd">
+<p>有</p>
+</td>
+</tr>
+<tr>
+<td class="confluenceTd" colspan="1">
+<p><strong>SLA</strong></p>
+</td>
+<td class="confluenceTd" colspan="1">
+<p>支持</p>
+</td>
+<td class="confluenceTd" colspan="1">
+<p>支持</p>
+</td>
+</tr>
+<tr>
+<td class="confluenceTd">
+<p><strong>监控</strong></p>
+</td>
+<td class="confluenceTd">
+<p>web-services API</p>
+<p>instrumentation log</p>
+</td>
+<td class="confluenceTd">
+<p>不支持</p>
+</td>
+</tr>
+<tr>
+<td class="confluenceTd">
+<p><strong>流程状态回调</strong></p>
+</td>
+<td class="confluenceTd">
+<p>JMS</p>
+<p>或</p>
+<p>oozie.coord.action.notification.url</p>
+<p><a href="http://oozie.wf" rel="noopener nofollow">oozie.wf</a>.workflow.notification.url</p>
+<p><a href="http://oozie.wf" rel="noopener nofollow">oozie.wf</a>.action.notification.url</p>
+</td>
+<td class="confluenceTd">
+<p>不支持</p>
+<p> </p>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+            </div>
+
+            <!-- Post Footer -->
+            <div class="post-footer">
+                <div class="post-navigation">
+                    <a href="../blog_cn.html" class="nav-button">← Back to Home</a>
+                    <a href="0356.html" class="nav-button">Next Post →</a>
+                </div>
+            </div>
+        </article>
+    </div>
+</body>
+</html>

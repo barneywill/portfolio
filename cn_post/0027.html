@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>logstash消费kafka延迟</title>
+    <link rel="stylesheet" href="../css/style3.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header Navigation -->
+        <div class="header">
+            <h1><a href="../blog_cn.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+        </div>
+
+        <!-- Post Container -->
+        <article class="post">
+            <!-- Post Header -->
+            <div class="post-header">
+                <h1>logstash消费kafka延迟</h1>
+                <div class="post-meta">
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📅</span>
+                        <span>May 18, 2022</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📖</span>
+                        <span>1 min read</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">👁️</span>
+                        <span>512 views</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Post Content -->
+            <div class="post-content">
+                <div class="blogpost-body cnblogs-markdown" id="cnblogs_post_body">
+<h1 id="背景">背景</h1>
+<p>logstash集群，每个节点服务器配置和任务配置相同，但是其中一个节点发生比较大的消费延迟</p>
+<h1 id="定位">定位</h1>
+<p>观察发现出问题的节点负载比其他节点要低很多，进一步对比logstash进程内线程的情况，发现出问题的节点只有4个worker进程，而正常节点有16个worker进程</p>
+<p><picture>
+  <source srcset="../img/1509647-20220518174622828-1677955164.webp" type="image/webp">
+  <img alt="" src="../img/1509647-20220518174622828-1677955164.png">
+</picture></p>
+<p>进一步排查发现问题节点的logstash配置与其他节点不同，</p>
+<blockquote>
+<p>/etc/logstash/logstash.yml<br/>
+pipeline.workers: 4</p>
+</blockquote>
+<p>这个配置用来设置worker数量，默认使用cpu的核数，服务器配置为16核，实际只用到了4核，只用到了25%的CPU，所以出现消费延迟</p>
+<h1 id="总结">总结</h1>
+<p>Logstash集群没有统一做集群配置管理，导致出现这种问题，除了这个参数之外，还有一些其他的参数也可能影响消费性能，比如pipeline.batch.size</p>
+<h1 id="其他官方参考">其他官方参考</h1>
+<p><a href="https://www.elastic.co/guide/en/logstash/6.8/performance-troubleshooting.html" rel="noopener nofollow" target="_blank">Logstash调优</a></p>
+<p><a href="https://www.elastic.co/guide/en/logstash/6.8/plugins-outputs-webhdfs.html" rel="noopener nofollow" target="_blank">hdfs插件调优</a></p>
+<p><a href="https://www.elastic.co/guide/en/logstash/6.8/plugins-outputs-elasticsearch.html" rel="noopener nofollow" target="_blank">es插件调优</a></p>
+<p><a href="https://www.elastic.co/guide/en/logstash/current/ts-plugins.html" rel="noopener nofollow" target="_blank">常见问题</a></p>
+</div>
+            </div>
+
+            <!-- Post Footer -->
+            <div class="post-footer">
+                <div class="post-navigation">
+                    <a href="../blog_cn.html" class="nav-button">← Back to Home</a>
+                    <a href="0028.html" class="nav-button">Next Post →</a>
+                </div>
+            </div>
+        </article>
+    </div>
+</body>
+</html>

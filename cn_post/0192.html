@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>opensuse leap 15</title>
+    <link rel="stylesheet" href="../css/style3.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header Navigation -->
+        <div class="header">
+            <h1><a href="../blog_cn.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+        </div>
+
+        <!-- Post Container -->
+        <article class="post">
+            <!-- Post Header -->
+            <div class="post-header">
+                <h1>opensuse leap 15</h1>
+                <div class="post-meta">
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📅</span>
+                        <span>March 05, 2019</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📖</span>
+                        <span>2 min read</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">👁️</span>
+                        <span>1323 views</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Post Content -->
+            <div class="post-content">
+                <div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<h1>装机</h1>
+<p>装机之后执行</p>
+<blockquote>
+<p>sudo zypper ar - fc https://mirrors.aliyun.com/opensuse/distribution/leap/15.0/repo/oss openSUSE-Aliyun-OSS<br/>sudo zypper ar - fc https://mirrors.aliyun.com/opensuse/distribution/leap/15.0/repo/non-oss openSUSE-Aliyun-NON-OSS<br/>sudo zypper ar - fc https://mirrors.aliyun.com/opensuse/update/leap/15.0/oss openSUSE-Aliyun-UPDATE-OSS<br/>sudo zypper ar - fc https://mirrors.aliyun.com/opensuse/update/leap/15.0/non-oss openSUSE-Aliyun-UPDATE-NON-OSS<br/>sudo zypper ar - fc https://mirrors.aliyun.com/packman/openSUSE_Leap_15.0 openSUSE-Aliyun-Packman<br/>sudo zypper ar - fc https://download.opensuse.org/repositories/home:/opensuse_zh/openSUSE_Leap_15.0 openSUSE-zh<br/>sudo zypper ar - fc https://download.opensuse.org/repositories/M17N/openSUSE_Leap_15.0 M17N<br/>sudo zypper ar - fc https://download.videolan.org/pub/SuSE/Leap_15.0 VLC<br/>sudo zypper ar - f https://download.nvidia.com/opensuse/leap/15.0 NVIDIA</p>
+<p>sudo zypper ar http://download.opensuse.org/repositories/system:/snappy/openSUSE_Leap_15.0/ snappy</p>
+<p>#其他版本将15.0替换即可，比如15.1</p>
+<p>sudo zypper ref</p>
+<p>sudo zypper inr (install-new-recommends)</p>
+<p>sudo zypper in snapd</p>
+<p>sudo systemctl start snapd.socket</p>
+<p>sudo snap install spotify (安装spotify）</p>
+<p>sudo snap install bcloud --devmode --beta （安装百度网盘）</p>
+<p>sudo snap install xmind （安装xmind）</p>
+<p> </p>
+<p>sudo zypper in libQtWebKit4</p>
+<p>sudo zypper in fcitx, fcitx-cloudpinyin, fcitx-googlepinyin, fcitx-libpinyin, fcitx-sunpinyin （google拼音）<br/>sudo zypper in chromium （chrome）<br/>sudo zypper in wps-office （wps）<br/>sudo zypper in netease-cloud-music （网易云音乐）</p>
+<p>sudo zypper in p7zip （压缩解压软件）</p>
+<p>sudo zypper in shutter （截图软件）<br/>sudo zypper in vlc (播放软件）</p>
+<p>sudo zypper in yakuake rxvt-unicode gvim （一键呼出终端）</p>
+<p>sudo zypper in wine （安装后安装迅雷等软件）</p>
+<p># 安装wine后，打开应用 Browse C:\ Drive，其中C:\Windows\Fonts下是空的，需要从windows电脑上找到同名文件夹拷贝一些字体文件过来，wine才能正常显示中文</p>
+<p># vlc lib<br/>sudo zypper in ffmpeg-tools<br/>sudo zypper in vlc-codecs</p>
+<p>#一键安装 <a href="https://www.opensuse-community.org/" rel="noopener nofollow">https://www.opensuse-community.org/</a></p>
+<p> </p>
+<p>#如果重启找不到windows引导，可以执行如下命令修复</p>
+<p>sudo grub2-mkconfig - o /boot/grub2/grub.cfg</p>
+<p> </p>
+<p>#禁用baloo</p>
+<p>mv /usr/bin/baloo_file_extractor /usr/bin/baloo_file_extractor.orig</p>
+<p>ln - s /bin/true /usr/bin/baloo_file_extractor</p>
+<p> </p>
+<p>另外qq、virtualbox、xmind、百度网盘等工具都有linux版本，可到官网下载。</p>
+<p> </p>
+<p>好用的widget：Application Dashbard、Pager、Show Desktop、Analog Clock、Launchpad Plasma、Event Calendar</p>
+<p> </p>
+<p>#休眠</p>
+<p># <code class="bash functions">echo</code> <code class="bash plain">“disk” &gt; </code><code class="bash plain">/sys/power/state</code></p>
+</blockquote>
+<p> shutter自定义快捷键</p>
+<p><img alt="" src="https://img2020.cnblogs.com/blog/1509647/202007/1509647-20200725234417520-1913840291.png"/></p>
+<p>自动壁纸更换</p>
+<p><img alt="" src="https://img2020.cnblogs.com/blog/1509647/202007/1509647-20200726015604700-265554779.png"/></p>
+<p> </p>
+<p> 同时注意在fcitx configuration中要取消 Only Show Current Language</p>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201903/1509647-20190305224759812-1478217156.png"/></p>
+<p>否则中文输入法显示不出来</p>
+<p> </p>
+<p>股票：http://jstock.org/</p>
+<p> </p>
+<h2>zypper常用命令</h2>
+<blockquote>
+<p>zypper lr - d<br/>zypper ar $url $name<br/>zypper rr $name<br/>zypper se $name<br/>zypper info $name<br/>zypper in $name<br/>zypper rm $name</p>
+</blockquote>
+<p> </p>
+<h1>kde 快捷键</h1>
+<p>Ctrl+F12 返回桌面<br/>Ctrl+F8 显示桌面网格<br/>Ctrl+F1 第一个桌面<br/>Ctrl+F2 第二个桌面<br/>...<br/>Ctrl+F9 显示当前桌面所有应用<br/>Ctrl+F10 显示全部桌面所有应用<br/>Ctrl+Esc 显示系统活动</p>
+<p>Ctrl+Alt+L 锁屏</p>
+<p>Alt+Tab 在应用间切换<br/>Alt+Shift+Tab 反向<br/>Alt+` 在一个应用的不同窗口间切换<br/>Alt+Shift+` 反向<br/>Alt+F1 显示系统菜单<br/>Alt+F3 显示窗口操作<br/>Alt+F4 关闭窗口</p>
+<p>F11 全屏、退出全屏</p>
+<h2>Dolphin快捷键</h2>
+<p>F3 打开左右双栏</p>
+<p>F4 打开终端</p>
+<h2>快速启动Konsole</h2>
+<p>System Settings-&gt;Shortcuts-&gt;Custom Shortcuts-&gt;Examples-&gt;Run Konsole</p>
+<p>Ctrl+Alt+T 快速启动Konsole</p>
+<p> </p>
+<h2>鼠标单击-&gt;双击</h2>
+<p>Configure Desktop-&gt;Input Devices-&gt;Mouse-&gt;General-&gt;Double Click to open files or folders</p>
+<p> </p>
+<h2>kde桌面mac化</h2>
+<p>sudo zypper in latte-dock</p>
+<p>System Settings - &gt; Workspace Theme - &gt; Desktop Theme (MacBreeze Shadowless)</p>
+<p>System Settings - &gt; Workspace Theme - &gt; Look And Feel (McMojave-light)</p>
+<p>System Settings - &gt; Workspace Theme - &gt; Cursor Theme (McMojave Cursor)</p>
+<p>System Settings - &gt; Icons - &gt; Icons (McMojave-circle)</p>
+<p>Desktop - &gt; Add Panle - &gt; Aplication Menu Bar-&gt; Add Widget (Digital Clock / System Tray / Lock/Logout / Application Launcher / Application Title)</p>
+<p>注意在靠右的Widget左边要 Add Spacer</p>
+<p> </p>
+<h2>安装其他桌面</h2>
+<p>sudo zypper in - t pattern xfce</p>
+<p>sudo zypper in i3 dmenu</p>
+<p>yast2 - &gt; software management - &gt; view - &gt; patterns</p>
+<p><img alt="" src="https://img2020.cnblogs.com/blog/1509647/202007/1509647-20200725232453896-630334050.png"/></p>
+<h2>修改默认启动的桌面</h2>
+<p>所有的桌面都在/usr/share/xsessions下，这里有两个link来控制默认桌面</p>
+<blockquote>
+<p>ls - l /usr/share/xsessions <br/>total 12<br/>lrwxrwxrwx 1 root root   42 Mar 28  2019 default.desktop - &gt; /etc/alternatives/default-xsession.desktop<br/>-rw-r--r-- 1 root root 5465 Apr  2  2019 xfce.desktop</p>
+<p>ln - s /usr/share/xsessions/xfce.desktop /etc/alternatives/default-xsession.desktop</p>
+</blockquote>
+<h2>kde支持各种自定义</h2>
+<p>wallpaper下载</p>
+<p>widget下载</p>
+<p>look and feel下载</p>
+<p>desktop theme下载</p>
+<p>cursor theme 下载</p>
+<p>icons下载</p>
+<p> </p>
+<h2>kde + i3wm</h2>
+<p>KDEWM=i3wm</p>
+<p>参考：<a href="https://userbase.kde.org/Tutorials/Using_Other_Window_Managers_with_Plasma" rel="noopener nofollow">https://userbase.kde.org/Tutorials/Using_Other_Window_Managers_with_Plasma</a></p>
+<p> </p>
+<p>备注：比较新的电脑和硬件如果安装leap后发现一些问题，改用tumbleweed版本吧，leap 15.2用的内核是5.3，tumbleweed用的内核已经到5.9了，本人自测新电脑amd ryzen 7 4800使用leap15.2有各种问题：显示器分辨率太低，sleep之后黑屏，不定期出现屏幕扩展提示，外接typec接口无法扩展屏幕，安装tumbleweed后一切问题解决，键盘上的各种快捷键都可用．</p>
+<p> </p>
+</div>
+            </div>
+
+            <!-- Post Footer -->
+            <div class="post-footer">
+                <div class="post-navigation">
+                    <a href="../blog_cn.html" class="nav-button">← Back to Home</a>
+                    <a href="0193.html" class="nav-button">Next Post →</a>
+                </div>
+            </div>
+        </article>
+    </div>
+</body>
+</html>

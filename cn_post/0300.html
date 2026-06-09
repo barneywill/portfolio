@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>spark sql limit实现原理</title>
+    <link rel="stylesheet" href="../css/style3.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header Navigation -->
+        <div class="header">
+            <h1><a href="../blog_cn.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+        </div>
+
+        <!-- Post Container -->
+        <article class="post">
+            <!-- Post Header -->
+            <div class="post-header">
+                <h1>spark sql limit实现原理</h1>
+                <div class="post-meta">
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📅</span>
+                        <span>December 21, 2018</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📖</span>
+                        <span>1 min read</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">👁️</span>
+                        <span>3666 views</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Post Content -->
+            <div class="post-content">
+                <div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<p>之前讨论过hive中limit的实现，详见 <a href="https://www.cnblogs.com/barneywill/p/10109217.html" target="_blank" title="【原创】经验分享（2）为什么hive在大表上加条件后执行limit很慢">https://www.cnblogs.com/barneywill/p/10109217.html</a><br/>下面看spark sql中limit的实现，首先看执行计划：</p>
+<blockquote>
+<p>spark-sql&gt; explain select * from test1 limit 10;<br/>== Physical Plan ==<br/>CollectLimit 10<br/>+- HiveTableScan [id#35], MetastoreRelation temp, test1<br/>Time taken: 0.201 seconds, Fetched 1 row(s)</p>
+</blockquote>
+<p>limit对应的CollectLimit，对应的实现类是</p>
+<p>org.apache.spark.sql.execution.CollectLimitExec</p>
+<div class="cnblogs_code">
+<pre><span style="color: rgba(0, 0, 255, 1)">case</span> <span style="color: rgba(0, 0, 255, 1)">class</span> CollectLimitExec(limit: Int, child: SparkPlan) <span style="color: rgba(0, 0, 255, 1)">extends</span><span style="color: rgba(0, 0, 0, 1)"> UnaryExecNode {
+...
+  </span><span style="color: rgba(0, 0, 255, 1)">protected</span> override def doExecute(): RDD[InternalRow] =<span style="color: rgba(0, 0, 0, 1)"> {
+    val locallyLimited </span>=<span style="color: rgba(0, 0, 0, 1)"> child.execute().mapPartitionsInternal(_.take(limit))
+    val shuffled </span>= <span style="color: rgba(0, 0, 255, 1)">new</span><span style="color: rgba(0, 0, 0, 1)"> ShuffledRowRDD(
+      ShuffleExchange.prepareShuffleDependency(
+        locallyLimited, child.output, SinglePartition, serializer))
+    shuffled.mapPartitionsInternal(_.take(limit))
+  }</span></pre>
+</div>
+<p>可见实现非常简单，首先调用SparkPlan.execute得到结果的RDD，然后从每个partition中取前limit个row得到一个新的RDD，然后再将这个新的RDD变成一个分区，然后再取前limit个，这样就得到最终的结果。</p>
+<p> </p>
+</div>
+            </div>
+
+            <!-- Post Footer -->
+            <div class="post-footer">
+                <div class="post-navigation">
+                    <a href="../blog_cn.html" class="nav-button">← Back to Home</a>
+                    <a href="0301.html" class="nav-button">Next Post →</a>
+                </div>
+            </div>
+        </article>
+    </div>
+</body>
+</html>

@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ambari 5 - 通过Ambari部署Hue</title>
+    <link rel="stylesheet" href="../css/style3.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header Navigation -->
+        <div class="header">
+            <h1><a href="../blog_cn.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+        </div>
+
+        <!-- Post Container -->
+        <article class="post">
+            <!-- Post Header -->
+            <div class="post-header">
+                <h1>Ambari 5 - 通过Ambari部署Hue</h1>
+                <div class="post-meta">
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📅</span>
+                        <span>January 29, 2019</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📖</span>
+                        <span>3 min read</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">👁️</span>
+                        <span>3181 views</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Post Content -->
+            <div class="post-content">
+                <div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<p>ambari2.7.3（hdp3.1） 安装 hue4.2</p>
+<p>ambari的hdp中原生不支持hue安装，下面介绍如何通过添加service的方式使ambari支持hue安装：</p>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201901/1509647-20190129120203202-201034162.png"/></p>
+<p>官方：http://gethue.com/</p>
+<p>Hue is an open source Workbench for developing and accessing Data Apps.</p>
+<h1>一 安装SERVICE</h1>
+<p>第三方service：https://github.com/EsharEditor/ambari-hue-service</p>
+<h2>1 下载</h2>
+<blockquote>
+<p>VERSION=`hdp-select status hadoop-client | sed 's/hadoop-client - \([0-9]\.[0-9]\).*/\1/'`<br/>rm -rf /var/lib/ambari-server/resources/stacks/HDP/$VERSION/services/HUE  <br/>sudo git clone https://github.com/EsharEditor/ambari-hue-service.git /var/lib/ambari-server/resources/stacks/HDP/$VERSION/services/HUE</p>
+</blockquote>
+<h2>2 修改</h2>
+<p>第三方service中安装的是hue3.11，改为4.2，需要如下改动：</p>
+<blockquote>
+<p># cd /var/lib/ambari-server/resources/stacks/HDP/3.1/services/HUE<br/># sed -i 's/3.11.0/4.2.0/g' metainfo.xml<br/># sed -i 's/3.11.0/4.2.0/g' README.md<br/># sed -i 's/3.11.0/4.2.0/g' package/scripts/params.py<br/># sed -i 's/3.11.0/4.2.0/g' package/scripts/setup_hue.py</p>
+<p> </p>
+<p># vi package/scripts/params.py</p>
+<p>--modify line</p>
+<p> 32 #download_url = 'cat /etc/yum.repos.d/HDP.repo | grep "baseurl" | awk -F \'=\' \'{print $2"hue/hue-4.2.0.tgz"}\''<br/>     33 download_url = 'echo "http://gethue.com/downloads/releases/4.2.0/hue-4.2.0.tgz"'</p>
+<p>    187 webhdfs_url = format('http://' + hdfs_httpfs_host + ':50070/webhdfs/v1')</p>
+<p>--without yarn</p>
+<p>:234,256s/^/#/g</p>
+<p> </p>
+<p># vi package/scripts/common.py</p>
+<p>--add line 59,63,64</p>
+<p> 58 Execute('tar -zxvf hue.tgz -C {0} &amp;&amp; rm -f hue.tgz'.format(params.hue_install_ dir))<br/>     59   Execute('mkdir -p {0}'.format(params.hue_dir))<br/>     60   # Ensure all Hue files owned by hue     61   Execute('chown -R {0}:{1} {2}'.format(params.hue_user,params.hue_group,params.        hue_dir))<br/>     62   Execute('ln -s {0} /usr/hdp/current/hue-server'.format(params.hue_dir))<br/>     63   Execute('rm -rf {0}/*'.format(params.hue_dir))<br/>     64   Execute('cd /usr/local/hue-4.2.0 &amp;&amp; make install')</p>
+<p>--comment line</p>
+<p>     90     #services_configurations['httpfs-site'] = {}<br/>     91     #services_configurations['httpfs-site']['httpfs.proxyuser.hue.groups'] = '*'<br/>     92     #services_configurations['httpfs-site']['httpfs.proxyuser.hue.hosts'] = '*'</p>
+<p> </p>
+<p># vi package/scripts/setup_hue.py</p>
+<p>--comment line</p>
+<p>     26   #Logger.info("Creating symlinks /usr/hdp/current/hadoop-client/lib/hue-plugins        -4.2.0-SNAPSHOT.jar")<br/>     27   #Link("{0}/desktop/libs/hadoop/java-lib/*".format(params.hue_dir),to = "/usr/h        dp/current/hadoop-client/lib")</p>
+<p> </p>
+<p># vi package/files/configs.sh</p>
+<p>     39 PASSWD="admin"</p>
+</blockquote>
+<p>注意这一步</p>
+<blockquote>
+<p>download_url = 'echo "http://gethue.com/downloads/releases/4.2.0/hue-4.2.0.tgz"'</p>
+</blockquote>
+<p>hue-4.2.0.tgz需要手工下载并放到一个服务器可访问的url上（比如本地的nginx），同时修改这里的download_url</p>
+<h1>二 在ambari中部署</h1>
+<h2>1 添加用户</h2>
+<blockquote>
+<p>useradd hue</p>
+</blockquote>
+<h2>2 页面部署安装hue</h2>
+<p>安装后的hue目录位于/usr/local/hue/</p>
+<h2>3 修改配置</h2>
+<p>1）修改数据库配置</p>
+<blockquote>
+<p># vi desktop/conf/hue.ini</p>
+<p>  [[database]]</p>
+<p>    # Database engine is typically one of:</p>
+<p>    # postgresql_psycopg2, mysql, sqlite3 or oracle.</p>
+<p>    #</p>
+<p>    # Note that for sqlite3, 'name', below is a path to the filename. For other backends, it is the database name</p>
+<p>    # Note for Oracle, options={"threaded":true} must be set in order to avoid crashes.</p>
+<p>    # Note for Oracle, you can use the Oracle Service Name by setting "host=" and "port=" and then "name=&lt;host&gt;:&lt;port&gt;/&lt;service_name&gt;".</p>
+<p>    # Note for MariaDB use the 'mysql' engine.</p>
+<p>    ## engine=sqlite3</p>
+<p>    ## host=</p>
+<p>    ## port=</p>
+<p>    ## user=</p>
+<p>    ## password=</p>
+<p>    # conn_max_age option to make database connection persistent value in seconds</p>
+<p>    # https://docs.djangoproject.com/en/1.9/ref/databases/#persistent-connections</p>
+<p>    ## conn_max_age=0</p>
+<p>    # Execute this script to produce the database password. This will be used when 'password' is not set.</p>
+<p>    ## password_script=/path/script</p>
+<p>    ## name=desktop/desktop.db</p>
+</blockquote>
+<p>修改engine、host、port、user、password、name</p>
+<p>2）初始化数据库</p>
+<blockquote>
+<p># build/env/bin/hue syncdb</p>
+</blockquote>
+<p>其中会创建初试用户名和密码</p>
+<blockquote>
+<p># build/env/bin/hue migrate</p>
+</blockquote>
+<p>3）如果要支持数据库查询比如mysql，找到</p>
+<blockquote>
+<p>  [[databases]]</p>
+<p> </p>
+<p>    # mysql, oracle, or postgresql configuration.</p>
+<p>    ## [[[mysql]]]</p>
+<p>      # Name to show in the UI.</p>
+<p>      ## nice_name="My SQL DB"</p>
+<p> </p>
+<p>      # For MySQL and PostgreSQL, name is the name of the database.</p>
+<p>      # For Oracle, Name is instance of the Oracle server. For express edition</p>
+<p>      # this is 'xe' by default.</p>
+<p>      ## name=mysqldb</p>
+<p> </p>
+<p>      # Database backend to use. This can be:</p>
+<p>      # 1. mysql</p>
+<p>      # 2. postgresql</p>
+<p>      # 3. oracle</p>
+<p>      ## engine=mysql</p>
+<p> </p>
+<p>      # IP or hostname of the database to connect to.</p>
+<p>      ## host=localhost</p>
+<p> </p>
+<p>      # Port the database server is listening to. Defaults are:</p>
+<p>      # 1. MySQL: 3306</p>
+<p>      # 2. PostgreSQL: 5432</p>
+<p>      # 3. Oracle Express Edition: 1521</p>
+<p>      ## port=3306</p>
+<p> </p>
+<p>      # Username to authenticate with when connecting to the database.</p>
+<p>      ## user=example</p>
+<p> </p>
+<p>      # Password matching the username to authenticate with when</p>
+<p>      # connecting to the database.</p>
+<p>      ## password=example</p>
+</blockquote>
+<p>按照注释添加即可，可添加多个</p>
+<p>4）如果需要增加impala查询，找到</p>
+<blockquote>
+<p>[impala]</p>
+<p>  # Host of the Impala Server (one of the Impalad)</p>
+<p>  # server_host=localhost</p>
+<p> </p>
+<p>  # Port of the Impala Server</p>
+<p>  ## server_port=21050</p>
+</blockquote>
+<p>注意这里是21050端口，不是impala-shell连接的21000端口</p>
+<p>5）可以通过配置blacklist来隐藏一些组件的菜单</p>
+<blockquote>
+<p>[desktop]</p>
+<p> app_blacklist=beeswax,impala,security,filebrowser,jobbrowser,rdbms,jobsub,pig,hbase,sqoop,zookeeper,metastore,spark,oozie,indexer</p>
+</blockquote>
+<h2>4 启动</h2>
+<p>直接启动</p>
+<blockquote>
+<p># build/env/bin/hue runcherrypyserver</p>
+</blockquote>
+<p>后台启动supervisor（supervisor会监控并启动hue server）</p>
+<blockquote>
+<p># nohup build/env/bin/supervisor start &gt;&gt; logs/hue.out 2&gt;&amp;1 &amp;</p>
+</blockquote>
+<p>日志位于 /usr/local/hue/logs/ 下</p>
+<h1>三 使用</h1>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201901/1509647-20190129115804604-1957622752.png"/></p>
+<p> </p>
+<p>如果hue使用nginx代理，一定要设置Host，否则会报400错误：</p>
+<blockquote>
+<p>location / {</p>
+<p>  proxy_pass http://hue_backend;</p>
+<p>  proxy_set_header Host hue.anything;</p>
+<p>}</p>
+</blockquote>
+<p>另外还可以使用nginx来管理hue的静态文件，加速访问； </p>
+<p> </p>
+<p>参考：https://blog.csdn.net/zhouyuanlinli/article/details/83374416</p>
+<p> </p>
+</div>
+            </div>
+
+            <!-- Post Footer -->
+            <div class="post-footer">
+                <div class="post-navigation">
+                    <a href="../blog_cn.html" class="nav-button">← Back to Home</a>
+                    <a href="0241.html" class="nav-button">Next Post →</a>
+                </div>
+            </div>
+        </article>
+    </div>
+</body>
+</html>

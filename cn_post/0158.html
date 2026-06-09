@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ElasticSearch 5 - 重要配置及调优</title>
+    <link rel="stylesheet" href="../css/style3.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header Navigation -->
+        <div class="header">
+            <h1><a href="../blog_cn.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+        </div>
+
+        <!-- Post Container -->
+        <article class="post">
+            <!-- Post Header -->
+            <div class="post-header">
+                <h1>ElasticSearch 5 - 重要配置及调优</h1>
+                <div class="post-meta">
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📅</span>
+                        <span>March 28, 2019</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📖</span>
+                        <span>5 min read</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">👁️</span>
+                        <span>5729 views</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Post Content -->
+            <div class="post-content">
+                <div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<h1>Index Settings 重要索引配置</h1>
+<p>Index level settings can be set per-index. Settings may be:</p>
+<h2>1 static 静态索引配置</h2>
+<p>They can only be set at index creation time or on a closed index.</p>
+<p>只能在创建索引时设置或者在closed状态的索引上设置；</p>
+<p><strong>index.number_of_shards</strong></p>
+<p>The number of primary shards that an index should have. Defaults to 5. This setting can only be set at index creation time. It cannot be changed on a closed index. Note: the number of shards are limited to 1024 per index.</p>
+<h2>2 dynamic 动态索引配置</h2>
+<p>They can be changed on a live index using the update-index-settings API.</p>
+<p>可以在索引存在时通过api修改；</p>
+<p><strong>index.number_of_replicas</strong></p>
+<p>The number of replicas each primary shard has. Defaults to 1.</p>
+<p><strong>index.refresh_interval</strong></p>
+<p>How often to perform a refresh operation, which makes recent changes to the index visible to search. Defaults to 1s. Can be set to - 1 to disable refresh.</p>
+<p><strong>index.blocks.read_only</strong></p>
+<p>Set to true to make the index and index metadata read only, false to allow writes and metadata changes.</p>
+<p><strong>index.blocks.read</strong></p>
+<p>Set to true to disable read operations against the index.</p>
+<p><strong>index.blocks.write</strong></p>
+<p>Set to true to disable data write operations against the index. Unlike read_only, this setting does not affect metadata. For instance, you can close an index with a write block, but not an index with a read_only block.</p>
+<p><strong>index.merge.scheduler.max_thread_count</strong></p>
+<p>The maximum number of threads on a single shard that may be merging at once. Defaults to Math.max(1, Math.min(4, Runtime.getRuntime().availableProcessors() / 2)) which works well for a good solid-state-disk (SSD). If your index is on spinning platter drives instead, decrease this to 1.</p>
+<p><strong>index.translog.durability</strong></p>
+<p>Whether or not to fsync and commit the translog after every index, delete, update, or bulk request. This setting accepts the following parameters:</p>
+<p>request: (default) fsync and commit after every request. In the event of hardware failure, all acknowledged writes will already have been committed to disk.<br/>async: fsync and commit in the background every sync_interval. In the event of hardware failure, all acknowledged writes since the last automatic commit will be discarded.</p>
+<h1>写索引调优</h1>
+<h2>1 Use bulk requests</h2>
+<p>批量请求</p>
+<p>Bulk requests will yield much better performance than single-document index requests.</p>
+<h2>2 Use multiple workers/threads to send data to Elasticsearch</h2>
+<p>多线程，但要注意并发量不能太大以至于es无法处理而报错</p>
+<p>Make sure to watch for TOO_MANY_REQUESTS (429) response codes (EsRejectedExecutionException with the Java client), which is the way that Elasticsearch tells you that it cannot keep up with the current indexing rate. When it happens, you should pause indexing a bit before trying again, ideally with randomized exponential backoff.</p>
+<h2>3 Increase the refresh interval</h2>
+<p>增加刷新间隔</p>
+<p>The default index.refresh_interval is 1s, which forces Elasticsearch to create a new segment every second. Increasing this value (to say, 30s) will allow larger segments to flush and decreases future merge pressure.</p>
+<h2>4 Disable refresh and replicas for initial loads</h2>
+<p>在第一次大量写索引时禁用刷新和副本</p>
+<p>If you need to load a large amount of data at once, you should disable refresh by setting index.refresh_interval to - 1 and set index.number_of_replicas to 0. This will temporarily put your index at risk since the loss of any shard will cause data loss, but at the same time indexing will be faster since documents will be indexed only once. Once the initial loading is finished, you can set index.refresh_interval and index.number_of_replicas back to their original values.</p>
+<h2>5 Disable swapping</h2>
+<p>禁用swap</p>
+<p>You should make sure that the operating system is not swapping out the java process by disabling swapping.</p>
+<blockquote>
+<p># swapoff - a</p>
+</blockquote>
+<h2>6 Give memory to the filesystem cache</h2>
+<p>The filesystem cache will be used in order to buffer I/O operations. You should make sure to give at least half the memory of the machine running Elasticsearch to the filesystem cache.</p>
+<h2>7 Use auto-generated ids</h2>
+<p>尽量使用自动生成id，可以节省查找id是否存在的开销；</p>
+<p>When indexing a document that has an explicit id, Elasticsearch needs to check whether a document with the same id already exists within the same shard, which is a costly operation and gets even more costly as the index grows. By using auto-generated ids, Elasticsearch can skip this check, which makes indexing faster.</p>
+<h2>8 Use faster hardware</h2>
+<p>使用更快的硬件，比如更多的内存缓存或者ssd</p>
+<p>If indexing is I/O bound, you should investigate giving more memory to the filesystem cache (see above) or buying faster drives. In particular SSD drives are known to perform better than spinning disks.</p>
+<h2>9 Indexing buffer size</h2>
+<p>增加indices.memory.index_buffer_size，通常每个shard最多需要512M</p>
+<p>If your node is doing only heavy indexing, be sure indices.memory.index_buffer_size is large enough to give at most 512 MB indexing buffer per shard doing heavy indexing (beyond that indexing performance does not typically improve).</p>
+<p><strong>indices.memory.index_buffer_size</strong></p>
+<p>Accepts either a percentage or a byte size value. It defaults to 10%, meaning that 10% of the total heap allocated to a node will be used as the indexing buffer size shared across all shards.</p>
+<h1>修改配置</h1>
+<h2>1 索引动态配置</h2>
+<div class="cnblogs_code">
+<pre>$ curl - XPUT - H 'Content-Type: application/json' 'http://localhost:9200/testdoc/_settings' - <span style="color: rgba(0, 0, 0, 1)">d '{
+    </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">index</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">: {
+        </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">refresh_interval</span><span style="color: rgba(128, 0, 0, 1)">"</span>:<span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">-1</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">,
+        </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">number_of_replicas</span><span style="color: rgba(128, 0, 0, 1)">"</span>:0<span style="color: rgba(0, 0, 0, 1)">,
+        </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">index.translog.durability</span><span style="color: rgba(128, 0, 0, 1)">"</span>:<span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">async</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">
+    }
+}'</span></pre>
+</div>
+<p>可反复修改，设置为null即可恢复默认</p>
+<h2>2 集群配置</h2>
+<div class="cnblogs_code">
+<pre>$<span style="color: rgba(0, 0, 0, 1)"> vi elasticsearch.yml
+indices.memory.index_buffer_size: </span>40%<span style="color: rgba(0, 0, 0, 1)">
+thread_pool.write.queue_size: </span>1024</pre>
+</div>
+<p>修改后同步到所有节点并重启</p>
+<p> </p>
+<p>注意以下配置已经deprecated</p>
+<p>The bulk thread pool has been renamed to the write thread pool. This change was made to reflect the fact that this thread pool is used to execute all write operations: single-document index/delete/update requests, as well as bulk requests.</p>
+<p>thread_pool.index.type<br/>thread_pool.index.size<br/>thread_pool.index.queue_size<br/>thread_pool.bulk.type<br/>thread_pool.bulk.size<br/>thread_pool.bulk.queue_size</p>
+<p>另外以上配置也不能通过api修改（即http://localhost:9200/_cluster/settings）</p>
+<p>The prefix on all thread pool settings has been changed from threadpool to thread_pool.<br/>Thread pool settings are now node-level settings. As such, it is not possible to update thread pool settings via the cluster settings API.</p>
+<p><br/>参考：<br/>https://www.elastic.co/guide/en/elasticsearch/reference/master/tune-for-indexing-speed.html<br/>https://www.elastic.co/guide/en/logstash/current/performance-troubleshooting.html<br/>https://www.elastic.co/guide/en/elasticsearch/reference/master/tune-for-disk-usage.html<br/>https://www.elastic.co/guide/en/elasticsearch/reference/current/modules-threadpool.html<br/>https://www.elastic.co/guide/en/elasticsearch/reference/master/index-modules.html<br/>https://www.elastic.co/guide/en/elasticsearch/reference/master/index-modules-translog.html<br/>https://www.elastic.co/guide/en/elasticsearch/reference/master/index-modules-merge.html</p>
+<p> </p>
+</div>
+            </div>
+
+            <!-- Post Footer -->
+            <div class="post-footer">
+                <div class="post-navigation">
+                    <a href="../blog_cn.html" class="nav-button">← Back to Home</a>
+                    <a href="0159.html" class="nav-button">Next Post →</a>
+                </div>
+            </div>
+        </article>
+    </div>
+</body>
+</html>

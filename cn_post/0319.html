@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>词频统计Word Count</title>
+    <link rel="stylesheet" href="../css/style3.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header Navigation -->
+        <div class="header">
+            <h1><a href="../blog_cn.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+        </div>
+
+        <!-- Post Container -->
+        <article class="post">
+            <!-- Post Header -->
+            <div class="post-header">
+                <h1>词频统计Word Count</h1>
+                <div class="post-meta">
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📅</span>
+                        <span>December 13, 2018</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📖</span>
+                        <span>1 min read</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">👁️</span>
+                        <span>3423 views</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Post Content -->
+            <div class="post-content">
+                <div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<p>对文件进行词频统计，是一个大数据领域的hello word级别的应用，来看下实现有多少种：</p>
+<h1>1 Linux单机处理</h1>
+<blockquote>
+<p>egrep - o "\b[[:alpha:]]+\b" test_word.log|sort|uniq - c|sort - rn|head - 10</p>
+</blockquote>
+<h1>2 Scala单机处理（Array）</h1>
+<blockquote>
+<pre>line.split(" ").map((_, 1)).groupBy(_._1).map(_._2.reduce((v1, v2) =&gt; (v1._1, v1._2 + v2._2))).toArray.sortWith(_._2 &gt; _._2).foreach(println)</pre>
+</blockquote>
+<h1>3 Spark分布式处理（Scala）</h1>
+<div class="cnblogs_code">
+<pre>val sparkConf = <span style="color: rgba(0, 0, 255, 1)">new</span><span style="color: rgba(0, 0, 0, 1)"> SparkConf()
+val sc </span>= <span style="color: rgba(0, 0, 255, 1)">new</span><span style="color: rgba(0, 0, 0, 1)"> SparkContext(sparkConf)
+sc.textFile(</span>"test_word.log").flatMap(_.split("\\s+")).map((_, 1)).reduceByKey(_ + _).sortBy(_._2, <span style="color: rgba(0, 0, 255, 1)">false</span>).take(10).foreach(println)</pre>
+</div>
+<h1>4 Flink分布式处理（Scala）</h1>
+<div class="cnblogs_code">
+<pre>    val env =<span style="color: rgba(0, 0, 0, 1)"> ExecutionEnvironment.getExecutionEnvironment
+    env.readTextFile(</span>"test_word.log").flatMap(_.toLowerCase.split("\\s+").map((_, 1)).groupBy(0).sum(1).sortPartition(1, Order.DESCENDING).first(10).print</pre>
+</div>
+<h1>5 MongoDB</h1>
+<blockquote>
+<p>&gt;db.table_name.mapReduce(function(){ emit(this.column,1);}, function(key, values){return Array.sum(values);}, {out:"post_total"})</p>
+</blockquote>
+<h1>6 Hive</h1>
+<blockquote>
+<p>select word, count(1) cnt</p>
+<p>from test_word lateral view explode(split(line, ' ')) words as word</p>
+<p>group by word</p>
+<p>order by cnt desc limit 10</p>
+</blockquote>
+<h1>7 Hadoop示例</h1>
+<blockquote>
+<p>hadoop jar /path/hadoop-2.6.1/share/hadoop/mapreduce/hadoop-mapreduce-examples-2.6.1.jar wordcount /tmp/wordcount/input /tmp/wordcount/output </p>
+</blockquote>
+<p> </p>
+<p>附：测试文件test_word.log内容如下：</p>
+<blockquote>
+<p>hello world<br/>hello www</p>
+</blockquote>
+<p>输出如下：</p>
+<blockquote>
+<p> 2 hello<br/>      1 world<br/>      1 www</p>
+</blockquote>
+<p> </p>
+</div>
+            </div>
+
+            <!-- Post Footer -->
+            <div class="post-footer">
+                <div class="post-navigation">
+                    <a href="../blog_cn.html" class="nav-button">← Back to Home</a>
+                    <a href="0320.html" class="nav-button">Next Post →</a>
+                </div>
+            </div>
+        </article>
+    </div>
+</body>
+</html>

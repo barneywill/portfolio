@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ElasticSearch 4 - es数据导入过程</title>
+    <link rel="stylesheet" href="../css/style3.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header Navigation -->
+        <div class="header">
+            <h1><a href="../blog_cn.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+        </div>
+
+        <!-- Post Container -->
+        <article class="post">
+            <!-- Post Header -->
+            <div class="post-header">
+                <h1>ElasticSearch 4 - es数据导入过程</h1>
+                <div class="post-meta">
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📅</span>
+                        <span>March 26, 2019</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📖</span>
+                        <span>6 min read</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">👁️</span>
+                        <span>7351 views</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Post Content -->
+            <div class="post-content">
+                <div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<h1>1 准备analyzer</h1>
+<h2>内置analyzer</h2>
+<p>参考：https://www.elastic.co/guide/en/elasticsearch/reference/current/analysis-analyzers.html</p>
+<h2>中文分词</h2>
+<h3>smartcn</h3>
+<p>参考：https://www.elastic.co/guide/en/elasticsearch/plugins/current/analysis-smartcn.html</p>
+<h3>ik</h3>
+<blockquote>
+<p>$ bin/elasticsearch-plugin install https://github.com/medcl/elasticsearch-analysis-ik/releases/download/v6.6.2/elasticsearch-analysis-ik-6.6.2.zip</p>
+</blockquote>
+<p>参考：https://github.com/medcl/elasticsearch-analysis-ik</p>
+<p>其他plugins</p>
+<p>参考：https://www.elastic.co/guide/en/elasticsearch/plugins/current/index.html</p>
+<h1>2 创建索引--准备mapping，确定shards、replication</h1>
+<div class="cnblogs_code">
+<pre><span style="color: rgba(0, 128, 0, 1)">#</span><span style="color: rgba(0, 128, 0, 1)"> curl - XPUT - H 'Content-Type: application/json' http://localhost:9200/testdoc - d '</span>
+<span style="color: rgba(0, 0, 0, 1)">{
+  </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">settings</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">: {
+    </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">index.number_of_shards</span><span style="color: rgba(128, 0, 0, 1)">"</span> : 10<span style="color: rgba(0, 0, 0, 1)">,
+    </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">index.number_of_routing_shards</span><span style="color: rgba(128, 0, 0, 1)">"</span> : 30<span style="color: rgba(0, 0, 0, 1)">,
+    </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">index.number_of_replicas</span><span style="color: rgba(128, 0, 0, 1)">"</span>:1<span style="color: rgba(0, 0, 0, 1)">,
+    </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">index.translog.durability</span><span style="color: rgba(128, 0, 0, 1)">"</span>: <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">async</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">,
+    </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">index.merge.scheduler.max_thread_count</span><span style="color: rgba(128, 0, 0, 1)">"</span>: 1<span style="color: rgba(0, 0, 0, 1)">,
+    </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">index.refresh_interval</span><span style="color: rgba(128, 0, 0, 1)">"</span>: <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">30s</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">
+  },
+  </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">mappings</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">: {
+    </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">_doc</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">: { 
+      </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">_all</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">: {
+        </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">enabled</span><span style="color: rgba(128, 0, 0, 1)">"</span>: <span style="color: rgba(0, 0, 255, 1)">false</span><span style="color: rgba(0, 0, 0, 1)">
+      },
+      </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">_source</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">: {
+        </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">enabled</span><span style="color: rgba(128, 0, 0, 1)">"</span>: <span style="color: rgba(0, 0, 255, 1)">false</span><span style="color: rgba(0, 0, 0, 1)">
+      },
+      </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">properties</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">: { 
+        </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">title</span><span style="color: rgba(128, 0, 0, 1)">"</span>:    { <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">type</span><span style="color: rgba(128, 0, 0, 1)">"</span>: <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">text</span><span style="color: rgba(128, 0, 0, 1)">"</span>, <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">analyzer</span><span style="color: rgba(128, 0, 0, 1)">"</span>: <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">ik_smart</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">}, 
+        </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">name</span><span style="color: rgba(128, 0, 0, 1)">"</span>:     { <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">type</span><span style="color: rgba(128, 0, 0, 1)">"</span>: <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">keyword</span><span style="color: rgba(128, 0, 0, 1)">"</span>, <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">doc_values</span><span style="color: rgba(128, 0, 0, 1)">"</span>: <span style="color: rgba(0, 0, 255, 1)">false</span><span style="color: rgba(0, 0, 0, 1)">}, 
+        </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">age</span><span style="color: rgba(128, 0, 0, 1)">"</span>:      { <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">type</span><span style="color: rgba(128, 0, 0, 1)">"</span>: <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">integer</span><span style="color: rgba(128, 0, 0, 1)">"</span>, <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">index</span><span style="color: rgba(128, 0, 0, 1)">"</span>: <span style="color: rgba(0, 0, 255, 1)">false</span><span style="color: rgba(0, 0, 0, 1)">},  
+        </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">created</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">:  {
+          </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">type</span><span style="color: rgba(128, 0, 0, 1)">"</span>:   <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">date</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">, 
+          </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">format</span><span style="color: rgba(128, 0, 0, 1)">"</span>: <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">strict_date_optional_time||epoch_millis</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">
+        }
+      }
+    }
+  }
+}'</span></pre>
+</div>
+<p>其中：</p>
+<p>_source 控制是否存储原始json<br/>_all 控制是否对原始json建倒排<br/>analyzer 用于指定分词<br/>doc_values 用于控制是否列式存储<br/>index 用于控制是否倒排</p>
+<p>The _source field stores the original JSON body of the document. If you don’t need access to it you can disable it.<br/>By default Elasticsearch indexes and adds doc values to most fields so that they can be searched and aggregated out of the box.</p>
+<p> </p>
+<h2>数据类型</h2>
+<p>参考：https://www.elastic.co/guide/en/elasticsearch/reference/current/mapping-types.html</p>
+<p>其中String有两种：text和keyword，区别是text会被分词，keyword不会被分词；</p>
+<h3>text</h3>
+<p>参考：https://www.elastic.co/guide/en/elasticsearch/reference/current/text.html</p>
+<h3>keyword</h3>
+<p>参考：https://www.elastic.co/guide/en/elasticsearch/reference/current/keyword.html</p>
+<h1>3 导入数据</h1>
+<h2>3.1 调用index api</h2>
+<p>参考：https://www.elastic.co/guide/en/elasticsearch/reference/current/docs-index_.html</p>
+<h2>3.2 准备hive外部表</h2>
+<p>详见：<a href="https://www.cnblogs.com/barneywill/p/10300951.html" target="_blank">https://www.cnblogs.com/barneywill/p/10300951.html</a></p>
+<h1>4 测试</h1>
+<blockquote>
+<p># curl - XPOST - H 'Content-Type: application/json' 'http://localhost:9200/_xpack/sql?format=txt' - d '{"query":"select * from testdoc limit 10"}'</p>
+<p>or</p>
+<p># curl - XGET 'http://localhost:9200/testdoc/_search?q=*'</p>
+</blockquote>
+<h1>5 问题</h1>
+<h2>报错：all nodes failed</h2>
+<div class="cnblogs_code">
+<pre>2019-03-27 03:14:50,091 ERROR [main] org.elasticsearch.hadoop.rest.NetworkClient: Node [192.168.0.1:9200] failed (Read timed out); selected next node [192.168.0.1:9200<span style="color: rgba(0, 0, 0, 1)">]
+</span>2019-03-27 03:15:50,148 ERROR [main] org.elasticsearch.hadoop.rest.NetworkClient: Node [192.168.0.2:9200] failed (Read timed out); selected next node [192.168.0.2:9200<span style="color: rgba(0, 0, 0, 1)">]
+</span>2019-03-27 03:16:50,207 ERROR [main] org.elasticsearch.hadoop.rest.NetworkClient: Node [192.168.0.3:9200] failed (Read timed out); no other nodes left - <span style="color: rgba(0, 0, 0, 1)"> aborting...
+</span>2019-03-27 03:16:50,208 ERROR [main] org.apache.hadoop.hive.ql.exec.mr.ExecMapper: Hit error <span style="color: rgba(0, 0, 255, 1)">while</span> closing operators - <span style="color: rgba(0, 0, 0, 1)"> failing tree
+</span>2019-03-27 03:16:50,210 WARN [main] org.apache.hadoop.mapred.YarnChild: Exception running child : java.lang.RuntimeException: Hive Runtime Error <span style="color: rgba(0, 0, 255, 1)">while</span><span style="color: rgba(0, 0, 0, 1)"> closing operators
+        at org.apache.hadoop.hive.ql.exec.mr.ExecMapper.close(ExecMapper.java:</span>207<span style="color: rgba(0, 0, 0, 1)">)
+        at org.apache.hadoop.mapred.MapRunner.run(MapRunner.java:</span>61<span style="color: rgba(0, 0, 0, 1)">)
+        at org.apache.hadoop.mapred.MapTask.runOldMapper(MapTask.java:</span>450<span style="color: rgba(0, 0, 0, 1)">)
+        at org.apache.hadoop.mapred.MapTask.run(MapTask.java:</span>343<span style="color: rgba(0, 0, 0, 1)">)
+        at org.apache.hadoop.mapred.YarnChild</span><span style="color: rgba(128, 0, 128, 1)">$2</span>.run(YarnChild.java:163<span style="color: rgba(0, 0, 0, 1)">)
+        at java.security.AccessController.doPrivileged(Native Method)
+        at javax.security.auth.Subject.doAs(Subject.java:</span>422<span style="color: rgba(0, 0, 0, 1)">)
+        at org.apache.hadoop.security.UserGroupInformation.doAs(UserGroupInformation.java:</span>1692<span style="color: rgba(0, 0, 0, 1)">)
+        at org.apache.hadoop.mapred.YarnChild.main(YarnChild.java:</span>158<span style="color: rgba(0, 0, 0, 1)">)
+Caused by: org.elasticsearch.hadoop.rest.EsHadoopNoNodesLeftException: Connection error (check network and</span>/or proxy settings)- all nodes failed; tried [[192.168.0.1:9200, 192.168.0.2:9200, 192.168.0.3:9200<span style="color: rgba(0, 0, 0, 1)">]]
+        at org.elasticsearch.hadoop.rest.NetworkClient.execute(NetworkClient.java:</span>152<span style="color: rgba(0, 0, 0, 1)">)
+        at org.elasticsearch.hadoop.rest.RestClient.execute(RestClient.java:</span>398<span style="color: rgba(0, 0, 0, 1)">)
+        at org.elasticsearch.hadoop.rest.RestClient.execute(RestClient.java:</span>362<span style="color: rgba(0, 0, 0, 1)">)
+        at org.elasticsearch.hadoop.rest.RestClient.execute(RestClient.java:</span>366<span style="color: rgba(0, 0, 0, 1)">)
+        at org.elasticsearch.hadoop.rest.RestClient.refresh(RestClient.java:</span>267<span style="color: rgba(0, 0, 0, 1)">)
+        at org.elasticsearch.hadoop.rest.bulk.BulkProcessor.close(BulkProcessor.java:</span>550<span style="color: rgba(0, 0, 0, 1)">)
+        at org.elasticsearch.hadoop.rest.RestRepository.close(RestRepository.java:</span>219<span style="color: rgba(0, 0, 0, 1)">)
+        at org.elasticsearch.hadoop.mr.EsOutputFormat</span><span style="color: rgba(128, 0, 128, 1)">$EsRecordWriter</span>.doClose(EsOutputFormat.java:214<span style="color: rgba(0, 0, 0, 1)">)
+        at org.elasticsearch.hadoop.hive.EsHiveOutputFormat</span><span style="color: rgba(128, 0, 128, 1)">$EsHiveRecordWriter</span>.close(EsHiveOutputFormat.java:74<span style="color: rgba(0, 0, 0, 1)">)
+        at org.apache.hadoop.hive.ql.exec.FileSinkOperator</span><span style="color: rgba(128, 0, 128, 1)">$FSPaths</span>.closeWriters(FileSinkOperator.java:190<span style="color: rgba(0, 0, 0, 1)">)
+        at org.apache.hadoop.hive.ql.exec.FileSinkOperator.closeOp(FileSinkOperator.java:</span>1047<span style="color: rgba(0, 0, 0, 1)">)
+        at org.apache.hadoop.hive.ql.exec.Operator.close(Operator.java:</span>697<span style="color: rgba(0, 0, 0, 1)">)
+        at org.apache.hadoop.hive.ql.exec.Operator.close(Operator.java:</span>711<span style="color: rgba(0, 0, 0, 1)">)
+        at org.apache.hadoop.hive.ql.exec.Operator.close(Operator.java:</span>711<span style="color: rgba(0, 0, 0, 1)">)
+        at org.apache.hadoop.hive.ql.exec.Operator.close(Operator.java:</span>711<span style="color: rgba(0, 0, 0, 1)">)
+        at org.apache.hadoop.hive.ql.exec.mr.ExecMapper.close(ExecMapper.java:</span>189<span style="color: rgba(0, 0, 0, 1)">)
+        ... </span>8 more</pre>
+</div>
+<p>解决方法：增加 index.number_of_shards，只能在创建索引时指定，默认为5</p>
+<h2>报错：es_rejected_execution_exception</h2>
+<div class="cnblogs_code">
+<pre>Caused by: org.elasticsearch.hadoop.EsHadoopException: Could not write all entries <span style="color: rgba(0, 0, 255, 1)">for</span> bulk operation [70/1000]. Error sample (first [5<span style="color: rgba(0, 0, 0, 1)">] error messages):
+        org.elasticsearch.hadoop.rest.EsHadoopRemoteException: es_rejected_execution_exception: rejected execution of processing of [</span>7622922][indices:data/write/bulk[s][p]]: request: BulkShardRequest [[test_indix][18]] containing [38] requests, target allocation id: iLlIBScJTxahse559pTINQ, primary term: 1 on EsThreadPoolExecutor[name = 1hxgYU_/write, queue capacity = 200, org.elasticsearch.common.util.concurrent.EsThreadPoolExecutor@ce11763[Running, pool size = 32, active threads = 32, queued tasks = 200, completed tasks = 5686436]]</pre>
+</div>
+<p>报错原因：</p>
+<p>thread_pool.write.queue_size</p>
+<p><em>For single-document index/delete/update and bulk requests. Thread pool type is fixed with a size of # of available processors, queue_size of 200. The maximum size for this pool is 1 + # of available processors.</em></p>
+<p><em>The queue_size allows to control the size of the queue of pending requests that have no threads to execute them. By default, it is set to - 1 which means its unbounded. When a request comes in and the queue is full, it will abort the request.</em></p>
+<p>查看thread_pool统计</p>
+<blockquote>
+<p># curl 'http://localhost:9200/_nodes/stats?pretty'|grep '"write"' - A 7</p>
+</blockquote>
+<p>通常由于写入速度、并发量或者压力较大超过es处理能力，超出queue的大小就会被reject</p>
+<p>解决方法：</p>
+<p>1）修改配置调优</p>
+<p>index.refresh_interval: - 1<br/>index.number_of_replicas: 0<br/>indices.memory.index_buffer_size: 40%<br/>thread_pool.write.queue_size: 1024</p>
+<p>详见：<a href="https://www.cnblogs.com/barneywill/p/10615249.html" target="_blank">https://www.cnblogs.com/barneywill/p/10615249.html</a></p>
+<p>2）减小写入压力</p>
+<p> </p>
+</div>
+            </div>
+
+            <!-- Post Footer -->
+            <div class="post-footer">
+                <div class="post-navigation">
+                    <a href="../blog_cn.html" class="nav-button">← Back to Home</a>
+                    <a href="0162.html" class="nav-button">Next Post →</a>
+                </div>
+            </div>
+        </article>
+    </div>
+</body>
+</html>

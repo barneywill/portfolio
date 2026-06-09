@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kudu 3 - primary key</title>
+    <link rel="stylesheet" href="../css/style3.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header Navigation -->
+        <div class="header">
+            <h1><a href="../blog_cn.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+        </div>
+
+        <!-- Post Container -->
+        <article class="post">
+            <!-- Post Header -->
+            <div class="post-header">
+                <h1>Kudu 3 - primary key</h1>
+                <div class="post-meta">
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📅</span>
+                        <span>April 13, 2019</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📖</span>
+                        <span>1 min read</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">👁️</span>
+                        <span>1928 views</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Post Content -->
+            <div class="post-content">
+                <div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<p>关于kudu的primary key</p>
+<h3>The primary key may not be changed after the table is created. You must drop and recreate a table to select a new primary key.</h3>
+<p>创建之后主键列不能变更</p>
+<h3>The columns which make up the primary key must be listed first in the schema.</h3>
+<p>否则会报错：</p>
+<blockquote>
+<p>ImpalaRuntimeException: Error creating Kudu table 'impala::default.cv00_atty_kudu' CAUSED BY: NonRecoverableException: Got out-of-order key column: name: "ent_ts" type: STRING is_key: true is_nullable: false cfile_block_size: 0</p>
+</blockquote>
+<h3>The primary key of a row may not be modified using the UPDATE functionality. To modify a row’s primary key, the row must be deleted and re-inserted with the modified key. Such a modification is non-atomic.</h3>
+<p>主键列不能被update</p>
+<h3>Columns with DOUBLE, FLOAT, or BOOL types are not allowed as part of a primary key definition. Additionally, all columns that are part of a primary key definition must be NOT NULL.</h3>
+<p>double、float、bool类型字段不能作为主键列，同时主键列不能为null</p>
+<h3>Auto-generated primary keys are not supported.</h3>
+<p>不支持自动生成主键</p>
+<h3>Cells making up a composite primary key are limited to a total of 16KB after the internal composite-key encoding done by Kudu.</h3>
+<p>主键大小最大16k</p>
+<p><br/>参考：https://kudu.apache.org/docs/known_issues.html#_schema_and_usage_limitations</p>
+</div>
+            </div>
+
+            <!-- Post Footer -->
+            <div class="post-footer">
+                <div class="post-navigation">
+                    <a href="../blog_cn.html" class="nav-button">← Back to Home</a>
+                    <a href="0147.html" class="nav-button">Next Post →</a>
+                </div>
+            </div>
+        </article>
+    </div>
+</body>
+</html>

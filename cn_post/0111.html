@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>logrotate</title>
+    <link rel="stylesheet" href="../css/style3.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header Navigation -->
+        <div class="header">
+            <h1><a href="../blog_cn.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+        </div>
+
+        <!-- Post Container -->
+        <article class="post">
+            <!-- Post Header -->
+            <div class="post-header">
+                <h1>logrotate</h1>
+                <div class="post-meta">
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📅</span>
+                        <span>June 18, 2019</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📖</span>
+                        <span>3 min read</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">👁️</span>
+                        <span>556 views</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Post Content -->
+            <div class="post-content">
+                <div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<h1>logrotate</h1>
+<p>logrotate ‐ rotates, compresses, and mails system logs</p>
+<p>logrotate is designed to ease administration of systems that generate large numbers of log files. It allows automatic rotation, compression, removal, and mailing of log files. Each log file may be<br/>       handled daily, weekly, monthly, or when it grows too large.</p>
+<p>       Normally, logrotate is run as a daily cron job.  It will not modify a log more than once in one day unless the criterion for that log is based on the log's size and logrotate is being run more than once<br/>       each day, or unless the - f or --force option is used.</p>
+<p>       Any number of config files may be given on the command line. Later config files may override the options given in earlier files, so the order in which the logrotate config files are listed is important.<br/>       Normally, a single config file which includes any other config files which are needed should be used.  See below for more information on how to use the include directive to accomplish this.  If a direc‐<br/>       tory is given on the command line, every file in that directory is used as a config file.</p>
+<p>       If  no command line arguments are given, logrotate will print version and copyright information, along with a short usage summary.  If any errors occur while rotating logs, logrotate will exit with non-<br/>       zero status.</p>
+<p> </p>
+<p>配置文件</p>
+<p>/etc/logrotate.conf</p>
+<p>/etc/logrotate.d/*</p>
+<p> </p>
+<p>tomcat文件按天滚动压缩并保留最近7天示例</p>
+<div class="cnblogs_code">
+<pre># cat /etc/logrotate.d/tomcat.conf<br/>/path/to/<span style="color: rgba(0, 0, 0, 1)">catalina.out
+{
+        daily
+        missingok
+        copytruncate
+        notifempty
+        size </span>102400<span style="color: rgba(0, 0, 0, 1)">
+        dateext
+        compress
+        rotate </span>3<span style="color: rgba(0, 0, 0, 1)">
+}</span></pre>
+</div>
+<p> </p>
+<p>常用参数：</p>
+<p><strong> compress</strong><br/>              Old versions of log files are compressed with gzip(1) by default. See also nocompress.</p>
+<p><strong> copytruncate</strong><br/>              Truncate  the original log file to zero size in place after creating a copy, instead of moving the old log file and optionally creating a new one.  It can be used when some program cannot be told<br/>              to close its logfile and thus might continue writing (appending) to the previous log file forever.  Note that there is a very small time slice between copying the file and truncating it, so  some<br/>              logging data might be lost.  When this option is used, the create option will have no effect, as the old log file stays in place.</p>
+<p><strong>daily </strong></p>
+<p>Log files are rotated every day.</p>
+<p><strong> dateext</strong><br/>              Archive old versions of log files adding a date extension like YYYYMMDD instead of simply adding a number. The extension may be configured using the dateformat and dateyesterday options.</p>
+<p><strong> minsize size</strong><br/>              Log files are rotated when they grow bigger than size bytes, but not before the additionally specified time interval (daily, weekly, monthly, or yearly).   The  related  size  option  is  similar<br/>              except  that  it  is  mutually  exclusive with the time interval options, and it causes log files to be rotated without regard for the last rotation time.  When minsize is used, both the size and<br/>              timestamp of a log file are considered.</p>
+<p><strong> rotate count</strong><br/>              Log files are rotated count times before being removed or mailed to the address specified in a mail directive. If count is 0, old versions are removed rather than rotated.</p>
+<p><strong>       size size</strong><br/>              Log files are rotated only if they grow bigger then size bytes. If size is followed by k, the size is assumed to be in kilobytes.  If the M is used, the size is in megabytes, and if  G  is  used,<br/>              the size is in gigabytes. So size 100, size 100k, size 100M and size 100G are all valid.</p>
+<p><strong> weekly [weekday]</strong><br/>              Log files are rotated once each weekday, or if the date is advanced by at least 7 days since the last rotation (while ignoring the exact time).  The weekday intepretation is following:   0  means<br/>              Sunday, 1 means Monday, ..., 6 means Saturday; the special value 7 means each 7 days, irrespectively of weekday.  Defaults to 0 if the weekday argument is omitted.</p>
+<p><strong> missingok</strong><br/>              If the log file is missing, go on to the next one without issuing an error message. See also nomissingok.</p>
+<p> </p>
+<p>手工触发</p>
+<blockquote>
+<p># logrotate /etc/logrotate.conf</p>
+</blockquote>
+<p> </p>
+<p>参考：</p>
+<p>$ man logrotate</p>
+</div>
+            </div>
+
+            <!-- Post Footer -->
+            <div class="post-footer">
+                <div class="post-navigation">
+                    <a href="../blog_cn.html" class="nav-button">← Back to Home</a>
+                    <a href="0112.html" class="nav-button">Next Post →</a>
+                </div>
+            </div>
+        </article>
+    </div>
+</body>
+</html>

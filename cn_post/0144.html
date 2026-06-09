@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ClouderaManager修改配置报错</title>
+    <link rel="stylesheet" href="../css/style3.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header Navigation -->
+        <div class="header">
+            <h1><a href="../blog_cn.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+        </div>
+
+        <!-- Post Container -->
+        <article class="post">
+            <!-- Post Header -->
+            <div class="post-header">
+                <h1>ClouderaManager修改配置报错</h1>
+                <div class="post-meta">
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📅</span>
+                        <span>April 30, 2019</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📖</span>
+                        <span>1 min read</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">👁️</span>
+                        <span>421 views</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Post Content -->
+            <div class="post-content">
+                <div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<p>Cloudera Manager中修改配置可能报错：</p>
+<blockquote>
+<p>Incorrect string value: '\xE7\xA8\x8B\xE5\xBA\x8F...' for column 'MESSAGE' at row 1</p>
+</blockquote>
+<p>这是一个mysql的字符集问题，极有可能创建scm数据库时使用默认的latin1编码导致，涉及的表为：</p>
+<blockquote>
+<p>CREATE TABLE `REVISIONS` (<br/>  `REVISION_ID` bigint(20) NOT NULL,<br/>  `OPTIMISTIC_LOCK_VERSION` bigint(20) NOT NULL,<br/>  `USER_ID` bigint(20) DEFAULT NULL,<br/>  `TIMESTAMP` bigint(20) DEFAULT NULL,<br/>  `MESSAGE` longtext,<br/>  PRIMARY KEY (`REVISION_ID`)<br/>) ENGINE=InnoDB DEFAULT CHARSET=latin1 </p>
+</blockquote>
+<p>解决方法为：</p>
+<blockquote>
+<p>alter table REVISIONS convert to character set utf8;</p>
+</blockquote>
+<p>如果不能修改字符集，也可以手工修改数据库中的配置：</p>
+<blockquote>
+<p>update CONFIGS set value = * where config_id = *;</p>
+</blockquote>
+<p>然后重启对应的组件即可</p>
+<p> </p>
+</div>
+            </div>
+
+            <!-- Post Footer -->
+            <div class="post-footer">
+                <div class="post-navigation">
+                    <a href="../blog_cn.html" class="nav-button">← Back to Home</a>
+                    <a href="0145.html" class="nav-button">Next Post →</a>
+                </div>
+            </div>
+        </article>
+    </div>
+</body>
+</html>

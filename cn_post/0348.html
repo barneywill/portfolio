@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dubbo monitor服务iowait高，负载高</title>
+    <link rel="stylesheet" href="../css/style3.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header Navigation -->
+        <div class="header">
+            <h1><a href="../blog_cn.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+        </div>
+
+        <!-- Post Container -->
+        <article class="post">
+            <!-- Post Header -->
+            <div class="post-header">
+                <h1>Dubbo monitor服务iowait高，负载高</h1>
+                <div class="post-meta">
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📅</span>
+                        <span>November 07, 2018</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📖</span>
+                        <span>1 min read</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">👁️</span>
+                        <span>1274 views</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Post Content -->
+            <div class="post-content">
+                <div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<h1>一 问题</h1>
+<p>Dubbo monitor所在服务器状态异常，iowait一直很高，load也一直很高，监控如下：</p>
+<p>iowait如图：</p>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201811/1509647-20181107170337744-1476229994.png"/></p>
+<p>load如图：</p>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201811/1509647-20181107170418265-2073144103.png"/></p>
+<p> </p>
+<h1>二 分析</h1>
+<p>通过iotop命令可以查看当前系统中磁盘io情况以及进程占用磁盘io的情况</p>
+<p> <img alt="" src="https://img2018.cnblogs.com/blog/1509647/201811/1509647-20181107170601722-211892826.png"/></p>
+<p>从中可以定位到占用io进程的pid；</p>
+<p>通过</p>
+<blockquote>
+<p>cat /proc/${pid}/io</p>
+</blockquote>
+<p>可以查看一个进程具体的读写状况；</p>
+<p>通过</p>
+<blockquote>
+<p>ps aux|grep ${pid}</p>
+</blockquote>
+<p>可以查到这个进程具体的命令；</p>
+<p> </p>
+<p>通过以上命令定位到进程为dubbo的monitor进程，用jstack打印线程栈发现处于RUNNABLE的进程除了</p>
+<blockquote>
+<p>java.lang.Thread.State: RUNNABLE</p>
+<p>       at sun.nio.ch.EPollArrayWrapper.epollWait(Native Method)</p>
+</blockquote>
+<p> </p>
+<p>之外，有两个线程很可疑</p>
+<p> </p>
+<blockquote>
+<p>"DubboMonitorTimer-thread-1" daemon prio=10 tid=0x00007f53b0593000 nid=0x363e runnable [0x00007f53ac36d000]</p>
+<p>   java.lang.Thread.State: RUNNABLE</p>
+<p>       at java.io.FileInputStream.readBytes(Native Method)</p>
+<p>       at java.io.FileInputStream.read(FileInputStream.java:272)</p>
+<p>       at sun.nio.cs.StreamDecoder.readBytes(StreamDecoder.java:283)</p>
+<p>       at sun.nio.cs.StreamDecoder.implRead(StreamDecoder.java:325)</p>
+<p>       at sun.nio.cs.StreamDecoder.read(StreamDecoder.java:177)</p>
+<p>       - locked &lt;0x0000000779d506f8&gt; (a java.io.FileReader)</p>
+<p>       at java.io.InputStreamReader.read(InputStreamReader.java:184)</p>
+<p>       at java.io.BufferedReader.fill(BufferedReader.java:154)</p>
+<p>       at java.io.BufferedReader.readLine(BufferedReader.java:317)</p>
+<p>       - locked &lt;0x0000000779d506f8&gt; (a java.io.FileReader)</p>
+<p>       at java.io.BufferedReader.readLine(BufferedReader.java:382)</p>
+<p>       at com.alibaba.dubbo.monitor.simple.SimpleMonitorService.appendData(SimpleMonitorService.java:322)</p>
+<p>       at com.alibaba.dubbo.monitor.simple.SimpleMonitorService.draw(SimpleMonitorService.java:263)</p>
+<p>       at com.alibaba.dubbo.monitor.simple.SimpleMonitorService.access$300(SimpleMonitorService.java:64)</p>
+<p>       at com.alibaba.dubbo.monitor.simple.SimpleMonitorService$2.run(SimpleMonitorService.java:137)</p>
+<p>       at java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:471)</p>
+<p>       at java.util.concurrent.FutureTask.runAndReset(FutureTask.java:304)</p>
+<p>       at java.util.concurrent.ScheduledThreadPoolExecutor$ScheduledFutureTask.access$301(ScheduledThreadPoolExecutor.java:178)</p>
+<p>       at java.util.concurrent.ScheduledThreadPoolExecutor$ScheduledFutureTask.run(ScheduledThreadPoolExecutor.java:293)</p>
+<p>       at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1145)</p>
+<p>       at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:615)</p>
+<p>       at java.lang.Thread.run(Thread.java:744)</p>
+<p> </p>
+<p>   Locked ownable synchronizers:</p>
+<p>       - &lt;0x0000000788104268&gt; (a java.util.concurrent.ThreadPoolExecutor$Worker)</p>
+</blockquote>
+<p> </p>
+<blockquote>
+<p>"DubboMonitorAsyncWriteLogThread" daemon prio=10 tid=0x00007f53b05ba000 nid=0x363d runnable [0x00007f53ac3af000]</p>
+<p>   java.lang.Thread.State: RUNNABLE</p>
+<p>       at java.io.FileOutputStream.writeBytes(Native Method)</p>
+<p>       at java.io.FileOutputStream.write(FileOutputStream.java:345)</p>
+<p>       at sun.nio.cs.StreamEncoder.writeBytes(StreamEncoder.java:221)</p>
+<p>       at sun.nio.cs.StreamEncoder.implFlushBuffer(StreamEncoder.java:291)</p>
+<p>       at sun.nio.cs.StreamEncoder.implFlush(StreamEncoder.java:295)</p>
+<p>       at sun.nio.cs.StreamEncoder.flush(StreamEncoder.java:141)</p>
+<p>       - locked &lt;0x000000077a028918&gt; (a java.io.FileWriter)</p>
+<p>       at java.io.OutputStreamWriter.flush(OutputStreamWriter.java:229)</p>
+<p>       at com.alibaba.dubbo.monitor.simple.SimpleMonitorService.write(SimpleMonitorService.java:213)</p>
+<p>       at com.alibaba.dubbo.monitor.simple.SimpleMonitorService.access$100(SimpleMonitorService.java:64)</p>
+<p>       at com.alibaba.dubbo.monitor.simple.SimpleMonitorService$1.run(SimpleMonitorService.java:120)</p>
+<p>       at java.lang.Thread.run(Thread.java:744)</p>
+<p> </p>
+<p>   Locked ownable synchronizers:</p>
+<p>       - None</p>
+</blockquote>
+<p> </p>
+<p>这两个线程一个在read，一个在write，查看dubbo monitor的源代码发现：</p>
+<p> <img alt="" src="https://img2018.cnblogs.com/blog/1509647/201811/1509647-20181107170656170-208327560.png"/></p>
+<p>monitor中会有两个线程，一个不停地写统计日志，一个每隔300s进行一次draw操作；</p>
+<p>monitor中每天的日志都会保存在一个日志目录中，进入其中一天的日志目录查看日志大小：</p>
+<p>发现一天的日志只有几十M，而上边iotop查看的结果是read是1520K/s,write是3.43M/s，所以排除write的问题，问题应该出在draw身上，查看draw的源代码发现draw会不断的读取统计日志同时进行绘图操作，</p>
+<p> <img alt="" src="https://img2018.cnblogs.com/blog/1509647/201811/1509647-20181107170822808-1380118919.png"/></p>
+<p>draw中会遍历日志目录，同时在appendData方法中会进行日志读取操作，由于monitor已经运行很长时间，所以按天保存的目录非常多，每次draw都需要去遍历这些目录并且进行读取文件操作，历史数据没有改动但却会不断的重新进行日志读取和绘图，问题应该出在这里；</p>
+<p> </p>
+<h1>三 解决</h1>
+<p>修改代码如下</p>
+<p> <img alt="" src="https://img2018.cnblogs.com/blog/1509647/201811/1509647-20181107170917692-279454730.png"/></p>
+<p>即让draw只对当天的日志进行处理，修改之后服务器iowait如图：</p>
+<p> <img alt="" src="https://img2018.cnblogs.com/blog/1509647/201811/1509647-20181107170942903-1690897401.png"/></p>
+<p>load如图：</p>
+<p> <img alt="" src="https://img2018.cnblogs.com/blog/1509647/201811/1509647-20181107171010512-2103888152.png"/></p>
+<p>问题解决</p>
+<p> </p>
+</div>
+            </div>
+
+            <!-- Post Footer -->
+            <div class="post-footer">
+                <div class="post-navigation">
+                    <a href="../blog_cn.html" class="nav-button">← Back to Home</a>
+                    <a href="0349.html" class="nav-button">Next Post →</a>
+                </div>
+            </div>
+        </article>
+    </div>
+</body>
+</html>

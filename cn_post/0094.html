@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>openresty（nginx+lua）发邮件</title>
+    <link rel="stylesheet" href="../css/style3.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header Navigation -->
+        <div class="header">
+            <h1><a href="../blog_cn.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+        </div>
+
+        <!-- Post Container -->
+        <article class="post">
+            <!-- Post Header -->
+            <div class="post-header">
+                <h1>openresty（nginx+lua）发邮件</h1>
+                <div class="post-meta">
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📅</span>
+                        <span>August 05, 2019</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📖</span>
+                        <span>2 min read</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">👁️</span>
+                        <span>938 views</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Post Content -->
+            <div class="post-content">
+                <div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<p>nginx配置</p>
+<div class="cnblogs_code">
+<pre>lua_package_path <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">/usr/local/openresty/lualib/resty/smtp/?.lua;;</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">;
+lua_need_request_body on;
+location </span>^~ /alarm/<span style="color: rgba(0, 0, 0, 1)">mail {
+  resolver </span>202.106.0.20 valid=<span style="color: rgba(0, 0, 0, 1)">3600s;
+  content_by_lua_file </span>/path/to/<span style="color: rgba(0, 0, 0, 1)">send_mail.lua;
+}</span></pre>
+</div>
+<p>其中resolver后为dns服务器ip；</p>
+<p> </p>
+<p>lua代码</p>
+<div class="cnblogs_code">
+<pre>local smtp = require <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">resty.smtp</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">
+local mime </span>= require <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">resty.smtp.mime</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">
+local mesgt </span>=<span style="color: rgba(0, 0, 0, 1)"> {
+    headers</span>=<span style="color: rgba(0, 0, 0, 1)"> {
+        subject</span>= mime.ew(<span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">$subject</span><span style="color: rgba(128, 0, 0, 1)">"</span>, nil, { charset= <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">utf-8</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)"> }),
+        [</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">content-transfer-encoding</span><span style="color: rgba(128, 0, 0, 1)">"</span>]= <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">BASE64</span><span style="color: rgba(128, 0, 0, 1)">"</span>, [<span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">content-type</span><span style="color: rgba(128, 0, 0, 1)">"</span>]= <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">text/html; charset='utf-8'</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">,
+    },
+    body</span>= mime.b64(<span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">$body</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">)
+}
+local ret, err </span>=<span style="color: rgba(0, 0, 0, 1)"> smtp.send {
+    </span><span style="color: rgba(0, 0, 255, 1)">from</span>= <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">$from_email</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">,
+    rcpt</span>= { <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">$to_email</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)"> },
+    user</span>= <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">$from_email</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">,
+    password</span>= <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">$password</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">,
+    server</span>= <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">$smtp_server</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">,
+    port</span>= 25<span style="color: rgba(0, 0, 0, 1)">,
+    timeout</span>= 30000<span style="color: rgba(0, 0, 0, 1)">,
+    ssl</span>= {enable= false, verify_cert=<span style="color: rgba(0, 0, 0, 1)"> false},
+    domain</span>= <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">$domain</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">,
+    source</span>=<span style="color: rgba(0, 0, 0, 1)"> smtp.message(mesgt),
+}</span></pre>
+</div>
+<p> </p>
+<p>参考：</p>
+<p>https://github.com/duhoobo/lua-resty-smtp</p>
+</div>
+            </div>
+
+            <!-- Post Footer -->
+            <div class="post-footer">
+                <div class="post-navigation">
+                    <a href="../blog_cn.html" class="nav-button">← Back to Home</a>
+                    <a href="0095.html" class="nav-button">Next Post →</a>
+                </div>
+            </div>
+        </article>
+    </div>
+</body>
+</html>

@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>iptables</title>
+    <link rel="stylesheet" href="../css/style3.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header Navigation -->
+        <div class="header">
+            <h1><a href="../blog_cn.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+        </div>
+
+        <!-- Post Container -->
+        <article class="post">
+            <!-- Post Header -->
+            <div class="post-header">
+                <h1>iptables</h1>
+                <div class="post-meta">
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📅</span>
+                        <span>January 27, 2019</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📖</span>
+                        <span>1 min read</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">👁️</span>
+                        <span>950 views</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Post Content -->
+            <div class="post-content">
+                <div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<p>iptables 1.4.21 </p>
+<p><span class="command"><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201901/1509647-20190127130815299-1076868402.png"/></span></p>
+<p> </p>
+<p><span class="command">官方：https://www.netfilter.org/projects/iptables/index.html</span></p>
+<p> </p>
+<p><span class="command">iptables is the userspace command line program used to configure the Linux 2.4.x and later packet filtering ruleset. It is targeted towards system administrators.</span></p>
+<p>iptables是一个命令行工具，与netfilter一起组成linux服务器的防火墙，通过iptables可以设置管理各种ip包过滤规则；</p>
+<p> </p>
+<p>查看当前配置，以下为初始配置：</p>
+<blockquote>
+<p># iptables - nL<br/>Chain INPUT (policy ACCEPT)<br/>target     prot opt source               destination         </p>
+<p>Chain FORWARD (policy ACCEPT)<br/>target     prot opt source               destination         </p>
+<p>Chain OUTPUT (policy ACCEPT)<br/>target     prot opt source               destination</p>
+</blockquote>
+<p>policy有两种，一种是ACCEPT（默认放开，需要加黑名单，初始配置为全部放开），一种是DROP（默认拒绝，需要加白名单），常用的是后一种</p>
+<p>服务器常见的策略是放开内网访问，限制外网访问：</p>
+<blockquote>
+<p>#允许内网和本机访问</p>
+<p>iptables - A INPUT - p tcp - s 192.168.0.0/24 - j ACCEPT<br/>iptables - A INPUT - p tcp - s 127.0.0.1 - j ACCEPT</p>
+<p>#允许ssh登录</p>
+<p>iptables - A INPUT - p tcp --dport 22 - j ACCEPT</p>
+<p>#允许访问dns、curl外网等</p>
+<p>iptables - A INPUT - p udp --sport 53 - j ACCEPT<br/>iptables - A INPUT - m state --state RELATED,ESTABLISHED - j ACCEPT</p>
+<p>#允许访问80端口</p>
+<p>iptables - A INPUT - p tcp --dport 80 - j ACCEPT</p>
+<p>#允许ping</p>
+<p>iptables - A INPUT - p icmp --icmp-type echo-request - j ACCEPT</p>
+<p>#允许keepalived</p>
+<p>iptables - I INPUT - d 224.0.0.0/8 - j ACCEPT<br/>iptables - A INPUT - p vrrp - j ACCEPT</p>
+<p><br/>iptables - P INPUT DROP</p>
+</blockquote>
+<p>注意在执行最后一句之前，一定要先执行各种ACCEPT，否则执行之后服务器直接远程直接登录不了；</p>
+<p>策略生效之后是这样的：</p>
+<blockquote>
+<p># iptables - nL<br/>Chain INPUT (policy DROP)<br/>target     prot opt source               destination         <br/>ACCEPT     tcp  --  192.168.0.0/24       0.0.0.0/0           <br/>ACCEPT     tcp  --  127.0.0.1            0.0.0.0/0           <br/>ACCEPT     tcp  --  0.0.0.0/0            0.0.0.0/0            tcp dpt:22</p>
+<p>ACCEPT udp -- 0.0.0.0/0 0.0.0.0/0 udp spt:53<br/>ACCEPT     all  --  0.0.0.0/0            0.0.0.0/0            state RELATED,ESTABLISHED</p>
+<p>Chain FORWARD (policy ACCEPT)<br/>target     prot opt source               destination         </p>
+<p>Chain OUTPUT (policy ACCEPT)<br/>target     prot opt source               destination</p>
+</blockquote>
+<p>如果想删除某条规则，增加--line-number</p>
+<blockquote>
+<p># iptables - nL --line-number<br/>Chain INPUT (policy DROP)<br/>num  target     prot opt source               destination         <br/>1    ACCEPT     tcp  --  192.168.0.0/24       0.0.0.0/0           <br/>2    ACCEPT     tcp  --  127.0.0.1            0.0.0.0/0           <br/>3    ACCEPT     tcp  --  0.0.0.0/0            0.0.0.0/0            tcp dpt:22<br/>4    ACCEPT     tcp  --  0.0.0.0/0            0.0.0.0/0            tcp dpt:80<br/>5    ACCEPT     udp  --  0.0.0.0/0            0.0.0.0/0            udp spt:53<br/>6    ACCEPT     all  --  0.0.0.0/0            0.0.0.0/0            state RELATED,ESTABLISHED</p>
+<p>Chain FORWARD (policy ACCEPT)<br/>num  target     prot opt source               destination         </p>
+<p>Chain OUTPUT (policy ACCEPT)<br/>num  target     prot opt source               destination</p>
+</blockquote>
+<p>然后指定行号删除</p>
+<blockquote>
+<p># iptables - D INPUT $line</p>
+</blockquote>
+<p>保存规则</p>
+<blockquote>
+<p># sudo systemctl stop firewalld.service</p>
+<p># sudo systemctl disable firewalld.service</p>
+<p> </p>
+<p># yum install iptables-services</p>
+<p># systemctl start iptables</p>
+<p># systemctl enable iptables</p>
+<p># service iptables save</p>
+</blockquote>
+<p>或者修改 /etc/sysconfig/iptables</p>
+<p> </p>
+<p>添加端口映射</p>
+<blockquote>
+<p># <code>iptables - t nat - A PREROUTING - p tcp --dport 80 - j REDIRECT --to-port 8080</code></p>
+</blockquote>
+<p>将本机80端口的请求转发到8080端口</p>
+<p>查看所有端口映射规则</p>
+<blockquote>
+<p># iptables - t nat --list</p>
+</blockquote>
+<p> </p>
+</div>
+            </div>
+
+            <!-- Post Footer -->
+            <div class="post-footer">
+                <div class="post-navigation">
+                    <a href="../blog_cn.html" class="nav-button">← Back to Home</a>
+                    <a href="0245.html" class="nav-button">Next Post →</a>
+                </div>
+            </div>
+        </article>
+    </div>
+</body>
+</html>

@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>聚类算法DBSCAN</title>
+    <link rel="stylesheet" href="../css/style3.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header Navigation -->
+        <div class="header">
+            <h1><a href="../blog_cn.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+        </div>
+
+        <!-- Post Container -->
+        <article class="post">
+            <!-- Post Header -->
+            <div class="post-header">
+                <h1>聚类算法DBSCAN</h1>
+                <div class="post-meta">
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📅</span>
+                        <span>December 26, 2018</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📖</span>
+                        <span>3 min read</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">👁️</span>
+                        <span>2510 views</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Post Content -->
+            <div class="post-content">
+                <div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<h1>一 简介</h1>
+<p>DBSCAN：Density-based spatial clustering of applications with noise</p>
+<p>is a <a class="mw-redirect" href="https://en.wikipedia.org/wiki/Data_clustering" rel="noopener nofollow" title="">data clustering</a> algorithm proposed by Martin Ester, <a href="https://en.wikipedia.org/wiki/Hans-Peter_Kriegel" rel="noopener nofollow" title="Hans-Peter Kriegel">Hans-Peter Kriegel</a>, Jörg Sander and Xiaowei Xu in 1996.It is a <a href="https://en.wikipedia.org/wiki/Cluster_analysis#Density-based_clustering" rel="noopener nofollow" title="Cluster analysis">density-based clustering</a> algorithm: given a set of points in some space, it groups together points that are closely packed together (points with many <a href="https://en.wikipedia.org/wiki/Fixed-radius_near_neighbors" rel="noopener nofollow" title="Fixed-radius near neighbors">nearby neighbors</a>), marking as outliers points that lie alone in low-density regions (whose nearest neighbors are too far away). DBSCAN is one of the most common clustering algorithms and also most cited in scientific literature.<sup class="reference" id="cite_ref-2"><a href="https://en.wikipedia.org/wiki/DBSCAN#cite_note-2" rel="noopener nofollow"><br/></a></sup></p>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201812/1509647-20181226175107937-427760307.png"/></p>
+<p> </p>
+<h1>二 原理</h1>
+<p>DBSCAN是一种基于密度的聚类算法，算法过程比较简单，即将相距较近的点（中心点和它的邻居点）聚成一个cluster，然后不断找邻居点的邻居点并加到这个cluster中，直到cluster无法再扩大，然后再处理其他未访问的点；</p>
+<h1>三 算法伪代码</h1>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201812/1509647-20181226142149121-1596920086.png"/></p>
+<p> 子方法伪代码</p>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201812/1509647-20181226142219082-1002128706.png"/></p>
+<p>DBSCAN requires two parameters: ε (eps) and the minimum number of points required to form a dense region (minPts).</p>
+<p>DBSCAN算法主要有两个参数，一个是距离Eps，一个是最小邻居的数量MinPts，即在中心点半径Eps之内的邻居点数量超过MinPts时，中心点和邻居点才可以组成一个cluster；</p>
+<h1>四 应用代码实现</h1>
+<h2>python</h2>
+<p>示例代码</p>
+<div class="cnblogs_code">
+<pre><span style="color: rgba(0, 0, 255, 1)">def</span><span style="color: rgba(0, 0, 0, 1)"> main_fun():
+    loc_data </span>= [(40.8379295833, -73.70228875), (40.750613794,-73.993434906), (40.6927066969, -73.8085984165), (40.7489736586, -73.9859616017), (40.8379525833, -73.70209875), (40.6997066969, -73.8085234165), (40.7484436586, -73.9857316017<span style="color: rgba(0, 0, 0, 1)">)]
+    epsilon </span>= 10<span style="color: rgba(0, 0, 0, 1)">
+    db </span>= DBSCAN(eps=epsilon, min_samples=1, algorithm=<span style="color: rgba(128, 0, 0, 1)">'</span><span style="color: rgba(128, 0, 0, 1)">ball_tree</span><span style="color: rgba(128, 0, 0, 1)">'</span>, metric=<span style="color: rgba(128, 0, 0, 1)">'</span><span style="color: rgba(128, 0, 0, 1)">haversine</span><span style="color: rgba(128, 0, 0, 1)">'</span><span style="color: rgba(0, 0, 0, 1)">).fit(np.radians(loc_data))
+    labels </span>=<span style="color: rgba(0, 0, 0, 1)"> db.labels_
+    </span><span style="color: rgba(0, 0, 255, 1)">print</span><span style="color: rgba(0, 0, 0, 1)">(labels)
+    </span><span style="color: rgba(0, 0, 255, 1)">print</span><span style="color: rgba(0, 0, 0, 1)">(db.core_sample_indices_)
+    </span><span style="color: rgba(0, 0, 255, 1)">print</span><span style="color: rgba(0, 0, 0, 1)">(db.components_)
+    n_clusters_ </span>= len(set(labels)) - (1 <span style="color: rgba(0, 0, 255, 1)">if</span> -1 <span style="color: rgba(0, 0, 255, 1)">in</span> labels <span style="color: rgba(0, 0, 255, 1)">else</span><span style="color: rgba(0, 0, 0, 1)"> 0)
+    </span><span style="color: rgba(0, 0, 255, 1)">for</span> i <span style="color: rgba(0, 0, 255, 1)">in</span><span style="color: rgba(0, 0, 0, 1)"> range(0, n_clusters_):
+        </span><span style="color: rgba(0, 0, 255, 1)">print</span><span style="color: rgba(0, 0, 0, 1)">(i)
+        indexs </span>= np.where(labels ==<span style="color: rgba(0, 0, 0, 1)"> i)
+        </span><span style="color: rgba(0, 0, 255, 1)">for</span> j <span style="color: rgba(0, 0, 255, 1)">in</span><span style="color: rgba(0, 0, 0, 1)"> indexs:
+            </span><span style="color: rgba(0, 0, 255, 1)">print</span><span style="color: rgba(0, 0, 0, 1)">(loc_data[j])
+
+</span><span style="color: rgba(0, 0, 255, 1)">if</span> <span style="color: rgba(128, 0, 128, 1)">__name__</span> == <span style="color: rgba(128, 0, 0, 1)">'</span><span style="color: rgba(128, 0, 0, 1)">__main__</span><span style="color: rgba(128, 0, 0, 1)">'</span><span style="color: rgba(0, 0, 0, 1)">:
+    main_fun()</span></pre>
+</div>
+<p>主要结果说明</p>
+<table class="docutils field-list" frame="void" rules="none">
+<tbody valign="top">
+<tr class="field-even field">
+<td class="field-body"><dl class="first last docutils"><dt><strong>core_sample_indices_</strong> <span class="classifier-delimiter">: <span class="classifier">array, shape = [n_core_samples]</span></span></dt><dd>
+<p class="first last">Indices of core samples.</p>
+</dd><dt><strong>components_</strong> <span class="classifier-delimiter">: <span class="classifier">array, shape = [n_core_samples, n_features]</span></span></dt><dd>
+<p class="first last">Copy of each core sample found by training.</p>
+</dd><dt><strong>labels_</strong> <span class="classifier-delimiter">: <span class="classifier">array, shape = [n_samples]</span></span></dt><dd>
+<p class="first last">Cluster labels for each point in the dataset given to fit(). Noisy samples are given the label -1.</p>
+</dd></dl></td>
+</tr>
+</tbody>
+</table>
+<p> 详见官方文档：https://scikit-learn.org/stable/modules/generated/sklearn.cluster.DBSCAN.html</p>
+<h2>scala</h2>
+<p>依赖</p>
+<blockquote>
+<pre>&lt;dependency&gt;<br/>  &lt;groupId&gt;org.scalanlp&lt;/groupId&gt;<br/>  &lt;artifactId&gt;nak_2.11&lt;/artifactId&gt;<br/>  &lt;version&gt;1.3&lt;/version&gt;<br/>&lt;/dependency&gt;</pre>
+<pre>&lt;dependency&gt;<br/>  &lt;groupId&gt;org.scalanlp&lt;/groupId&gt;<br/>  &lt;artifactId&gt;breeze_2.11&lt;/artifactId&gt;<br/>  &lt;version&gt;0.13&lt;/version&gt;<br/>&lt;/dependency&gt;</pre>
+</blockquote>
+<p>示例代码</p>
+<div class="cnblogs_code">
+<pre><span style="color: rgba(0, 0, 255, 1)">import</span><span style="color: rgba(0, 0, 0, 1)"> breeze.linalg.DenseMatrix
+</span><span style="color: rgba(0, 0, 255, 1)">import</span><span style="color: rgba(0, 0, 0, 1)"> nak.cluster.{DBSCAN, GDBSCAN, Kmeans}
+
+    val matrix </span>=<span style="color: rgba(0, 0, 0, 1)"> DenseMatrix(
+      (</span>40.8379295833, -73.70228875<span style="color: rgba(0, 0, 0, 1)">),
+      (</span>40.6927066969, -73.8085984165<span style="color: rgba(0, 0, 0, 1)">),
+      (</span>40.7489736586, -73.9859616017<span style="color: rgba(0, 0, 0, 1)">),
+      (</span>40.8379525833, -73.70209875<span style="color: rgba(0, 0, 0, 1)">),
+      (</span>40.6997066969, -73.8085234165<span style="color: rgba(0, 0, 0, 1)">),
+      (</span>40.7484436586, -73.9857316017<span style="color: rgba(0, 0, 0, 1)">),
+      (</span>40.750613794,-73.993434906<span style="color: rgba(0, 0, 0, 1)">))
+
+    val gdbscan </span>=<span style="color: rgba(0, 0, 0, 1)"> new GDBSCAN(
+      DBSCAN.getNeighbours(epsilon </span>= 1000.0, distance =<span style="color: rgba(0, 0, 0, 1)"> Kmeans.euclideanDistance),
+      DBSCAN.isCorePoint(minPoints </span>= 1<span style="color: rgba(0, 0, 0, 1)">)
+    )
+    val clusters </span>=<span style="color: rgba(0, 0, 0, 1)"> gdbscan cluster matrix
+    clusters.foreach(cluster </span>=&gt;<span style="color: rgba(0, 0, 0, 1)"> {
+        println(cluster.id </span>+ <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">, </span><span style="color: rgba(128, 0, 0, 1)">"</span> +<span style="color: rgba(0, 0, 0, 1)"> cluster.points.length)
+        cluster.points.foreach(p </span>=&gt;<span style="color: rgba(0, 0, 0, 1)"> p.value.data.foreach(println))
+      })</span></pre>
+</div>
+<p>详见官方文档：https://github.com/scalanlp/nak </p>
+<p> </p>
+<p>算法细节详见参考</p>
+<p>参考：<a href="https://www.aaai.org/Papers/KDD/1996/KDD96-037.pdf" rel="noopener nofollow" target="_blank">A Density-Based Algorithm for Discovering Clusters in Large Spatial Databases with Noise</a></p>
+<p> </p>
+<p>其他：</p>
+<p>http://www.cs.fsu.edu/~ackerman/CIS5930/notes/DBSCAN.pdf</p>
+<p>https://www.oreilly.com/ideas/clustering-geolocated-data-using-spark-and-dbscan</p>
+<p> </p>
+</div>
+            </div>
+
+            <!-- Post Footer -->
+            <div class="post-footer">
+                <div class="post-navigation">
+                    <a href="../blog_cn.html" class="nav-button">← Back to Home</a>
+                    <a href="0297.html" class="nav-button">Next Post →</a>
+                </div>
+            </div>
+        </article>
+    </div>
+</body>
+</html>

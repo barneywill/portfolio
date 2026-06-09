@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Java基础之常用JVM工具</title>
+    <link rel="stylesheet" href="../css/style3.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header Navigation -->
+        <div class="header">
+            <h1><a href="../blog_cn.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+        </div>
+
+        <!-- Post Container -->
+        <article class="post">
+            <!-- Post Header -->
+            <div class="post-header">
+                <h1>Java基础之常用JVM工具</h1>
+                <div class="post-meta">
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📅</span>
+                        <span>January 30, 2019</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📖</span>
+                        <span>1 min read</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">👁️</span>
+                        <span>327 views</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Post Content -->
+            <div class="post-content">
+                <div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<p>查看当前所有java进程</p>
+<blockquote>
+<p># jps</p>
+</blockquote>
+<p>查看某个进程的堆内存占用情况</p>
+<blockquote>
+<p># jmap - heap $pid</p>
+</blockquote>
+<p>查看某个进程的堆内存中对象分布情况</p>
+<blockquote>
+<p># jmap - histo $pid</p>
+</blockquote>
+<p>将某个进程的堆内存导出文件</p>
+<blockquote>
+<p># jmap - dump:format=b,file=test.dump $pid</p>
+</blockquote>
+<p>分析堆内存导出文件</p>
+<blockquote>
+<p># jhat test.dump</p>
+</blockquote>
+<p>也可以用eclipse Memory Analyzer：http://www.eclipse.org/mat/</p>
+<p>查看某个进程的gc情况</p>
+<blockquote>
+<p># jstat - gcutil $pid</p>
+</blockquote>
+<p>查看某个进程的线程堆栈</p>
+<blockquote>
+<p># jstack $pid</p>
+</blockquote>
+<p>查看某个jar包中某个类的签名</p>
+<blockquote>
+<p># javap - cp $jar_path $class_name</p>
+</blockquote>
+<p>查看某个jar中所有的文件（类、配置等），相当于list</p>
+<blockquote>
+<p># vim $jar_name</p>
+<p>or</p>
+<p># unzip - l $jar_name</p>
+</blockquote>
+<p> </p>
+</div>
+            </div>
+
+            <!-- Post Footer -->
+            <div class="post-footer">
+                <div class="post-navigation">
+                    <a href="../blog_cn.html" class="nav-button">← Back to Home</a>
+                    <a href="0239.html" class="nav-button">Next Post →</a>
+                </div>
+            </div>
+        </article>
+    </div>
+</body>
+</html>

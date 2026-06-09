@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Impala读取parquet时间字段时区偏移问题</title>
+    <link rel="stylesheet" href="../css/style3.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header Navigation -->
+        <div class="header">
+            <h1><a href="../blog_cn.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+        </div>
+
+        <!-- Post Container -->
+        <article class="post">
+            <!-- Post Header -->
+            <div class="post-header">
+                <h1>Impala读取parquet时间字段时区偏移问题</h1>
+                <div class="post-meta">
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📅</span>
+                        <span>June 08, 2020</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📖</span>
+                        <span>1 min read</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">👁️</span>
+                        <span>1301 views</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Post Content -->
+            <div class="post-content">
+                <div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<p>parquet文件中的时间字段，在hive和spark-sql中读取正常，在impala中读取会偏移8个小时（少），经测试结果如下：</p>
+<h1>一 不修改impala配置</h1>
+<p>1 由spark或hive写入parquet</p>
+<ul>
+<li>spark和hive读取正常</li>
+<li>impala读取偏移8小时（少），需要手工偏移 from_unixtime(unix_timestamp(time) + 28800)</li>
+</ul>
+<h1>二 修改impala配置</h1>
+<blockquote>
+<p>use_local_tz_for_unix_timestamp_conversions=true</p>
+<p>convert_legacy_hive_parquet_utc_timestamps=true</p>
+</blockquote>
+<p>1 由spark或hive写入parquet</p>
+<ul>
+<li>spark和hive读取正常</li>
+<li>impala读取正常</li>
+</ul>
+<p>2 由impala写入parquet</p>
+<ul>
+<li>spark和hive读取偏移8小时（多）</li>
+<li>impala读取正常</li>
+</ul>
+<p> </p>
+<p>参考：https://docs.cloudera.com/documentation/enterprise/latest/topics/impala_timezone.html</p>
+</div>
+            </div>
+
+            <!-- Post Footer -->
+            <div class="post-footer">
+                <div class="post-navigation">
+                    <a href="../blog_cn.html" class="nav-button">← Back to Home</a>
+                    <a href="0069.html" class="nav-button">Next Post →</a>
+                </div>
+            </div>
+        </article>
+    </div>
+</body>
+</html>

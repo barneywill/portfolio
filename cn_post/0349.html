@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kafka客户端报错SocketException: Too many open files 打开的文件过多</title>
+    <link rel="stylesheet" href="../css/style3.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header Navigation -->
+        <div class="header">
+            <h1><a href="../blog_cn.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+        </div>
+
+        <!-- Post Container -->
+        <article class="post">
+            <!-- Post Header -->
+            <div class="post-header">
+                <h1>Kafka客户端报错SocketException: Too many open files 打开的文件过多</h1>
+                <div class="post-meta">
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📅</span>
+                        <span>November 07, 2018</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📖</span>
+                        <span>2 min read</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">👁️</span>
+                        <span>7567 views</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Post Content -->
+            <div class="post-content">
+                <div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<p>kafka0.8.1</p>
+<h1>一 问题</h1>
+<p>10月22号应用系统忽然报错：</p>
+<blockquote>
+<p>[2014/12/22 11:52:32.738]<strong>java.net.SocketException: </strong><strong>打开的文件过多</strong></p>
+<p>[2014/12/22 11:52:32.738]       at java.net.Socket.createImpl(Socket.java:447)</p>
+<p>[2014/12/22 11:52:32.738]       at java.net.Socket.connect(Socket.java:577)</p>
+<p>[2014/12/22 11:52:32.738]       at java.net.Socket.connect(Socket.java:528)</p>
+<p>[2014/12/22 11:52:32.738]       at sun.net.NetworkClient.doConnect(NetworkClient.java:180)</p>
+<p>[2014/12/22 11:52:32.738]       at sun.net.www.http.HttpClient.openServer(HttpClient.java:432)</p>
+<p>[2014/12/22 11:52:32.738]       at sun.net.www.http.HttpClient.openServer(HttpClient.java:527)</p>
+<p>[2014/12/22 11:52:32.738]       at sun.net.www.http.HttpClient.&lt;init&gt;(HttpClient.java:211)</p>
+<p>[2014/12/22 11:52:32.738]       at sun.net.www.http.HttpClient.New(HttpClient.java:308)</p>
+<p>[2014/12/22 11:52:32.738]       at sun.net.www.http.HttpClient.New(HttpClient.java:326)</p>
+<p>[2014/12/22 11:52:32.738]       at sun.net.www.protocol.http.HttpURLConnection.getNewHttpClient(HttpURLConnection.java:996)</p>
+<p>[2014/12/22 11:52:32.738]       at sun.net.www.protocol.http.HttpURLConnection.plainConnect(HttpURLConnection.java:932)</p>
+<p>[2014/12/22 11:52:32.738]       at sun.net.www.protocol.http.HttpURLConnection.connect(HttpURLConnection.java:850)</p>
+<p>[2014/12/22 11:52:32.738]       at sun.net.www.protocol.http.HttpURLConnection.getOutputStream(HttpURLConnection.java:1091)</p>
+<p>[2014/12/22 11:52:32.738]       at com.rbc.http.client.RbcHttpClient.callCptService(RbcHttpClient.java:50)</p>
+<p>[2014/12/22 11:52:32.738]       at com.rbc.http.client.RbcHttpClient.callCptService(RbcHttpClient.java:144)</p>
+<p>[2014/12/22 11:52:32.738]       at com.rbc.http.bean.BaseBean.call(BaseBean.java:54)</p>
+<p>[2014/12/22 11:52:32.739]       at app.package.APPClass.send2Center(APPClass.java:852)</p>
+<p>[2014/12/22 11:52:32.739]       at sun.reflect.GeneratedMethodAccessor4312.invoke(Unknown Source)</p>
+<p>[2014/12/22 11:52:32.739]       at sun.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)</p>
+<p>[2014/12/22 11:52:32.739]       at java.lang.reflect.Method.invoke(Method.java:606)</p>
+<p>[2014/12/22 11:52:32.739]       at org.springframework.aop.support.AopUtils.invokeJoinpointUsingReflection(AopUtils.java:307)</p>
+<p>[2014/12/22 11:52:32.739]       at org.springframework.aop.framework.JdkDynamicAopProxy.invoke(JdkDynamicAopProxy.java:198)</p>
+<p>[2014/12/22 11:52:32.739]       at com.sun.proxy.$Proxy157.send2Center(Unknown Source)</p>
+<p>[2014/12/22 11:52:32.739]       at java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:471)</p>
+<p>[2014/12/22 11:52:32.739]       at java.util.concurrent.FutureTask.run(FutureTask.java:262)</p>
+<p>[2014/12/22 11:52:32.739]       at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1145)</p>
+<p>[2014/12/22 11:52:32.739]       at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:615)</p>
+<p>[2014/12/22 11:52:32.739]       at java.lang.Thread.run(Thread.java:745)</p>
+</blockquote>
+<p>发现是因为上午打开一个开关，即应用系统将访问日志发送到消息平台kafka，但是应用系统服务器没有配置消息平台kafka的host，导致出现问题；</p>
+<p> </p>
+<h1>二 问题重现</h1>
+<p>将kafka客户端的broker-list配置为一个不存在的host，并且不断发送消息，执行：</p>
+<blockquote>
+<p>lsof –p $pid|wc -l</p>
+</blockquote>
+<p>会发现该java进程的文件描述符不断增长，其中包含大量的socket连接，并最终超过限制，可以通过：</p>
+<blockquote>
+<p>ulimit -a|grep 'open files'</p>
+</blockquote>
+<p>来查看文件描述符数量限制，超出限制之后，会就不断报错：</p>
+<blockquote>
+<p>java.net.SocketException: Too many open files</p>
+</blockquote>
+<p>问题重现；</p>
+<p> </p>
+<p><strong><em>但是如果将broker-list</em><em>配置为一个不存在的ip</em><em>，则不能重现问题；</em></strong></p>
+<p> </p>
+<h1>三 背景</h1>
+<h2>1 File Descriptor</h2>
+<p>Generally, a file descriptor is an index for an entry in a <a href="http://en.wikipedia.org/wiki/Kernel_(computer_science)" rel="noopener nofollow" title="Kernel (computer science)">kernel</a>-resident <a href="http://en.wikipedia.org/wiki/Array_data_structure" rel="noopener nofollow" title="Array data structure">array data structure</a> containing the details of open files. In POSIX this data structure is called a file descriptor table, and each <a href="http://en.wikipedia.org/wiki/Process_(computing)" rel="noopener nofollow" title="Process (computing)">process</a> has its own file descriptor table. The process passes the file descriptor to the kernel through a <a href="http://en.wikipedia.org/wiki/System_call" rel="noopener nofollow" title="System call">system call</a>, and the kernel will access the file on behalf of the process. The process itself cannot read or write the file descriptor table directly.</p>
+<p>On <a href="http://en.wikipedia.org/wiki/Linux" rel="noopener nofollow" title="Linux">Linux</a>, the set of file descriptors open in a process can be accessed under the path /proc/PID/fd/, where PID is the <a href="http://en.wikipedia.org/wiki/Process_identifier" rel="noopener nofollow" title="Process identifier">process identifier</a>.</p>
+<p> </p>
+<blockquote>
+<p>ulimit -a|grep 'open files'</p>
+</blockquote>
+<p>查看进程文件描述符限制</p>
+<blockquote>
+<p>cat /proc/sys/fs/file-max</p>
+</blockquote>
+<p>查看系统总的文件描述符限制</p>
+<blockquote>
+<p>lsof –p $pid</p>
+</blockquote>
+<p>查看某个进程具体打开的文件描述符</p>
+<blockquote>
+<p>ulimit –n $num</p>
+</blockquote>
+<p>临时修改文件描述符限制</p>
+<p> </p>
+<h2>2 Kafka Async Producer</h2>
+<p>为了避免kafka出现问题影响应用系统，使用kafka异步producer，发送消息后会将消息添加到内存队列并立即返回，另外有一个线程不断处理内存队列中的消息并发送到kafka：</p>
+<p> <img alt="" src="https://img2018.cnblogs.com/blog/1509647/201811/1509647-20181107155717735-1757607226.png"/></p>
+<p>当kafka服务器出现问题，消息发送不出去的时候，只要配置queue.enqueue.timeout.ms=0，则内存队列满时消息直接抛弃掉，不会阻塞：</p>
+<p> <img alt="" src="https://img2018.cnblogs.com/blog/1509647/201811/1509647-20181107155737862-1848076776.png"/></p>
+<p> </p>
+<h1>四 问题原因</h1>
+<p>Kafka客户端发送消息前，首先会通过broker-list中的配置连接到任一台broker获取metadata：</p>
+<blockquote>
+<p>ERROR [2014-12-22 14:05:04,687] (Logging.scala:103)  - Producer connection to $kafka_server_1:9096 unsuccessful</p>
+<p>java.nio.channels.UnresolvedAddressException</p>
+<p>       at sun.nio.ch.Net.checkAddress(Net.java:127)</p>
+<p>       at sun.nio.ch.SocketChannelImpl.connect(SocketChannelImpl.java:613)</p>
+<p>       at kafka.network.BlockingChannel.connect(BlockingChannel.scala:57)</p>
+<p>       at kafka.producer.SyncProducer.connect(SyncProducer.scala:141)</p>
+<p>       at kafka.producer.SyncProducer.getOrMakeConnection(SyncProducer.scala:156)</p>
+<p>       at kafka.producer.SyncProducer.kafka$producer$SyncProducer$$doSend(SyncProducer.scala:68)</p>
+<p>       at kafka.producer.SyncProducer.send(SyncProducer.scala:112)</p>
+<p>       <strong>at kafka.client.ClientUtils$.fetchTopicMetadata(ClientUtils.scala:53)</strong>     </p>
+</blockquote>
+<p> </p>
+<p>在这个过程报错UnresolvedAddressException，SyncProducer部分代码如下：</p>
+<p> <img alt="" src="https://img2018.cnblogs.com/blog/1509647/201811/1509647-20181107155901101-1605444930.png"/></p>
+<p>BlockingChannel代码如下：</p>
+<p> <img alt="" src="https://img2018.cnblogs.com/blog/1509647/201811/1509647-20181107155942192-159266970.png"/></p>
+<p>发现问题原因：BlockingChannel的connect方法中，channel.connect这行抛异常，此时connected为false，但是SyncProducer的disconnect中只有当BlockingChannel的connected为true时才会调用BlockingChannel的disconnect方法，所以导致一直在调用Blockingchannel的connect方法而没有调用disconnect方法，而connect方法中会调用SocketChannel.open方法：</p>
+<p> <img alt="" src="https://img2018.cnblogs.com/blog/1509647/201811/1509647-20181107160030679-986646149.png"/></p>
+<p>-&gt;</p>
+<p> <img alt="" src="https://img2018.cnblogs.com/blog/1509647/201811/1509647-20181107160044147-1745628802.png"/></p>
+<p>-&gt;</p>
+<p> <img alt="" src="https://img2018.cnblogs.com/blog/1509647/201811/1509647-20181107160100495-1458228769.png"/></p>
+<p>-&gt;</p>
+<p> <img alt="" src="https://img2018.cnblogs.com/blog/1509647/201811/1509647-20181107160112835-1222366110.png"/></p>
+<p>可见每次调用SocketChannel.open方法都会创建一个文件描述符，这样文件描述符会不断增加，为什么只有配host时出问题，而配ip时没有问题，SocketChannelImpl部分代码：</p>
+<p> <img alt="" src="https://img2018.cnblogs.com/blog/1509647/201811/1509647-20181107160157349-24324457.png"/></p>
+<p>当配host时，是Net.checkAddress时抛UnresolvedAddressException异常，这时直接退出；当配ip时，是在Net.connect时抛ConnectionTimeoutException异常，这时会有后续的finally和catch代码执行，其中readerCleanup代码如下：</p>
+<p> <img alt="" src="https://img2018.cnblogs.com/blog/1509647/201811/1509647-20181107160214445-373443548.png"/></p>
+<p>-&gt;</p>
+<p> <img alt="" src="https://img2018.cnblogs.com/blog/1509647/201811/1509647-20181107160227836-1866726214.png"/></p>
+<p>可见虽然没有调用disconnect，也会关闭文件描述符，所以配ip时不会出现文件描述符过多的问题；</p>
+<p> </p>
+<h1>五 修复</h1>
+<p>修改kafka.network.SocketChannel代码如下：</p>
+<p> <img alt="" src="https://img2018.cnblogs.com/blog/1509647/201811/1509647-20181107160253087-191093626.png"/></p>
+<p>增加try-catch，并在UnresolvedAddressException异常发生时调用disconnect，问题解决；</p>
+<p> </p>
+<p>这是当时发现问题之后在kafka jira上提交的issues： <a href="https://issues.apache.org/jira/browse/KAFKA-1832" rel="noopener nofollow" target="_blank" title="https://issues.apache.org/jira/browse/KAFKA-1832">https://issues.apache.org/jira/browse/KAFKA-1832</a></p>
+<p> </p>
+</div>
+            </div>
+
+            <!-- Post Footer -->
+            <div class="post-footer">
+                <div class="post-navigation">
+                    <a href="../blog_cn.html" class="nav-button">← Back to Home</a>
+                    <a href="0350.html" class="nav-button">Next Post →</a>
+                </div>
+            </div>
+        </article>
+    </div>
+</body>
+</html>

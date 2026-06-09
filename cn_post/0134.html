@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>kudu写入压力大时报错</title>
+    <link rel="stylesheet" href="../css/style3.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header Navigation -->
+        <div class="header">
+            <h1><a href="../blog_cn.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+        </div>
+
+        <!-- Post Container -->
+        <article class="post">
+            <!-- Post Header -->
+            <div class="post-header">
+                <h1>kudu写入压力大时报错</h1>
+                <div class="post-meta">
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📅</span>
+                        <span>May 20, 2019</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📖</span>
+                        <span>1 min read</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">👁️</span>
+                        <span>3922 views</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Post Content -->
+            <div class="post-content">
+                <div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<p>kudu写入压力大时报错</p>
+<blockquote>
+<p>19/05/18 16:53:12 INFO AsyncKuduClient: Invalidating location fd52e4f930bc45458a8f29ed118785e3(server002:7050) for tablet 4259921cdcca4776b37771659a8cafb3: Service unavailable: Soft memory limit exceeded (at 106.05% of capacity). See https://kudu.apache.org/releases/1.7.0-cdh5.16.1/docs/troubleshooting.html</p>
+</blockquote>
+<p>这是个INFO日志，只是在内存超过hard的80%时拒绝写入，可能请求导致部分写入超时；</p>
+<p>参数调优（增大以下参数）：</p>
+<ul>
+<li>1 --memory_limit_hard_bytes</li>
+<li>2 --maintenance_manager_num_threads （Generally, the recommended ratio of maintenance manager threads to data directories is 1:3.）</li>
+<li>3 --block_cache_capacity_mb （memory_limit_hard_bytes的30%到50%）</li>
+</ul>
+<p>原文：</p>
+<p>Kudu has a hard and soft memory limit. The hard memory limit is the maximum amount a Kudu process is allowed to use, and is controlled by the --memory_limit_hard_bytes flag. The soft memory limit is a percentage of the hard memory limit, controlled by the flag memory_limit_soft_percentage and with a default value of 80%, that determines the amount of memory a process may use before it will start rejecting some write operations.</p>
+<p>If the logs or RPC traces contain messages like</p>
+<blockquote>
+<p>Service unavailable: Soft memory limit exceeded (at 96.35% of capacity)</p>
+</blockquote>
+<p>then Kudu is rejecting writes due to memory backpressure. This may result in write timeouts. There are several ways to relieve the memory pressure on Kudu:</p>
+<ul>
+<li>If the host has more memory available for Kudu, increase --memory_limit_hard_bytes.</li>
+<li>Increase the rate at which Kudu can flush writes from memory to disk by increasing the number of disks or increasing the number of maintenance manager threads --maintenance_manager_num_threads. Generally, the recommended ratio of maintenance manager threads to data directories is 1:3.</li>
+<li>Reduce the volume of writes flowing to Kudu on the application side.</li>
+</ul>
+<p>Finally, on versions of Kudu prior to 1.8, check the value of --block_cache_capacity_mb. This setting determines the maximum size of Kudu’s block cache. While a higher value can help with read and write performance, do not raise --block_cache_capacity_mb above the memory pressure threshold, which is --memory_pressure_percentage (default 60%) of --memory_limit_hard_bytes, as this will cause Kudu to flush aggressively even if write throughput is low. Keeping --block_cache_capacity_mb below 50% of the memory pressure threshold is recommended. With the defaults, this means --block_cache_capacity_mb should not exceed 30% of --memory_limit_hard_bytes. On Kudu 1.8 and higher, servers will refuse to start if the block cache capacity exceeds the memory pressure threshold.</p>
+<p> </p>
+<p>调优：</p>
+<p>https://kudu.apache.org/docs/scaling_guide.html#memory</p>
+<p>https://kudu.apache.org/docs/scaling_guide.html#_verifying_if_a_memory_limit_is_sufficient </p>
+<p> </p>
+<p>参考：<br/>https://kudu.apache.org/docs/troubleshooting.html<br/>https://kudu.apache.org/docs/troubleshooting.html#memory_limits</p>
+</div>
+            </div>
+
+            <!-- Post Footer -->
+            <div class="post-footer">
+                <div class="post-navigation">
+                    <a href="../blog_cn.html" class="nav-button">← Back to Home</a>
+                    <a href="0135.html" class="nav-button">Next Post →</a>
+                </div>
+            </div>
+        </article>
+    </div>
+</body>
+</html>

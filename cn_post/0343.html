@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>在yarn上查看hive完整执行sql</title>
+    <link rel="stylesheet" href="../css/style3.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header Navigation -->
+        <div class="header">
+            <h1><a href="../blog_cn.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+        </div>
+
+        <!-- Post Container -->
+        <article class="post">
+            <!-- Post Header -->
+            <div class="post-header">
+                <h1>在yarn上查看hive完整执行sql</h1>
+                <div class="post-meta">
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📅</span>
+                        <span>December 07, 2018</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📖</span>
+                        <span>1 min read</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">👁️</span>
+                        <span>6271 views</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Post Content -->
+            <div class="post-content">
+                <div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<p>hive执行sql提交到yarn上的任务名字是被处理过的，通常只能显示sql的前边一段和最后几个字符，这样就会带来一些问题：</p>
+<p>1）相近时间提交了几个相近的sql，相互之间无法区分；</p>
+<p>2）一个任务有问题，想看下这个任务具体执行的是什么？是谁的任务？</p>
+<p>通过以下方法可以查看：</p>
+<p>1）如果任务正在running，进入yarn的ApplicationMaster页面，进入job，点击configuration，右上角过滤框输入“hive.query.string”即可，如图：</p>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201812/1509647-20181207163927480-1119372179.png"/></p>
+<p>2）如果任务已经结束，进入history server，页面和上边差不多；</p>
+<p> </p>
+</div>
+            </div>
+
+            <!-- Post Footer -->
+            <div class="post-footer">
+                <div class="post-navigation">
+                    <a href="../blog_cn.html" class="nav-button">← Back to Home</a>
+                    <a href="0344.html" class="nav-button">Next Post →</a>
+                </div>
+            </div>
+        </article>
+    </div>
+</body>
+</html>

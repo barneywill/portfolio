@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Java基础之ClassLoader类加载器简介</title>
+    <link rel="stylesheet" href="../css/style3.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header Navigation -->
+        <div class="header">
+            <h1><a href="../blog_cn.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+        </div>
+
+        <!-- Post Container -->
+        <article class="post">
+            <!-- Post Header -->
+            <div class="post-header">
+                <h1>Java基础之ClassLoader类加载器简介</h1>
+                <div class="post-meta">
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📅</span>
+                        <span>December 12, 2018</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📖</span>
+                        <span>1 min read</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">👁️</span>
+                        <span>357 views</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Post Content -->
+            <div class="post-content">
+                <div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<h1>classloader简介</h1>
+<h2>1 classloader层次结构（父子关系）</h2>
+<p>Bootstrap（ClassLoader）</p>
+<ul>
+<li>ExtClassLoader
+<ul>
+<li>AppClassLoader
+<ul>
+<li>XXXClassLoader</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<p>详见代码如下：</p>
+<h5 id="id-20180914整理-sun.misc.Launcher"><strong>sun.misc.Launcher</strong></h5>
+<div class="cnblogs_code">
+<pre>public<span> Launcher() {
+
+        Launcher.ExtClassLoader var1;
+
+        try<span> {
+
+            var1 =<span> Launcher.ExtClassLoader.getExtClassLoader();
+
+        } catch<span> (IOException var10) {
+
+            throw new InternalError("Could not create extension class loader"<span>, var10);
+
+        }
+
+ 
+
+        try<span> {
+
+            this.loader =<span> Launcher.AppClassLoader.getAppClassLoader(var1);
+
+        } catch<span> (IOException var9) {
+
+            throw new InternalError("Could not create application class loader"<span>, var9);
+
+        }</span></span></span></span></span></span></span></span></span></pre>
+</div>
+<h2>2 classloader加载类过程</h2>
+<p>classloader在加载class时优先尝试通过parent classloader加载，如果加载不到，才尝试自己加载，即常说的“双亲委派”，</p>
+<p>并且如果一个class依赖其他class，比如ClassA依赖ClassB，ClassB默认由ClassA的classloader来加载。</p>
+<blockquote>
+<p>* &lt;p&gt; The methods and constructors of objects created by a class loader may<br/>* reference other classes. To determine the class(es) referred to, the Java<br/>* virtual machine invokes the {@link #loadClass &lt;tt&gt;loadClass&lt;/tt&gt;} method of<br/>* the class loader that originally created the class.</p>
+</blockquote>
+<p>详见代码如下：</p>
+<h5 id="id-20180914整理-java.lang.ClassLoader"><strong>java.lang.ClassLoader</strong></h5>
+<div class="cnblogs_code">
+<pre>protected Class&lt;?&gt; loadClass(String name, boolean<span> resolve)
+
+        throws<span> ClassNotFoundException
+
+    {
+
+        synchronized<span> (getClassLoadingLock(name)) {
+
+            // First, check if the class has already been loaded
+<span>
+            Class&lt;?&gt; c =<span> findLoadedClass(name);
+
+            if (c == null<span>) {
+
+                long t0 =<span> System.nanoTime();
+
+                try<span> {
+
+                    if (parent != null<span>) {
+
+                        c = parent.loadClass(name, false<span>);
+
+                    } else<span> {
+
+                        c =<span> findBootstrapClassOrNull(name);
+
+                    }
+
+                } catch<span> (ClassNotFoundException e) {
+
+                    // ClassNotFoundException thrown if class not found
+
+                    // from the non-null parent class loader
+<span>
+                }
+
+ 
+
+                if (c == null<span>) {
+
+                    // If still not found, then invoke findClass in order
+
+                    // to find the class.
+
+                    long t1 =<span> System.nanoTime();
+
+                    c =<span> findClass(name);
+
+ 
+
+                    // this is the defining class loader; record the stats
+<span>
+                    sun.misc.PerfCounter.getParentDelegationTime().addTime(t1 - <span> t0);
+
+                    sun.misc.PerfCounter.getFindClassTime().addElapsedTimeFrom(t1);
+
+                    sun.misc.PerfCounter.getFindClasses().increment();
+
+                }
+
+            }
+
+            if<span> (resolve) {
+
+                resolveClass(c);
+
+            }
+
+            return<span> c;
+
+        }
+
+    }</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></pre>
+<p><span> </span></p>
+</div>
+</div>
+            </div>
+
+            <!-- Post Footer -->
+            <div class="post-footer">
+                <div class="post-navigation">
+                    <a href="../blog_cn.html" class="nav-button">← Back to Home</a>
+                    <a href="0327.html" class="nav-button">Next Post →</a>
+                </div>
+            </div>
+        </article>
+    </div>
+</body>
+</html>

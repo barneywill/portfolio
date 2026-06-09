@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>yarn被利用提交get-shell任务挖矿</title>
+    <link rel="stylesheet" href="../css/style3.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header Navigation -->
+        <div class="header">
+            <h1><a href="../blog_cn.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+        </div>
+
+        <!-- Post Container -->
+        <article class="post">
+            <!-- Post Header -->
+            <div class="post-header">
+                <h1>yarn被利用提交get-shell任务挖矿</h1>
+                <div class="post-meta">
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📅</span>
+                        <span>May 19, 2022</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📖</span>
+                        <span>1 min read</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">👁️</span>
+                        <span>391 views</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Post Content -->
+            <div class="post-content">
+                <div class="blogpost-body cnblogs-markdown" id="cnblogs_post_body">
+<h1 id="背景">背景</h1>
+<p>某天开始集群网络带宽被占满</p>
+<p><picture>
+  <source srcset="../img/1509647-20220519105400719-60291449.webp" type="image/webp">
+  <img alt="" src="../img/1509647-20220519105400719-60291449.png">
+</picture></p>
+<p>登录出问题的节点，通过iftop发现有大量出网方向的流量</p>
+<blockquote>
+<p>hadoop-*                                                                                                                  =&gt; c-73-29-172-82.hsd1.nj.comcast.net                                                                                         422Mb   433Mb   236Mb<br/>
+&lt;=                                                                                                                              0b   0b      0b<br/>
+hadoop-*                                                                                                                  =&gt; cpe-75-187-235-200.neo.res.rr.com                                                                                          358Mb   391Mb   440Mb</p>
+</blockquote>
+<p>同时发现问题节点上有大量的异常进程，启动用户是yarn</p>
+<p><picture>
+  <source srcset="../img/1509647-20220519105447839-1257027283.webp" type="image/webp">
+  <img alt="" src="../img/1509647-20220519105447839-1257027283.png">
+</picture></p>
+<p>到yarn上发现有一个异常的应用，name为get-shell</p>
+<p><picture>
+  <source srcset="../img/1509647-20220519105549908-1325294146.webp" type="image/webp">
+  <img alt="" src="../img/1509647-20220519105549908-1325294146.png">
+</picture></p>
+<p>yarn的ResourceManager的8088端口，可以向该端口提交get-shell任务，这个任务会启动2个进程，然后启动其他同名进程，这些进程向外网传输数据。</p>
+<h2 id="清理进程">清理进程</h2>
+<blockquote>
+<p>ps aux|grep Vm6RUIoCjV7jGf5</p>
+</blockquote>
+<h2 id="追踪来源">追踪来源</h2>
+<p>清理get-shell任务之后，不确定是从内网还是外网提交get-shell任务，将8088端口改为nginx端口，记录任务提交记录，等待下次任务提交，发现</p>
+<blockquote>
+<p>172.245.81.123 - - [08/Feb/2022:19:08:48 +0800] "POST /ws/v1/cluster/apps/new-application HTTP/1.1" 200 243 "-" "python-requests/2.6.0 CPython/2.7.5 Linux/3.10.0-1160.53.1.el7.x86_64" "-"</p>
+</blockquote>
+<p>ip是美国的ip，来自外网，进一步排查发现是安全策略有个漏洞，原本放开的是内网网段，但是这个外网ip恰好被匹配到，导致恶意用户直接穿透到内网的yarn。</p>
+<p>类似案例参考：<a href="https://www.jianshu.com/p/a2d6b0d827ab" rel="noopener nofollow" target="_blank">yarn集群8088端口被攻击挖矿</a></p>
+</div>
+            </div>
+
+            <!-- Post Footer -->
+            <div class="post-footer">
+                <div class="post-navigation">
+                    <a href="../blog_cn.html" class="nav-button">← Back to Home</a>
+                    <a href="0027.html" class="nav-button">Next Post →</a>
+                </div>
+            </div>
+        </article>
+    </div>
+</body>
+</html>

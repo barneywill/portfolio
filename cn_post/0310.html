@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>spark写数据到hive外部表报错ClassCastException: org.apache.hadoop.hive.hbase.HiveHBaseTableOutputFormat cannot be cast to org.apache.hadoop.hive.ql.io.HiveOutputFormat</title>
+    <link rel="stylesheet" href="../css/style3.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header Navigation -->
+        <div class="header">
+            <h1><a href="../blog_cn.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+        </div>
+
+        <!-- Post Container -->
+        <article class="post">
+            <!-- Post Header -->
+            <div class="post-header">
+                <h1>spark写数据到hive外部表报错ClassCastException: org.apache.hadoop.hive.hbase.HiveHBaseTableOutputFormat cannot be cast to org.apache.hadoop.hive.ql.io.HiveOutputFormat</h1>
+                <div class="post-meta">
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📅</span>
+                        <span>December 18, 2018</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📖</span>
+                        <span>1 min read</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">👁️</span>
+                        <span>2891 views</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Post Content -->
+            <div class="post-content">
+                <div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<p> spark 2.1.1</p>
+<p> </p>
+<p>spark在写数据到hive外部表（底层数据在hbase中）时会报错</p>
+<blockquote>
+<p>Caused by: java.lang.ClassCastException: org.apache.hadoop.hive.hbase.HiveHBaseTableOutputFormat cannot be cast to org.apache.hadoop.hive.ql.io.HiveOutputFormat<br/>	at org.apache.spark.sql.hive.SparkHiveWriterContainer.outputFormat$lzycompute(hiveWriterContainers.scala:82)</p>
+</blockquote>
+<p> </p>
+<p>org.apache.spark.sql.hive.SparkHiveWriterContainer</p>
+<div class="cnblogs_code">
+<pre><span style="color: rgba(0, 0, 0, 1)">org.apache.spark.sql.hive.SparkHiveWriterContainer
+  @</span><span style="color: rgba(0, 0, 255, 1)">transient</span> <span style="color: rgba(0, 0, 255, 1)">private</span> lazy val outputFormat = conf.value.getOutputFormat.asInstanceOf[HiveOutputFormat[AnyRef, Writable]]</pre>
+</div>
+<p> </p>
+<p>报错的是这一句，查看代码发现此时这个变量并没有什么用处，可以在不能cast时置为null</p>
+<div class="cnblogs_code">
+<pre>  @<span style="color: rgba(0, 0, 255, 1)">transient</span> <span style="color: rgba(0, 0, 255, 1)">private</span> lazy val outputFormat =
+    <span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> conf.value.getOutputFormat.asInstanceOf[HiveOutputFormat[AnyRef, Writable]]</span>
+<span style="color: rgba(0, 0, 0, 1)">    conf.value.getOutputFormat match {
+      </span><span style="color: rgba(0, 0, 255, 1)">case</span> format <span style="color: rgba(0, 0, 255, 1)">if</span> format.isInstanceOf[HiveOutputFormat[AnyRef, Writable]] =&gt;<span style="color: rgba(0, 0, 0, 1)"> format.asInstanceOf[HiveOutputFormat[AnyRef, Writable]]
+      </span><span style="color: rgba(0, 0, 255, 1)">case</span> _ =&gt; <span style="color: rgba(0, 0, 255, 1)">null</span><span style="color: rgba(0, 0, 0, 1)">
+    }</span></pre>
+</div>
+<p>问题解决，官方讨论如下： https://issues.apache.org/jira/browse/SPARK-6628</p>
+<p><a href="https://www.cnblogs.com/barneywill/p/10137235.html" id="post_title_link_10137235"> </a></p>
+<p> </p>
+</div>
+            </div>
+
+            <!-- Post Footer -->
+            <div class="post-footer">
+                <div class="post-navigation">
+                    <a href="../blog_cn.html" class="nav-button">← Back to Home</a>
+                    <a href="0311.html" class="nav-button">Next Post →</a>
+                </div>
+            </div>
+        </article>
+    </div>
+</body>
+</html>

@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>hdfs副本数量</title>
+    <link rel="stylesheet" href="../css/style3.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header Navigation -->
+        <div class="header">
+            <h1><a href="../blog_cn.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+        </div>
+
+        <!-- Post Container -->
+        <article class="post">
+            <!-- Post Header -->
+            <div class="post-header">
+                <h1>hdfs副本数量</h1>
+                <div class="post-meta">
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📅</span>
+                        <span>March 25, 2019</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📖</span>
+                        <span>1 min read</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">👁️</span>
+                        <span>1131 views</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Post Content -->
+            <div class="post-content">
+                <div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<p>当hdfs空间不足时，除了删除临时数据或垃圾数据之外，还可以适当调整部分大目录的副本数量，多管齐下；</p>
+<h1>1 查看</h1>
+<blockquote>
+<p>$ hdfs dfs - ls /user/hive/warehouse/temp.db/test_ext_o<br/>-rwxr-xr-x   3 hadoop supergroup   44324200 2019-02-28 16:36 /user/hive/warehouse/temp.db/test_ext_o/000000_0</p>
+</blockquote>
+<p>权限后边的3即为副本数量</p>
+<h1>2 修改</h1>
+<blockquote>
+<p>$ hadoop fs - setrep [-w] 2 /user/hive/warehouse/temp.db/test_ext_o/000000_0<br/>or<br/>$ hdfs dfs - setrep [-w] 2 /user/hive/warehouse/temp.db/test_ext_o/000000_0<br/>WARNING: the waiting time may be long for DECREASING the number of replications.</p>
+</blockquote>
+<p>修改副本数量为2，启动路径可以指定文件，也可以指定目录；<br/>可以增加-w参数，会一直等待操作完成；</p>
+<p>The - w flag requests that the command wait for the replication to complete. This can potentially take a very long time.</p>
+</div>
+            </div>
+
+            <!-- Post Footer -->
+            <div class="post-footer">
+                <div class="post-navigation">
+                    <a href="../blog_cn.html" class="nav-button">← Back to Home</a>
+                    <a href="0163.html" class="nav-button">Next Post →</a>
+                </div>
+            </div>
+        </article>
+    </div>
+</body>
+</html>

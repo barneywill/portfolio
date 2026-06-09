@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FRP</title>
+    <link rel="stylesheet" href="../css/style3.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header Navigation -->
+        <div class="header">
+            <h1><a href="../blog_cn.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+        </div>
+
+        <!-- Post Container -->
+        <article class="post">
+            <!-- Post Header -->
+            <div class="post-header">
+                <h1>FRP</h1>
+                <div class="post-meta">
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📅</span>
+                        <span>July 24, 2021</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📖</span>
+                        <span>1 min read</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">👁️</span>
+                        <span>161 views</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Post Content -->
+            <div class="post-content">
+                <div class="blogpost-body cnblogs-markdown" id="cnblogs_post_body">
+<h1 id="frp">frp</h1>
+<h2 id="简介">简介</h2>
+<p>frp is a fast reverse proxy to help you expose a local server behind a NAT or firewall to the Internet. As of now, it supports TCP and UDP, as well as HTTP and HTTPS protocols, where requests can be forwarded to internal services by domain name.</p>
+<h2 id="下载">下载</h2>
+<p>下载最新的tag，下载地址：<a href="https://github.com/fatedier/frp" rel="noopener nofollow" target="_blank">https://github.com/fatedier/frp</a></p>
+<h2 id="安装">安装</h2>
+<p>在服务端和客户端分别解压</p>
+<pre><code>tar xvf frp_0.37.0_linux_amd64.tar.gz
+</code></pre>
+<h3 id="服务端">服务端</h3>
+<h4 id="准备配置文件frpsini">准备配置文件：frps.ini</h4>
+<pre><code>[common]
+bind_port=7000
+token=$token
+dashboard_port=7500
+dashboard_user=$user
+dashboard_pwd=$pwd
+log_file=/path/to/frp_0.37.0_linux_amd64/logs/frps.log
+log_level=info
+log_max_days=3
+authentication_timeout=0
+max_pool_count=50
+</code></pre>
+<p>配置token（用于客户端连接服务端），dashboard_user和dashboard_pwd（用于管理页面）</p>
+<h4 id="启动">启动</h4>
+<pre><code>./frps - c frps.ini
+</code></pre>
+<p>启动之后通过访问：http://$server_ip:7500<br/>
+帐号和密码即dashboard_user和dashboard_pwd</p>
+<h3 id="客户端">客户端</h3>
+<h4 id="准备配置文件frpcini">准备配置文件：frpc.ini</h4>
+<pre><code>[common]
+server_addr=$server_ip
+server_port=7000
+token=$token
+
+
+[test_ssh]
+type=tcp
+local_ip=127.0.0.1
+local_port=22
+remote_port=$port
+</code></pre>
+<p>类似test_ssh可以配置多个，test_ssh表明将本地的22端口绑定到远程服务端的$port端口，即可以通过访问远程服务端$server_ip的$port来间接访问客户端的22端口</p>
+<h4 id="启动-1">启动</h4>
+<pre><code>./frps - c frpc.ini
+</code></pre>
+<h2 id="使用场景">使用场景</h2>
+<p>一台有外网ip的云主机，在上边配置frp服务端，然后可以在内网部署客户端，将内网的端口绑定到云主机的端口，实现内网穿透访问</p>
+</div>
+            </div>
+
+            <!-- Post Footer -->
+            <div class="post-footer">
+                <div class="post-navigation">
+                    <a href="../blog_cn.html" class="nav-button">← Back to Home</a>
+                    <a href="0038.html" class="nav-button">Next Post →</a>
+                </div>
+            </div>
+        </article>
+    </div>
+</body>
+</html>

@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>impala执行多个select distinct</title>
+    <link rel="stylesheet" href="../css/style3.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header Navigation -->
+        <div class="header">
+            <h1><a href="../blog_cn.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+        </div>
+
+        <!-- Post Container -->
+        <article class="post">
+            <!-- Post Header -->
+            <div class="post-header">
+                <h1>impala执行多个select distinct</h1>
+                <div class="post-meta">
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📅</span>
+                        <span>September 28, 2019</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📖</span>
+                        <span>1 min read</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">👁️</span>
+                        <span>5052 views</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Post Content -->
+            <div class="post-content">
+                <div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<p>impala在一个select中执行多个count distinct时会报错，比如执行</p>
+<blockquote>
+<p>select key, count(distinct column_a), count(distinct column_b) from test_table group by key</p>
+</blockquote>
+<p>会报错</p>
+<blockquote>
+<p>Query submitted at: 2019-09-28 00:34:20 (Coordinator: http://DataOne-001:25000)<br/>ERROR: AnalysisException: all DISTINCT aggregate functions need to have the same set of parameters as count(DISTINCT column_a); 
+<br/>deviating function: count(DISTINCT column_b)<br/>Consider using NDV() instead of COUNT(DISTINCT) if estimated counts are acceptable. Enable the APPX_COUNT_DISTINCT query option to 
+<br/>perform this rewrite automatically.</p>
+</blockquote>
+<p>这时有几种方法：</p>
+<h2>1 使用近似值</h2>
+<p>1.1 set APPX_COUNT_DISTINCT = true<br/>1.2 count distinct改为ndv，即ndv(column_a)<br/>这两种方法底层实现是一样的，设置APPX_COUNT_DISTINCT会自动将count distinct改写为ndv，ndv全称为（number of distinct values），用到
+<br/>Cardinality（基数计数），底层实现是类似HLLC（Hyper LogLog Counting）这种概率算法，详见参考；</p>
+<p><em>An aggregate function that returns an approximate value similar to the result of <code class="ph codeph">COUNT(DISTINCT <var class="keyword varname">col</var>)</code>, the <span class="q">"number of distinct values". It is much faster than the combination of <code class="ph codeph">COUNT</code> and <code class="ph codeph">DISTINCT</code>, and uses a constant amount of memory and thus is less memory-intensive for columns with high cardinality.</span></em></p>
+<h2>2 使用精确值</h2>
+<p>改写为多个子查询然后join，比如</p>
+<blockquote>
+<p>select a.key, a.count_a, b.count_b from <br/>(select key, count(distinct column_a) count_a from test_table group by key) a join<br/>(select key, count(distinct column_b) count_b from test_table group by key) b on a.key = b.key</p>
+</blockquote>
+<p> </p>
+<p>参考：</p>
+<p>ndv</p>
+<p><a href="http://impala.apache.org/docs/build/html/topics/impala_ndv.html#ndv" rel="noopener nofollow">http://impala.apache.org/docs/build/html/topics/impala_ndv.html#ndv</a></p>
+<p>APPX_COUNT_DISTINCT</p>
+<p><a href="http://impala.apache.org/docs/build/html/topics/impala_appx_count_distinct.html" rel="noopener nofollow">http://impala.apache.org/docs/build/html/topics/impala_appx_count_distinct.html</a></p>
+<p>其他</p>
+<p><a href="https://stackoverflow.com/questions/39236076/impala-all-distinct-aggregate-functions-need-to-have-the-same-set-of-parameters" rel="noopener nofollow">https://stackoverflow.com/questions/39236076/impala-all-distinct-aggregate-functions-need-to-have-the-same-set-of-parameters</a></p>
+<p> </p>
+</div>
+            </div>
+
+            <!-- Post Footer -->
+            <div class="post-footer">
+                <div class="post-navigation">
+                    <a href="../blog_cn.html" class="nav-button">← Back to Home</a>
+                    <a href="0091.html" class="nav-button">Next Post →</a>
+                </div>
+            </div>
+        </article>
+    </div>
+</body>
+</html>

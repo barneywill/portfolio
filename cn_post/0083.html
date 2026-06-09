@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>linux服务器iowait和负载很高</title>
+    <link rel="stylesheet" href="../css/style3.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header Navigation -->
+        <div class="header">
+            <h1><a href="../blog_cn.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+        </div>
+
+        <!-- Post Container -->
+        <article class="post">
+            <!-- Post Header -->
+            <div class="post-header">
+                <h1>linux服务器iowait和负载很高</h1>
+                <div class="post-meta">
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📅</span>
+                        <span>November 11, 2019</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📖</span>
+                        <span>2 min read</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">👁️</span>
+                        <span>1136 views</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Post Content -->
+            <div class="post-content">
+                <div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<p> </p>
+<blockquote>
+<p># top</p>
+</blockquote>
+<div class="cnblogs_code">
+<pre>top - 21:21:51 up 207 days,  1:30,  5 users,  load average: 0.90, 0.79, 1.62<span style="color: rgba(0, 0, 0, 1)">
+Tasks: </span>249 total,   1 running, 246 sleeping,   2<span style="color: rgba(0, 0, 0, 1)"> stopped,   0 zombie
+</span>%Cpu(s): 49.2 us,  2.0 sy,  0.0 ni, 48.1 id,  0.0 wa,  0.0 hi,  0.6 si,  0.0 st</pre>
+</div>
+<p>如果load average很大（参考核数），则系统负载很高，其中一种可能是由于iowait很大，具体可见%Cpu中的wa，通常wa=0.0，</p>
+<p>iowait很大有两种可能，一种是网络，一种是磁盘，并且极有可能是磁盘，检查磁盘io，有多种命令：</p>
+<p>1）iotop</p>
+<div class="cnblogs_code">
+<pre>Total DISK READ :       0.00 B/s | Total DISK WRITE :       0.00 B/<span style="color: rgba(0, 0, 0, 1)">s
+Actual DISK READ:       </span>0.00 B/s | Actual DISK WRITE:       0.00 B/<span style="color: rgba(0, 0, 0, 1)">s
+  TID  PRIO  USER     DISK READ  DISK WRITE  SWAPIN      IO    COMMAND
+    </span>1 be/4 root        0.00 B/s    0.00 B/s  0.00 %  0.00 % systemd --switched-root --system --deserialize 22
+    2 be/4 root        0.00 B/s    0.00 B/s  0.00 %  0.00 %<span style="color: rgba(0, 0, 0, 1)"> [kthreadd]
+    </span>3 be/4 root        0.00 B/s    0.00 B/s  0.00 %  0.00 % [ksoftirqd/0]</pre>
+</div>
+<blockquote>
+<p># iotop -b -n 5 -d 2</p>
+</blockquote>
+<p>以非交互方式每隔2s运行5次</p>
+<p>可以发现读写io很高的进程；</p>
+<p>2）iostat</p>
+<div class="cnblogs_code">
+<pre>Linux 3.10.0-957.5.1.el7.x86_64 (002)     01/11/2019     _x86_64_    (8<span style="color: rgba(0, 0, 0, 1)"> CPU)
+
+avg</span>-cpu:  %user   %nice %system %iowait  %steal   %<span style="color: rgba(0, 0, 0, 1)">idle
+          </span>15.42    0.00    2.19    1.06    0.00   81.33<span style="color: rgba(0, 0, 0, 1)">
+
+Device:            tps    kB_read</span>/s    kB_wrtn/<span style="color: rgba(0, 0, 0, 1)">s    kB_read    kB_wrtn
+vda              </span>33.36       100.93       420.00 1805775696 7514000609<span style="color: rgba(0, 0, 0, 1)">
+vdb              </span>48.99       460.82      5627.92 8244424473 100686856544<span style="color: rgba(0, 0, 0, 1)">
+vdc               </span>3.77        91.20       262.15 1631539193 4689931576<span style="color: rgba(0, 0, 0, 1)">
+vdd               </span>0.74        26.14       106.88  467597777 1912213584</pre>
+</div>
+<blockquote>
+<p># iostat -x 2 5</p>
+</blockquote>
+<p>每隔2s运行5次</p>
+<div class="cnblogs_code">
+<pre>avg-cpu:  %user   %nice %system %iowait  %steal   %<span style="color: rgba(0, 0, 0, 1)">idle
+           </span>6.73    0.00   15.63   58.83    0.00   18.81<span style="color: rgba(0, 0, 0, 1)">
+
+Device:         rrqm</span>/s   wrqm/s     r/s     w/s    rkB/s    wkB/s avgrq-sz avgqu-sz   await r_await w_await  svctm  %<span style="color: rgba(0, 0, 0, 1)">util
+vda               </span>0.00     7.00    0.50    6.00     2.00    54.00    17.23     0.00    0.54    0.00    0.58   0.38   0.25<span style="color: rgba(0, 0, 0, 1)">
+vdb               </span>0.00     5.00    0.00    1.50     0.00    26.00    34.67     0.00    0.67    0.00    0.67   0.67   0.10<span style="color: rgba(0, 0, 0, 1)">
+vdc               </span>0.00     0.00    1.00    0.00    64.00     0.00   128.00    37.88 23500.00 23500.00    0.00 619.00  61.90<span style="color: rgba(0, 0, 0, 1)">
+vdd               </span>0.00     0.00    0.00    0.00     0.00     0.00     0.00     0.00    0.00    0.00    0.00   0.00   0.00</pre>
+</div>
+<p>可以发现读写io很高的磁盘；</p>
+<p> </p>
+<p>如果发现一个磁盘读写io很高，怎么查看是哪些进程导致的？</p>
+<blockquote>
+<p># lsof /dev/vdc1</p>
+</blockquote>
+<div class="cnblogs_code">
+<pre>COMMAND   PID    USER   FD   TYPE DEVICE SIZE/<span style="color: rgba(0, 0, 0, 1)">OFF    NODE NAME
+java     </span>2688    hdfs  299uW  REG 253,33       16 3407875 /data/dfs/dn/<span style="color: rgba(0, 0, 0, 1)">in_use.lock
+java     </span>9982 jenkins  mem    REG 253,33   304183 1181098 /data/jenkins/plugins/github-branch-source/WEB-INF/lib/github-branch-source.jar</pre>
+</div>
+<p>如何查看一个进程有哪些io？</p>
+<blockquote>
+<p># lsof -p $pid</p>
+</blockquote>
+<div class="cnblogs_code">
+<pre>COMMAND   PID USER   FD      TYPE             DEVICE  SIZE/<span style="color: rgba(0, 0, 0, 1)">OFF       NODE NAME
+java    </span>19891 hdfs  cwd       DIR               0,38       400 1047556664 /opt/cloudera-manager/cm-5.16.1/run/cloudera-scm-agent/process/806-hdfs-<span style="color: rgba(0, 0, 0, 1)">DATANODE
+java    </span>19891 hdfs  rtd       DIR              253,1      4096          2 /</pre>
+</div>
+<p> </p>
+</div>
+            </div>
+
+            <!-- Post Footer -->
+            <div class="post-footer">
+                <div class="post-navigation">
+                    <a href="../blog_cn.html" class="nav-button">← Back to Home</a>
+                    <a href="0084.html" class="nav-button">Next Post →</a>
+                </div>
+            </div>
+        </article>
+    </div>
+</body>
+</html>

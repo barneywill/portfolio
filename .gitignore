@@ -1,2 +1,51 @@
-.idea
+# Python virtual environment
+venv/
+env/
+.venv/
+
+# Python cache and bytecode
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# Environment variables and secrets
+.env
+.env.local
+.env.*.local
+
+# Log files
+*.log
+scraper_output.log
+translate_output.log
+
+# OS files
 .DS_Store
+Thumbs.db
+.AppleDouble
+.LSOverride
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.project
+.pydevproject
+
+# Original posts (before processing)
+original_posts/*
+
+# Build and cache
+build/
+dist/
+*.egg-info/
+.cache/
+.pytest_cache/
+
+# Temporary files
+*.tmp
+.temp/
+tmp/

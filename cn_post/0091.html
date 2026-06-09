@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>logstash一个实例运行多个配置文件</title>
+    <link rel="stylesheet" href="../css/style3.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header Navigation -->
+        <div class="header">
+            <h1><a href="../blog_cn.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+        </div>
+
+        <!-- Post Container -->
+        <article class="post">
+            <!-- Post Header -->
+            <div class="post-header">
+                <h1>logstash一个实例运行多个配置文件</h1>
+                <div class="post-meta">
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📅</span>
+                        <span>September 22, 2019</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📖</span>
+                        <span>1 min read</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">👁️</span>
+                        <span>2414 views</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Post Content -->
+            <div class="post-content">
+                <div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<p>logstash一个实例运行多个配置文件，将所有配置文件放到以下目录即可</p>
+<p>/usr/share/logstash/pipeline</p>
+<p>但是默认行为不是每个配置文件独立运行，而是作为一个整体，每个input会匹配所有的filter，然后匹配所有的output，可能会导致数据被错误的处理以及发送到错误的地方；</p>
+<p> </p>
+<p>解决方法一：</p>
+<p>在input中设置一个变量，在filter和output中判断该变量，实现每个配置文件独立运行，不会相互影响，使用哪个变量呢？</p>
+<p>input默认有很多通用参数，但是只有type可用，官方描述如下：</p>
+<blockquote>
+<p>Add a <code class="literal">type</code> field to all events handled by this input.</p>
+<p>Types are used mainly for filter activation.</p>
+<p>The type is stored as part of the event itself, so you can also use the type to search for it in Kibana.</p>
+</blockquote>
+<p>input中的type参数会被添加到event中，所以后续在filter和output中都可以使用，其他参数就不行了，配置如下：</p>
+<div class="cnblogs_code">
+<pre><span style="color: rgba(0, 0, 0, 1)">input {
+  jdbc {
+    ...
+    type </span>=&gt; <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">some_type</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">
+  }
+}
+filter {
+  </span><span style="color: rgba(0, 0, 255, 1)">if</span> [type] == <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">some_type</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)"> {
+    ...
+  }
+}
+output {
+  </span><span style="color: rgba(0, 0, 255, 1)">if</span> [type] == <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">some_type</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)"> {
+    ...
+  }
+}</span></pre>
+</div>
+<p>如果一切正常，恭喜你，如果还有问题，有可能是你的event里本来就有type字段，然后又赋值一个，会出现一个type数组（追加而不是覆盖），这时有两个问题：</p>
+<p>1）filter和output中的if判断失效，你的数据压根就不会处理也不会发送出去；</p>
+<p>2）你的数据中的type字段被改乱了；</p>
+<p> </p>
+<p>解决方法二：</p>
+<p>在event中手工添加一个变量，比如my_type，配置如下：</p>
+<div class="cnblogs_code">
+<pre><span style="color: rgba(0, 0, 0, 1)">input {
+  jdbc {
+    ...
+    statement </span>=&gt; <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">select *, 'some_type' my_type from my_table where update_time &gt; :sql_last_value</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">
+    ...
+  }
+}
+filter {
+  </span><span style="color: rgba(0, 0, 255, 1)">if</span> [my_type] == <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">some_type</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)"> {
+    ...
+  }
+}
+output {
+  </span><span style="color: rgba(0, 0, 255, 1)">if</span> [my_type] == <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">some_type</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)"> {
+    ...
+  }
+}</span></pre>
+</div>
+<p> </p>
+<p>还有其他解决方法详见下边引用的官方文档，包括各种if判断以及@metadata变量的使用； </p>
+<p> </p>
+<p>参考：</p>
+<p>jdbc input</p>
+<p>https://www.elastic.co/guide/en/logstash/6.3/plugins-inputs-jdbc.html</p>
+<p>event dependent configuration</p>
+<p>https://www.elastic.co/guide/en/logstash/6.7/event-dependent-configuration.html</p>
+</div>
+            </div>
+
+            <!-- Post Footer -->
+            <div class="post-footer">
+                <div class="post-navigation">
+                    <a href="../blog_cn.html" class="nav-button">← Back to Home</a>
+                    <a href="0092.html" class="nav-button">Next Post →</a>
+                </div>
+            </div>
+        </article>
+    </div>
+</body>
+</html>

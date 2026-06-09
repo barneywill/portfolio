@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Java基础之Session机制</title>
+    <link rel="stylesheet" href="../css/style3.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header Navigation -->
+        <div class="header">
+            <h1><a href="../blog_cn.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+        </div>
+
+        <!-- Post Container -->
+        <article class="post">
+            <!-- Post Header -->
+            <div class="post-header">
+                <h1>Java基础之Session机制</h1>
+                <div class="post-meta">
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📅</span>
+                        <span>December 13, 2018</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📖</span>
+                        <span>1 min read</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">👁️</span>
+                        <span>1459 views</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Post Content -->
+            <div class="post-content">
+                <div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<h1>Session机制</h1>
+<p>JSESSIONID是Session的标识，当客户端请求服务器端的时候，服务器端会检查是否已经给这个客户端创建过Session，也就是看客户端的请求中的header是否有Cookie:JSESSIONID=…，如果客户端请求包含JSESSIONID，那么服务器端可以根据JSESSIONID找到对应的Session；如果没有，则服务端认为该客户端第一次访问，会在response中增加header，即Set-Cookie:JSESSIONID=…，当客户端收到该response后就会被设置Cookie，以后的请求都会携带该Cookie，保证Session的一致性；</p>
+<h2>1 Session机制测试</h2>
+<h3>1.1 模拟第一次访问（无JSESSION）</h3>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201812/1509647-20181213222102689-1581075533.png"/></p>
+<p> </p>
+<h3>1.2 模拟非第一次访问（有JSESSIONID）</h3>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201812/1509647-20181213222146071-1297066369.png"/></p>
+<h2> </h2>
+<h2>2 分布式Session实现</h2>
+<h3>2.1 伪分布式Session</h3>
+<h4>2.1.1 nginx ip_hash</h4>
+<p>根据客户端的IP，将请求分配到不同的服务器上；</p>
+<p>配置如下：</p>
+<blockquote>
+<p>upstream my_upstream {</p>
+<p>                ip_hash;</p>
+<p>                server 10.20.35.11:8001;<br/>                server 10.20.35.11:8002;<br/> }</p>
+</blockquote>
+<h4>2.1.2 nginx sticky</h4>
+<pre>https://bitbucket.org/nginx-goodies/nginx-sticky-module-ng/overview</pre>
+<p>下载之后通过--add-module重新编译nginx；</p>
+<p>配置如下：</p>
+<blockquote>
+<pre>upstream my_upstream{
+　　　　sticky;
+　　　　server 10.20.35.11:8001;
+　　　　server 10.20.35.11:8002;
+}</pre>
+</blockquote>
+<p>实现原理：</p>
+<p>Sticky是nginx的一个模块，它是基于cookie的一种nginx的负载均衡解决方案，通过分发和识别cookie，来使同一个客户端的请求落在同一台服务器上，默认标识名为route<br/>1 客户端首次发起访问请求，nginx接收后，发现请求头没有cookie，则以轮询方式将请求分发给后端服务器。<br/>2 后端服务器处理完请求，将响应数据返回给nginx。<br/>3 此时nginx生成带route的cookie，返回给客户端。route的值与后端服务器对应，可能是明文，也可能是md5、sha1等Hash值<br/>4 客户端接收请求，并保存带route的cookie。<br/>5 当客户端下一次发送请求时，会带上route，nginx根据接收到的cookie中的route值，转发给对应的后端服务器。</p>
+<h3> </h3>
+<h3>2.2 真分布式Session</h3>
+<p>后端实现：</p>
+<p>1 继承HttpSessionWrapper，比如DistributeHttpSessionWrapper，覆盖getAttributeNames、getAttribute、setAttribute等方法，改为到一个公共的地方读写session属性，比如DB、Memcached、Redis等；</p>
+<p><strong>javax.servlet.http.HttpSession</strong></p>
+<p>2 继承HttpServletRequestWrapper，比如DistributeHttpServletRequestWrapper，覆盖getSession方法，改为返回DistributeHttpSessionWrapper；</p>
+<p><strong>javax.servlet.http.HttpServletRequestWrapper</strong></p>
+<p>2 继承Filter，比如DistributeSessionFilter，覆盖doFilter方法，在调用链中将HttpServletRequest替换为DistributeHttpServletRequestWrapper；</p>
+<p><strong>javax.servlet.Filter</strong></p>
+<p> </p>
+</div>
+            </div>
+
+            <!-- Post Footer -->
+            <div class="post-footer">
+                <div class="post-navigation">
+                    <a href="../blog_cn.html" class="nav-button">← Back to Home</a>
+                    <a href="0318.html" class="nav-button">Next Post →</a>
+                </div>
+            </div>
+        </article>
+    </div>
+</body>
+</html>

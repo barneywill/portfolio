@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>调度框架</title>
+    <link rel="stylesheet" href="../css/style3.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header Navigation -->
+        <div class="header">
+            <h1><a href="../blog_cn.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+        </div>
+
+        <!-- Post Container -->
+        <article class="post">
+            <!-- Post Header -->
+            <div class="post-header">
+                <h1>调度框架</h1>
+                <div class="post-meta">
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📅</span>
+                        <span>December 12, 2018</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📖</span>
+                        <span>2 min read</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">👁️</span>
+                        <span>2517 views</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Post Content -->
+            <div class="post-content">
+                <div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<h1>常见调度框架实现方式</h1>
+<div class="table-wrap">
+<table class="confluenceTable">
+<tbody>
+<tr>
+<td class="confluenceTd" rowspan="3">
+<p>开源</p>
+</td>
+<td class="confluenceTd">
+<p>Oozie</p>
+</td>
+<td class="confluenceTd">
+<p>成熟稳定可靠，可直接用于生产环境</p>
+</td>
+<td class="confluenceTd">
+<p> </p>
+</td>
+</tr>
+<tr>
+<td class="confluenceTd">
+<p>Azkaban</p>
+</td>
+<td class="confluenceTd">
+<p>单点、简单粗暴，有两套独立的调度实现，必须二次开发才可用</p>
+</td>
+<td class="confluenceTd">
+<p> </p>
+</td>
+</tr>
+<tr>
+<td class="confluenceTd">
+<p>Airflow</p>
+</td>
+<td class="confluenceTd">
+<p> </p>
+</td>
+<td class="confluenceTd">
+<p>代码以及流程配置都是python</p>
+</td>
+</tr>
+<tr>
+<td class="confluenceTd" rowspan="3">
+<p>自己封装</p>
+</td>
+<td class="confluenceTd" rowspan="2">
+<p>基于quartz单机</p>
+</td>
+<td class="confluenceTd">
+<p>使用zk来做分布式控制</p>
+</td>
+<td class="confluenceTd">
+<p>常用quartz+zk做调度系统</p>
+</td>
+</tr>
+<tr>
+<td class="confluenceTd">
+<p>使用db心跳来做分布式控制</p>
+</td>
+<td class="confluenceTd">
+<p>比如阿里Zeus（3年前不再开源，还需要做一些二次开发才能用）</p>
+</td>
+</tr>
+<tr>
+<td class="confluenceTd">
+<p>基于quartz分布式</p>
+</td>
+<td class="confluenceTd">
+<p>quartz本身使用db锁来做分布式控制</p>
+</td>
+<td class="confluenceTd">
+<p> </p>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>azkaban实现详见：<a href="https://www.cnblogs.com/barneywill/p/9895130.html">https://www.cnblogs.com/barneywill/p/9895130.html</a></p>
+<p>oozie实现详见：<a href="https://www.cnblogs.com/barneywill/p/9895091.html">https://www.cnblogs.com/barneywill/p/9895091.html</a></p>
+<p>Ps：</p>
+<ul>
+<li>Quartz有两种部署方式：<strong>单机</strong>以及<strong>分布式</strong>（现在还支持新的TerracottaJobStore），<strong>单机</strong>由于使用的RAMJobStore，重启之后没办法自动恢复之前中断的任务，所以基于<strong>单机</strong>的封装主要是两个点，一个是scheduler分布式控制，一个是scheduler重启后的任务自动恢复，这两点在<strong>分布式</strong>中已经实现，所以基于<strong>单机</strong>的封装看起来没有必要；</li>
+<li>azkaban和zeus都是自己提供执行节点（azkaban中是executor server，zeus是worker）来执行任务，并且都是通过启动本地进程执行任务，这样会有两个问题：
+<ul>
+<li>调度节点scheduler需要维护可用执行节点executor列表（zeus使用长连接，做的更好一些），并且在执行节点executor异常时恢复任务，并且很容易由于状态同步不及时造成一些问题，这是一个比较庞大的开销，oozie完全不需要这些；</li>
+<li>启动本地进程执行任务，虽然可以灵活控制任务进程的资源，但是有任务<strong>同时重复执行</strong>的风险，除非任务本身通过zk来保证不同时重复执行；</li>
+</ul>
+</li>
+<li>
+<p>zeus相比azkaban，有一点做的不好，是all-in-one，即主从部署在一起，有两个问题，一个是资源浪费，一个是主从相互影响；</p>
+</li>
+</ul>
+<p> </p>
+<div class="table-wrap">
+<table class="confluenceTable">
+<tbody>
+<tr>
+<td class="confluenceTd">
+<p> </p>
+</td>
+<td class="confluenceTd">
+<p>Oozie</p>
+</td>
+<td class="confluenceTd">
+<p>Azkaban</p>
+</td>
+<td class="confluenceTd">
+<p>Zeus</p>
+</td>
+</tr>
+<tr>
+<td class="confluenceTd">
+<p>版本</p>
+</td>
+<td class="confluenceTd">
+<p>4.3（5.0Beta）</p>
+</td>
+<td class="confluenceTd">
+<p>3.45</p>
+</td>
+<td class="confluenceTd">
+<p> </p>
+</td>
+</tr>
+<tr>
+<td class="confluenceTd">
+<p>高可用性</p>
+</td>
+<td class="confluenceTd">
+<p><strong>支持（zk）</strong></p>
+</td>
+<td class="confluenceTd">
+<p>不支持（存在单点）</p>
+</td>
+<td class="confluenceTd">
+<p><strong>支持（db心跳）</strong></p>
+</td>
+</tr>
+<tr>
+<td class="confluenceTd">
+<p>高稳定性</p>
+</td>
+<td class="confluenceTd">
+<p><strong>是</strong></p>
+</td>
+<td class="confluenceTd">
+<p>未知</p>
+</td>
+<td class="confluenceTd">
+<p>未知</p>
+</td>
+</tr>
+<tr>
+<td class="confluenceTd">
+<p>功能</p>
+</td>
+<td class="confluenceTd">
+<p><strong>丰富</strong></p>
+</td>
+<td class="confluenceTd">
+<p>简单</p>
+</td>
+<td class="confluenceTd">
+<p>简单</p>
+</td>
+</tr>
+<tr>
+<td class="confluenceTd">
+<p>界面</p>
+</td>
+<td class="confluenceTd">
+<p>Ext2</p>
+</td>
+<td class="confluenceTd">
+<p><strong>最好</strong></p>
+</td>
+<td class="confluenceTd">
+<p>Gwt</p>
+</td>
+</tr>
+<tr>
+<td class="confluenceTd">
+<p>是否需要二次开发</p>
+</td>
+<td class="confluenceTd">
+<p><strong>否</strong></p>
+</td>
+<td class="confluenceTd">
+<p>是</p>
+</td>
+<td class="confluenceTd">
+<p>是</p>
+</td>
+</tr>
+<tr>
+<td class="confluenceTd">
+<p>是否需要人工干预</p>
+</td>
+<td class="confluenceTd">
+<p><strong>否</strong></p>
+</td>
+<td class="confluenceTd">
+<p>是</p>
+</td>
+<td class="confluenceTd">
+<p><strong>否</strong></p>
+</td>
+</tr>
+<tr>
+<td class="confluenceTd">
+<p>重启服务器流程自动恢复</p>
+</td>
+<td class="confluenceTd">
+<p><strong>是</strong></p>
+</td>
+<td class="confluenceTd">
+<p>否</p>
+</td>
+<td class="confluenceTd">
+<p><strong>是</strong></p>
+</td>
+</tr>
+<tr>
+<td class="confluenceTd">
+<p>是否有任务重复运行风险</p>
+</td>
+<td class="confluenceTd">
+<p><strong>否</strong></p>
+</td>
+<td class="confluenceTd">
+<p>是</p>
+</td>
+<td class="confluenceTd">
+<p>是</p>
+</td>
+</tr>
+<tr>
+<td class="confluenceTd">
+<p>代码质量</p>
+</td>
+<td class="confluenceTd">
+<p><strong>高</strong></p>
+</td>
+<td class="confluenceTd">
+<p>一般</p>
+</td>
+<td class="confluenceTd">
+<p>一般</p>
+</td>
+</tr>
+<tr>
+<td class="confluenceTd">
+<p>代码更新</p>
+</td>
+<td class="confluenceTd">
+<p><strong>正常</strong></p>
+</td>
+<td class="confluenceTd">
+<p>过于频繁</p>
+</td>
+<td class="confluenceTd">
+<p>停止开源，无人维护</p>
+</td>
+</tr>
+<tr>
+<td class="confluenceTd">
+<p>主从分离（任务分配与执行分离）</p>
+</td>
+<td class="confluenceTd">
+<p><strong>是</strong></p>
+</td>
+<td class="confluenceTd">
+<p><strong>是</strong></p>
+</td>
+<td class="confluenceTd">
+<p>否</p>
+</td>
+</tr>
+<tr>
+<td class="confluenceTd">
+<p>最小占用资源</p>
+</td>
+<td class="confluenceTd">
+<p>2个server</p>
+<p>Yarn</p>
+</td>
+<td class="confluenceTd">
+<p>1个web server</p>
+<p>2个executor server</p>
+</td>
+<td class="confluenceTd">
+<p>2个server</p>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p> </p>
+<h1>调度相关术语</h1>
+<div class="table-wrap">
+<table class="confluenceTable">
+<tbody>
+<tr>
+<td class="confluenceTd">
+<p>任务</p>
+</td>
+<td class="confluenceTd">
+<p>Task/Job</p>
+</td>
+<td class="confluenceTd">
+<p>一个具体的操作</p>
+</td>
+</tr>
+<tr>
+<td class="confluenceTd">
+<p>工作流</p>
+</td>
+<td class="confluenceTd">
+<p>Workflow</p>
+</td>
+<td class="confluenceTd">
+<p>由多个任务组成</p>
+</td>
+</tr>
+<tr>
+<td class="confluenceTd">
+<p>调度</p>
+</td>
+<td class="confluenceTd">
+<p>Coordinator</p>
+</td>
+<td class="confluenceTd">
+<p>按照条件触发工作流，比如定时</p>
+</td>
+</tr>
+<tr>
+<td class="confluenceTd">
+<p>定义</p>
+</td>
+<td class="confluenceTd">
+<p>Definition</p>
+</td>
+<td class="confluenceTd">
+<p>描述要做的事情，比如任务定义、工作流定义、调度定义</p>
+</td>
+</tr>
+<tr>
+<td class="confluenceTd">
+<p>实例</p>
+</td>
+<td class="confluenceTd">
+<p>Instance</p>
+</td>
+<td class="confluenceTd">
+<p>定义的一次具体执行，包括执行时间、状态等</p>
+</td>
+</tr>
+</tbody>
+</table>
+<p> </p>
+<h1 id="id-5.1调度框架通用抽象-调度框架通用抽象">调度框架通用抽象</h1>
+<h2 id="id-5.1调度框架通用抽象-1任务、工作流、调度">1 任务、工作流、调度</h2>
+<p> <img alt="" src="https://img2018.cnblogs.com/blog/1509647/201812/1509647-20181212175553729-1356937850.png"/></p>
+<p> </p>
+<h2 id="id-5.1调度框架通用抽象-2定义、实例">2 定义、实例</h2>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201812/1509647-20181212175612987-989643361.png"/></p>
+<p> </p>
+<h2 id="id-5.1调度框架通用抽象-3抽象">3 抽象</h2>
+<p>l  <strong>模型Model</strong>分为三种：<strong>任务</strong><strong>Task/Job</strong><strong>、工作流Workflow</strong><strong>、调度Coordinator</strong>，一个或多个任务组合成一个工作流，工作流可以手工触发，也可以配置调度来触发，常见的调度比如定时；</p>
+<p>l  <strong>定义Definition</strong>的每一次执行都是一个<strong>实例</strong><strong>Instance</strong>，<strong>实例</strong>记录开始、结束时间、状态、日志等；</p>
+<p> </p>
+<p><strong><em>所有的调度框架的抽象是相同或者近似的，所以理论上可以将调度框架A</em></strong><strong><em>的任务、工作流、调度定义 </em></strong><strong><em><span style="text-decoration: underline">翻译Translate</span> </em></strong><strong><em>为调度框架B</em></strong><strong><em>的任务、工作流、调度定义</em></strong><strong><em>，实现调度框架的切换；</em></strong></p>
+<p> </p>
+<p>一个形象的类比是，调度框架A是中国工人，调度框架B是日本工人，中国工人生病了，现在需要增加一个翻译人员C，将中国工人的工作内容和时间告诉日本工人，同时不断将日本工人工作的进展同步给中国工人，所有的变化对领导层都是透明的；</p>
+</div>
+<p> </p>
+</div>
+            </div>
+
+            <!-- Post Footer -->
+            <div class="post-footer">
+                <div class="post-navigation">
+                    <a href="../blog_cn.html" class="nav-button">← Back to Home</a>
+                    <a href="0329.html" class="nav-button">Next Post →</a>
+                </div>
+            </div>
+        </article>
+    </div>
+</body>
+</html>

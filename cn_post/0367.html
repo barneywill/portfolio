@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Thinking in BigData  1 - 大数据简介</title>
+    <link rel="stylesheet" href="style3.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header Navigation -->
+        <div class="header">
+            <h1><a href="../index.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+        </div>
+
+        <!-- Post Container -->
+        <article class="post">
+            <!-- Post Header -->
+            <div class="post-header">
+                <h1>Thinking in BigData  1 - 大数据简介</h1>
+                <div class="post-meta">
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📅</span>
+                        <span>October 16, 2018</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📖</span>
+                        <span>3 min read</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">👁️</span>
+                        <span>572 views</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Post Content -->
+            <div class="post-content">
+                <div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<p>提到大数据，就不得不提到Hadoop，提到Hadoop，就不得不提到Google公布的3篇研究论文：GFS、MapReduce、BigTable，Google确实是一家伟大的公司，开启了全球的大数据时代，</p>
+<p> </p>
+<p>在《后谷歌时代：大数据的没落与区块链经济的崛起》中如此说道：</p>
+<blockquote>
+<p><em>googol一词的意思是10的100次方--一个大到不可思议的数字。</em></p>
+<p><em>...</em></p>
+<p><em>随着岁月的流逝，谷歌几乎数字化了世界上所有可以获取的图书（2005），数字化了世界语言这个大织锦挂毯上的所有语言及其翻译（2010），数字化了这个星球的地形（谷歌地图和谷歌地球，2007），甚至细致到了各个街道的面貌和结构（街景）以及其交通状况（位智，2016），它甚至在其数字面部识别软件中（2006年，现在已大规模升级，是谷歌照片的一部分），将整个世界的面部表情都数字化了。2006年，随着YouTube的来袭，谷歌指挥了异常爆炸性的、不断扩大的数字表演，其内容囊括了世界上大部分图像、音乐和访谈。</em></p>
+<p><em>将地球表面了无定型的混乱的表面、声音、图像、账目、歌曲、演讲、道路、建筑物、文件、信息和叙事都统一到一个行星式的数字工具中，这是一个举世无双、价值连城的伟大壮举。</em></p>
+<p><em>...</em></p>
+<p><em>谷歌的成功几乎不可思议。</em></p>
+<p><em>...</em></p>
+<p><em>除了少数微小却至关重要的领域，谷歌向其客户提供的一切都免费。</em></p>
+<p><em>...</em></p>
+<p><em>免费地图以惊人的覆盖范围和分辨率使谷歌成为移动和本地服务大师；免费YouTube以惊人的质量和多样性正在成为互联网影音的首选载体；免费电子邮件，优雅简洁和略带神秘的垃圾邮件过滤器，方便的附件和数以百兆的存储空间，还能免费链接查看日历和联系人列表；免费的安卓应用，免费的游戏，免费的搜索带来了速度，提高了效率。免费，免费，免费。免费的假期幻灯片，免费的道德提升，免费的世界文学经典，免费的答案。你的一切心血来潮，都来自谷歌的大脑。</em></p>
+</blockquote>
+<p><br/>先回到一开始，Google是做搜索引擎（Search Engine）起家的，搜索引擎简而言之，首先需要一堆爬虫按照一定的规则将全网的网页全部爬取下来，然后需要对这些网页进行内容提取，然后对内容进行分词并建倒排索引；当用户搜索时将用户的搜索关键词分词然后查倒排索引并结合一些权重将结果排序后分页返回给用户。</p>
+<p>这里其实忽略了很多细节，比如爬虫爬取后要存储所有的原始网页数据，就需要分布式文件存储，于是GFS出现了；在GFS中需要解决分布式一致性问题，于是Chubby出现了；在结果排序时需要参考页面权重，也就是计算PageRank，于是计算模型MapReduce出现了；网页数据需要保留历史版本、支持海量实时写入、支持实时随机访问，比如网页快照功能，于是BigTable出现了。。。</p>
+<p> </p>
+<p>下面是我整理的一个简单的对照表，如有谬误欢迎指出，左侧是Google的原创，右侧是开源版：</p>
+<table class="confluenceTable">
+<tbody>
+<tr><th class="confluenceTh">Google</th><th class="confluenceTh">OpenSource</th></tr>
+<tr>
+<td class="confluenceTd" colspan="1">GSA</td>
+<td class="confluenceTd" colspan="1">Lucene、Elastic Search</td>
+</tr>
+<tr>
+<td class="confluenceTd"><span>Chubby</span></td>
+<td class="confluenceTd">Zookeeper</td>
+</tr>
+<tr>
+<td class="confluenceTd">GFS</td>
+<td class="confluenceTd">Hadoop HDFS</td>
+</tr>
+<tr>
+<td class="confluenceTd">MapReduce</td>
+<td class="confluenceTd">Hadoop MapReduce</td>
+</tr>
+<tr>
+<td class="confluenceTd">BigTable</td>
+<td class="confluenceTd">HBase</td>
+</tr>
+<tr>
+<td class="confluenceTd">Dremel</td>
+<td class="confluenceTd">Drill、Impala</td>
+</tr>
+<tr>
+<td class="confluenceTd" colspan="1">Pregel</td>
+<td class="confluenceTd" colspan="1">Giraph</td>
+</tr>
+<tr>
+<td class="confluenceTd" colspan="1">MillWheel</td>
+<td class="confluenceTd" colspan="1">Storm、Spark Streaming、Flink、Samza</td>
+</tr>
+<tr>
+<td class="confluenceTd">Spanner</td>
+<td class="confluenceTd"> </td>
+</tr>
+<tr>
+<td class="confluenceTd">Beam</td>
+<td class="confluenceTd"> </td>
+</tr>
+<tr>
+<td class="confluenceTd">TensorFlow</td>
+<td class="confluenceTd"> </td>
+</tr>
+<tr>
+<td class="confluenceTd">Kubernetes</td>
+<td class="confluenceTd"> </td>
+</tr>
+</tbody>
+</table>
+<p style="text-align: left">当前大数据开源领域组件眼花缭乱</p>
+<p style="text-align: left"><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201811/1509647-20181107105630669-774323724.png"/></p>
+<h1 style="text-align: left">一 常用的开源组件列表</h1>
+<table border="0">
+<tbody>
+<tr>
+<td style="width: 110px"><strong>Zookeeper</strong></td>
+<td style="width: 180px"> </td>
+<td>分布式一致性，常用于其他组件的master主从切换</td>
+<td><a class="external-link" href="http://zookeeper.apache.org/" rel="noopener nofollow">http://zookeeper.apache.org/</a></td>
+</tr>
+<tr>
+<td style="width: 110px"><strong>Kafka</strong></td>
+<td style="width: 180px"> </td>
+<td>MessageQueue，日志汇总</td>
+<td><a class="external-link" href="http://kafka.apache.org/" rel="noopener nofollow">http://kafka.apache.org</a></td>
+</tr>
+<tr>
+<td style="width: 110px"><strong>Hadoop</strong></td>
+<td style="width: 180px">HDFS</td>
+<td>分布式文件系统</td>
+<td> </td>
+</tr>
+<tr>
+<td style="width: 110px"><strong> </strong></td>
+<td style="width: 180px">Yarn</td>
+<td>资源（CPU/Memory）调度</td>
+<td> </td>
+</tr>
+<tr>
+<td style="width: 110px"><strong> </strong></td>
+<td style="width: 180px">MapReduce</td>
+<td>现在基本没有人直接用了，但是其他组件比如hive、oozie等还在用</td>
+<td> </td>
+</tr>
+<tr>
+<td style="width: 110px"><strong>Hive</strong></td>
+<td style="width: 180px"> </td>
+<td>数据仓库、离线SQL查询</td>
+<td> </td>
+</tr>
+<tr>
+<td style="width: 110px"><strong>Flume</strong></td>
+<td style="width: 180px"> </td>
+<td>日志收集，agent部署在各个终端节点</td>
+<td> </td>
+</tr>
+<tr>
+<td style="width: 110px"><strong>Sqoop</strong></td>
+<td style="width: 180px"> </td>
+<td>数据在Hadoop生态内外导入导出，比如hive&lt;-&gt;mysql</td>
+<td> </td>
+</tr>
+<tr>
+<td style="width: 110px"><strong>Gobblin</strong></td>
+<td style="width: 180px"> </td>
+<td>ETL工具，比如Kafka-&gt;HDFS</td>
+<td> </td>
+</tr>
+<tr>
+<td style="width: 110px"><strong>Spark</strong></td>
+<td style="width: 180px">Spark</td>
+<td>离线计算</td>
+<td> </td>
+</tr>
+<tr>
+<td style="width: 110px"><strong> </strong></td>
+<td style="width: 180px">SparkSQL</td>
+<td>离线SQL查询</td>
+<td> </td>
+</tr>
+<tr>
+<td style="width: 110px"><strong> </strong></td>
+<td style="width: 180px">SparkStreaming</td>
+<td>实时计算</td>
+<td> </td>
+</tr>
+<tr>
+<td style="width: 110px"><strong> </strong></td>
+<td style="width: 180px">SparkStructuredStreaming</td>
+<td>SQL式实时计算</td>
+<td> </td>
+</tr>
+<tr>
+<td style="width: 110px"><strong> </strong></td>
+<td style="width: 180px">SparkML</td>
+<td>机器学习</td>
+<td> </td>
+</tr>
+<tr>
+<td style="width: 110px"><strong>HBase</strong></td>
+<td style="width: 180px"> </td>
+<td>海量KV数据库</td>
+<td> </td>
+</tr>
+<tr>
+<td style="width: 110px">
+<p><strong>Oozie</strong></p>
+<p><strong>Azkaban</strong></p>
+<p><strong>Quartz</strong></p>
+</td>
+<td style="width: 180px"> </td>
+<td>任务调度</td>
+<td>
+<p><a class="external-link" href="http://oozie.apache.org/" rel="noopener nofollow">http://oozie.apache.org/</a></p>
+<p><a class="external-link" href="https://azkaban.github.io/" rel="noopener nofollow">https://azkaban.github.io/</a></p>
+<p><a class="external-link" href="http://www.quartz-scheduler.org/" rel="noopener nofollow">http://www.quartz-scheduler.org/</a></p>
+</td>
+</tr>
+<tr>
+<td style="width: 110px">
+<p><strong>Parquet</strong></p>
+<p><strong>ORC</strong></p>
+<p><strong>Kudu</strong></p>
+</td>
+<td style="width: 180px"> </td>
+<td>数据存储格式，列式存储</td>
+<td>
+<p><a class="external-link" href="https://orc.apache.org/" rel="noopener nofollow">https://orc.apache.org</a></p>
+<p><a class="external-link" href="http://parquet.apache.org/" rel="noopener nofollow">http://parquet.apache.org</a></p>
+</td>
+</tr>
+<tr>
+<td style="width: 110px">
+<p><strong>ProtocolBuffer</strong></p>
+<p><strong>Thrift</strong></p>
+<p><strong>Avro</strong></p>
+<p><strong>Json</strong></p>
+</td>
+<td style="width: 180px"> </td>
+<td>数据序列化</td>
+<td> </td>
+</tr>
+<tr>
+<td style="width: 110px"><strong>Scala</strong></td>
+<td style="width: 180px"> </td>
+<td>编程语言，通吃函数式编程和面向对象编程，代码简洁</td>
+<td> </td>
+</tr>
+<tr>
+<td style="width: 110px">
+<p><strong>ElasticSearch</strong></p>
+<p><strong>Lucene</strong></p>
+</td>
+<td style="width: 180px"> </td>
+<td>倒排索引搜索</td>
+<td> </td>
+</tr>
+<tr>
+<td style="width: 110px"><strong>Cassandra</strong></td>
+<td style="width: 180px"> </td>
+<td>海量KV数据库，比Hbase要快</td>
+<td> </td>
+</tr>
+<tr>
+<td style="width: 110px"><strong>Kylin</strong></td>
+<td style="width: 180px"> </td>
+<td>实时查询，利用Hbase空间换时间</td>
+<td> </td>
+</tr>
+<tr>
+<td style="width: 110px"><strong>Druid</strong></td>
+<td style="width: 180px"> </td>
+<td> </td>
+<td> </td>
+</tr>
+<tr>
+<td style="width: 110px">
+<p><strong>Impala</strong></p>
+<p><strong>Drill</strong></p>
+</td>
+<td style="width: 180px"> </td>
+<td>实时查询</td>
+<td> </td>
+</tr>
+<tr>
+<td style="width: 110px"><strong>Hue</strong></td>
+<td style="width: 180px"> </td>
+<td>Hadoop UI，集成Hadoop生态多个组件的页面UI</td>
+<td> </td>
+</tr>
+<tr>
+<td style="width: 110px"><strong>Ambari</strong></td>
+<td style="width: 180px"> </td>
+<td>大数据集群快速部署工具、监控工具</td>
+<td> </td>
+</tr>
+<tr>
+<td style="width: 110px"><strong>Nagios</strong></td>
+<td style="width: 180px"> </td>
+<td>监控工具</td>
+<td> </td>
+</tr>
+<tr>
+<td style="width: 110px"><strong>Ranger</strong></td>
+<td style="width: 180px"> </td>
+<td>权限控制</td>
+<td> </td>
+</tr>
+<tr>
+<td style="width: 110px"><strong>Kerberos</strong></td>
+<td style="width: 180px"> </td>
+<td>安全认证</td>
+<td> </td>
+</tr>
+<tr>
+<td style="width: 110px"><strong>Kubernetes</strong></td>
+<td style="width: 180px"> </td>
+<td>容器集群管理</td>
+<td> </td>
+</tr>
+</tbody>
+</table>
+<p>（内容陆续补充中）</p>
+<p> </p>
+<h1 style="text-align: left">二 发行版</h1>
+<p style="text-align: left">开源组件通常有3个发行版：</p>
+<h2 style="text-align: left">1 Apache </h2>
+<p style="text-align: left">基础发行版</p>
+<h2 style="text-align: left">2 CDH（Cloudera's Distribution, including Apache Hadoop）</h2>
+<p style="text-align: left"><a class="external-link" href="https://www.cloudera.com/products/open-source/apache-hadoop/key-cdh-components.html" rel="noopener nofollow">https://www.cloudera.com/products/open-source/apache-hadoop/key-cdh-components.html</a></p>
+<p style="text-align: left"><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201811/1509647-20181107105722122-902163269.png"/></p>
+<p> </p>
+<p style="text-align: left">CDH is Cloudera’s 100% open source platform distribution, including Apache Hadoop and built specifically to meet enterprise demands. CDH delivers everything you need for enterprise use right out of the box. By integrating Hadoop with more than a dozen other critical open source projects, Cloudera has created a functionally advanced system that helps you perform end-to-end Big Data workflows.</p>
+<h2 style="text-align: left">3 HDP（Hortonworks Data Platform） </h2>
+<p style="text-align: left"><a class="external-link" href="https://hortonworks.com/" rel="noopener nofollow">https://hortonworks.com/</a></p>
+<p style="text-align: left"><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201811/1509647-20181107105756617-1250301709.png"/></p>
+<p> </p>
+<p style="text-align: left">HDP is the industry's only true secure, enterprise-ready open source Apache™ Hadoop® distribution based on a centralized architecture (<a class="external-link" href="https://hortonworks.com/apache/yarn/" rel="noopener nofollow" title="Yarn">YARN</a>). HDP addresses the complete needs of data-at-rest, powers real-time customer applications and delivers robust big data analytics that accelerate decision making and innovation. </p>
+<p style="text-align: left"><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201811/1509647-20181107105835239-474324270.png"/></p>
+<p> </p>
+<p style="text-align: left"> 为什么会有这么多发行版，简单来说，CDH和HDP都是基于Apache而来的，直接用Apache的话，各个组件的版本是随意选择的，很容易发生版本兼容问题，CDH和HDP相当于对一系列版本兼容的组件打了一个包并且命名了一个新的版本，更新相对滞后；另外会有一些独有的组件，比如CDH的Cloudera Manager、Hue、Impala等，HDP的Ambari等，方便集群的搭建、管理、监控等工作；</p>
+<p style="text-align: left">Ambari更开放一些，支持安装第三方组件，比如ElasticSearch、Airflow、Impala、Hue等，详见：<a href="https://www.cnblogs.com/barneywill/p/10268501.html" target="_blank">https://www.cnblogs.com/barneywill/p/10268501.html</a></p>
+<p style="text-align: left">ps：最近Cloudera和Hortonworks两家公司合并了，未来CDH和HDP也可能进一步整合。</p>
+</div>
+            </div>
+
+            <!-- Post Footer -->
+            <div class="post-footer">
+                <div class="post-navigation">
+                    <a href="../index.html" class="nav-button">← Back to Home</a>
+                    <a href="0366.html" class="nav-button">Next Post →</a>
+                </div>
+            </div>
+        </article>
+    </div>
+</body>
+</html>

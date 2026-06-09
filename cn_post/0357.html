@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Oozie 1 - 简介、源代码解析</title>
+    <link rel="stylesheet" href="../css/style3.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header Navigation -->
+        <div class="header">
+            <h1><a href="../blog_cn.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+        </div>
+
+        <!-- Post Container -->
+        <article class="post">
+            <!-- Post Header -->
+            <div class="post-header">
+                <h1>Oozie 1 - 简介、源代码解析</h1>
+                <div class="post-meta">
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📅</span>
+                        <span>November 02, 2018</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📖</span>
+                        <span>2 min read</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">👁️</span>
+                        <span>2477 views</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Post Content -->
+            <div class="post-content">
+                <div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<p>Oozie4.3</p>
+<h1>一 简介</h1>
+<p> <img alt="" src="https://img2018.cnblogs.com/blog/1509647/201811/1509647-20181107111409607-211135577.png"/></p>
+<p> </p>
+<h2>1 官网</h2>
+<p><a href="http://oozie.apache.org/" rel="noopener nofollow">http://oozie.apache.org/</a></p>
+<h4>Apache Oozie Workflow Scheduler for Hadoop</h4>
+<blockquote>
+<p>Hadoop生态的工作流调度器</p>
+</blockquote>
+<h5>Overview</h5>
+<p>Oozie is a workflow scheduler system to manage Apache Hadoop jobs.</p>
+<p>Oozie Workflow jobs are Directed Acyclical Graphs (DAGs) of actions.</p>
+<p>Oozie Coordinator jobs are recurrent Oozie Workflow jobs triggered by time (frequency) and data availability.</p>
+<p>Oozie is integrated with the rest of the Hadoop stack supporting several types of Hadoop jobs out of the box (such as Java map-reduce, Streaming map-reduce, Pig, Hive, Sqoop and Distcp) as well as system specific jobs (such as Java programs and shell scripts).</p>
+<p>Oozie is a scalable, reliable and extensible system.</p>
+<p> <img alt="" src="https://img2018.cnblogs.com/blog/1509647/201811/1509647-20181107111425649-1894455818.png"/></p>
+<h2>2 部署</h2>
+<p> <img alt="" src="https://img2018.cnblogs.com/blog/1509647/201811/1509647-20181107111446613-1172860781.png"/></p>
+<h2>3 数据库表结构</h2>
+<p> <img alt="" src="https://img2018.cnblogs.com/blog/1509647/201811/1509647-20181107111502822-1953156128.png"/></p>
+<p> </p>
+<p>wf_jobs：工作流实例</p>
+<p>wf_actions：任务实例</p>
+<p>coord_jobs：调度实例</p>
+<p>coord_actions：调度任务实例</p>
+<h2>4 概念</h2>
+<p>l  Control Node：工作流的开始、结束以及决定Workflow的执行路径的节点（start、end、kill、decision、fork/join）</p>
+<p>l  Action Node：工作流执行的计算任务，支持的类型包括（HDFS、MapReduce、Java、Shell、SSH、Pig、Hive、E-Mail、Sub-Workflow、Sqoop、Distcp），即<strong>任务</strong></p>
+<p>l  Workflow：由Control Node以及一系列Action Node组成的工作流，即<strong>工作流</strong></p>
+<p>l  Coordinator：根据指定Cron信息触发workflow，即<strong>调度</strong></p>
+<p>l  Bundle：按照组的方式批量管理Coordinator任务，实现集中的启停</p>
+<h1>二 代码解析</h1>
+<h2>1 启动过程</h2>
+<p>加载配置的所有service：</p>
+<p><strong>ServicesLoader.contextInitialized</strong></p>
+<p><strong>         Services.init</strong></p>
+<p><strong>                  Services.loadServices (oozie.services, oozie.services.ext)</strong></p>
+<p> </p>
+<p>Service结构：</p>
+<p><strong>Service</strong></p>
+<p><strong>         org.apache.oozie.service.SchedulerService,</strong></p>
+<p><strong>         org.apache.oozie.service.InstrumentationService,</strong></p>
+<p><strong>         org.apache.oozie.service.MemoryLocksService,</strong></p>
+<p><strong>         org.apache.oozie.service.UUIDService,</strong></p>
+<p><strong>         org.apache.oozie.service.ELService,</strong></p>
+<p><strong>         org.apache.oozie.service.AuthorizationService,</strong></p>
+<p><strong>         org.apache.oozie.service.UserGroupInformationService,</strong></p>
+<p><strong>         org.apache.oozie.service.HadoopAccessorService,</strong></p>
+<p><strong>         org.apache.oozie.service.JobsConcurrencyService,</strong></p>
+<p><strong>         org.apache.oozie.service.URIHandlerService,</strong></p>
+<p><strong>         org.apache.oozie.service.DagXLogInfoService,</strong></p>
+<p><strong>         org.apache.oozie.service.SchemaService,</strong></p>
+<p><strong>         org.apache.oozie.service.LiteWorkflowAppService,</strong></p>
+<p><strong>         org.apache.oozie.service.JPAService,</strong></p>
+<p><strong>         org.apache.oozie.service.StoreService,</strong></p>
+<p><strong>         org.apache.oozie.service.SLAStoreService,</strong></p>
+<p><strong>         org.apache.oozie.service.DBLiteWorkflowStoreService,</strong></p>
+<p><strong>         org.apache.oozie.service.CallbackService,</strong></p>
+<p><strong>         org.apache.oozie.service.ActionService,</strong></p>
+<p><strong>         org.apache.oozie.service.ShareLibService,</strong></p>
+<p><strong>         org.apache.oozie.service.CallableQueueService,</strong></p>
+<p><strong>         org.apache.oozie.service.ActionCheckerService,</strong></p>
+<p><strong>         org.apache.oozie.service.RecoveryService,</strong></p>
+<p><strong>         org.apache.oozie.service.PurgeService,</strong></p>
+<p><strong>         org.apache.oozie.service.CoordinatorEngineService,</strong></p>
+<p><strong>         org.apache.oozie.service.BundleEngineService,</strong></p>
+<p><strong>         org.apache.oozie.service.DagEngineService,</strong></p>
+<p><strong>         org.apache.oozie.service.CoordMaterializeTriggerService,</strong></p>
+<p><strong>         org.apache.oozie.service.StatusTransitService,</strong></p>
+<p><strong>         org.apache.oozie.service.PauseTransitService,</strong></p>
+<p><strong>         org.apache.oozie.service.GroupsService,</strong></p>
+<p><strong>         org.apache.oozie.service.ProxyUserService,</strong></p>
+<p><strong>         org.apache.oozie.service.XLogStreamingService,</strong></p>
+<p><strong>         org.apache.oozie.service.JvmPauseMonitorService,</strong></p>
+<p><strong>         org.apache.oozie.service.SparkConfigurationService</strong></p>
+<p> </p>
+<h2>2 核心引擎</h2>
+<p><strong>BaseEngine</strong></p>
+<p><strong>         DAGEngine （负责workflow执行<strong>）</strong></strong></p>
+<p><strong>         CoordinatorEngine <strong>（</strong>负责coordinator执行<strong>）</strong></strong></p>
+<p><strong>         BundleEngine <strong>（</strong>负责bundle执行<strong>）</strong></strong></p>
+<p> </p>
+<h2>3 workflow提交执行过程</h2>
+<p><strong>DAGEngine.submitJob| submitJobFromCoordinator （提交workflow）</strong></p>
+<p><strong>         SubmitXCommand.call</strong></p>
+<p><strong>                  execute</strong></p>
+<p><strong>                          LiteWorkflowAppService.parseDef （解析得到WorkflowApp）</strong></p>
+<p><strong>                                   LiteWorkflowLib.parseDef</strong></p>
+<p><strong>                                            LiteWorkflowAppParser.validateAndParse</strong></p>
+<p><strong>                                                     parse</strong></p>
+<p><strong>                          WorkflowLib.createInstance （创建WorkflowInstance）</strong></p>
+<p><strong>                          BatchQueryExecutor.executeBatchInsertUpdateDelete （保存WorkflowJobBean 到wf_jobs）</strong></p>
+<p><strong>         StartXCommand.call</strong></p>
+<p><strong>                  SignalXCommand.call</strong></p>
+<p><strong>                          execute</strong></p>
+<p><strong>                                   WorkflowInstance.start</strong></p>
+<p><strong>                                            LiteWorkflowInstance.start</strong></p>
+<p><strong>                                                     signal</strong></p>
+<p><strong>                                                             NodeHandler.enter</strong></p>
+<p><strong>                                                                      ActionNodeHandler.enter</strong></p>
+<p><strong>                                                                               start</strong></p>
+<p><strong>                                                                                        LiteWorkflowStoreService.liteExecute (添加WorkflowActionBean到ACTIONS_TO_START)</strong></p>
+<p><strong>                                   WorkflowStoreService.getActionsToStart （从ACTIONS_TO_START取Action）</strong></p>
+<p><strong>                                            ActionStartXCommand.call</strong></p>
+<p><strong>                                                     ActionExecutor.start</strong></p>
+<p><strong>                                                     WorkflowNotificationXCommand.call</strong></p>
+<p><strong>                                            BatchQueryExecutor.executeBatchInsertUpdateDelete （保存WorkflowActionBean到wf_actions）</strong></p>
+<p> </p>
+<p>ActionExecutor.start是异步的，还需要检查Action执行状态来推进流程，有两种情况：</p>
+<p>一种是Oozie Server正常运行：利用JobEndNotification</p>
+<p><strong>CallbackServlet.doGet</strong></p>
+<p><strong>         DagEngine.processCallback</strong></p>
+<p><strong>                  CompletedActionXCommand.call</strong></p>
+<p><strong>                          ActionCheckXCommand.call</strong></p>
+<p><strong>                                   ActionExecutor.check</strong></p>
+<p><strong>ActionEndXCommand.call</strong></p>
+<p><strong>                                            SignalXCommand.call</strong></p>
+<p>一种是Oozie Server重启：利用ActionCheckerService</p>
+<p><strong>ActionCheckerService.init</strong></p>
+<p><strong>         ActionCheckRunnable.run</strong></p>
+<p><strong>                  runWFActionCheck (GET_RUNNING_ACTIONS, oozie.service.ActionCheckerService.action.check.delay=600)</strong></p>
+<p><strong>                          ActionCheckXCommand.call</strong></p>
+<p><strong>                                    ActionExecutor.check</strong></p>
+<p><strong>                                   ActionEndXCommand.call</strong></p>
+<p><strong>                                            SignalXCommand.call</strong></p>
+<p><strong>                  runCoordActionCheck</strong></p>
+<p> </p>
+<h2>4 coordinator提交执行过程</h2>
+<p><strong>CoordinatorEngine.submitJob（提交coordinator）</strong></p>
+<p><strong>         CoordSubmitXCommand.call</strong></p>
+<p><strong>                  submit</strong></p>
+<p><strong>                          submitJob</strong></p>
+<p><strong>                                   storeToDB</strong></p>
+<p><strong>                                            CoordJobQueryExecutor.insert (保存CoordinatorJobBean到coord_jobs)</strong></p>
+<p><strong>                                   queueMaterializeTransitionXCommand</strong></p>
+<p><strong>                                            CoordMaterializeTransitionXCommand.call</strong></p>
+<p><strong>                                                     execute</strong></p>
+<p><strong>                                                              materialize</strong></p>
+<p><strong>                                                                      materializeActions</strong></p>
+<p><strong>                                                                               CoordCommandUtils.materializeOneInstance（创建CoordinatorActionBean）</strong></p>
+<p><strong>                                                                                storeToDB</strong></p>
+<p><strong>                                                             performWrites</strong></p>
+<p><strong>                                                                      BatchQueryExecutor.executeBatchInsertUpdateDelete（保存CoordinatorActionBean到coord_actions）</strong></p>
+<p><strong>                                                                      CoordActionInputCheckXCommand.call</strong></p>
+<p><strong>                                                                               CoordActionReadyXCommand.call</strong></p>
+<p><strong>                                                                                        CoordActionStartXCommand.call</strong></p>
+<p><strong>                                                                                                DAGEngine.submitJobFromCoordinator</strong></p>
+<p>定时任务触发Materialize：</p>
+<p><strong>CoordMaterializeTriggerService.init</strong></p>
+<p><strong>         CoordMaterializeTriggerRunnable.run</strong></p>
+<p><strong>                  CoordMaterializeTriggerService.runCoordJobMatLookup</strong></p>
+<p><strong>                          materializeCoordJobs (GET_COORD_JOBS_OLDER_FOR_MATERIALIZATION)</strong></p>
+<p><strong>                                   CoordMaterializeTransitionXCommand.call</strong></p>
+<p> </p>
+<h2>5 分布式</h2>
+<p>有些内部任务只能启动一个，单server环境Oozie中通过MemoryLocksService来保证，多server环境Oozie通过ZKLocksService来保证，要开启ZK，需要开启一些service：</p>
+<p><strong>org.apache.oozie.service.ZKLocksService,</strong></p>
+<p><strong>org.apache.oozie.service.ZKXLogStreamingService,</strong></p>
+<p><strong>org.apache.oozie.service.ZKJobsConcurrencyService,</strong></p>
+<p><strong>org.apache.oozie.service.ZKUUIDService</strong></p>
+<p>同时需要配置oozie.zookeeper.connection.string</p>
+<h2>6 任务执行过程</h2>
+<p>ActionExecutor是任务执行的核心抽象基类，所有的具体任务都是这个类的子类</p>
+<p><strong>ActionExecutor</strong></p>
+<p><strong>         JavaActionExecutor</strong></p>
+<p><strong>         SshActionExecutor</strong></p>
+<p><strong>         FsActionExecutor</strong></p>
+<p><strong>         SubWorkflowActionExecutor</strong></p>
+<p> </p>
+<p>其中JavaActionExecutor是最重要的一个子类，很多其他的任务都是这个类的子类（比如HiveActionExecutor、SparkActionExecutor等）</p>
+<p><strong>JavaActionExecutor.start</strong></p>
+<p><strong>         prepareActionDir</strong></p>
+<p><strong>         submitLauncher</strong></p>
+<p><strong>                  JobClient.getJob</strong></p>
+<p><strong>                  injectLauncherCallback</strong></p>
+<p><strong>                          ActionExecutor.Context.getCallbackUrl</strong></p>
+<p><strong>                                   job.end.notification.url</strong></p>
+<p><strong>                  createLauncherConf</strong></p>
+<p><strong>                          LauncherMapperHelper.setupLauncherInfo</strong></p>
+<p><strong>                  JobClient.submitJob</strong></p>
+<p><strong>         check</strong></p>
+<p> </p>
+<p>JavaActionExecutor执行时会提交一个map任务到yarn，即LauncherMapper，</p>
+<p><strong>LauncherMapper.map</strong></p>
+<p><strong>         LauncherMain.main</strong></p>
+<p> </p>
+<p>LauncherMain是具体任务的执行类</p>
+<p><strong>LauncherMain</strong></p>
+<p><strong>         JavaMain</strong></p>
+<p><strong>         HiveMain</strong></p>
+<p><strong>         Hive2Main</strong></p>
+<p><strong>         SparkMain</strong></p>
+<p><strong>         ShellMain</strong></p>
+<p><strong>         SqoopMain</strong></p>
+</div>
+            </div>
+
+            <!-- Post Footer -->
+            <div class="post-footer">
+                <div class="post-navigation">
+                    <a href="../blog_cn.html" class="nav-button">← Back to Home</a>
+                    <a href="0358.html" class="nav-button">Next Post →</a>
+                </div>
+            </div>
+        </article>
+    </div>
+</body>
+</html>

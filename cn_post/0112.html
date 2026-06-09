@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Drill 1 - 简介、安装及使用</title>
+    <link rel="stylesheet" href="../css/style3.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header Navigation -->
+        <div class="header">
+            <h1><a href="../blog_cn.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+        </div>
+
+        <!-- Post Container -->
+        <article class="post">
+            <!-- Post Header -->
+            <div class="post-header">
+                <h1>Drill 1 - 简介、安装及使用</h1>
+                <div class="post-meta">
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📅</span>
+                        <span>June 16, 2019</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📖</span>
+                        <span>9 min read</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">👁️</span>
+                        <span>2141 views</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Post Content -->
+            <div class="post-content">
+                <div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<p><picture>
+  <source srcset="../img/1509647-20181108170947012-177769743.webp" type="image/webp">
+  <img alt="" src="../img/1509647-20181108170947012-177769743.png">
+</picture></p>
+<p> </p>
+<p><a href="https://drill.apache.org/" rel="noopener nofollow">https://drill.apache.org/</a></p>
+<p> </p>
+<h1>一 简介</h1>
+<p><strong>Drill is an Apache open-source SQL query engine for Big Data exploration. Drill is designed from the ground up to support high-performance analysis on the semi-structured and rapidly evolving data coming from modern Big Data applications, while still providing the familiarity and ecosystem of ANSI SQL, the industry-standard query language. Drill provides plug-and-play integration with existing Apache Hive and Apache HBase deployments.</strong></p>
+<p> </p>
+<p>Drill is the world's first and only distributed SQL engine that <strong>doesn't require schemas</strong>. It shares the same schema-free JSON model as MongoDB and Elasticsearch. No need to define and maintain schemas or transform data (ETL). Drill automatically understands the structure of the data.</p>
+<p><strong>Self-describing data formats</strong> such as Parquet, JSON, AVRO, and NoSQL databases have schema specified as part of the data itself, which Drill leverages dynamically at query time. </p>
+<p><span><span>Drill does not have a centralized metadata requirement. <span>Drill metadata is derived through the storage plugins that correspond to data sources. Storage plugins provide a spectrum of metadata ranging from full metadata (Hive), partial metadata (HBase), or no central metadata (files). </span></span></span></p>
+<p> </p>
+<p>Drill supports the <strong>standard SQL:2003 syntax</strong>.</p>
+<p> </p>
+<p>Drill is designed from the ground up for <strong>high throughput and low latency</strong>. It <strong>doesn't use a general purpose execution engine</strong> like MapReduce, Tez or Spark. As a result, Drill is flexible (schema-free JSON model) and performant. Drill's optimizer leverages rule- and cost-based techniques, as well as data locality and operator push-down, which is the capability to push down query fragments into the back-end data sources. Drill also provides a columnar and vectorized execution engine, resulting in higher memory and CPU efficiency.</p>
+<p> </p>
+<p>Drill can <strong>combine data from multiple data sources on the fly in a single query</strong>, with no centralized metadata definitions. Here's a query that combines data from a Hive table, an HBase table (view) and a JSON file:</p>
+<pre><code class="language-text">SELECT custview.membership, sum(orders.order_total) AS sales
+FROM hive.orders, custview, dfs.`clicks/clicks.json` c 
+WHERE orders.cust_id = custview.cust_id AND orders.cust_id = c.user_info.cust_id 
+GROUP BY custview.membership
+ORDER BY 2;</code></pre>
+<p> </p>
+<h2>Architecture</h2>
+<p><picture>
+  <source srcset="../img/1509647-20181108171008359-9942604.webp" type="image/webp">
+  <img alt="" src="../img/1509647-20181108171008359-9942604.png">
+</picture></p>
+<p> </p>
+<p>Apache Drill is a low latency distributed query engine for large-scale datasets, including structured and semi-structured/nested data. <strong>Inspired by Google’s Dremel</strong>, Drill is designed to scale to several thousands of nodes and query petabytes of data at interactive speeds that BI/Analytics environments require.</p>
+<p>Drill is also useful for short, interactive ad-hoc queries on large-scale data sets. Drill is capable of querying nested data in formats like JSON and Parquet and performing dynamic schema discovery. Drill does not require a centralized metadata repository.</p>
+<p> </p>
+<p>Drill includes a distributed execution environment, purpose built for large- scale data processing. At the core of Apache Drill is the "<strong>Drillbit</strong>" service, which is responsible for accepting requests from the client, processing the queries, and returning results to the client.</p>
+<p>A <strong>Drillbit</strong> service can be installed and run on all of the required nodes in a Hadoop cluster to form a distributed cluster environment. When a Drillbit runs on each data node in the cluster, Drill can maximize <strong>data locality</strong> during query execution without moving data over the network or between nodes. Drill uses <strong>ZooKeeper</strong> to maintain cluster membership and health-check information.</p>
+<p>Though Drill works in a Hadoop cluster environment, Drill is <strong>not tied to Hadoop</strong> and can run in any distributed cluster environment. The only pre-requisite for Drill is <strong>ZooKeeper</strong>.</p>
+<p>Drill provides an <strong>extensible architecture at all layer</strong>s, including the <strong>storage plugin, query, query optimization/execution, and client API layers</strong>. <span>Drill uses classpath scanning to find and load plugins, and to add additional storage plugins, functions, and operators with minimal configuration.</span></p>
+<p><span><span><strong>Storage plugins</strong> in Drill represent the abstractions that Drill uses to interact with the data sources.<span>In the context of Hadoop, Drill provides storage plugins for distributed files and HBase. Drill also integrates with Hive using a storage plugin.</span></span></span></p>
+<p><strong>Runtime compilation</strong> enables faster execution than interpreted execution. Drill generates highly efficient custom code for every single query. The following image shows the Drill compilation/code generation process:</p>
+<p><picture>
+  <source srcset="../img/1509647-20181108171024644-1871056520.webp" type="image/webp">
+  <img alt="" src="../img/1509647-20181108171024644-1871056520.png">
+</picture></p>
+<p> </p>
+<p>Using an optimistic execution model to process queries, Drill assumes that failures are infrequent within the short span of a query. Drill does not spend time creating boundaries or checkpoints to minimize recovery time.</p>
+<h3>Query过程</h3>
+<p><strong>SQL--[parser]--&gt;Logical Plan--[optimizer]--&gt;Physical Plan<strong>--[parallelizer]-</strong>-&gt;Major Fragments-&gt;Minor Fragments-&gt;Operator</strong></p>
+<p>When you submit a Drill query, a client or an application sends the query in the form of an <strong>SQL statement</strong> to a Drillbit in the Drill cluster. <strong>A Drillbit is the process running on each active Drill node that coordinates, plans, and executes queries, as well as distributes query work across the cluster to maximize data locality</strong>.</p>
+<p><picture>
+  <source srcset="../img/1509647-20181108171041392-573349672.webp" type="image/webp">
+  <img alt="" src="../img/1509647-20181108171041392-573349672.png">
+</picture></p>
+<p> </p>
+<p>The Drillbit that receives the query from a client or application becomes the <strong>Foreman</strong> for the query and drives the entire query. A <strong>parser</strong> in the Foreman parses the SQL, applying custom rules to convert specific <strong>SQL operators</strong> into a specific <strong>logical operator</strong> syntax that Drill understands. This collection of <strong>logical operators</strong> forms a <strong>logical plan</strong>. The logical plan describes the work required to generate the query results and defines which data sources and operations to apply.</p>
+<p><em><span>Drill uses <a href="https://calcite.incubator.apache.org/" rel="noopener nofollow">Calcite</a><span>, the open source SQL parser framework, to parse incoming queries.</span></span></em></p>
+<p>The Foreman sends the <strong>logical plan</strong> into a cost-based <strong>optimizer</strong> to optimize the order of SQL operators in a statement and read the logical plan. The optimizer applies various types of rules to rearrange operators and functions into an optimal plan. The optimizer converts the <strong>logical plan</strong> into a <strong>physical plan</strong> that describes how to execute the query.</p>
+<pre><code class="language-text">explain plan for &lt;query&gt; ;</code></pre>
+<p><a href="https://drill.apache.org/docs/explain/" rel="noopener nofollow">https://drill.apache.org/docs/explain/</a></p>
+<p> </p>
+<p><picture>
+  <source srcset="../img/1509647-20181108171059645-43615718.webp" type="image/webp">
+  <img alt="" src="../img/1509647-20181108171059645-43615718.png">
+</picture></p>
+<p> </p>
+<p>A <strong>parallelizer</strong> in the Foreman transforms the <strong>physical plan</strong> into <strong>multiple phases</strong>, called <strong>major and minor fragments</strong>. These fragments create a <strong>multi-level execution tree</strong> that rewrites the query and executes it in <strong>parallel</strong> against the configured data sources, sending the results back to the client or application.</p>
+<p><picture>
+  <source srcset="../img/1509647-20181108171117347-75946277.webp" type="image/webp">
+  <img alt="" src="../img/1509647-20181108171117347-75946277.png">
+</picture></p>
+<p> </p>
+<p>A <strong>major fragment</strong> is a concept that represents a <strong>phase of the query execution</strong>. A <strong>phase</strong> can consist of one or <strong>multiple operations</strong> that Drill must perform to execute the query. Drill assigns each major fragment a <strong>MajorFragmentID</strong>.</p>
+<p><picture>
+  <source srcset="../img/1509647-20181108171143879-681541183.webp" type="image/webp">
+  <img alt="" src="../img/1509647-20181108171143879-681541183.png">
+</picture></p>
+<p> </p>
+<p>Drill uses an <strong>exchange</strong> operator to separate <strong>major fragments</strong>. An <strong>exchange</strong> is a change in data location and/or parallelization of the physical plan. An exchange is composed of a sender and a receiver to allow data to move between nodes.</p>
+<p><strong>Major fragments</strong> do not actually perform any query tasks. Each major fragment is divided into one or multiple <strong>minor fragments</strong> (discussed in the next section) that actually execute the operations required to complete the query and return results back to the client.</p>
+<p>Each <strong>major fragment</strong> is parallelized into <strong>minor fragments</strong>. A <strong>minor fragment</strong> is a logical unit of work that runs inside a thread. A logical unit of work in Drill is also referred to as a <strong>slice</strong>. The execution plan that Drill creates is composed of minor fragments. Drill assigns each minor fragment a <strong>MinorFragmentID</strong>.</p>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201811/1509647-20181108171157620-586954915.png"/></p>
+<p> </p>
+<p><strong>Minor fragments</strong> contain one or more <strong>relational operators</strong>. An <strong>operator</strong> performs a relational operation, such as <strong>scan, filter, join, or group by</strong>. Each operator has a particular operator type and an <strong>OperatorID</strong>. Each OperatorID defines its relationship within the minor fragment to which it belongs.</p>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201811/1509647-20181108171212070-177121901.png"/></p>
+<p> </p>
+<p>You cannot modify the number of minor fragments within the execution plan. However, you can view the <strong>query profile</strong> in the Drill Web Console and modify some configuration options that change the behavior of minor fragments, such as the maximum number of slices. </p>
+<p><a href="https://drill.apache.org/docs/query-profiles/" rel="noopener nofollow">https://drill.apache.org/docs/query-profiles/</a></p>
+<p><strong>Minor fragments</strong> can run as <strong>root, intermediate, or leaf fragments</strong>. An execution tree contains <strong>only one</strong> root fragment. The coordinates of the execution tree are numbered from the root, with the root being zero. Data flows downstream from the leaf fragments to the root fragment.</p>
+<p>The <strong>root fragment</strong> runs in the Foreman and receives incoming queries, reads metadata from tables, rewrites the queries and routes them to the next level in the serving tree. The other fragments become intermediate or leaf fragments.</p>
+<p> </p>
+<p><strong>Intermediate fragments</strong> start work when data is available or fed to them from other fragments. They perform operations on the data and then send the data downstream. They also pass the aggregated results to the root fragment, which performs further aggregation and provides the query results to the client or application.</p>
+<p> </p>
+<p>The <strong>leaf fragments</strong> scan tables in parallel and communicate with the storage layer or access data on local disk. The leaf fragments pass partial results to the intermediate fragments, which perform parallel operations on intermediate results.</p>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201811/1509647-20181108171227769-1622186950.png"/></p>
+<p> </p>
+<p> </p>
+<h1>二 安装</h1>
+<blockquote>
+<p>wget <a href="http://apache.mirrors.hoobly.com/drill/drill-1.14.0/apache-drill-1.14.0.tar.gz" rel="noopener nofollow">http://apache.mirrors.hoobly.com/drill/drill-1.14.0/apache-drill-1.14.0.tar.gz</a></p>
+<p>tar - xvzf <a href="http://apache.mirrors.hoobly.com/drill/drill-1.14.0/apache-drill-1.14.0.tar.gz" rel="noopener nofollow">apache-drill-1.14.0.tar.gz</a></p>
+<p>cd <a href="http://apache.mirrors.hoobly.com/drill/drill-1.14.0/apache-drill-1.14.0.tar.gz" rel="noopener nofollow">apache-drill-1.14.0</a></p>
+</blockquote>
+<h2>部署方式：</h2>
+<h3>1 单机</h3>
+<h5>启动</h5>
+<blockquote>
+<p>bin/drill-embedded</p>
+</blockquote>
+<h5>连接</h5>
+<blockquote>
+<p>sqlline - u "jdbc:drill:zk=local"</p>
+</blockquote>
+<p><span>退出sqlline</span></p>
+<blockquote>
+<p><span>sqlline&gt; !quit</span></p>
+</blockquote>
+<p><span><a href="https://drill.apache.org/docs/drill-in-10-minutes/" rel="noopener nofollow">https://drill.apache.org/docs/drill-in-10-minutes/</a></span></p>
+<h3>2 分布式</h3>
+<p>zk必须</p>
+<h4><span>连接</span></h4>
+<p>通过zk：</p>
+<blockquote>
+<p>sqlline –u jdbc:drill:[schema=&lt;storage plugin&gt;;]zk=&lt;zk name&gt;[:&lt;port&gt;][,&lt;zk name2&gt;[:&lt;port&gt;]... ]/&lt;directory&gt;/&lt;cluster ID&gt;</p>
+</blockquote>
+<p><code>直连Drillbit：</code></p>
+<blockquote>
+<p><code>sqlline - u jdbc:drill:[schema=&lt;storage plugin&gt;;]drillbit=&lt;node name&gt;[:&lt;port&gt;][,&lt;node name2&gt;[:&lt;port&gt;]...</code><code>]/&lt;directory&gt;/&lt;cluster ID&gt;</code></p>
+</blockquote>
+<h4>2.1 手工启动Drillbit集群</h4>
+<h5>配置</h5>
+<p>drill-override.conf</p>
+<blockquote>
+<pre><code class="language-text"> drill.exec:{
+  cluster-id: "&lt;mydrillcluster&gt;",
+  zk.connect: "&lt;zkhostname1&gt;:&lt;port&gt;,&lt;zkhostname2&gt;:&lt;port&gt;,&lt;zkhostname3&gt;:&lt;port&gt;"
+ }</code></pre>
+</blockquote>
+<h5>启动</h5>
+<blockquote>
+<p>drillbit.sh [--config &lt;conf-dir&gt;] (start|stop|graceful_stop|status|restart|autorestart)</p>
+</blockquote>
+<p><a href="https://drill.apache.org/docs/installing-drill-on-the-cluster/" rel="noopener nofollow">https://drill.apache.org/docs/installing-drill-on-the-cluster/</a></p>
+<h4>2.2 drill on yarn</h4>
+<p> </p>
+<h5>环境变量</h5>
+<blockquote>
+<p>export MASTER_DIR=/path/to/master/dir<br/><br/>export DRILL_NAME=apachedrillx.y.z<br/>export DRILL_HOME=$MASTER_DIR/$DRILL_NAME<br/><br/>export DRILL_SITE=$MASTER_DIR/site</p>
+</blockquote>
+<h5>准备</h5>
+<blockquote>
+<p>          cp $DRILL_HOME/conf/drill-override.conf $DRILL_SITE<br/>          cp $DRILL_HOME/conf/drill-env.sh $DRILL_SITE<br/>          cp $DRILL_HOME/jars/3rdparty/$yourJarName.jar $DRILL_SITE/jars</p>
+</blockquote>
+<p>如果有外部jar，比如lzo等，需要拷贝到$DRILL_SITE/jars</p>
+<h5>配置</h5>
+<blockquote>
+<p>$DRILL_SITE/drill-override.conf</p>
+<p>$DRILL_SITE/drill-on-yarn.conf</p>
+</blockquote>
+<h5>启动</h5>
+<blockquote>
+<pre>drill-on-yarn.sh --site $DRILL_SITE start</pre>
+</blockquote>
+<pre><code class="language-text"><a href="https://drill.apache.org/docs/creating-a-basic-drill-cluster/" rel="noopener nofollow">https://drill.apache.org/docs/creating-a-basic-drill-cluster/</a></code></pre>
+<p> </p>
+<blockquote>
+<pre><code class="language-text">drill-on-yarn.sh --site $DRILL_SITE status</code></pre>
+</blockquote>
+<p>Drill on yarn管理页面</p>
+<blockquote>
+<p><a>http://$appmaster_ip:8048/</a> </p>
+</blockquote>
+<p>ps: 该页面无法通过yarn proxy方式访问</p>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201811/1509647-20181108171404731-1114155387.png"/></p>
+<h3>3 drill query hive</h3>
+<h4>准备</h4>
+<blockquote>
+<p>cp $DRILL_HOME/conf/storage-plugins-override.conf $DRILL_SITE</p>
+</blockquote>
+<h4>添加</h4>
+<blockquote>
+<p>  "storage": {</p>
+<p>    hive: {</p>
+<p>      type: "hive",</p>
+<p>      enabled: true,</p>
+<p>      "configProps": {</p>
+<p>        "hive.metastore.uris": "thrift://localhost:9083",</p>
+<p>        "hive.metastore.sasl.enabled": "false",</p>
+<p>        "fs.default.name": "hdfs://localhost:9000/"</p>
+<p>      }</p>
+<p>    }</p>
+<p>  }</p>
+</blockquote>
+<p>然后重启drill，另外还可以通过web或者rest api添加hive plugin，然后就可以看到hive的数据库</p>
+<blockquote>
+<p>0: jdbc:drill:zk=localhost:2181/drill/drillbi&gt; show databases;<br/>+---------------------+<br/>|     SCHEMA_NAME     |<br/>+---------------------+<br/>| cp.default          |<br/>| hive.default        |<br/>| hive.temp           |<br/>| information_schema  |<br/>| opentsdb            |<br/>| sys                 |<br/>+---------------------+</p>
+</blockquote>
+<p>参考：https://drill.apache.org/docs/configuring-storage-plugins/</p>
+<h1>三 使用</h1>
+<p>1 命令行</p>
+<blockquote>
+<p>sqlline –u jdbc:drill:zk=$zkhost</p>
+<p>0: jdbc:drill:zk=<span>$zkhost&gt; SELECT * FROM cp.`employee.json` LIMIT 3;</span></p>
+</blockquote>
+<p>2 页面</p>
+<p>连接任一drillbits服务器</p>
+<blockquote>
+<p><a>http://$drillbits_ip:8047/</a></p>
+</blockquote>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201811/1509647-20181108171423829-456269933.png"/></p>
+<p> </p>
+<p> </p>
+<h1>四 设计原理</h1>
+<p> </p>
+<p>Rather than operating on single values from a single table record at one time, vectorization in Drill allows the CPU to operate on vectors, referred to as a record batches. A record batch has arrays of values from many different records. The technical basis for efficiency of vectorized processing is modern chip technology with deep-pipelined CPU designs. Keeping all pipelines full to achieve efficiency near peak performance is impossible to achieve in traditional database engines, primarily due to code complexity.</p>
+<p> </p>
+</div>
+            </div>
+
+            <!-- Post Footer -->
+            <div class="post-footer">
+                <div class="post-navigation">
+                    <a href="../blog_cn.html" class="nav-button">← Back to Home</a>
+                    <a href="0113.html" class="nav-button">Next Post →</a>
+                </div>
+            </div>
+        </article>
+    </div>
+</body>
+</html>

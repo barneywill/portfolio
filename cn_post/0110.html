@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chronos</title>
+    <link rel="stylesheet" href="../css/style3.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header Navigation -->
+        <div class="header">
+            <h1><a href="../blog_cn.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+        </div>
+
+        <!-- Post Container -->
+        <article class="post">
+            <!-- Post Header -->
+            <div class="post-header">
+                <h1>Chronos</h1>
+                <div class="post-meta">
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📅</span>
+                        <span>June 19, 2019</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📖</span>
+                        <span>1 min read</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">👁️</span>
+                        <span>773 views</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Post Content -->
+            <div class="post-content">
+                <div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<p><picture>
+  <source srcset="../img/1509647-20190619133516902-484724408.webp" type="image/webp">
+  <img alt="" src="../img/1509647-20190619133516902-484724408.png">
+</picture></p>
+<p>官方：https://mesos.github.io/chronos/</p>
+<p> </p>
+<p>mesos集群中替换crontab</p>
+<p> </p>
+<p>Chronos</p>
+<p class="lead">A fault tolerant job scheduler for Mesos which handles dependencies and ISO8601 based schedules</p>
+<h1 class="lead">简介</h1>
+<p>Chronos is a replacement for <code class="highlighter-rouge">cron</code>. It is a distributed and fault-tolerant scheduler that runs on top of <a href="https://mesos.apache.org/" rel="noopener nofollow" title="Apache Mesos">Apache Mesos</a> that can be used for job orchestration. It supports custom Mesos executors as well as the default command executor. Thus by default, Chronos executes <code class="highlighter-rouge">sh</code> (on most systems bash) scripts.</p>
+<p>Chronos can be used to interact with systems such as Hadoop (incl. EMR), even if the Mesos slaves on which execution happens do not have Hadoop installed. Chronos is also natively able to schedule jobs that run inside Docker containers.</p>
+<p>Chronos has a number of advantages over regular cron. It allows you to schedule your jobs using <a href="http://en.wikipedia.org/wiki/ISO_8601" rel="noopener nofollow" title="ISO8601 Standard">ISO8601</a> repeating interval notation, which enables more flexibility in job scheduling. Chronos also supports the definition of jobs triggered by the completion of other jobs. It supports arbitrarily long dependency chains.</p>
+<h2 class="lead">工作过程</h2>
+<p>Internally, the Chronos scheduler main loop is quite simple. The pattern is as follows:</p>
+<ol>
+<li>Chronos reads all job state from the state store (ZooKeeper)</li>
+<li>Jobs are registered within the scheduler and loaded into the job graph for tracking dependencies.</li>
+<li>Jobs are separated into a list of those which should be run at the current time (based on the clock of the host machine), and those which should not.</li>
+<li>Jobs in the list of jobs to run are queued, and will be launched as soon as a sufficient offer becomes available.</li>
+<li>Chronos will sleep until the next job is scheduled to run, and begin again from step 1.</li>
+</ol>
+<p class="lead"> </p>
+<p class="lead">chronos通过zk来维护任务状态，任务会随机分配到一个mesos slave节点运行</p>
+<p class="lead"> </p>
+<h1 class="lead">安装</h1>
+<p>前提是已经部署好zk和mesos</p>
+<blockquote>
+<p>$ docker run --net=host - e PORT0=8080 - e PORT1=8081 mesosphere/chronos:v3.0.0 --zk_hosts $zk_ip:2181 --master zk://$zk_ip:2181/mesos</p>
+</blockquote>
+<p class="lead">其中第一个端口是http端口</p>
+<h1 class="lead">使用</h1>
+<p class="lead">访问 http://localhost:8080</p>
+<p class="lead"><picture>
+  <source srcset="../img/1509647-20190619143957672-1407164563.webp" type="image/webp">
+  <img alt="" src="../img/1509647-20190619143957672-1407164563.png">
+</picture></p>
+<p>添加任务</p>
+<p><picture>
+  <source srcset="../img/1509647-20190619144021521-717048930.webp" type="image/webp">
+  <img alt="" src="../img/1509647-20190619144021521-717048930.png">
+</picture></p>
+<p>只需要配置</p>
+<ul>
+<li>任务名称</li>
+<li>时间间隔</li>
+<li>要执行的shell命令/脚本</li>
+</ul>
+<p class="lead">其中shell命令也可以替换为启动docker容器，如下图：</p>
+<p class="lead"><picture>
+  <source srcset="../img/1509647-20190619144439086-502319261.webp" type="image/webp">
+  <img alt="" src="../img/1509647-20190619144439086-502319261.png">
+</picture></p>
+<p class="lead">时间间隔格式示例：</p>
+<p class="lead">R/2019-06-19T14:40:00.000+08:00/PT5M</p>
+<p class="lead">以上配置为在北京时间下每5分钟执行</p>
+<p class="lead"> </p>
+<p class="lead">任务执行之后可以在mesos上找到任务执行记录</p>
+<p class="lead"><picture>
+  <source srcset="../img/1509647-20190619145511340-2106554447.webp" type="image/webp">
+  <img alt="" src="../img/1509647-20190619145511340-2106554447.png">
+</picture></p>
+<p> </p>
+<p>任务定义以及执行状态都可以在zk上找到</p>
+<blockquote>
+<p>[zk: localhost:2181(CONNECTED) 7] get /chronos/state/state/J_ $job_name</p>
+</blockquote>
+<p> </p>
+<p class="lead">只需要完成一个通用的shell脚本，这个shell脚本根据参数首先将一个hdfs目录（任务目录，包括脚本和配置等）下载到本地，然后进入目录执行参数中的命令，即可实现分布式任务调度；</p>
+<blockquote>
+<p class="lead">$ do_job.sh $hdfs_path $cmd</p>
+</blockquote>
+<p class="lead"> </p>
+<p class="lead">参考：https://hub.docker.com/r/mesosphere/chronos/</p>
+<p class="lead"> </p>
+</div>
+            </div>
+
+            <!-- Post Footer -->
+            <div class="post-footer">
+                <div class="post-navigation">
+                    <a href="../blog_cn.html" class="nav-button">← Back to Home</a>
+                    <a href="0111.html" class="nav-button">Next Post →</a>
+                </div>
+            </div>
+        </article>
+    </div>
+</body>
+</html>

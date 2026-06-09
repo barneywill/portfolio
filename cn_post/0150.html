@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>vi&vim基础篇</title>
+    <link rel="stylesheet" href="../css/style3.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header Navigation -->
+        <div class="header">
+            <h1><a href="../blog_cn.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+        </div>
+
+        <!-- Post Container -->
+        <article class="post">
+            <!-- Post Header -->
+            <div class="post-header">
+                <h1>vi&vim基础篇</h1>
+                <div class="post-meta">
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📅</span>
+                        <span>April 02, 2019</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📖</span>
+                        <span>4 min read</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">👁️</span>
+                        <span>597 views</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Post Content -->
+            <div class="post-content">
+                <div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<h1><img alt="" src="https://img2020.cnblogs.com/blog/1509647/202006/1509647-20200616223223503-1779599432.png"/></h1>
+<h1>一 vi配置文件</h1>
+<blockquote>
+<p>~/.vimrc<br/>or<br/>/etc/vimrc</p>
+</blockquote>
+<p>ps：如果使用的是idea中的vim插件，使用的配置文件为 ~/.ideavimrc~~~`s</p>
+<p> </p>
+<p>配置文件中可以修改配色，可以修改键位绑定，可以修改配置，比如</p>
+<blockquote>
+<p><code class="sourceCode bash"><span id="cb1-3"><span class="ex">inoremap <span class="op">&lt;C-a<span class="op">&gt; <span class="op">&lt;Home<span class="op">&gt;</span></span></span></span></span></span></code></p>
+<p><code class="sourceCode bash"><span id="cb1-3"></span></code><code class="sourceCode bash"><span id="cb1-3"><span class="ex"><span class="op"><span class="op"><span class="op"><span class="op"><span id="cb1-4"><span class="ex">inoremap <span class="op">&lt;C-e<span class="op">&gt; <span class="op">&lt;End<span class="op">&gt;</span></span></span></span></span></span></span></span></span></span></span></span></code></p>
+<p><code class="sourceCode bash"><span id="cb1-3"></span></code><code class="sourceCode bash"><span id="cb1-3"><span class="ex"><span class="op"><span class="op"><span class="op"><span class="op"><span id="cb1-4"><span class="ex"><span class="op"><span class="op"><span class="op"><span class="op"><span id="cb1-5"><span class="st">inoremap &lt;C-p&gt; &lt;Up&gt;</span></span></span></span></span></span></span></span></span></span></span></span></span></span></code></p>
+<p><code class="sourceCode bash"><span id="cb1-3"><span class="ex"><span class="op"><span class="op"><span class="op"><span class="op"><span id="cb1-4"><span class="ex"><span class="op"><span class="op"><span class="op"><span class="op"><span id="cb1-5"><span class="st"><span id="cb1-6"><span class="st"><span class="ex">inoremap <span class="op">&lt;C-n<span class="op">&gt; <span class="op">&lt;Down<span class="op">&gt;</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></code></p>
+<p><code class="sourceCode bash"><span id="cb1-3"></span></code><code class="sourceCode bash"><span id="cb1-3"><span class="ex"><span class="op"><span class="op"><span class="op"><span class="op"><span id="cb1-4"><span class="ex"><span class="op"><span class="op"><span class="op"><span class="op"><span id="cb1-5"><span class="st"><span id="cb1-6"><span class="st"><span class="ex"><span class="op"><span class="op"><span class="op"><span class="op"><span id="cb1-7"><span class="ex">inoremap <span class="op">&lt;C-b<span class="op">&gt; <span class="op">&lt;Left<span class="op">&gt;</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></code></p>
+<p><code class="sourceCode bash"><span id="cb1-3"></span></code><code class="sourceCode bash"><span id="cb1-3"><span class="ex"><span class="op"><span class="op"><span class="op"><span class="op"><span id="cb1-4"><span class="ex"><span class="op"><span class="op"><span class="op"><span class="op"><span id="cb1-5"><span class="st"><span id="cb1-6"><span class="st"><span class="ex"><span class="op"><span class="op"><span class="op"><span class="op"><span id="cb1-7"><span class="ex"><span class="op"><span class="op"><span class="op"><span class="op"><span id="cb1-8"><span class="ex">inoremap <span class="op">&lt;C-f<span class="op">&gt; <span class="op">&lt;Right<span class="op">&gt;</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></code></p>
+<p> </p>
+<p>colorscheme darkblue</p>
+</blockquote>
+<p>默认配色文件夹：/usr/share/vim/vim74/colors</p>
+<p>注意74是版本号</p>
+<p> </p>
+<h1>二 模式</h1>
+<p>三个模式：命令模式、底线命令模式、输入模式</p>
+<h2>命令模式（Command Mode）</h2>
+<h3>1 上/下/左/右移动光标</h3>
+<blockquote>
+<p>h Left</p>
+<p>k Up</p>
+<p>j Down</p>
+<p>l RIght</p>
+</blockquote>
+<p>数字+j|k|h|l 可快速移动数字个字符</p>
+<h3>2 光标快速移动</h3>
+<blockquote>
+<p>G （文件末尾）</p>
+<p>1G （文件开头）</p>
+<p>gg </p>
+<p>10G （跳到第10行的行首）</p>
+<p>10gg </p>
+<p>:10回车 </p>
+<p>10回车 （光标向下移动10行）</p>
+<p>10j </p>
+<p> </p>
+<p>H （当前屏幕的顶行）</p>
+<p>L （当前屏幕的底行）</p>
+<p>M （移动光标至屏幕的中间行）</p>
+<p>^ （行首，不包含空格，第一个非空白字符，软行首）</p>
+<p>0 （数字0，行首，包含空格，第一个字符，硬行首）</p>
+<p>$ （行尾）</p>
+<p>- （上一行行首，软行首）</p>
+<p>+ （下一行行首，软行首）</p>
+<p> </p>
+<p>空格 （向后移动1个字符）</p>
+<p>10空格 （向后移动10个字符）</p>
+<p>10l （小写的L）</p>
+<p>w （移动到下个单词的开头，这里的单词以非字母分隔）</p>
+<p>W （移动到下个单词的开头，这里的单词以空格分隔）</p>
+<p>e （移动到下个单词的结尾，同上）</p>
+<p>E （这里的单词以空格分隔，同上）</p>
+<p>ge （反向的e）</p>
+<p>b （移动到上个单词的开头，同上）</p>
+<p>B （这里的单词以空格分隔，同上）</p>
+<p> </p>
+<p>( （移动到上个句子的开头）</p>
+<p>) （移动到下个句子的开头）</p>
+<p>{ （移动到上一段，空白行分割）</p>
+<p>} （移动到下一段，空白行分割）</p>
+<p> </p>
+<p>Ctrl+g （列出编辑信息，包括文件名、行号、列号等）</p>
+<p>&gt;&gt; （缩进，一个tab）</p>
+<p>&lt;&lt; （反缩进，一个tab）</p>
+<p> </p>
+<p>f任意字符 （向后移动光标至指定字符）</p>
+<p>F任意字符 （向前移动光标至指定字符）</p>
+<p>t任意字符 （移动光标至指定字符之前）</p>
+<p>T任意字符 （反向移动光标至指定字符之前）</p>
+<p>10f任意字符（向后移动光标至指定字符的第10次出现位置）</p>
+<p>; （repeat，重复上边的操作，继续移动光标到下一个位置）</p>
+<p>, （reverse，返回光标到上一个位置）</p>
+</blockquote>
+<h3>3 翻页</h3>
+<blockquote>
+<p>Ctrl+b （向上翻一页）</p>
+<p>Ctrl+u （向上翻半页）</p>
+<p>Ctrl+f （向下翻一页）</p>
+<p>Ctrl+d （向下翻半页）</p>
+<p>Ctrl+e （屏幕向下滚动，光标位置不变，区别于j）</p>
+<p>Ctrl+y （屏幕向上滚动，光标位置不变，区别与k）</p>
+</blockquote>
+<h3>4 搜索</h3>
+<blockquote>
+<p>/something （向下搜索）</p>
+<p>?something （向上搜索）</p>
+<p>n 下一个 N 上一个</p>
+<p> </p>
+<p># （向上选中当前光标所在单词）</p>
+<p>* （向下选中当前光标所在单词）</p>
+</blockquote>
+<h3>5 删除字符</h3>
+<blockquote>
+<p>x （向后删除，Delete）</p>
+<p>X （向前删除，Backspace）</p>
+<p>10x （向后删除10个字符）</p>
+<p>10X （向前删除10个字符）</p>
+<p>dw （向后删除1个单词）</p>
+<p>10dw （向后删除10个单词）</p>
+<p>d^ （删除光标到行首）</p>
+<p>d0 </p>
+<p>d$ （删除光标到行尾）</p>
+<p>D </p>
+<p> </p>
+<p>di' （删除''之间的字符）</p>
+<p>da' （删除''之间的字符，包含'）</p>
+<p>di" （删除""之间的字符）</p>
+<p>da" （删除""之间的字符，包含"）</p>
+<p>ci ca （修改）</p>
+<p>yi ya （复制）</p>
+<p> </p>
+<p>dd （删除当前行）</p>
+<p>dj （删除下一行）</p>
+<p>dk （删除上一行）</p>
+<p>d10d （删除10行）</p>
+<p>10dd （删除10行）</p>
+<p>dG （删除光标所在行到最后一样）</p>
+<p>d1G （删除光标所在行到第一行）</p>
+</blockquote>
+<h3>6 可视化复制粘贴</h3>
+<blockquote>
+<p>V （可视行模式，块选择模式，然后上下移动光标直到选中所需行）</p>
+<p>v （可视模式，然后左右移动光标直到选中所需字符）</p>
+<p>y （复制所有选中字符）</p>
+<p>d （剪切所选中字符）</p>
+<p>p （将选中的文本粘贴到光标下一行）</p>
+<p>P （将选中的文本粘贴到光标上一行）</p>
+</blockquote>
+<h3> </h3>
+<h3>7 复制</h3>
+<blockquote>
+<p>yy （复制整行）</p>
+<p>Y</p>
+<p>10yy （复制10行）</p>
+<p>yw （复制下一个单词）</p>
+<p>10yw （复制下10个单词）</p>
+<p>yG （复制当前行到最后一行）</p>
+<p>y1G （复制当前行到第一行）</p>
+<p>y0 （复制当前光标至行首）</p>
+<p>y^</p>
+<p>y$ （复制当前光标到行尾）</p>
+<p> </p>
+<p>以上剪切和复制只能在vi内结合p使用，如果想在其他应用中粘贴，需要复制到剪贴板，命令如下：</p>
+<p>"*yG (全选复制)</p>
+</blockquote>
+<h3>8 undo&amp;redo操作</h3>
+<blockquote>
+<p>u （undo 恢复到编辑前的状态）</p>
+<p>U （undo 恢复上一次操作，再按一次则重复上一次操作）</p>
+<p>. （redo 重复执行上一命令，比如dw）</p>
+</blockquote>
+<h3>9 临时挂起和返回</h3>
+<blockquote>
+<p>Ctrl+z （挂起）</p>
+<p>fg （返回）</p>
+</blockquote>
+<h3>10 标记</h3>
+<blockquote>
+<p>m任意字符 （标记光标当前位置为任意字符）</p>
+<p>`任意字符 （快速返回标记）</p>
+<p>'任意字符 （快速返回标记行的行首）</p>
+<p>:delmarks 任意字符 (取消标注)</p>
+</blockquote>
+<h2>底线命令模式（Last Line Mode）</h2>
+<p>命令模式输入:进入底线命令模式，删除:或者命令执行完返回命令模式</p>
+<h3>1 显示行号或取消</h3>
+<blockquote>
+<p>:set number</p>
+<p>:set nonumber</p>
+<p>or</p>
+<p>:set nu</p>
+<p>:set nonu</p>
+</blockquote>
+<h3>2 自动缩进</h3>
+<blockquote>
+<p>:set ai<br/>or<br/>:set autoindent</p>
+</blockquote>
+<h3>3 智能缩进</h3>
+<blockquote>
+<p>:set si<br/>or<br/>:set smartindent</p>
+</blockquote>
+<h3>4 粘贴时取消自动缩进</h3>
+<blockquote>
+<p>:set noai nosi<br/>or<br/>:set paste</p>
+</blockquote>
+<h3>5 文本替换 a-&gt;b</h3>
+<blockquote>
+<p>:%s/a/b/g （全部行）</p>
+<p>:s/a/b/g （当前行）</p>
+<p>:1,5s/a/b/g （1-5行）</p>
+<p> </p>
+<p>:1,5s/^/#/b （1-5行添加注释）</p>
+<p>另一种方式，在vim下</p>
+<p>1）Ctrl+v （进入块选择模式）</p>
+<p>2）j （移动光标选中1-5行）</p>
+<p>3）I （大写i，进入行首输入）</p>
+<p>4）# （输入注释字符）</p>
+<p>5）Esc （两次，退出块选择模式，同时在1-5行行首增加注释字符）</p>
+</blockquote>
+<p> </p>
+<h3>6 将文件格式修改为unix</h3>
+<blockquote>
+<p>:set fileformat unix</p>
+</blockquote>
+<h3>7 保存&amp;退出</h3>
+<blockquote>
+<p>:w （保存）</p>
+<p>:q （退出）</p>
+<p>:q! （丢弃修改退出，等于ZQ）</p>
+<p>:wq （保存并退出，等于ZZ）</p>
+</blockquote>
+<p> </p>
+<h3>8 临时执行命令</h3>
+<blockquote>
+<p>:! some command （临时执行 some command）</p>
+</blockquote>
+<h3>9 剪切</h3>
+<blockquote>
+<p>:x,yd （将x到y行剪切）</p>
+<p>:x,y m z （将x到y行移动到z行之后）</p>
+</blockquote>
+<h3>10 vim配色</h3>
+<blockquote>
+<p>:colorscheme （查看当前配色）</p>
+<p>:colorscheme darkblue （修改配色，永久修改需要修改.vimrc）</p>
+</blockquote>
+<h3>11 其他</h3>
+<blockquote>
+<p>:h （帮助）</p>
+<p>:e filename（打开另一个文件）</p>
+<p>:new （打开新文件）</p>
+<p>:sav filename（另存为）</p>
+<p> </p>
+<p>:sp [filename] （打开另一个文件，同时上下分屏）</p>
+<p>:vsp [filename] （打开另一个文件，同时左右分屏）</p>
+<p>:q （退出分屏）</p>
+<p>Ctrl+w h|j|k|l （光标在分屏之间移动）</p>
+</blockquote>
+<p> </p>
+<h2>输入模式（Insert Mode）</h2>
+<p>从命令模式开始</p>
+<h3>1 插入字符</h3>
+<blockquote>
+<p>i （在光标后插入）</p>
+<p>I （在行首插入）</p>
+<p>a （在光标后追加）</p>
+<p>A （在行尾追加）</p>
+<p>o （从当前位置插入换行同时在换行后开始插入字符）</p>
+<p>O （从当前位置插入换行同时在换行前开始插入字符）</p>
+<p>r （替换当前1个字符，替换之后返回命令模式）</p>
+<p>R （进入替换模式）</p>
+<p>c0 （将光标之前至行首的字符全部删除，同时进入插入模式）</p>
+<p>c$ （将光标之后至行尾的字符全部删除，同时进入插入模式）</p>
+<p>C </p>
+<p>cc （删除当前行，同时进入插入模式）</p>
+<p>cw （删除光标后一个单词，同时进入插入模式）</p>
+</blockquote>
+<h3>2 进入输入模式后</h3>
+<blockquote>
+<p>Ctrl+w （向左删除1个单词）</p>
+<p>Ctrl+u （向左删除至行首）</p>
+<p>Ctrl+h （向左删除1个字符）</p>
+<p> </p>
+<p>Ctrl+t （在行首增加缩进）</p>
+<p>Ctrl+d （在行首删除缩进）</p>
+<p> </p>
+<p>Ctrl+a （插入上次插入的内容）</p>
+<p>Ctrl+@ （插入上次插入的内容并结束插入模式）</p>
+<p> </p>
+<p>Ctrl+o （暂时返回命令模式，执行一个命令后返回输入模式，避免来回切换模式）</p>
+<p> </p>
+<p>Ctrl+u （恢复上次的修改）</p>
+</blockquote>
+<p>vi进入输入模式后，快捷键少的可怜，比如移动光标，虽然可以通过Ctrl+o，还是不如emacs方便，不过好消息是可以在vi里绑定emacs的快捷键</p>
+<blockquote>
+<p># vi .vimrc</p>
+<p><span style="font-family: 宋体; font-size: 14px"><code class="sourceCode bash"><span id="cb1-3"><span class="ex">inoremap <span class="op">&lt;C-a<span class="op">&gt; <span class="op">&lt;Home<span class="op">&gt;</span></span></span></span></span></span></code></span></p>
+<p><span style="font-family: 宋体; font-size: 14px"><code class="sourceCode bash"><span id="cb1-3"></span></code><code class="sourceCode bash"><span id="cb1-3"><span class="ex"><span class="op"><span class="op"><span class="op"><span class="op"><span id="cb1-4"><span class="ex">inoremap <span class="op">&lt;C-e<span class="op">&gt; <span class="op">&lt;End<span class="op">&gt;</span></span></span></span></span></span></span></span></span></span></span></span></code></span></p>
+<p><span style="font-family: 宋体; font-size: 14px"><code class="sourceCode bash"><span id="cb1-3"></span></code><code class="sourceCode bash"><span id="cb1-3"><span class="ex"><span class="op"><span class="op"><span class="op"><span class="op"><span id="cb1-4"><span class="ex"><span class="op"><span class="op"><span class="op"><span class="op"><span id="cb1-5"><span class="st">inoremap &lt;C-p&gt; &lt;Up&gt;</span></span></span></span></span></span></span></span></span></span></span></span></span></span></code></span></p>
+<p><span style="font-family: 宋体; font-size: 14px"><code class="sourceCode bash"><span id="cb1-3"><span class="ex"><span class="op"><span class="op"><span class="op"><span class="op"><span id="cb1-4"><span class="ex"><span class="op"><span class="op"><span class="op"><span class="op"><span id="cb1-5"><span class="st"><span id="cb1-6"><span class="st"><span class="ex">inoremap <span class="op">&lt;C-n<span class="op">&gt; <span class="op">&lt;Down<span class="op">&gt;</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></code></span></p>
+<p><span style="font-family: 宋体; font-size: 14px"><code class="sourceCode bash"><span id="cb1-3"></span></code><code class="sourceCode bash"><span id="cb1-3"><span class="ex"><span class="op"><span class="op"><span class="op"><span class="op"><span id="cb1-4"><span class="ex"><span class="op"><span class="op"><span class="op"><span class="op"><span id="cb1-5"><span class="st"><span id="cb1-6"><span class="st"><span class="ex"><span class="op"><span class="op"><span class="op"><span class="op"><span id="cb1-7"><span class="ex">inoremap <span class="op">&lt;C-b<span class="op">&gt; <span class="op">&lt;Left<span class="op">&gt;</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></code></span></p>
+<p><span style="font-family: 宋体; font-size: 14px"><code class="sourceCode bash"><span id="cb1-3"></span></code><code class="sourceCode bash"><span id="cb1-3"><span class="ex"><span class="op"><span class="op"><span class="op"><span class="op"><span id="cb1-4"><span class="ex"><span class="op"><span class="op"><span class="op"><span class="op"><span id="cb1-5"><span class="st"><span id="cb1-6"><span class="st"><span class="ex"><span class="op"><span class="op"><span class="op"><span class="op"><span id="cb1-7"><span class="ex"><span class="op"><span class="op"><span class="op"><span class="op"><span id="cb1-8"><span class="ex">inoremap <span class="op">&lt;C-f<span class="op">&gt; <span class="op">&lt;Right<span class="op">&gt;</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></code></span></p>
+</blockquote>
+<p><span style="font-family: 宋体"><span><span class="ex"><span class="op"><span class="op"><span class="op"><span class="op"><span><span class="ex"><span class="op"><span class="op"><span class="op"><span class="op"><span><span class="st"><span><span class="st"><span class="ex"><span class="op"><span class="op"><span class="op"><span class="op"><span><span class="ex"><span class="op"><span class="op"><span class="op"><span class="op"><span><span class="ex"><span class="op"><span class="op"><span class="op"><span class="op"><span><span class="ex"><span class="op"><span class="op"><span class="op"><span class="op"><span><span class="ex"><span class="op"><span class="op"><span class="op"><span class="op">以上会绑定Ctrl+aepnbf等快捷键，可谓双剑合璧</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></p>
+<h3>3 返回命令模式</h3>
+<blockquote>
+<p>Esc</p>
+<p>Ctrl+c</p>
+<p>Ctrl+[</p>
+</blockquote>
+<p> </p>
+</div>
+            </div>
+
+            <!-- Post Footer -->
+            <div class="post-footer">
+                <div class="post-navigation">
+                    <a href="../blog_cn.html" class="nav-button">← Back to Home</a>
+                    <a href="0151.html" class="nav-button">Next Post →</a>
+                </div>
+            </div>
+        </article>
+    </div>
+</body>
+</html>

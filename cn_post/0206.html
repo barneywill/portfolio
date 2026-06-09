@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hive 3 - 最简绿色部署</title>
+    <link rel="stylesheet" href="../css/style3.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header Navigation -->
+        <div class="header">
+            <h1><a href="../blog_cn.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+        </div>
+
+        <!-- Post Container -->
+        <article class="post">
+            <!-- Post Header -->
+            <div class="post-header">
+                <h1>Hive 3 - 最简绿色部署</h1>
+                <div class="post-meta">
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📅</span>
+                        <span>February 25, 2019</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📖</span>
+                        <span>1 min read</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">👁️</span>
+                        <span>286 views</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Post Content -->
+            <div class="post-content">
+                <div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<p>hadoop部署参考：https://www.cnblogs.com/barneywill/p/10428098.html</p>
+<p> </p>
+<h1>1 拷贝到所有服务器上并解压</h1>
+<blockquote>
+<p># ansible all-servers -m copy -a 'src=/src/path/to/apache-hive-2.3.4-bin.tar.gz dest=/dest/path/to/'<br/># ansible all-servers -m shell -a 'tar xvf /dest/path/to/apache-hive-2.3.4-bin.tar.gz -C /app/path'</p>
+</blockquote>
+<h1>2 拷贝mysql-connector-java.jar</h1>
+<blockquote>
+<p># ansible all-servers -m shell -a 'cp /path/to/mysql-connector-java.jar /app/path/apache-hive-2.3.4-bin/lib/'</p>
+</blockquote>
+<h1>3 准备配置文件</h1>
+<p>hive-site.xml</p>
+<blockquote>
+<p>&lt;configuration&gt;</p>
+<p>    &lt;property&gt;</p>
+<p>        &lt;name&gt;javax.jdo.option.ConnectionUserName&lt;/name&gt;</p>
+<p>        &lt;value&gt;hive&lt;/value&gt;</p>
+<p>    &lt;/property&gt;</p>
+<p>    &lt;property&gt;</p>
+<p>        &lt;name&gt;javax.jdo.option.ConnectionPassword&lt;/name&gt;</p>
+<p>        &lt;value&gt;hive&lt;/value&gt;</p>
+<p>    &lt;/property&gt;</p>
+<p>   &lt;property&gt;</p>
+<p>        &lt;name&gt;javax.jdo.option.ConnectionURL&lt;/name&gt;</p>
+<p>        &lt;value&gt;jdbc:mysql://node0:3306/hive&lt;/value&gt;</p>
+<p>    &lt;/property&gt;</p>
+<p>    &lt;property&gt;</p>
+<p>        &lt;name&gt;javax.jdo.option.ConnectionDriverName&lt;/name&gt;</p>
+<p>        &lt;value&gt;com.mysql.jdbc.Driver&lt;/value&gt;</p>
+<p>    &lt;/property&gt;</p>
+<p>    &lt;property&gt;</p>
+<p>        &lt;name&gt;hive.metastore.uris&lt;/name&gt;</p>
+<p>        &lt;value&gt;thrift://node0:9083&lt;/value&gt;</p>
+<p>    &lt;/property&gt;</p>
+<p>&lt;/configuration&gt;</p>
+</blockquote>
+<h1>4 将配置同步到所有服务器上</h1>
+<blockquote>
+<p># ansible all-servers -m copy -a 'src=/path/to/config/ dest=/app/path/apache-hive-2.3.4-bin/conf/'</p>
+</blockquote>
+<h1>5 初始化数据库</h1>
+<blockquote>
+<p># echo "create database hive;grant all privileges on hive.* to hive@'%' identified by 'hive';"|mysql -uroot -proot</p>
+<p># su - hadoop<br/>$ /app/path/apache-hive-2.3.4-bin/bin/schematool -dbType mysql -initSchema</p>
+</blockquote>
+<h1>6 启动metastore</h1>
+<blockquote>
+<p># su - hadoop<br/>$ /app/path/apache-hive-2.3.4-bin/bin/hive --service metastore</p>
+</blockquote>
+<h1>7 启动hive thrift server</h1>
+<blockquote>
+<p># su - hadoop<br/>$ /app/path/apache-hive-2.3.4-bin/bin/hive --service hiveserver2</p>
+</blockquote>
+<p>如果运行sql时报Error: Java heap space，即mapper或reducer内存溢出，可以临时调整参数</p>
+<blockquote>
+<p>set mapreduce.map.memory.mb=3072;<br/>set mapreduce.map.java.opts=-Xmx2048m;<br/>set mapreduce.reduce.memory.mb=3072;<br/>set mapreduce.reduce.java.opts=-Xmx2048m;</p>
+</blockquote>
+<p>以上配置可以在mapred-site.xml中永久修改</p>
+<p> </p>
+</div>
+            </div>
+
+            <!-- Post Footer -->
+            <div class="post-footer">
+                <div class="post-navigation">
+                    <a href="../blog_cn.html" class="nav-button">← Back to Home</a>
+                    <a href="0207.html" class="nav-button">Next Post →</a>
+                </div>
+            </div>
+        </article>
+    </div>
+</body>
+</html>

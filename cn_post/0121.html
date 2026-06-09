@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>docker启动tomcat不输出catalina.out</title>
+    <link rel="stylesheet" href="../css/style3.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header Navigation -->
+        <div class="header">
+            <h1><a href="../blog_cn.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+        </div>
+
+        <!-- Post Container -->
+        <article class="post">
+            <!-- Post Header -->
+            <div class="post-header">
+                <h1>docker启动tomcat不输出catalina.out</h1>
+                <div class="post-meta">
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📅</span>
+                        <span>June 13, 2019</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📖</span>
+                        <span>10 min read</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">👁️</span>
+                        <span>3190 views</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Post Content -->
+            <div class="post-content">
+                <div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<p>docker启动tomcat默认是：</p>
+<blockquote>
+<p>Run the default Tomcat server (<code>CMD ["catalina.sh", "run"]</code>):</p>
+</blockquote>
+<p>查看tomcat启动脚本catalish.sh</p>
+<div class="cnblogs_code">
+<pre><span style="color: rgba(0, 0, 255, 1)">elif</span> [ <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">$1</span><span style="color: rgba(128, 0, 0, 1)">"</span> = <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">run</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)"> ]; then
+
+  shift
+  </span><span style="color: rgba(0, 0, 255, 1)">if</span> [ <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">$1</span><span style="color: rgba(128, 0, 0, 1)">"</span> = <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">-security</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)"> ] ; then
+    </span><span style="color: rgba(0, 0, 255, 1)">if</span> [ $have_tty - eq 1<span style="color: rgba(0, 0, 0, 1)"> ]; then
+      echo </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">Using Security Manager</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">
+    fi
+    shift
+    eval </span><span style="color: rgba(0, 0, 255, 1)">exec</span> <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">\"$_RUNJAVA\"</span><span style="color: rgba(128, 0, 0, 1)">"</span> <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">\"$LOGGING_CONFIG\"</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)"> $LOGGING_MANAGER $JAVA_OPTS $CATALINA_OPTS \
+      </span>-D$ENDORSED_PROP=<span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">\"$JAVA_ENDORSED_DIRS\"</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)"> \
+      </span>-classpath <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">\"$CLASSPATH\"</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)"> \
+      </span>-<span style="color: rgba(0, 0, 0, 1)">Djava.security.manager \
+      </span>-Djava.security.policy==<span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">\"$CATALINA_BASE/conf/catalina.policy\"</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)"> \
+      </span>-Dcatalina.base=<span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">\"$CATALINA_BASE\"</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)"> \
+      </span>-Dcatalina.home=<span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">\"$CATALINA_HOME\"</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)"> \
+      </span>-Djava.io.tmpdir=<span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">\"$CATALINA_TMPDIR\"</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)"> \
+      org.apache.catalina.startup.Bootstrap </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">$@</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)"> start
+  </span><span style="color: rgba(0, 0, 255, 1)">else</span><span style="color: rgba(0, 0, 0, 1)">
+    eval </span><span style="color: rgba(0, 0, 255, 1)">exec</span> <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">\"$_RUNJAVA\"</span><span style="color: rgba(128, 0, 0, 1)">"</span> <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">\"$LOGGING_CONFIG\"</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)"> $LOGGING_MANAGER $JAVA_OPTS $CATALINA_OPTS \
+      </span>-D$ENDORSED_PROP=<span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">\"$JAVA_ENDORSED_DIRS\"</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)"> \
+      </span>-classpath <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">\"$CLASSPATH\"</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)"> \
+      </span>-Dcatalina.base=<span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">\"$CATALINA_BASE\"</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)"> \
+      </span>-Dcatalina.home=<span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">\"$CATALINA_HOME\"</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)"> \
+      </span>-Djava.io.tmpdir=<span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">\"$CATALINA_TMPDIR\"</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)"> \
+      org.apache.catalina.startup.Bootstrap </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">$@</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)"> start
+  fi
+
+</span><span style="color: rgba(0, 0, 255, 1)">elif</span> [ <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">$1</span><span style="color: rgba(128, 0, 0, 1)">"</span> = <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">start</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)"> ] ; then
+
+  </span><span style="color: rgba(0, 0, 255, 1)">if</span> [ ! - z <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">$CATALINA_PID</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)"> ]; then
+    </span><span style="color: rgba(0, 0, 255, 1)">if</span> [ - f <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">$CATALINA_PID</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)"> ]; then
+      </span><span style="color: rgba(0, 0, 255, 1)">if</span> [ - s <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">$CATALINA_PID</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)"> ]; then
+        echo </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">Existing PID file found during start.</span><span style="color: rgba(128, 0, 0, 1)">"</span>
+        <span style="color: rgba(0, 0, 255, 1)">if</span> [ - r <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">$CATALINA_PID</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)"> ]; then
+          PID</span>=`cat <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">$CATALINA_PID</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">`
+          ps </span>-p $PID &gt;/dev/null 2&gt;&amp;1
+          <span style="color: rgba(0, 0, 255, 1)">if</span> [ $? - <span style="color: rgba(0, 0, 0, 1)">eq 0 ] ; then
+            echo </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">Tomcat appears to still be running with PID $PID. Start aborted.</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">
+            echo </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">If the following process is not a Tomcat process, remove the PID file and try again:</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">
+            ps </span>-f - <span style="color: rgba(0, 0, 0, 1)">p $PID
+            exit </span>1
+          <span style="color: rgba(0, 0, 255, 1)">else</span><span style="color: rgba(0, 0, 0, 1)">
+            echo </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">Removing/clearing stale PID file.</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">
+            rm </span>-f <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">$CATALINA_PID</span><span style="color: rgba(128, 0, 0, 1)">"</span> &gt;/dev/null 2&gt;&amp;1
+            <span style="color: rgba(0, 0, 255, 1)">if</span> [ $? !=<span style="color: rgba(0, 0, 0, 1)"> 0 ]; then
+              </span><span style="color: rgba(0, 0, 255, 1)">if</span> [ - w <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">$CATALINA_PID</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)"> ]; then
+                cat </span>/dev/null &gt; <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">$CATALINA_PID</span><span style="color: rgba(128, 0, 0, 1)">"</span>
+              <span style="color: rgba(0, 0, 255, 1)">else</span><span style="color: rgba(0, 0, 0, 1)">
+                echo </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">Unable to remove or clear stale PID file. Start aborted.</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">
+                exit </span>1<span style="color: rgba(0, 0, 0, 1)">
+              fi
+            fi
+          fi
+        </span><span style="color: rgba(0, 0, 255, 1)">else</span><span style="color: rgba(0, 0, 0, 1)">
+          echo </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">Unable to read PID file. Start aborted.</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">
+          exit </span>1<span style="color: rgba(0, 0, 0, 1)">
+        fi
+      </span><span style="color: rgba(0, 0, 255, 1)">else</span><span style="color: rgba(0, 0, 0, 1)">
+        rm </span>-f <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">$CATALINA_PID</span><span style="color: rgba(128, 0, 0, 1)">"</span> &gt;/dev/null 2&gt;&amp;1
+        <span style="color: rgba(0, 0, 255, 1)">if</span> [ $? !=<span style="color: rgba(0, 0, 0, 1)"> 0 ]; then
+          </span><span style="color: rgba(0, 0, 255, 1)">if</span> [ ! - w <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">$CATALINA_PID</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)"> ]; then
+            echo </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">Unable to remove or write to empty PID file. Start aborted.</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">
+            exit </span>1<span style="color: rgba(0, 0, 0, 1)">
+          fi
+        fi
+      fi
+    fi
+  fi
+
+  shift
+  </span><span style="color: rgba(0, 0, 255, 1)">if</span> [ - z <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">$CATALINA_OUT_CMD</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)"> ] ; then
+    touch </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">$CATALINA_OUT</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">
+    catalina_out_command</span>=<span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">&gt;&gt; \"$CATALINA_OUT\" 2&gt;&amp;1</span><span style="color: rgba(128, 0, 0, 1)">"</span>
+  <span style="color: rgba(0, 0, 255, 1)">else</span><span style="color: rgba(0, 0, 0, 1)">
+    catalina_out_command</span>=<span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">| $CATALINA_OUT_CMD</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">
+  fi
+  </span><span style="color: rgba(0, 0, 255, 1)">if</span> [ ! - z <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">$CATALINA_PID</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)"> ]; then
+    catalina_pid_file</span>=<span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">$CATALINA_PID</span><span style="color: rgba(128, 0, 0, 1)">"</span>
+  <span style="color: rgba(0, 0, 255, 1)">else</span><span style="color: rgba(0, 0, 0, 1)">
+    catalina_pid_file</span>=/dev/<span style="color: rgba(0, 0, 0, 1)">null
+  fi
+  </span><span style="color: rgba(0, 0, 255, 1)">if</span> [ <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">$1</span><span style="color: rgba(128, 0, 0, 1)">"</span> = <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">-security</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)"> ] ; then
+    </span><span style="color: rgba(0, 0, 255, 1)">if</span> [ $have_tty - eq 1<span style="color: rgba(0, 0, 0, 1)"> ]; then
+      echo </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">Using Security Manager</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">
+    fi
+    shift
+    eval \{ $_NOHUP </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">\"$_RUNJAVA\"</span><span style="color: rgba(128, 0, 0, 1)">"</span> <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">\"$LOGGING_CONFIG\"</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)"> $LOGGING_MANAGER $JAVA_OPTS $CATALINA_OPTS \
+      </span>-D$ENDORSED_PROP=<span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">\"$JAVA_ENDORSED_DIRS\"</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)"> \
+      </span>-classpath <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">\"$CLASSPATH\"</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)"> \
+      </span>-<span style="color: rgba(0, 0, 0, 1)">Djava.security.manager \
+      </span>-Djava.security.policy==<span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">\"$CATALINA_BASE/conf/catalina.policy\"</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)"> \
+      </span>-Dcatalina.base=<span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">\"$CATALINA_BASE\"</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)"> \
+      </span>-Dcatalina.home=<span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">\"$CATALINA_HOME\"</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)"> \
+      </span>-Djava.io.tmpdir=<span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">\"$CATALINA_TMPDIR\"</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)"> \
+      org.apache.catalina.startup.Bootstrap </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">$@</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)"> start \
+      </span>2\&gt;\&amp;1 \&amp; echo \$! \&gt;\<span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">$catalina_pid_file\" \; \} $catalina_out_command </span><span style="color: rgba(128, 0, 0, 1)">"</span>&amp;<span style="color: rgba(128, 0, 0, 1)">"
+</span>
+  <span style="color: rgba(0, 0, 255, 1)">else</span><span style="color: rgba(0, 0, 0, 1)">
+    eval \{ $_NOHUP </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">\"$_RUNJAVA\"</span><span style="color: rgba(128, 0, 0, 1)">"</span> <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">\"$LOGGING_CONFIG\"</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)"> $LOGGING_MANAGER $JAVA_OPTS $CATALINA_OPTS \
+      </span>-D$ENDORSED_PROP=<span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">\"$JAVA_ENDORSED_DIRS\"</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)"> \
+      </span>-classpath <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">\"$CLASSPATH\"</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)"> \
+      </span>-Dcatalina.base=<span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">\"$CATALINA_BASE\"</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)"> \
+      </span>-Dcatalina.home=<span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">\"$CATALINA_HOME\"</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)"> \
+      </span>-Djava.io.tmpdir=<span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">\"$CATALINA_TMPDIR\"</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)"> \
+      org.apache.catalina.startup.Bootstrap </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">$@</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)"> start \
+      </span>2\&gt;\&amp;1 \&amp; echo \$! \&gt;\<span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">$catalina_pid_file\" \; \} $catalina_out_command </span><span style="color: rgba(128, 0, 0, 1)">"</span>&amp;<span style="color: rgba(128, 0, 0, 1)">"
+</span><span style="color: rgba(0, 0, 0, 1)">
+  fi
+
+  echo </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">Tomcat started.</span><span style="color: rgba(128, 0, 0, 1)">"</span>
+
+<span style="color: rgba(0, 0, 255, 1)">elif</span> [ <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">$1</span><span style="color: rgba(128, 0, 0, 1)">"</span> = <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">stop</span><span style="color: rgba(128, 0, 0, 1)">"</span> ] ; then</pre>
+</div>
+<p>可以发现run时并不会输出catalina.out（exec直接启动java），start时才会输出catalina.out（nohup后台启动java）；</p>
+<p> </p>
+<p>要想输出catalina.out，一种是tee，一种是重定向，后者脚本如下：</p>
+<div class="cnblogs_code">
+<pre><span style="color: rgba(0, 128, 0, 1)">#</span><span style="color: rgba(0, 128, 0, 1)"> cat start.sh</span><span style="color: rgba(0, 128, 0, 1)">
+#</span><span style="color: rgba(0, 128, 0, 1)">!/bin/sh</span>
+
+/usr/local/tomcat/bin/catalina.sh run &gt;&gt; /usr/local/tomcat/logs/catalina.out 2&gt;&amp;1</pre>
+</div>
+<p>启动命令改为</p>
+<blockquote>
+<p>$ docker run - d - p 8080:8080 - v /dir/start.sh:/usr/local/tomcat/start.sh tomcat:9 sh /usr/local/tomcat/start.sh</p>
+</blockquote>
+<p>即可</p>
+<p> </p>
+<p>参考：</p>
+<p>https://hub.docker.com/_/tomcat</p>
+<p> </p>
+</div>
+            </div>
+
+            <!-- Post Footer -->
+            <div class="post-footer">
+                <div class="post-navigation">
+                    <a href="../blog_cn.html" class="nav-button">← Back to Home</a>
+                    <a href="0122.html" class="nav-button">Next Post →</a>
+                </div>
+            </div>
+        </article>
+    </div>
+</body>
+</html>

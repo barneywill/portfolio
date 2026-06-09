@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spark 1 - Spark Submit即Spark任务提交过程</title>
+    <link rel="stylesheet" href="../css/style3.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header Navigation -->
+        <div class="header">
+            <h1><a href="../blog_cn.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+        </div>
+
+        <!-- Post Container -->
+        <article class="post">
+            <!-- Post Header -->
+            <div class="post-header">
+                <h1>Spark 1 - Spark Submit即Spark任务提交过程</h1>
+                <div class="post-meta">
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📅</span>
+                        <span>October 20, 2018</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📖</span>
+                        <span>5 min read</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">👁️</span>
+                        <span>3397 views</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Post Content -->
+            <div class="post-content">
+                <div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<p>Spark2.1.1</p>
+<h1 id="Spark-1SparkSubmit解析">一 Spark Submit本地解析</h1>
+<h2 id="Spark-1.1现象">1.1 现象</h2>
+<p>提交命令：</p>
+<blockquote>
+<p><strong>spark-submit</strong> --master local[10] --driver-memory 30g --class app.package.AppClass app-1.0.jar</p>
+</blockquote>
+<p>进程：</p>
+<blockquote>
+<p>hadoop 225653 0.0 0.0 11256 364 ? S Aug24 0:00 bash /$spark-dir/bin/<strong>spark-class</strong> org.apache.spark.deploy.SparkSubmit --master local[10] --driver-memory 30g --class app.package.AppClass app-1.0.jar</p>
+</blockquote>
+<blockquote>
+<p>hadoop 225654 0.0 0.0 34424 2860 ? Sl Aug24 0:00 /$jdk_dir/bin/java - Xmx128m - cp /spark-dir/jars/* org.apache.spark.launcher.Main <strong>org.apache.spark.deploy.SparkSubmit</strong> --master local[10] --driver-memory 30g --class app.package.AppClass app-1.0.jar</p>
+</blockquote>
+<h2 id="Spark-1.2执行过程">1.2 执行过程</h2>
+<h3 id="Spark-1.2.1脚本执行">1.2.1 脚本执行</h3>
+<h5 id="Spark--bash-4.1$catbin/spark-submit#!/usr/bin/envbash">-bash-4.1$ cat bin/<strong>spark-submit</strong></h5>
+<blockquote>
+<h5>#!/usr/bin/env bash</h5>
+<p>if [ - z "${SPARK_HOME}" ]; then<br/>source "$(dirname "$0")"/find-spark-home<br/>fi</p>
+<p># disable randomized hash for string in Python 3.3+<br/>export PYTHONHASHSEED=0</p>
+<p>exec "${SPARK_HOME}"/bin/spark-class org.apache.spark.deploy.SparkSubmit "$@"</p>
+</blockquote>
+<p>注释：这里执行了另一个脚本spark-class，具体如下：</p>
+<p> </p>
+<h5 id="Spark--bash-4.1$catbin/spark-class">-bash-4.1$ cat bin/spark-class</h5>
+<blockquote>
+<p>...</p>
+<p>build_command() {<br/>"$RUNNER" - Xmx128m - cp "$LAUNCH_CLASSPATH" org.apache.spark.launcher.Main "$@"<br/>printf "%d\0" $?<br/>}</p>
+<p>CMD=()<br/>while IFS= read - d '' - r ARG; do<br/>CMD+=("$ARG")<br/>done &lt; &lt;(build_command "$@")</p>
+<p>...</p>
+<p>CMD=("${CMD[@]:0:$LAST}")<br/>exec "${CMD[@]}"</p>
+</blockquote>
+<p>注释：这里执行java class： org.apache.spark.launcher.Main，并传入参数，具体如下：</p>
+<p> </p>
+<h3 id="Spark-1.2.2代码执行">1.2.2 代码执行</h3>
+<h5 id="Spark-org.apache.spark.launcher.Main">org.apache.spark.launcher.Main</h5>
+<div class="cnblogs_code">
+<pre><span style="color: rgba(0, 0, 0, 1)">...
+
+        builder </span>= <span style="color: rgba(0, 0, 255, 1)">new</span><span style="color: rgba(0, 0, 0, 1)"> SparkSubmitCommandBuilder(help);
+
+...
+
+    List</span>&lt;String&gt; cmd =<span style="color: rgba(0, 0, 0, 1)"> builder.buildCommand(env);
+
+...
+
+      List</span>&lt;String&gt; bashCmd =<span style="color: rgba(0, 0, 0, 1)"> prepareBashCommand(cmd, env);
+
+      </span><span style="color: rgba(0, 0, 255, 1)">for</span><span style="color: rgba(0, 0, 0, 1)"> (String c : bashCmd) {
+
+        System.out.print(c);
+
+        System.out.print(</span>'\0'<span style="color: rgba(0, 0, 0, 1)">);
+
+      }
+
+...</span></pre>
+</div>
+<p>注释：其中会调用SparkSubmitCommandBuilder来生成Spark Submit命令，具体如下：</p>
+<p> </p>
+<h5 id="Spark-org.apache.spark.launcher.SparkSubmitCommandBuilder">org.apache.spark.launcher.SparkSubmitCommandBuilder</h5>
+<div class="cnblogs_code">
+<pre><span style="color: rgba(0, 0, 0, 1)">...
+
+  </span><span style="color: rgba(0, 0, 255, 1)">private</span> List&lt;String&gt; buildSparkSubmitCommand(Map&lt;String, String&gt;<span style="color: rgba(0, 0, 0, 1)"> env)
+...
+    addOptionString(cmd, System.getenv(</span>"SPARK_SUBMIT_OPTS"<span style="color: rgba(0, 0, 0, 1)">));
+    addOptionString(cmd, System.getenv(</span>"SPARK_JAVA_OPTS"<span style="color: rgba(0, 0, 0, 1)">));
+...
+    String driverExtraJavaOptions </span>=<span style="color: rgba(0, 0, 0, 1)"> config.get(SparkLauncher.DRIVER_EXTRA_JAVA_OPTIONS);
+...
+    </span><span style="color: rgba(0, 0, 255, 1)">if</span><span style="color: rgba(0, 0, 0, 1)"> (isClientMode) {
+...
+      addOptionString(cmd, driverExtraJavaOptions);
+...
+    }
+...
+
+    addPermGenSizeOpt(cmd);
+
+    cmd.add(</span>"org.apache.spark.deploy.SparkSubmit"<span style="color: rgba(0, 0, 0, 1)">);
+
+    cmd.addAll(buildSparkSubmitArgs());
+
+    </span><span style="color: rgba(0, 0, 255, 1)">return</span><span style="color: rgba(0, 0, 0, 1)"> cmd;
+
+...</span></pre>
+</div>
+<p>注释：这里创建了本地命令，其中java class：org.apache.spark.deploy.SparkSubmit，同时会把各种JavaOptions放到启动命令里（比如SPARK_JAVA_OPTS，DRIVER_EXTRA_JAVA_OPTIONS等），具体如下：</p>
+<h5 id="Spark-org.apache.spark.deploy.SparkSubmit"><strong>org.apache.spark.deploy.SparkSubmit</strong></h5>
+<div class="cnblogs_code">
+<pre>  def main(args: Array[String]): Unit =<span style="color: rgba(0, 0, 0, 1)"> {
+
+    val appArgs </span>= <span style="color: rgba(0, 0, 255, 1)">new</span> SparkSubmitArguments(args) <span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)">parse command line parameter</span>
+
+    <span style="color: rgba(0, 0, 255, 1)">if</span><span style="color: rgba(0, 0, 0, 1)"> (appArgs.verbose) {
+
+      </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> scalastyle:off println</span>
+<span style="color: rgba(0, 0, 0, 1)">
+      printStream.println(appArgs)
+
+      </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> scalastyle:on println</span>
+<span style="color: rgba(0, 0, 0, 1)">
+    }
+
+    appArgs.action match {
+
+      </span><span style="color: rgba(0, 0, 255, 1)">case</span> SparkSubmitAction.SUBMIT =&gt;<span style="color: rgba(0, 0, 0, 1)"> submit(appArgs)
+
+      </span><span style="color: rgba(0, 0, 255, 1)">case</span> SparkSubmitAction.KILL =&gt;<span style="color: rgba(0, 0, 0, 1)"> kill(appArgs)
+
+      </span><span style="color: rgba(0, 0, 255, 1)">case</span> SparkSubmitAction.REQUEST_STATUS =&gt;<span style="color: rgba(0, 0, 0, 1)"> requestStatus(appArgs)
+
+    }
+
+  }
+
+ 
+
+    </span><span style="color: rgba(0, 0, 255, 1)">private</span> def submit(args: SparkSubmitArguments): Unit =<span style="color: rgba(0, 0, 0, 1)"> {
+
+    val (childArgs, childClasspath, sysProps, childMainClass) </span>= prepareSubmitEnvironment(args) <span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)">merge all parameters from: command line, properties file, system property, etc...</span>
+<span style="color: rgba(0, 0, 0, 1)">
+ 
+
+    def doRunMain(): Unit </span>=<span style="color: rgba(0, 0, 0, 1)"> {
+
+      ...
+
+        runMain(childArgs, childClasspath, sysProps, childMainClass, args.verbose)
+
+      ...
+
+    }
+
+         ...
+
+ 
+
+  </span><span style="color: rgba(0, 0, 255, 1)">private</span><span style="color: rgba(0, 0, 0, 1)">[deploy] def prepareSubmitEnvironment(args: SparkSubmitArguments)
+
+      : (Seq[String], Seq[String], Map[String, String], String) </span>=<span style="color: rgba(0, 0, 0, 1)"> {
+
+    </span><span style="color: rgba(0, 0, 255, 1)">if</span> (deployMode == CLIENT ||<span style="color: rgba(0, 0, 0, 1)"> isYarnCluster) {
+
+      childMainClass </span>=<span style="color: rgba(0, 0, 0, 1)"> args.mainClass
+
+      ...
+
+    </span><span style="color: rgba(0, 0, 255, 1)">if</span><span style="color: rgba(0, 0, 0, 1)"> (isYarnCluster) {
+
+      childMainClass </span>= "org.apache.spark.deploy.yarn.Client"<span style="color: rgba(0, 0, 0, 1)">
+
+      ...
+
+ 
+
+  </span><span style="color: rgba(0, 0, 255, 1)">private</span><span style="color: rgba(0, 0, 0, 1)"> def runMain(
+
+      childArgs: Seq[String],
+
+      childClasspath: Seq[String],
+
+      sysProps: Map[String, String],
+
+      childMainClass: String,
+
+      verbose: Boolean): Unit </span>=<span style="color: rgba(0, 0, 0, 1)"> {
+
+    </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> scalastyle:off println</span>
+
+    <span style="color: rgba(0, 0, 255, 1)">if</span><span style="color: rgba(0, 0, 0, 1)"> (verbose) {
+
+      printStream.println(s</span>"Main class:\n$childMainClass"<span style="color: rgba(0, 0, 0, 1)">)
+
+      printStream.println(s</span>"Arguments:\n${childArgs.mkString("\n")}"<span style="color: rgba(0, 0, 0, 1)">)
+
+      printStream.println(s</span>"System properties:\n${sysProps.mkString("\n")}"<span style="color: rgba(0, 0, 0, 1)">)
+
+      printStream.println(s</span>"Classpath elements:\n${childClasspath.mkString("\n")}"<span style="color: rgba(0, 0, 0, 1)">)
+
+      printStream.println(</span>"\n"<span style="color: rgba(0, 0, 0, 1)">)
+
+    }
+
+    </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> scalastyle:on println</span>
+<span style="color: rgba(0, 0, 0, 1)">
+ 
+
+    val loader </span>=
+
+      <span style="color: rgba(0, 0, 255, 1)">if</span> (sysProps.getOrElse("spark.driver.userClassPathFirst", "false"<span style="color: rgba(0, 0, 0, 1)">).toBoolean) {
+
+        </span><span style="color: rgba(0, 0, 255, 1)">new</span> ChildFirstURLClassLoader(<span style="color: rgba(0, 0, 255, 1)">new</span> Array[URL](0<span style="color: rgba(0, 0, 0, 1)">),
+
+          Thread.currentThread.getContextClassLoader)
+
+      } </span><span style="color: rgba(0, 0, 255, 1)">else</span><span style="color: rgba(0, 0, 0, 1)"> {
+
+        </span><span style="color: rgba(0, 0, 255, 1)">new</span> MutableURLClassLoader(<span style="color: rgba(0, 0, 255, 1)">new</span> Array[URL](0<span style="color: rgba(0, 0, 0, 1)">),
+
+          Thread.currentThread.getContextClassLoader)
+
+      }
+
+    Thread.currentThread.setContextClassLoader(loader)
+
+ 
+
+    </span><span style="color: rgba(0, 0, 255, 1)">for</span> (jar &lt;-<span style="color: rgba(0, 0, 0, 1)"> childClasspath) {
+
+      addJarToClasspath(jar, loader)
+
+    }
+
+ 
+
+    </span><span style="color: rgba(0, 0, 255, 1)">for</span> ((key, value) &lt;-<span style="color: rgba(0, 0, 0, 1)"> sysProps) {
+
+      System.setProperty(key, value)
+
+    }
+
+ 
+
+    var mainClass: Class[_] </span>= <span style="color: rgba(0, 0, 255, 1)">null</span>
+
+ 
+
+    <span style="color: rgba(0, 0, 255, 1)">try</span><span style="color: rgba(0, 0, 0, 1)"> {
+
+      mainClass </span>=<span style="color: rgba(0, 0, 0, 1)"> Utils.classForName(childMainClass)
+
+    } </span><span style="color: rgba(0, 0, 255, 1)">catch</span><span style="color: rgba(0, 0, 0, 1)"> {
+
+    ...
+
+    val mainMethod </span>= mainClass.getMethod("main", <span style="color: rgba(0, 0, 255, 1)">new</span> Array[String](0<span style="color: rgba(0, 0, 0, 1)">).getClass)
+
+    ...
+
+      mainMethod.invoke(</span><span style="color: rgba(0, 0, 255, 1)">null</span><span style="color: rgba(0, 0, 0, 1)">, childArgs.toArray)
+
+      ...</span></pre>
+</div>
+<p>注释：这里首先会解析命令行参数，比如mainClass，准备运行环境包括System Property以及classpath等，然后使用一个新的classloader：ChildFirstURLClassLoader来加载用户的mainClass，然后反射调用mainClass的main方法，这样用户的app.package.AppClass的main方法就开始执行了。</p>
+<p> </p>
+<h5 id="Spark-org.apache.spark.SparkConf"><strong>org.apache.spark.SparkConf</strong></h5>
+<div class="cnblogs_code">
+<pre><span style="color: rgba(0, 0, 255, 1)">class</span> SparkConf(loadDefaults: Boolean) <span style="color: rgba(0, 0, 255, 1)">extends</span><span style="color: rgba(0, 0, 0, 1)"> Cloneable with Logging with Serializable {
+
+ 
+
+  </span><span style="color: rgba(0, 0, 255, 1)">import</span><span style="color: rgba(0, 0, 0, 1)"> SparkConf._
+
+ 
+
+  </span><span style="color: rgba(0, 128, 0, 1)">/**</span><span style="color: rgba(0, 128, 0, 1)"> Create a SparkConf that loads defaults from system properties and the classpath </span><span style="color: rgba(0, 128, 0, 1)">*/</span><span style="color: rgba(0, 0, 0, 1)">
+
+  def </span><span style="color: rgba(0, 0, 255, 1)">this</span>() = <span style="color: rgba(0, 0, 255, 1)">this</span>(<span style="color: rgba(0, 0, 255, 1)">true</span><span style="color: rgba(0, 0, 0, 1)">)
+
+...
+
+  </span><span style="color: rgba(0, 0, 255, 1)">if</span><span style="color: rgba(0, 0, 0, 1)"> (loadDefaults) {
+
+    loadFromSystemProperties(</span><span style="color: rgba(0, 0, 255, 1)">false</span><span style="color: rgba(0, 0, 0, 1)">)
+
+  }
+
+ 
+
+  </span><span style="color: rgba(0, 0, 255, 1)">private</span>[spark] def loadFromSystemProperties(silent: Boolean): SparkConf =<span style="color: rgba(0, 0, 0, 1)"> {
+
+    </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> Load any spark.* system properties</span>
+
+    <span style="color: rgba(0, 0, 255, 1)">for</span> ((key, value) &lt;- Utils.getSystemProperties <span style="color: rgba(0, 0, 255, 1)">if</span> key.startsWith("spark."<span style="color: rgba(0, 0, 0, 1)">)) {
+
+      set(key, value, silent)
+
+    }
+
+    </span><span style="color: rgba(0, 0, 255, 1)">this</span><span style="color: rgba(0, 0, 0, 1)">
+
+  }</span></pre>
+</div>
+<p>注释：这里可以看到spark是怎样加载配置的</p>
+<p> </p>
+<h3 id="Spark-1.2.3--verbose">1.2.3 --verbose</h3>
+<blockquote>
+<p>spark-submit --master local[*] --class app.package.AppClass --jars /$other-dir/other.jar  --driver-memory 1g <strong>--verbose</strong> app-1.0.jar</p>
+</blockquote>
+<p>输出示例：</p>
+<blockquote>
+<p>Main class:<br/>app.package.AppClass<br/>Arguments:</p>
+<p>System properties:<br/>spark.executor.logs.rolling.maxSize - &gt; 1073741824<br/>spark.driver.memory - &gt; 1g<br/>spark.driver.extraLibraryPath - &gt; /$hadoop-dir/lib/native<br/>spark.eventLog.enabled - &gt; true<br/>spark.eventLog.compress - &gt; true<br/>spark.executor.logs.rolling.time.interval - &gt; daily<br/>SPARK_SUBMIT - &gt; true<br/><a class="external-link" href="http://spark.app.name/" rel="noopener nofollow">spark.app.name</a> -&gt; app.package.AppClass<br/>spark.driver.extraJavaOptions - &gt; - XX:+PrintGCDetails - XX:+UseG1GC - XX:G1HeapRegionSize=32M - XX:+UseGCOverheadLimit - XX:+ExplicitGCInvokesConcurrent - XX:+HeapDumpOnOutOfMemoryError - XX:-UseCompressedClassPointers - XX:CompressedClassSpaceSize=3G - XX:+PrintGCTimeStamps <a rel="nofollow">-Xloggc:/export/Logs/hadoop/g1gc.log</a><br/>spark.jars - &gt; <a class="external-link" href="http://file/home/hadoop/wangxin123/zhike-common-1.0.4-SNAPSHOT.jar,file:/export/hadoop/wangxin123/zhike.dataprocessing.all-1.0.jar" rel="noopener nofollow">file:/$other-dir/other.jar</a><br/>spark.sql.adaptive.enabled - &gt; true<br/>spark.submit.deployMode - &gt; client<br/>spark.executor.logs.rolling.maxRetainedFiles - &gt; 10<br/>spark.executor.extraClassPath - &gt; /usr/lib/hadoop/lib/hadoop-lzo.<a class="external-link" href="http://jar/export/App/xdata-spark/extlib/*" rel="noopener nofollow">jar</a><br/>spark.eventLog.dir - &gt; <a rel="nofollow">hdfs://myhdfs/spark/history</a><br/>spark.master - &gt; local[*]<br/>spark.sql.crossJoin.enabled - &gt; true<br/>spark.driver.extraClassPath - &gt; /usr/lib/hadoop/lib/hadoop-lzo.<a class="external-link" href="http://jar/export/App/xdata-spark/extlib/*" rel="noopener nofollow">jar</a><br/>Classpath elements:<br/><a class="external-link" href="http://file/export/hadoop/wangxin123/zhike.dataprocessing.all-1.0.jar" rel="noopener nofollow">file:/$other-dir/other.jar</a><br/><a class="external-link" href="http://file/home/hadoop/wangxin123/zhike-common-1.0.4-SNAPSHOT.jar" rel="noopener nofollow">file:/app-1.0.jar</a></p>
+</blockquote>
+<p>启动时添加--verbose参数后，可以输出所有的运行时信息，有助于判断问题。</p>
+<p> </p>
+</div>
+            </div>
+
+            <!-- Post Footer -->
+            <div class="post-footer">
+                <div class="post-navigation">
+                    <a href="../blog_cn.html" class="nav-button">← Back to Home</a>
+                    <a href="0365.html" class="nav-button">Next Post →</a>
+                </div>
+            </div>
+        </article>
+    </div>
+</body>
+</html>

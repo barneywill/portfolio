@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>beeline连接spark thrift有时会卡住</title>
+    <link rel="stylesheet" href="../css/style3.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header Navigation -->
+        <div class="header">
+            <h1><a href="../blog_cn.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+        </div>
+
+        <!-- Post Container -->
+        <article class="post">
+            <!-- Post Header -->
+            <div class="post-header">
+                <h1>beeline连接spark thrift有时会卡住</h1>
+                <div class="post-meta">
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📅</span>
+                        <span>December 19, 2018</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📖</span>
+                        <span>1 min read</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">👁️</span>
+                        <span>968 views</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Post Content -->
+            <div class="post-content">
+                <div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<p>spark 2.1.1</p>
+<p> </p>
+<p>beeline连接spark thrift之后，执行use database有时会卡住，而use database 在server端对应的是 setCurrentDatabase，</p>
+<p>经过排查发现当时spark thrift正在执行insert操作，</p>
+<p> </p>
+<p>org.apache.spark.sql.hive.execution.InsertIntoHiveTable</p>
+<div class="cnblogs_code">
+<pre>  <span style="color: rgba(0, 0, 255, 1)">protected</span> override def doExecute(): RDD[InternalRow] =<span style="color: rgba(0, 0, 0, 1)"> {
+    sqlContext.sparkContext.parallelize(sideEffectResult.asInstanceOf[Seq[InternalRow]], </span>1<span style="color: rgba(0, 0, 0, 1)">)
+  }
+...
+  @</span><span style="color: rgba(0, 0, 255, 1)">transient</span> <span style="color: rgba(0, 0, 255, 1)">private</span> val externalCatalog =<span style="color: rgba(0, 0, 0, 1)"> sqlContext.sharedState.externalCatalog
+
+  </span><span style="color: rgba(0, 0, 255, 1)">protected</span>[sql] lazy val sideEffectResult: Seq[InternalRow] =<span style="color: rgba(0, 0, 0, 1)"> {
+  ...
+        externalCatalog.loadDynamicPartitions(
+          externalCatalog.getPartitionOption(
+          externalCatalog.loadPartition(
+      externalCatalog.loadTable(</span></pre>
+</div>
+<p>可见insert操作中可能会调用loadDynamicPartitions、getPartitionOption、loadPartition、loadTable等方法，</p>
+<p> </p>
+<p>org.apache.spark.sql.hive.client.HiveClientImpl</p>
+<div class="cnblogs_code">
+<pre><span style="color: rgba(0, 0, 0, 1)">  def loadTable(
+      loadPath: String, </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> TODO URI</span>
+<span style="color: rgba(0, 0, 0, 1)">      tableName: String,
+      replace: Boolean,
+      holdDDLTime: Boolean): Unit </span>=<span style="color: rgba(0, 0, 0, 1)"> withHiveState {
+...
+  def loadPartition(
+      loadPath: String,
+      dbName: String,
+      tableName: String,
+      partSpec: java.util.LinkedHashMap[String, String],
+      replace: Boolean,
+      holdDDLTime: Boolean,
+      inheritTableSpecs: Boolean): Unit </span>=<span style="color: rgba(0, 0, 0, 1)"> withHiveState {
+...
+  override def setCurrentDatabase(databaseName: String): Unit </span>= withHiveState {</pre>
+</div>
+<p>而HiveClientImpl中对应的方法都会执行withHiveState，而withHiveState有synchronized，所以insert操作中的部分代码（比如loadPartition）和use database操作会被同步执行，当insert执行很慢时就会卡住所有的其他操作；</p>
+<p> </p>
+<p>spark thrift中实现原理详见 <a href="https://www.cnblogs.com/barneywill/p/10137672.html" target="_blank" title="【原创】大数据基础之Spark（3）Spark Thrift实现原理及代码实现">https://www.cnblogs.com/barneywill/p/10137672.html</a></p>
+<p> </p>
+</div>
+            </div>
+
+            <!-- Post Footer -->
+            <div class="post-footer">
+                <div class="post-navigation">
+                    <a href="../blog_cn.html" class="nav-button">← Back to Home</a>
+                    <a href="0307.html" class="nav-button">Next Post →</a>
+                </div>
+            </div>
+        </article>
+    </div>
+</body>
+</html>

@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Weiwei Wu的技术博客</title>
+    <link rel="stylesheet" href="./css/style_blog.css">
+</head>
+<body>
+    <div class="language-switch">
+        <button class="lang-btn active">中文</button>
+        <button class="lang-btn" onclick="location.href='index.html'">English</button>
+    </div>
+
+    <header>
+        <h1>✨ Weiwei Wu的博客</h1>
+        <p>大数据 | 系统架构 | 问题定位分享</p>
+    </header>
+
+    <div class="container">
+        <div class="stats-section">
+            <div class="stat-item">
+                <h4>366</h4>
+                <p>技术文章</p>
+            </div>
+            <div class="stat-item">
+                <h4>10+</h4>
+                <p>年度累计</p>
+            </div>
+            <div class="stat-item">
+                <h4>20+</h4>
+                <p>专业领域</p>
+            </div>
+            <div class="stat-item">
+                <h4>100万+</h4>
+                <p>总阅读量</p>
+            </div>
+        </div>
+
+        <div class="filters">
+            <button class="filter-btn active">全部文章</button>
+            <button class="filter-btn">大数据</button>
+            <button class="filter-btn">系统设计</button>
+            <button class="filter-btn">运维</button>
+            <button class="filter-btn">问题定位</button>
+        </div>
+
+        <div class="tech-stack-section">
+            <h3>💡 Technology Stack</h3>
+            <div class="component-badges" id="componentBadges"></div>
+            <div class="filter-info" id="filterInfo"></div>
+        </div>
+
+        <div class="posts-grid" id="postsGrid"></div>
+
+        <div class="pagination" id="pagination"></div>
+    </div>
+
+    <footer>
+        <p>&copy; 2026 Weiwei Wu的博客。</p>
+    </footer>
+
+    <script src="./js/index-script.js"></script>
+</body>
+</html>

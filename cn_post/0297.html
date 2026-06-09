@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cardinality Estimate 基数计数概率算法</title>
+    <link rel="stylesheet" href="../css/style3.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header Navigation -->
+        <div class="header">
+            <h1><a href="../blog_cn.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+        </div>
+
+        <!-- Post Container -->
+        <article class="post">
+            <!-- Post Header -->
+            <div class="post-header">
+                <h1>Cardinality Estimate 基数计数概率算法</h1>
+                <div class="post-meta">
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📅</span>
+                        <span>December 25, 2018</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📖</span>
+                        <span>1 min read</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">👁️</span>
+                        <span>938 views</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Post Content -->
+            <div class="post-content">
+                <div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<p>读过《编程珠玑》（&lt;Programming Pearls&gt;）的人应该还对开篇的Case记忆犹新，大概的场景是：</p>
+<p><em>作者的一位在电话公司工作的朋友想要统计一段时间内不同的电话号码的个数，电话号码的数量很大，当时的内存很小，所以不能把所有的电话号码全部放到内存来去重统计，他的朋友很苦恼。</em></p>
+<p>作者聪明的想到了用bit数组来解决问题，每个电话号码可以映射为bit数组的index，bit数组初始状态所有位为0，所有电话号码逐一处理：将bit数组对应位置为1，处理完之后统计bit数组中有多少个1即可。</p>
+<blockquote>
+<p>示例：[0,1,0,0,0,1,0,...] 这个bit数组表示2和5存在</p>
+</blockquote>
+<p>不得不说这种想法非常精妙，即减少了内存占用（8位电话号码如果全部放到内存需要381M（每个电话号码存成Integer占4Byte计算），而使用bit数组只需要11M），而且只需要两次循环就可以得到结果；</p>
+<p> </p>
+<p>这是一个基数计数的问题，Cardinality：estimating the number of distinct elements.</p>
+<h1>1 Bitmap</h1>
+<p>上边提到的方式是使用bitmap，思路是将dataset中的每一个element映射到一个bit位，不允许冲突，所需要的内存空间大概为基数*1bit（上例中是100,000,000bit），并且计数精准；</p>
+<p>但是当基数非常大时，即使bitmap内存也放不下！</p>
+<p>好消息是如果不要求计数精准（允许一定范围内的误差），可以采用概率估算算法：</p>
+<h1>2 LC：Linear Counting</h1>
+<h2>公式</h2>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201812/1509647-20181225223626433-368458240.png"/></p>
+<p>其中：n是估算值，m是bitmap大小，Vn是bitmap中0出现的比率，比如0.1；</p>
+<h2>原理</h2>
+<p>使用固定大小的hashtable来存放dataset，可以想见：</p>
+<ul>
+<li>dataset的基数越小，hashtable越空，当基数为0时hashtable所有的key都是空的</li>
+<li>dataset的基数越大，hashtable越满，冲突也越多，当基数无穷大时hashtable所有的key都被占用并且每个key都有大量冲突</li>
+</ul>
+<p>所以可以根据hashtable中key被占用的情况来估算dataset的基数，这里主要用到了对数曲线的特性（0&lt;x&lt;1这一段）：</p>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201812/1509647-20181225161001925-966177561.png"/></p>
+<h2>过程</h2>
+<p>初始化一个bitmap，所有位为0，dataset的每一个element都hash到bitmap的一个bit位，hash之后将对应的bit位置为1，hash允许冲突，最后根据bitmap中0的数量和bitmap大小由公式来估算基数；</p>
+<p>注意：虽然LC用的也是bitmap，但是相比原始的bitmap算法，LC的bitmap大小可以比基数小很多，因为LC的映射允许冲突，另外可以设置bitmap大小来决定误差的大小；</p>
+<p> </p>
+<p>推导过程详见参考</p>
+<p>参考：<a href="http://dblab.kaist.ac.kr/Prof/pdf/ACM90_TODS_v15n2.pdf" rel="noopener nofollow" target="_blank">A linear-time probabilistic counting algorithm for database applications</a></p>
+<h1>3 LLC：LogLog Counting</h1>
+<h2>公式</h2>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201812/1509647-20181225162419859-813522263.png"/><br/>其中：m是桶的数量，M为桶的集合，k是用于分桶的位数，ρ为bit数组中第一个为1的下标即index，E是估算值；</p>
+<h2>原理</h2>
+<p>来看抛硬币的过程，抛硬币的过程是伯努利Bernoulli过程，每次的结果要么是0，要么是1，并且概率均为1/2，假设一次抛硬币game定义为抛到1为止，可能第一次就抛到1（P=0.5），也可能前边抛了i次0最后才抛到1（P=1-0.5^i）；抛硬币game玩的次数越多，越容易出现前边很多次都是0的情况，这是因为开头连续出现的0的个数越多，出现概率越小，需要尝试伯努利过程的次数就越多，所以可以利用概率根据结果（开头出现0的个数，即i）来反推出条件（game玩了多少次，即n=2^i，这个也很容易理解，比如彩票的中奖概率是1/10000，即平均买10000张彩票才能中一次奖，反过来说，如果有人中了一次奖，他很大概率上应该买了10000张彩票）；</p>
+<p>但是由于随机性的存在导致误差较大，所以通过将dataset分为m份，每份单独统计，最后取算数平均值的方式来降低随机性从而减小误差；</p>
+<h2>过程</h2>
+<p>dataset的每一个element先映射到一个bit数组，比如32位bit数组，将这个bit数组的1到k位的值作为桶的bucket_index（即第几个桶），将k+1到32位中第一个为1的index作为value放到桶中，如果桶里已经有value，桶会保存一个最大的value，数据集元素全部映射完之后，将所有桶的value取算数平均值，根据n=2^i，这样可以得到每个桶内的基数，再乘以m可以得到整个dataset的基数，公式最前边的α是修正参数；</p>
+<p>比如k=2，则m=2^k=4，即4个桶，dataset中一个element映射的bit数组为[1,0,0,0,0,1,0,...]，取前两位[1,0]对应的值是2，即第2个桶，取第3位之后的数组[0,0,0,1,0,...]可见第一个位1的index是3，将3放到桶2中，以此类推；</p>
+<p> </p>
+<p>推导过程详见参考</p>
+<p>参考：<a href="http://algo.inria.fr/flajolet/Publications/DuFl03-LNCS.pdf" rel="noopener nofollow" target="_blank">Loglog Counting of Large Cardinalities</a></p>
+<h1>4 HLLC：Hyper LogLog Counting</h1>
+<h1>公式 </h1>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201812/1509647-20181225231243394-562520084.png"/></p>
+<h2>原理</h2>
+<p>同LLC，只有一点不同：取均值的时候不使用算数平均数而改用调和平均数</p>
+<p> </p>
+<p>推导过程详见参考</p>
+<p>参考：<a href="http://algo.inria.fr/flajolet/Publications/FlFuGaMe07.pdf" rel="noopener nofollow" target="_blank">HyperLogLog: the analysis of a near-optimal cardinality estimation algorithm</a></p>
+<h1>5 最优实践</h1>
+<h2>公式</h2>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201812/1509647-20181225142142552-1064509869.png"/></p>
+<h2>过程</h2>
+<p>在大量实践中根据各个参数和结果的情况进行调优，综合使用HLLC和LC等算法</p>
+<p> </p>
+<p>参考：<a href="http://static.googleusercontent.com/media/research.google.com/en//pubs/archive/40671.pdf" rel="noopener nofollow" target="_blank">HyperLogLog in Practice: Algorithmic Engineering of a State of The Art Cardinality Estimation Algorithm</a></p>
+<p> </p>
+<h1>总结</h1>
+<p>目前HLLC在很多开源组件中都有应用，比如redis、druid等</p>
+<p> </p>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201812/1509647-20181225232513562-1144852378.png"/></p>
+<p>其他：</p>
+<p>https://research.neustar.biz/2012/10/25/sketch-of-the-day-hyperloglog-cornerstone-of-a-big-data-infrastructure/</p>
+<p> </p>
+</div>
+            </div>
+
+            <!-- Post Footer -->
+            <div class="post-footer">
+                <div class="post-navigation">
+                    <a href="../blog_cn.html" class="nav-button">← Back to Home</a>
+                    <a href="0298.html" class="nav-button">Next Post →</a>
+                </div>
+            </div>
+        </article>
+    </div>
+</body>
+</html>

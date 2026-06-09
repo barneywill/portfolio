@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>mesos slave启动失败</title>
+    <link rel="stylesheet" href="../css/style3.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header Navigation -->
+        <div class="header">
+            <h1><a href="../blog_cn.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+        </div>
+
+        <!-- Post Container -->
+        <article class="post">
+            <!-- Post Header -->
+            <div class="post-header">
+                <h1>mesos slave启动失败</h1>
+                <div class="post-meta">
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📅</span>
+                        <span>January 10, 2020</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📖</span>
+                        <span>6 min read</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">👁️</span>
+                        <span>1010 views</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Post Content -->
+            <div class="post-content">
+                <div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<p>mesos slave启动失败，查看状态如下：</p>
+<div class="cnblogs_code">
+<pre><span style="color: rgba(0, 128, 0, 1)">#</span><span style="color: rgba(0, 128, 0, 1)"> systemctl status mesos-slave</span>
+● mesos-slave.service - <span style="color: rgba(0, 0, 0, 1)"> Mesos Slave
+   Loaded: loaded (</span>/usr/lib/systemd/system/mesos-<span style="color: rgba(0, 0, 0, 1)">slave.service; enabled; vendor preset: disabled)
+   Active: activating (auto</span>-restart) (Result: exit-code) since Sat 2019-12-28 21:41:50<span style="color: rgba(0, 0, 0, 1)"> CST; 13s ago
+  Process: </span>15627 ExecStart=/usr/bin/mesos-init-wrapper slave (code=exited, status=1/<span style="color: rgba(0, 0, 0, 1)">FAILURE)
+ Main PID: </span>15627 (code=exited, status=1/<span style="color: rgba(0, 0, 0, 1)">FAILURE)
+
+Dec </span>28 21:41:50 test-003 systemd[1]: Unit mesos-<span style="color: rgba(0, 0, 0, 1)">slave.service entered failed state.
+Dec </span>28 21:41:50 test-003 systemd[1]: mesos-slave.service failed.</pre>
+</div>
+<p>查看mesos-slave日志如下：</p>
+<div class="cnblogs_code">
+<pre><span style="color: rgba(0, 128, 0, 1)">#</span><span style="color: rgba(0, 128, 0, 1)"> journalctl - u mesos-slave - f - n 300</span>
+<span style="color: rgba(0, 0, 0, 1)">...
+Dec </span>28 21:42:10 test-003 mesos-slave[15974]: I1228 21:42:10.604262 15978 group.cpp:831] Syncing group operations: queue size (joins, cancels, datas) =<span style="color: rgba(0, 0, 0, 1)"> (0, 0, 0)
+Dec </span>28 21:42:10 test-003 mesos-slave[15974]: I1228 21:42:10.604274 15978 group.cpp:419] Trying to create path <span style="color: rgba(128, 0, 0, 1)">'</span><span style="color: rgba(128, 0, 0, 1)">/mesos</span><span style="color: rgba(128, 0, 0, 1)">'</span> <span style="color: rgba(0, 0, 255, 1)">in</span><span style="color: rgba(0, 0, 0, 1)"> ZooKeeper
+Dec </span>28 21:42:10 test-003 mesos-slave[15974]: I1228 21:42:10.602254 15961 slave.cpp:615] Agent resources: [{<span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">name</span><span style="color: rgba(128, 0, 0, 1)">"</span>:<span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">ports</span><span style="color: rgba(128, 0, 0, 1)">"</span>,<span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">ranges</span><span style="color: rgba(128, 0, 0, 1)">"</span>:{<span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">range</span><span style="color: rgba(128, 0, 0, 1)">"</span>:[{<span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">begin</span><span style="color: rgba(128, 0, 0, 1)">"</span>:80,<span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">end</span><span style="color: rgba(128, 0, 0, 1)">"</span>:60000}]},<span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">type</span><span style="color: rgba(128, 0, 0, 1)">"</span>:<span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">RANGES</span><span style="color: rgba(128, 0, 0, 1)">"</span>},{<span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">name</span><span style="color: rgba(128, 0, 0, 1)">"</span>:<span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">cpus</span><span style="color: rgba(128, 0, 0, 1)">"</span>,<span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">scalar</span><span style="color: rgba(128, 0, 0, 1)">"</span>:{<span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">value</span><span style="color: rgba(128, 0, 0, 1)">"</span>:8.0},<span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">type</span><span style="color: rgba(128, 0, 0, 1)">"</span>:<span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">SCALAR</span><span style="color: rgba(128, 0, 0, 1)">"</span>},{<span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">name</span><span style="color: rgba(128, 0, 0, 1)">"</span>:<span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">mem</span><span style="color: rgba(128, 0, 0, 1)">"</span>,<span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">scalar</span><span style="color: rgba(128, 0, 0, 1)">"</span>:{<span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">value</span><span style="color: rgba(128, 0, 0, 1)">"</span>:30987.0},<span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">type</span><span style="color: rgba(128, 0, 0, 1)">"</span>:<span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">SCALAR</span><span style="color: rgba(128, 0, 0, 1)">"</span>},{<span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">name</span><span style="color: rgba(128, 0, 0, 1)">"</span>:<span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">disk</span><span style="color: rgba(128, 0, 0, 1)">"</span>,<span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">scalar</span><span style="color: rgba(128, 0, 0, 1)">"</span>:{<span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">value</span><span style="color: rgba(128, 0, 0, 1)">"</span>:95544.0},<span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">type</span><span style="color: rgba(128, 0, 0, 1)">"</span>:<span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">SCALAR</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">}]
+Dec </span>28 21:42:10 test-003 mesos-slave[15974]: I1228 21:42:10.605845 15961 slave.cpp:623<span style="color: rgba(0, 0, 0, 1)">] Agent attributes: [  ]
+Dec </span>28 21:42:10 test-003 mesos-slave[15974]: I1228 21:42:10.605868 15961 slave.cpp:632<span style="color: rgba(0, 0, 0, 1)">] Agent hostname: test003
+Dec </span>28 21:42:10 test-003 mesos-slave[15974]: I1228 21:42:10.605935 15977 task_status_update_manager.cpp:181<span style="color: rgba(0, 0, 0, 1)">] Pausing sending task status updates
+Dec </span>28 21:42:10 test-003 mesos-slave[15974]: I1228 21:42:10.606037 15982 detector.cpp:152] Detected a new leader: (id=<span style="color: rgba(128, 0, 0, 1)">'</span><span style="color: rgba(128, 0, 0, 1)">79</span><span style="color: rgba(128, 0, 0, 1)">'</span><span style="color: rgba(0, 0, 0, 1)">)
+Dec </span>28 21:42:10 test-003 mesos-slave[15974]: I1228 21:42:10.606160 15981 group.cpp:700] Trying to get <span style="color: rgba(128, 0, 0, 1)">'</span><span style="color: rgba(128, 0, 0, 1)">/mesos/json.info_0000000079</span><span style="color: rgba(128, 0, 0, 1)">'</span> <span style="color: rgba(0, 0, 255, 1)">in</span><span style="color: rgba(0, 0, 0, 1)"> ZooKeeper
+Dec </span>28 21:42:10 test-003 mesos-slave[15974]: I1228 21:42:10.607014 15975 state.cpp:66] Recovering state <span style="color: rgba(0, 0, 255, 1)">from</span> <span style="color: rgba(128, 0, 0, 1)">'</span><span style="color: rgba(128, 0, 0, 1)">/var/lib/mesos/meta</span><span style="color: rgba(128, 0, 0, 1)">'</span><span style="color: rgba(0, 0, 0, 1)">
+Dec </span>28 21:42:10 test-003 mesos-slave[15974]: I1228 21:42:10.607070 15975 state.cpp:742] No committed checkpointed resources found at <span style="color: rgba(128, 0, 0, 1)">'</span><span style="color: rgba(128, 0, 0, 1)">/var/lib/mesos/meta/resources/resources.info</span><span style="color: rgba(128, 0, 0, 1)">'</span><span style="color: rgba(0, 0, 0, 1)">
+Dec </span>28 21:42:10 test-003 mesos-slave[15974]: I1228 21:42:10.607249 15981 zookeeper.cpp:262] A new leading master (UPID=master@192.168.0.1:5050) <span style="color: rgba(0, 0, 255, 1)">is</span><span style="color: rgba(0, 0, 0, 1)"> detected
+Dec </span>28 21:42:10 test-003 mesos-slave[15974]: I1228 21:42:10.646075 15979 slave.cpp:6951] Finished recovering checkpointed state <span style="color: rgba(0, 0, 255, 1)">from</span> <span style="color: rgba(128, 0, 0, 1)">'</span><span style="color: rgba(128, 0, 0, 1)">/var/lib/mesos/meta</span><span style="color: rgba(128, 0, 0, 1)">'</span><span style="color: rgba(0, 0, 0, 1)">, beginning agent recovery
+Dec </span>28 21:42:10 test-003 mesos-slave[15974]: E1228 21:42:10.649549 15979 slave.cpp:7311] EXIT with status 1<span style="color: rgba(0, 0, 0, 1)">: Failed to perform recovery: Incompatible agent info detected.
+Dec </span>28 21:42:10 test-003 mesos-slave[15974<span style="color: rgba(0, 0, 0, 1)">]: ecovery
+Dec </span>28 21:42:10 test-003 mesos-slave[15974]: ------------------------------------------------------------<span style="color: rgba(0, 0, 0, 1)">
+Dec </span>28 21:42:10 test-003 mesos-slave[15974<span style="color: rgba(0, 0, 0, 1)">]: Old agent info:
+Dec </span>28 21:42:10 test-003 mesos-slave[15974]: hostname: <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">test003</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">
+Dec </span>28 21:42:10 test-003 mesos-slave[15974<span style="color: rgba(0, 0, 0, 1)">]: resources {
+Dec </span>28 21:42:10 test-003 mesos-slave[15974]:   name: <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">ports</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">
+Dec </span>28 21:42:10 test-003 mesos-slave[15974<span style="color: rgba(0, 0, 0, 1)">]:   type: RANGES
+Dec </span>28 21:42:10 test-003 mesos-slave[15974<span style="color: rgba(0, 0, 0, 1)">]:   ranges {
+Dec </span>28 21:42:10 test-003 mesos-slave[15974<span style="color: rgba(0, 0, 0, 1)">]:     range {
+Dec </span>28 21:42:10 test-003 mesos-slave[15974]:       begin: 80<span style="color: rgba(0, 0, 0, 1)">
+Dec </span>28 21:42:10 test-003 mesos-slave[15974]:       end: 60000<span style="color: rgba(0, 0, 0, 1)">
+Dec </span>28 21:42:10 test-003 mesos-slave[15974<span style="color: rgba(0, 0, 0, 1)">]:     }
+Dec </span>28 21:42:10 test-003 mesos-slave[15974<span style="color: rgba(0, 0, 0, 1)">]:   }
+Dec </span>28 21:42:10 test-003 mesos-slave[15974<span style="color: rgba(0, 0, 0, 1)">]: }
+Dec </span>28 21:42:10 test-003 mesos-slave[15974<span style="color: rgba(0, 0, 0, 1)">]: resources {
+Dec </span>28 21:42:10 test-003 mesos-slave[15974]:   name: <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">cpus</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">
+Dec </span>28 21:42:10 test-003 mesos-slave[15974<span style="color: rgba(0, 0, 0, 1)">]:   type: SCALAR
+Dec </span>28 21:42:10 test-003 mesos-slave[15974<span style="color: rgba(0, 0, 0, 1)">]:   scalar {
+Dec </span>28 21:42:10 test-003 mesos-slave[15974]:     value: 8<span style="color: rgba(0, 0, 0, 1)">
+Dec </span>28 21:42:10 test-003 mesos-slave[15974<span style="color: rgba(0, 0, 0, 1)">]:   }
+Dec </span>28 21:42:10 test-003 mesos-slave[15974<span style="color: rgba(0, 0, 0, 1)">]: }
+Dec </span>28 21:42:10 test-003 mesos-slave[15974<span style="color: rgba(0, 0, 0, 1)">]: resources {
+Dec </span>28 21:42:10 test-003 systemd[1]: mesos-slave.service: main process exited, code=exited, status=1/<span style="color: rgba(0, 0, 0, 1)">FAILURE
+Dec </span>28 21:42:10 test-003 systemd[1]: Unit mesos-<span style="color: rgba(0, 0, 0, 1)">slave.service entered failed state.
+Dec </span>28 21:42:10 test-003 systemd[1]: mesos-slave.service failed.</pre>
+</div>
+<p>注意关键的几行</p>
+<blockquote>
+<p>Dec 28 21:42:10 test-003 mesos-slave[15974]: I1228 21:42:10.646075 15979 slave.cpp:6951] Finished recovering checkpointed state from '/var/lib/mesos/meta', beginning agent recovery<br/>Dec 28 21:42:10 test-003 mesos-slave[15974]: E1228 21:42:10.649549 15979 slave.cpp:7311] EXIT with status 1: Failed to perform recovery: Incompatible agent info detected.</p>
+</blockquote>
+<p>尝试从/var/lib/mesos/meta恢复，但是失败了，然后进程退出，</p>
+<blockquote>
+<p># rm - rf /var/lib/mesos/meta/*</p>
+</blockquote>
+<p>将meta目录删除之后再启动mesos slave成功，问题解决；</p>
+</div>
+            </div>
+
+            <!-- Post Footer -->
+            <div class="post-footer">
+                <div class="post-navigation">
+                    <a href="../blog_cn.html" class="nav-button">← Back to Home</a>
+                    <a href="0077.html" class="nav-button">Next Post →</a>
+                </div>
+            </div>
+        </article>
+    </div>
+</body>
+</html>

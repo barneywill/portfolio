@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HDFS 1 - HDFS新创建文件如何分配Datanode</title>
+    <link rel="stylesheet" href="../css/style3.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header Navigation -->
+        <div class="header">
+            <h1><a href="../blog_cn.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+        </div>
+
+        <!-- Post Container -->
+        <article class="post">
+            <!-- Post Header -->
+            <div class="post-header">
+                <h1>HDFS 1 - HDFS新创建文件如何分配Datanode</h1>
+                <div class="post-meta">
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📅</span>
+                        <span>December 13, 2018</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📖</span>
+                        <span>4 min read</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">👁️</span>
+                        <span>2109 views</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Post Content -->
+            <div class="post-content">
+                <div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<p>HDFS中的File由Block组成，一个File包含一个或多个Block，当创建File时会创建一个Block，然后根据配置的副本数量（默认是3）申请3个Datanode来存放这个Block；</p>
+<p>通过hdfs fsck命令可以查看一个文件具体的Block、Datanode、Rack信息，例如：</p>
+<blockquote>
+<p>hdfs fsck /tmp/test.sql - files - blocks - locations - racks<br/>Connecting to namenode via http://name_node:50070<br/>FSCK started by hadoop (auth:SIMPLE) from /client for path /tmp/test.sql at Thu Dec 13 15:44:12 CST 2018<br/>/tmp/test.sql 16 bytes, 1 block(s):  OK<br/>0. BP-436366437-name_node-1493982655699:blk_1449692331_378721485 len=16 repl=3 [/DEFAULT/server111:50010, /DEFAULT/server121:50010, /DEFAULT/server43:50010]</p>
+<p>Status: HEALTHY<br/> Total size:    16 B<br/> Total dirs:    0<br/> Total files:   1<br/> Total symlinks:                0<br/> Total blocks (validated):      1 (avg. block size 16 B)<br/> Minimally replicated blocks:   1 (100.0 %)<br/> Over-replicated blocks:        0 (0.0 %)<br/> Under-replicated blocks:       0 (0.0 %)<br/> Mis-replicated blocks:         0 (0.0 %)<br/> Default replication factor:    3<br/> Average block replication:     3.0<br/> Corrupt blocks:                0<br/> Missing replicas:              0 (0.0 %)<br/> Number of data-nodes:          193<br/> Number of racks:               1<br/>FSCK ended at Thu Dec 13 15:44:12 CST 2018 in 1 milliseconds</p>
+<p><br/>The filesystem under path '/tmp/test.sql' is HEALTHY</p>
+</blockquote>
+<p>那3个Datanode是如何选择出来的？有一个优先级：</p>
+<p>1 当前机架（相对hdfs client而言）</p>
+<p>2 远程机架（相对hdfs client而言）</p>
+<p>3 另一机架</p>
+<p>4 全部随机</p>
+<p>然后每个机架能选择几个Datanode（即maxNodesPerRack）有一个计算公式，详见代码</p>
+<p> </p>
+<h3>org.apache.hadoop.hdfs.DFSOutputStream$DataStreamer</h3>
+<div class="cnblogs_code">
+<pre>    private int findNewDatanode(final<span> DatanodeInfo[] original
+
+        ) throws<span> IOException {
+
+      if (nodes.length != original.length + 1<span>) {
+
+        throw new<span> IOException(
+
+            new<span> StringBuilder()
+
+            .append("Failed to replace a bad datanode on the existing pipeline "<span>)
+
+            .append("due to no more good datanodes being available to try. "<span>)
+
+            .append("(Nodes: current="<span>).append(Arrays.asList(nodes))
+
+            .append(", original=").append(Arrays.asList(original)).append("). "<span>)
+
+            .append("The current failed datanode replacement policy is "<span>)
+
+            .append(dfsClient.dtpReplaceDatanodeOnFailure).append(", and "<span>)
+
+            .append("a client may configure this via '"<span>)
+
+            .append(DFSConfigKeys.DFS_CLIENT_WRITE_REPLACE_DATANODE_ON_FAILURE_POLICY_KEY)
+
+            .append("' in its configuration."<span>)
+
+            .toString());
+
+      }</span></span></span></span></span></span></span></span></span></span></span></span></span></pre>
+</div>
+<p>注释：当没有找到新的datanode时会报异常，报错如下：</p>
+<blockquote>
+<p>Caused by: java.io.IOException: Failed to replace a bad datanode on the existing pipeline due to no more good datanodes being available to try. (Nodes: current=[server82:50010], original=[server.82:50010]).<br/> The current failed datanode replacement policy is ALWAYS, and a client may configure this via 'dfs.client.block.write.replace-datanode-on-failure.policy' in its configuration.</p>
+</blockquote>
+<p> </p>
+<div class="cnblogs_code">
+<pre>    private void addDatanode2ExistingPipeline() throws<span> IOException {
+
+...
+
+      final DatanodeInfo[] original =<span> nodes;
+
+      final LocatedBlock lb =<span> dfsClient.namenode.getAdditionalDatanode(
+
+          src, fileId, block, nodes, storageIDs,
+
+          failed.toArray(new<span> DatanodeInfo[failed.size()]),
+
+          1<span>, dfsClient.clientName);
+
+      setPipeline(lb);
+
+ 
+
+      //find the new datanode
+
+      final int d = findNewDatanode(original);</span></span></span></span></span></pre>
+</div>
+<p>注释：会调用getAdditionalDatanode方法来获取1个新的datanode，此处略去很多调用堆栈</p>
+<p>                 </p>
+<h3>org.apache.hadoop.hdfs.server.blockmanagement.BlockPlacementPolicyDefault</h3>
+<div class="cnblogs_code">
+<pre>  private DatanodeStorageInfo[] chooseTarget(int<span> numOfReplicas,
+
+                                    Node writer,
+
+                                    List&lt;DatanodeStorageInfo&gt;<span> chosenStorage,
+
+                                    boolean<span> returnChosenNodes,
+
+                                    Set&lt;Node&gt;<span> excludedNodes,
+
+                                    long<span> blocksize,
+
+                                    final<span> BlockStoragePolicy storagePolicy) {
+
+...
+
+    int[] result =<span> getMaxNodesPerRack(chosenStorage.size(), numOfReplicas);
+
+    numOfReplicas = result[0<span>];
+
+    int maxNodesPerRack = result[1<span>];
+
+...
+
+    final Node localNode =<span> chooseTarget(numOfReplicas, writer, excludedNodes,
+
+        blocksize, maxNodesPerRack, results, avoidStaleNodes, storagePolicy,
+
+        EnumSet.noneOf(StorageType.class), results.isEmpty());</span></span></span></span></span></span></span></span></span></span></pre>
+</div>
+<p>注释：此处maxNodesPerRack表示每个机架最多只能分配几个datanode</p>
+<p> </p>
+<div class="cnblogs_code">
+<pre>  private Node chooseTarget(int<span> numOfReplicas,
+
+                            Node writer,
+
+                            final Set&lt;Node&gt;<span> excludedNodes,
+
+                            final long<span> blocksize,
+
+                            final int<span> maxNodesPerRack,
+
+                            final List&lt;DatanodeStorageInfo&gt;<span> results,
+
+                            final boolean<span> avoidStaleNodes,
+
+                            final<span> BlockStoragePolicy storagePolicy,
+
+                            final EnumSet&lt;StorageType&gt;<span> unavailableStorages,
+
+                            final boolean<span> newBlock) {
+
+...
+
+      if (numOfResults &lt;= 1<span>) {
+
+        chooseRemoteRack(1<span>, dn0, excludedNodes, blocksize, maxNodesPerRack,
+
+            results, avoidStaleNodes, storageTypes);
+
+        if (--numOfReplicas == 0<span>) {
+
+          return<span> writer;
+
+        }
+
+      }</span></span></span></span></span></span></span></span></span></span></span></span></span></pre>
+</div>
+<p>注释：此处会尝试在远程机架（即与已有的datanode不同的机架）获取一个新的datanode</p>
+<p>          </p>
+<div class="cnblogs_code">
+<pre>  protected void chooseRemoteRack(int<span> numOfReplicas,
+
+                                DatanodeDescriptor localMachine,
+
+                                Set&lt;Node&gt;<span> excludedNodes,
+
+                                long<span> blocksize,
+
+                                int<span> maxReplicasPerRack,
+
+                                List&lt;DatanodeStorageInfo&gt;<span> results,
+
+                                boolean<span> avoidStaleNodes,
+
+                                EnumMap&lt;StorageType, Integer&gt;<span> storageTypes)
+
+                                    throws<span> NotEnoughReplicasException {
+
+...
+
+      chooseRandom(numOfReplicas, "~" +<span> localMachine.getNetworkLocation(),
+
+          excludedNodes, blocksize, maxReplicasPerRack, results,
+
+          avoidStaleNodes, storageTypes);</span></span></span></span></span></span></span></span></span></pre>
+</div>
+<p>注释：此处会在所有可选的datanode中随机选择一个</p>
+<p>                   </p>
+<div class="cnblogs_code">
+<pre>  protected DatanodeStorageInfo chooseRandom(int<span> numOfReplicas,
+
+                            String scope,
+
+                            Set&lt;Node&gt;<span> excludedNodes,
+
+                            long<span> blocksize,
+
+                            int<span> maxNodesPerRack,
+
+                            List&lt;DatanodeStorageInfo&gt;<span> results,
+
+                            boolean<span> avoidStaleNodes,
+
+                            EnumMap&lt;StorageType, Integer&gt;<span> storageTypes)
+
+                            throws<span> NotEnoughReplicasException {
+
+...
+
+    int numOfAvailableNodes =<span> clusterMap.countNumOfAvailableNodes(
+
+        scope, excludedNodes);
+
+...
+
+    if (numOfReplicas&gt;0<span>) {
+
+      String detail =<span> enableDebugLogging;
+
+      if<span> (LOG.isDebugEnabled()) {
+
+        if (badTarget &amp;&amp; builder != null<span>) {
+
+          detail =<span> builder.toString();
+
+          builder.setLength(0<span>);
+
+        } else<span> {
+
+          detail = ""<span>;
+
+        }
+
+      }
+
+      throw new<span> NotEnoughReplicasException(detail);
+
+    }</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></pre>
+</div>
+<p>注释：如果由于一些原因（比如节点磁盘满或者下线），导致numOfAvailableNodes计算结果为0，会抛出NotEnoughReplicasException</p>
+<p> </p>
+<p>其中maxNodesPerRack计算逻辑如下：</p>
+<h3>org.apache.hadoop.hdfs.server.blockmanagement.BlockPlacementPolicyDefault</h3>
+<div class="cnblogs_code">
+<pre>  /**
+
+   * Calculate the maximum number of replicas to allocate per rack. It also
+
+   * limits the total number of replicas to the total number of nodes in the
+
+   * cluster. Caller should adjust the replica count to the return value.
+
+   *
+
+   * @param numOfChosen The number of already chosen nodes.
+
+   * @param numOfReplicas The number of additional nodes to allocate.
+
+   * @return integer array. Index 0: The number of nodes allowed to allocate
+
+   *         in addition to already chosen nodes.
+
+   *         Index 1: The maximum allowed number of nodes per rack. This
+
+   *         is independent of the number of chosen nodes, as it is calculated
+
+   *         using the target number of replicas.
+
+   */
+
+  private int[] getMaxNodesPerRack(int numOfChosen, int<span> numOfReplicas) {
+
+    int clusterSize =<span> clusterMap.getNumOfLeaves();
+
+    int totalNumOfReplicas = numOfChosen +<span> numOfReplicas;
+
+    if (totalNumOfReplicas &gt;<span> clusterSize) {
+
+      numOfReplicas - = (totalNumOfReplicas-<span>clusterSize);
+
+      totalNumOfReplicas =<span> clusterSize;
+
+    }
+
+    // No calculation needed when there is only one rack or picking one node.
+
+    int numOfRacks =<span> clusterMap.getNumOfRacks();
+
+    if (numOfRacks == 1 || totalNumOfReplicas &lt;= 1<span>) {
+
+      return new int<span>[] {numOfReplicas, totalNumOfReplicas};
+
+    }
+
+ 
+
+    int maxNodesPerRack = (totalNumOfReplicas-1)/numOfRacks + 2<span>;
+
+    // At this point, there are more than one racks and more than one replicas
+
+    // to store. Avoid all replicas being in the same rack.
+
+    //
+
+    // maxNodesPerRack has the following properties at this stage.
+
+    //   1) maxNodesPerRack &gt;= 2
+
+    //   2) (maxNodesPerRack-1) * numOfRacks &gt; totalNumOfReplicas
+
+    //          when numOfRacks &gt; 1
+
+    //
+
+    // Thus, the following adjustment will still result in a value that forces
+
+    // multi-rack allocation and gives enough number of total nodes.
+
+    if (maxNodesPerRack ==<span> totalNumOfReplicas) {
+
+      maxNodesPerRack--<span>;
+
+    }
+
+    return new int<span>[] {numOfReplicas, maxNodesPerRack};
+
+  }</span></span></span></span></span></span></span></span></span></span></span></span></span></pre>
+</div>
+<p>注释：</p>
+<blockquote>
+<p>int maxNodesPerRack = (totalNumOfReplicas-1)/numOfRacks + 2;</p>
+</blockquote>
+<blockquote>
+<p>    if (maxNodesPerRack == totalNumOfReplicas) {</p>
+<p>      maxNodesPerRack--;</p>
+<p>    }</p>
+</blockquote>
+<p> </p>
+</div>
+            </div>
+
+            <!-- Post Footer -->
+            <div class="post-footer">
+                <div class="post-navigation">
+                    <a href="../blog_cn.html" class="nav-button">← Back to Home</a>
+                    <a href="0324.html" class="nav-button">Next Post →</a>
+                </div>
+            </div>
+        </article>
+    </div>
+</body>
+</html>

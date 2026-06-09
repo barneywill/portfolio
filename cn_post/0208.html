@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>docker挂载文件修改生效</title>
+    <link rel="stylesheet" href="../css/style3.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header Navigation -->
+        <div class="header">
+            <h1><a href="../blog_cn.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+        </div>
+
+        <!-- Post Container -->
+        <article class="post">
+            <!-- Post Header -->
+            <div class="post-header">
+                <h1>docker挂载文件修改生效</h1>
+                <div class="post-meta">
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📅</span>
+                        <span>February 23, 2019</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📖</span>
+                        <span>1 min read</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">👁️</span>
+                        <span>3129 views</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Post Content -->
+            <div class="post-content">
+                <div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<p>docker经常需要挂载文件到容器中，比如启动nginx</p>
+<blockquote>
+<p># docker run - d --name test_nginx - v /tmp/nginx.conf:/etc/nginx/nginx.conf nginx</p>
+</blockquote>
+<p>然后就有修改配置文件然后刷新的功能，如果直接用vi编辑宿主机文件</p>
+<blockquote>
+<p># vi /tmp/nginx.conf</p>
+</blockquote>
+<p>然后在docker容器中执行reload</p>
+<blockquote>
+<p># docker exec - it test_nginx nginx - s reload</p>
+</blockquote>
+<p>会发现配置没有生效，此时直接查看docker容器中的文件内容发现还是旧的</p>
+<blockquote>
+<p># docker exec - it test_nginx cat /etc/nginx/nginx.conf</p>
+</blockquote>
+<p>所以看起来只能将docker容器restart，正确的操作方法应该是</p>
+<blockquote>
+<p># cp /tmp/nginx.conf /tmp/nginx.conf2<br/># vi /tmp/nginx.conf2<br/># cat /tmp/nginx.conf2 &gt; /tmp/nginx.conf<br/># docker exec - it test_nginx nginx - s reload</p>
+</blockquote>
+<p>这是因为用vi编辑保存时会修改文件的inode，而cat重定向不会，查看文件inode的方法</p>
+<blockquote>
+<p># stat /path/to/file<br/># ls - i /path/to/file</p>
+</blockquote>
+<p> </p>
+</div>
+            </div>
+
+            <!-- Post Footer -->
+            <div class="post-footer">
+                <div class="post-navigation">
+                    <a href="../blog_cn.html" class="nav-button">← Back to Home</a>
+                    <a href="0209.html" class="nav-button">Next Post →</a>
+                </div>
+            </div>
+        </article>
+    </div>
+</body>
+</html>

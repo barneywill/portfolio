@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>hive读取gzip文件乱码</title>
+    <link rel="stylesheet" href="../css/style3.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header Navigation -->
+        <div class="header">
+            <h1><a href="../blog_cn.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+        </div>
+
+        <!-- Post Container -->
+        <article class="post">
+            <!-- Post Header -->
+            <div class="post-header">
+                <h1>hive读取gzip文件乱码</h1>
+                <div class="post-meta">
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📅</span>
+                        <span>May 19, 2022</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📖</span>
+                        <span>1 min read</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">👁️</span>
+                        <span>599 views</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Post Content -->
+            <div class="post-content">
+                <div class="blogpost-body cnblogs-markdown" id="cnblogs_post_body">
+<h1 id="背景">背景</h1>
+<p>hive读取纯文本数据，无论是：原始格式、gzip、bzip，都可以自动识别，不需要修改建表语句或修改setting。<br/>
+但是使用gobblin开启gzip压缩之后保存文件使用hive读取发生乱码。</p>
+<h1 id="定位">定位</h1>
+<h2 id="首先怀疑是文件损坏">首先怀疑是文件损坏</h2>
+<p>gobblin开启压缩之后写的文件为：*.txt.gzip，将该文件下载到本地，使用gzip命令可以正常解压，排除。</p>
+<h2 id="其次怀疑是gzip版本之间不兼容">其次怀疑是gzip版本之间不兼容</h2>
+<p>即gobblin写gzip和hive读gzip版本不兼容，查看gobblin写文件的代码，发现使用的是</p>
+<blockquote>
+<p>java.util.zip.GZIPOutputStream</p>
+</blockquote>
+<p>和hive读取使用都是jdk的jar包，排除。</p>
+<h2 id="最后怀疑是hive对gzip格式识别有问题">最后怀疑是hive对gzip格式识别有问题</h2>
+<p>查看hive读取文件的代码发现是根据硬编码的 gz 后缀来识别gzip格式，将gzip后缀改为gz后缀后，hive读取正常，找到原因。</p>
+</div>
+            </div>
+
+            <!-- Post Footer -->
+            <div class="post-footer">
+                <div class="post-navigation">
+                    <a href="../blog_cn.html" class="nav-button">← Back to Home</a>
+                    <a href="0022.html" class="nav-button">Next Post →</a>
+                </div>
+            </div>
+        </article>
+    </div>
+</body>
+</html>

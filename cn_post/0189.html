@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>beeline连接hiveserver2报错impersonate</title>
+    <link rel="stylesheet" href="../css/style3.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header Navigation -->
+        <div class="header">
+            <h1><a href="../blog_cn.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+        </div>
+
+        <!-- Post Container -->
+        <article class="post">
+            <!-- Post Header -->
+            <div class="post-header">
+                <h1>beeline连接hiveserver2报错impersonate</h1>
+                <div class="post-meta">
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📅</span>
+                        <span>March 07, 2019</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📖</span>
+                        <span>1 min read</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">👁️</span>
+                        <span>681 views</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Post Content -->
+            <div class="post-content">
+                <div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<p>beeline连接hiveserver2报错</p>
+<p>Error: Could not open client transport with JDBC Uri: jdbc:hive2://localhost:10000: Failed to open new session: java.lang.RuntimeException: org.apache.hadoop.ipc.RemoteException(org.apache.hadoop.security.authorize.AuthorizationException): User: test is not allowed to impersonate anonymous (state=08S01,code=0)</p>
+<p>解决方法</p>
+<p>core-site.xml</p>
+<blockquote>
+<p>     &lt;property&gt;</p>
+<p>         &lt;name&gt;hadoop.proxyuser.test.groups&lt;/name&gt;</p>
+<p>         &lt;value&gt;*&lt;/value&gt;</p>
+<p>     &lt;/property&gt;</p>
+<p>     &lt;property&gt;</p>
+<p>         &lt;name&gt;hadoop.proxyuser.test.hosts&lt;/name&gt;</p>
+<p>         &lt;value&gt;*&lt;/value&gt;</p>
+<p>     &lt;/property&gt;</p>
+</blockquote>
+<p>这里是test用户，其他用户自行调整，即执行beeline的用户名，修改完成后重启hdfs和yarn</p>
+<p> </p>
+</div>
+            </div>
+
+            <!-- Post Footer -->
+            <div class="post-footer">
+                <div class="post-navigation">
+                    <a href="../blog_cn.html" class="nav-button">← Back to Home</a>
+                    <a href="0190.html" class="nav-button">Next Post →</a>
+                </div>
+            </div>
+        </article>
+    </div>
+</body>
+</html>

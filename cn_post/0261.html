@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ambari 4 - 通过Ambari部署Impala</title>
+    <link rel="stylesheet" href="../css/style3.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header Navigation -->
+        <div class="header">
+            <h1><a href="../blog_cn.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+        </div>
+
+        <!-- Post Container -->
+        <article class="post">
+            <!-- Post Header -->
+            <div class="post-header">
+                <h1>Ambari 4 - 通过Ambari部署Impala</h1>
+                <div class="post-meta">
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📅</span>
+                        <span>January 19, 2019</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📖</span>
+                        <span>3 min read</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">👁️</span>
+                        <span>5634 views</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Post Content -->
+            <div class="post-content">
+                <div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<p>ambari2.7.3（hdp3.1） 安装 impala2.12（自动安装最新）</p>
+<p>ambari的hdp中原生不支持impala安装，下面介绍如何通过mpack方式使ambari支持impala安装：</p>
+<h1>一 安装Service</h1>
+<h2>1 下载</h2>
+<blockquote>
+<p># wget https://github.com/cas-bigdatalab/ambari-impala-service/raw/master/ambari-impala-mpack-2.6.0-0816.tar.gz</p>
+</blockquote>
+<h2>2 安装</h2>
+<blockquote>
+<p> # ambari-server install-mpack --mpack=/path/to/ambari-impala-mpack-2.6.0-0816.tar.gz --verbose</p>
+</blockquote>
+<h2>3 重启</h2>
+<blockquote>
+<p> # ambari-server restart</p>
+</blockquote>
+<p>访问ambari页面发现services中并没有impala，检查mpack.json发现问题：</p>
+<p>/var/lib/ambari-server/resources/mpacks/ambari-impala-mpack-2.6.0-0816/mpack.json</p>
+<blockquote>
+<p>{"name": "ambari-impala-mpack", "prerequisites": {"max-ambari-version": "", "min-ambari-version": "2.4.0.0"}, "artifacts": [{"type": "service-definitions", "name": "ambari-common-services", "source_dir": "common-services"}, {"service_versions_map": [{"service_name": "IMPALA", "applicable_stacks": [{"stack_name": "HDP", "stack_version": "2.6"}], "service_version": "2.6.0"}], "type": "stack-addon-service-definitions", "name": "ambari-addon-services", "source_dir": "addon-services"}], "version": "2.6.0-0816", "type": "full-release", "description": "Ambari Management Pack ambari-impala-mpack"}</p>
+</blockquote>
+<p>修改hdp版本，增加3.1</p>
+<blockquote>
+<p>{"stack_name": "HDP", "stack_version": "2.6"}</p>
+</blockquote>
+<p>重新打包ambari-impala-mpack-2.6.0-0816.tar.gz</p>
+<p>注意：impala版本不用修改，默认会安装最新的；</p>
+<h2>4 卸载</h2>
+<blockquote>
+<p>ambari-server uninstall-mpack --mpack-name=ambari-impala-mpack</p>
+</blockquote>
+<h2>5 安装（同上）</h2>
+<h2>6 重启（同上）</h2>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201901/1509647-20190119230857227-765280045.png"/></p>
+<h1>二 安装Impala</h1>
+<p>按照页面提示进行，要增加repo</p>
+<blockquote>
+<p># cat /etc/yum.repos.d/impala.repo <br/>[cloudera-cdh5]<br/># Packages for Cloudera's Distribution for Hadoop, Version 5, on RedHat	or CentOS 7 x86_64<br/>name=Cloudera's Distribution for Hadoop, Version 5<br/>baseurl=https://archive.cloudera.com/cdh5/redhat/7/x86_64/cdh/5/<br/>gpgkey =https://archive.cloudera.com/cdh5/redhat/7/x86_64/cdh/RPM-GPG-KEY-cloudera    <br/>gpgcheck = 1</p>
+</blockquote>
+<p>注意这里是redhat7，按照需要将7改为6也可以；</p>
+<h1>三 启动Impala</h1>
+<p> impala-state-store、impala-catalog、impala-server全部启动失败，OMG</p>
+<p>下面看各种报错：</p>
+<p>1 看日志报错</p>
+<blockquote>
+<p># more /var/log/impala/impala-catalog.log <br/>find: '/usr/local/jdk/': No such file or directory<br/>find: '/usr/local/jdk/': No such file or directory<br/>find: '/usr/local/jdk/': No such file or directory</p>
+<p>/usr/lib/impala/sbin/impalad: error while loading shared libraries: libjsig.so: cannot open shared object file: No such file or directory</p>
+</blockquote>
+<p> 增加链接</p>
+<blockquote>
+<p>ln -s /data/jdk1.8.0_191 /usr/local/jdk</p>
+</blockquote>
+<p> 这次impala-state-store可以启动，但是impala-catalog和impala-server还是报错；</p>
+<p>2 各种ClassNotFoundException</p>
+<blockquote>
+<p>ClassNotFoundException: org.apache.hadoop.conf.Configurationjava.lang.NoClassDefFoundError: org/apache/hadoop/conf/Configuration</p>
+<p>Caused by: java.lang.ClassNotFoundException: org.apache.hadoop.conf.Configuration</p>
+<p>         at java.net.URLClassLoader.findClass(URLClassLoader.java:382)</p>
+<p>         at java.lang.ClassLoader.loadClass(ClassLoader.java:424)</p>
+<p>         at sun.misc.Launcher$AppClassLoader.loadClass(Launcher.java:349)</p>
+<p>         at java.lang.ClassLoader.loadClass(ClassLoader.java:357)</p>
+</blockquote>
+<p> 检查lib目录：/usr/lib/impala/lib/* </p>
+<blockquote>
+<p>lrwxrwxrwx 1 root root 43 Jan 19 07:34 hadoop-common.jar -&gt; /usr/hdp/None/hadoop/hadoop-common.jar</p>
+</blockquote>
+<p>发现很多链接有问题，指向一个不存在的目录/usr/hdp/None，实际为/usr/hdp/3.1.0.0-78，将这些链接全部替换为正确的地址：</p>
+<blockquote>
+<p>cd /usr/lib/impala/lib<br/># ls -l|grep None|awk '{print "/bin/rm "$9}'<br/># ls -l|grep None|awk '{print "ln -s "$9" "$11}'|sed 's/None/3.1.0.0-78/g'</p>
+</blockquote>
+<p>然后换了个错：</p>
+<blockquote>
+<p>ClassNotFoundException: com.ctc.wstx.io.InputBootstrapperjava.lang.NoClassDefFoundError: com/ctc/wstx/io/InputBootstrapper</p>
+<p>Caused by: java.lang.ClassNotFoundException: com.ctc.wstx.io.InputBootstrapper</p>
+<p>         at java.net.URLClassLoader.findClass(URLClassLoader.java:382)</p>
+<p>         at java.lang.ClassLoader.loadClass(ClassLoader.java:424)</p>
+<p>         at sun.misc.Launcher$AppClassLoader.loadClass(Launcher.java:349)</p>
+<p>         at java.lang.ClassLoader.loadClass(ClassLoader.java:357)</p>
+</blockquote>
+<p>这个类在包woodstox-core-5.0.3.jar中，从hadoop2.9版本开始引入，因为hdp3.1内置的hadoop是3.1.1，尝试将这个jar包放到/usr/lib/impala/lib/，结果错误依旧，同时考虑到这个目录下hadoop相关的jar都没有版本号，猜测impala可能直接根据一些写死的jar名字来加载，所以后添加的jar识别不到，只能降hadoop版本</p>
+<blockquote>
+<p>hadoop2.7.2</p>
+<p>hadoop-auth.jar</p>
+<p>hadoop-common.jar<br/>hadoop-hdfs.jar<br/>hadoop-mapreduce-client-core.jar</p>
+<p>hive2.1.0</p>
+<p>hive-common.jar<br/>hive-metastore.jar</p>
+<p>hbase1.2.6</p>
+<p>hbase-common.jar<br/>hbase-client.jar</p>
+</blockquote>
+<p>将以上版本的jar更新到/usr/lib/impala/lib/下，ClassNotFoundException消失；</p>
+<p>3 权限</p>
+<p>E0119 18:16:24.230655 29797 impala-server.cc:285] Invalid short-circuit reads configuration:<br/>  - Impala cannot read or execute the parent directory of dfs.domain.socket.path</p>
+<p>查看hdfs配置dfs.domain.socket.path对应的目录</p>
+<blockquote>
+<p>ls -l /var/lib<br/>drwxr-x--x   3 hdfs          hadoop          36 Jan 19 17:05 hadoop-hdfs</p>
+</blockquote>
+<p>由于impala是impala用户启动的，所以没有权限</p>
+<blockquote>
+<p># usermod -G hadoop impala</p>
+</blockquote>
+<p>将impala加到hadoop组解决</p>
+<p>4 NoSuchMethodError</p>
+<p># cat /var/log/impala/catalogd.ERROR</p>
+<blockquote>
+<p>F0119 18:21:35.781538 16153 catalog.cc:90] java.lang.NoSuchMethodError: org.apache.hadoop.hive.metastore.RetryingMetaStoreClient.getProxy(Lorg/apache/hadoop/hive/conf/HiveConf;Lorg/apache/hadoop/hive/metastore/HiveM</p>
+<p>etaHookLoader;Ljava/lang/String;)Lorg/apache/hadoop/hive/metastore/IMetaStoreClient;</p>
+<p>         at org.apache.impala.catalog.MetaStoreClientPool$MetaStoreClient.&lt;init&gt;(MetaStoreClientPool.java:93)</p>
+<p>         at org.apache.impala.catalog.MetaStoreClientPool$MetaStoreClient.&lt;init&gt;(MetaStoreClientPool.java:72)</p>
+<p>         at org.apache.impala.catalog.MetaStoreClientPool.initClients(MetaStoreClientPool.java:168)</p>
+<p>         at org.apache.impala.catalog.Catalog.&lt;init&gt;(Catalog.java:100)</p>
+<p>         at org.apache.impala.catalog.CatalogServiceCatalog.&lt;init&gt;(CatalogServiceCatalog.java:263)</p>
+<p>         at org.apache.impala.service.JniCatalog.&lt;init&gt;(JniCatalog.java:121)</p>
+</blockquote>
+<p>报错的类是hive metastore相关的类，查看</p>
+<blockquote>
+<p># javap -cp hive-metastore.jar org.apache.hadoop.hive.metastore.RetryingMetaStoreClient</p>
+<p>Compiled from "RetryingMetaStoreClient.java"</p>
+<p>public class org.apache.hadoop.hive.metastore.RetryingMetaStoreClient implements java.lang.reflect.InvocationHandler {</p>
+<p>  protected org.apache.hadoop.hive.metastore.RetryingMetaStoreClient(org.apache.hadoop.hive.conf.HiveConf, java.lang.Class&lt;?&gt;[], java.lang.Object[], java.util.concurrent.ConcurrentHashMap&lt;java.lang.String, java.lang.Long&gt;, java.lang.Class&lt;? extends org.apache.hadoop.hive.metastore.IMetaStoreClient&gt;) throws org.apache.hadoop.hive.metastore.api.MetaException;</p>
+<p>  public static org.apache.hadoop.hive.metastore.IMetaStoreClient getProxy(org.apache.hadoop.hive.conf.HiveConf, boolean) throws org.apache.hadoop.hive.metastore.api.MetaException;</p>
+<p>  public static org.apache.hadoop.hive.metastore.IMetaStoreClient getProxy(org.apache.hadoop.hive.conf.HiveConf, org.apache.hadoop.hive.metastore.HiveMetaHookLoader, java.lang.String) throws org.apache.hadoop.hive.metastore.api.MetaException;</p>
+<p>  public static org.apache.hadoop.hive.metastore.IMetaStoreClient getProxy(org.apache.hadoop.hive.conf.HiveConf, org.apache.hadoop.hive.metastore.HiveMetaHookLoader, java.util.concurrent.ConcurrentHashMap&lt;java.lang.String, java.lang.Long&gt;, java.lang.String, boolean) throws org.apache.hadoop.hive.metastore.api.MetaException;</p>
+<p>  public static org.apache.hadoop.hive.metastore.IMetaStoreClient getProxy(org.apache.hadoop.hive.conf.HiveConf, java.lang.Class&lt;?&gt;[], java.lang.Object[], java.lang.String) throws org.apache.hadoop.hive.metastore.api.MetaException;</p>
+<p>  public static org.apache.hadoop.hive.metastore.IMetaStoreClient getProxy(org.apache.hadoop.hive.conf.HiveConf, java.lang.Class&lt;?&gt;[], java.lang.Object[], java.util.concurrent.ConcurrentHashMap&lt;java.lang.String, java.lang.Long&gt;, java.lang.String) throws org.apache.hadoop.hive.metastore.api.MetaException;</p>
+<p>  public java.lang.Object invoke(java.lang.Object, java.lang.reflect.Method, java.lang.Object[]) throws java.lang.Throwable;</p>
+<p>  static {};</p>
+<p>}</p>
+</blockquote>
+<p>方法签名是存在的，再仔细分析一下NoSuchMethodError，这个错误并不是说方法不存在，否则编译都过不了，而是因为jar包冲突有两个相同的类，一个有这个方法，一个没有，运行时一旦加载第二个类的方法就会报错NoSuchMethodError，再检查其他jar果然发现问题</p>
+<blockquote>
+<p># javap -cp hive-exec.jar org.apache.hadoop.hive.metastore.RetryingMetaStoreClient</p>
+<p>Compiled from "RetryingMetaStoreClient.java"</p>
+<p>public class org.apache.hadoop.hive.metastore.RetryingMetaStoreClient implements java.lang.reflect.InvocationHandler {</p>
+<p>  protected org.apache.hadoop.hive.metastore.RetryingMetaStoreClient(org.apache.hadoop.conf.Configuration, java.lang.Class&lt;?&gt;[], java.lang.Object[], java.util.concurrent.ConcurrentHashMap&lt;java.lang.String, java.lang.Long&gt;, java.lang.Class&lt;? extends org.apache.hadoop.hive.metastore.IMetaStoreClient&gt;) throws org.apache.hadoop.hive.metastore.api.MetaException;</p>
+<p>  public static org.apache.hadoop.hive.metastore.IMetaStoreClient getProxy(org.apache.hadoop.conf.Configuration, boolean) throws org.apache.hadoop.hive.metastore.api.MetaException;</p>
+<p>  public static org.apache.hadoop.hive.metastore.IMetaStoreClient getProxy(org.apache.hadoop.conf.Configuration, org.apache.hadoop.hive.metastore.HiveMetaHookLoader, java.lang.String) throws org.apache.hadoop.hive.metastore.api.MetaException;</p>
+<p>  public static org.apache.hadoop.hive.metastore.IMetaStoreClient getProxy(org.apache.hadoop.conf.Configuration, org.apache.hadoop.hive.metastore.HiveMetaHookLoader, java.util.concurrent.ConcurrentHashMap&lt;java.lang.String, java.lang.Long&gt;, java.lang.String, boolean) throws org.apache.hadoop.hive.metastore.api.MetaException;</p>
+<p>  public static org.apache.hadoop.hive.metastore.IMetaStoreClient getProxy(org.apache.hadoop.conf.Configuration, java.lang.Class&lt;?&gt;[], java.lang.Object[], java.lang.String) throws org.apache.hadoop.hive.metastore.api.MetaException;</p>
+<p>  public static org.apache.hadoop.hive.metastore.IMetaStoreClient getProxy(org.apache.hadoop.conf.Configuration, java.lang.Class&lt;?&gt;[], java.lang.Object[], java.util.concurrent.ConcurrentHashMap&lt;java.lang.String, java.lang.Long&gt;, java.lang.String) throws org.apache.hadoop.hive.metastore.api.MetaException;</p>
+<p>  public java.lang.Object invoke(java.lang.Object, java.lang.reflect.Method, java.lang.Object[]) throws java.lang.Throwable;</p>
+<p>  static org.apache.hadoop.hive.metastore.IMetaStoreClient access$000(org.apache.hadoop.hive.metastore.RetryingMetaStoreClient);</p>
+<p>  static {};</p>
+<p>}</p>
+</blockquote>
+<p>在hive-exec.jar中也有一个RetryingMetaStoreClient ，继续替换jar</p>
+<blockquote>
+<p>hive2.1.0</p>
+<p>hive-exec.jar</p>
+</blockquote>
+<p>5 NoClassDefFoundError</p>
+<blockquote>
+<p>F0119 18:59:40.175907 17009 catalog.cc:90] java.lang.IllegalStateException: java.lang.RuntimeException: Unable to instantiate org.apache.hadoop.hive.metastore.HiveMetaStoreClient</p>
+<p>         at org.apache.impala.catalog.MetaStoreClientPool$MetaStoreClient.&lt;init&gt;(MetaStoreClientPool.java:99)</p>
+<p>         at org.apache.impala.catalog.MetaStoreClientPool$MetaStoreClient.&lt;init&gt;(MetaStoreClientPool.java:72)</p>
+<p>         at org.apache.impala.catalog.MetaStoreClientPool.initClients(MetaStoreClientPool.java:168)</p>
+<p>         at org.apache.impala.catalog.Catalog.&lt;init&gt;(Catalog.java:100)</p>
+<p>         at org.apache.impala.catalog.CatalogServiceCatalog.&lt;init&gt;(CatalogServiceCatalog.java:263)</p>
+<p>         at org.apache.impala.service.JniCatalog.&lt;init&gt;(JniCatalog.java:121)</p>
+<p>Caused by: java.lang.RuntimeException: Unable to instantiate org.apache.hadoop.hive.metastore.HiveMetaStoreClient</p>
+<p>         at org.apache.hadoop.hive.metastore.MetaStoreUtils.newInstance(MetaStoreUtils.java:1627)</p>
+<p>         at org.apache.hadoop.hive.metastore.RetryingMetaStoreClient.&lt;init&gt;(RetryingMetaStoreClient.java:80)</p>
+<p>         at org.apache.hadoop.hive.metastore.RetryingMetaStoreClient.getProxy(RetryingMetaStoreClient.java:130)</p>
+<p>         at org.apache.hadoop.hive.metastore.RetryingMetaStoreClient.getProxy(RetryingMetaStoreClient.java:101)</p>
+<p>         at org.apache.hadoop.hive.metastore.RetryingMetaStoreClient.getProxy(RetryingMetaStoreClient.java:94)</p>
+<p>         at org.apache.impala.catalog.MetaStoreClientPool$MetaStoreClient.&lt;init&gt;(MetaStoreClientPool.java:93)</p>
+<p>         ... 5 more</p>
+<p>Caused by: java.lang.reflect.InvocationTargetException</p>
+<p>         at sun.reflect.GeneratedConstructorAccessor5.newInstance(Unknown Source)</p>
+<p>         at sun.reflect.DelegatingConstructorAccessorImpl.newInstance(DelegatingConstructorAccessorImpl.java:45)</p>
+<p>         at java.lang.reflect.Constructor.newInstance(Constructor.java:423)</p>
+<p>         at org.apache.hadoop.hive.metastore.MetaStoreUtils.newInstance(MetaStoreUtils.java:1625)</p>
+<p>         ... 10 more</p>
+<p>Caused by: java.lang.NoClassDefFoundError: org/datanucleus/PersistenceNucleusContext</p>
+<p>         at java.lang.Class.forName0(Native Method)</p>
+<p>         at java.lang.Class.forName(Class.java:348)</p>
+<p>         at org.apache.hadoop.hive.metastore.MetaStoreUtils.getClass(MetaStoreUtils.java:1592)</p>
+<p>         at org.apache.hadoop.hive.metastore.RawStoreProxy.getProxy(RawStoreProxy.java:64)</p>
+<p>         at org.apache.hadoop.hive.metastore.HiveMetaStore$HMSHandler.newRawStore(HiveMetaStore.java:581)</p>
+<p>         at org.apache.hadoop.hive.metastore.HiveMetaStore$HMSHandler.getMS(HiveMetaStore.java:546)</p>
+<p>         at org.apache.hadoop.hive.metastore.HiveMetaStore$HMSHandler.createDefaultDB(HiveMetaStore.java:608)</p>
+<p>         at org.apache.hadoop.hive.metastore.HiveMetaStore$HMSHandler.init(HiveMetaStore.java:398)</p>
+<p>         at org.apache.hadoop.hive.metastore.RetryingHMSHandler.&lt;init&gt;(RetryingHMSHandler.java:78)</p>
+<p>         at org.apache.hadoop.hive.metastore.RetryingHMSHandler.getProxy(RetryingHMSHandler.java:84)</p>
+<p>         at org.apache.hadoop.hive.metastore.HiveMetaStore.newRetryingHMSHandler(HiveMetaStore.java:6396)</p>
+<p>         at org.apache.hadoop.hive.metastore.HiveMetaStoreClient.&lt;init&gt;(HiveMetaStoreClient.java:236)</p>
+<p>         ... 14 more</p>
+</blockquote>
+<p>查看/usr/lib/impala/lib/下有datanucleus相关jar：</p>
+<blockquote>
+<p>datanucleus-api-jdo-3.2.6.jar<br/>datanucleus-core-3.2.12.jar<br/>datanucleus-rdbms-3.2.12.jar</p>
+</blockquote>
+<p>通过javap检查这几个jar包都没有org.datanucleus.PersistenceNucleusContext，再看hive2.1.0依赖的版本是</p>
+<blockquote>
+<p>datanucleus-core-4.1.6.jar</p>
+</blockquote>
+<p>而且不能通过添加jar到/usr/lib/impala/lib/来解决，只能降hive版本到1.2.1，因为这个版本的hive用是的datanucleus3，至此问题全部解决，impala-catalog和impala-server都成功启动；</p>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201901/1509647-20190119234518057-440781633.png"/></p>
+<p>6）通过hue访问impala server报错</p>
+<blockquote>
+<p>NoClassDefFoundError: org/apache/hive/service/cli/thrift/TGetInfoReq CAUSED BY: ClassNotFoundException: org.apache.hive.service.cli.thrift.TGetInfoReq</p>
+</blockquote>
+<p>这个类在hive-service-1.2.1.jar中，所以还要替换</p>
+<blockquote>
+<p>hive1.2.0</p>
+<p>hive-service.jar</p>
+</blockquote>
+<p>注意hue中连接impala一定要使用21050端口，不能像impala-shell一样使用21000端口，否则会报错</p>
+<blockquote>
+<p>Invalid method name 'OpenSession'</p>
+</blockquote>
+<p>最后汇总一下需要替换的jar</p>
+<blockquote>
+<p>hadoop2.7.2</p>
+<p>hadoop-auth.jar<br/>hadoop-common.jar<br/>hadoop-hdfs.jar<br/>hadoop-mapreduce-client-core.jar</p>
+<p>hive1.2.0</p>
+<p>hive-common.jar<br/>hive-metastore.jar<br/>hive-exec.jar<br/>hive-service.jar</p>
+<p>hbase1.2.6</p>
+<p>hbase-common.jar<br/>hbase-client.jar</p>
+</blockquote>
+<p> </p>
+<p>参考：</p>
+<p>https://github.com/cas-bigdatalab/ambari-impala-service</p>
+</div>
+            </div>
+
+            <!-- Post Footer -->
+            <div class="post-footer">
+                <div class="post-navigation">
+                    <a href="../blog_cn.html" class="nav-button">← Back to Home</a>
+                    <a href="0262.html" class="nav-button">Next Post →</a>
+                </div>
+            </div>
+        </article>
+    </div>
+</body>
+</html>

@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>archlinux+i3wm</title>
+    <link rel="stylesheet" href="../css/style3.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header Navigation -->
+        <div class="header">
+            <h1><a href="../blog_cn.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+        </div>
+
+        <!-- Post Container -->
+        <article class="post">
+            <!-- Post Header -->
+            <div class="post-header">
+                <h1>archlinux+i3wm</h1>
+                <div class="post-meta">
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📅</span>
+                        <span>July 27, 2020</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📖</span>
+                        <span>1 min read</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">👁️</span>
+                        <span>1518 views</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Post Content -->
+            <div class="post-content">
+                <div class="blogpost-body cnblogs-markdown" id="cnblogs_post_body">
+<h1 id="安装arch">安装arch</h1>
+<p>virtualbox/vagrant 都可以</p>
+<h1 id="更新源">更新源</h1>
+<pre><code>pacman - Syy
+pacman - Syu
+</code></pre>
+<h1 id="安装yaourt">安装yaourt</h1>
+<pre><code>vim /etc/pacman.conf
+[archlinuxcn]
+Server=https://mirrors.ustc.edu.cn/archlinuxcn/$arch
+
+pacman - Sy
+pacman - S yaourt
+pacman - S archlinuxcn-keyring
+</code></pre>
+<h1 id="安装i3">安装i3</h1>
+<pre><code>pacman - S xterm
+
+pacman - S xorg-server xorg-xinit
+
+pacman - S i3-wm
+or
+pacman - S i3-gaps
+</code></pre>
+<h1 id="安装其他">安装其他</h1>
+<pre><code>yaourt - S polybar
+pacman - S rofi
+pacman - S dunst
+pacman - S feh
+pacman - S compton
+</code></pre>
+<h1 id="安装常用工具">安装常用工具</h1>
+<pre><code>pacman - S rxvt-unicode
+pacman - S zsh
+pacman - S gvim
+</code></pre>
+<h1 id="安装字体">安装字体</h1>
+<pre><code>pacman - S adobe-source-han-sans-cn-fonts
+</code></pre>
+<h1 id="修改启动">修改启动</h1>
+<pre><code>sudo cp /etc/X11/xinit/xinitrc ~/.xinitrc
+sudo chown $user.$group ~/.xinitrc
+
+vim ~/.xinitrc
+exec compton - b &amp;
+exec fcitx &amp;                                     
+exec i3 - V &gt;&gt; ~/.config/i3/log/i3log-$(date +'%F-%k-%M-%S') 2&gt;&amp;1
+</code></pre>
+<h1 id="启动图形界面">启动图形界面</h1>
+<pre><code>startx
+</code></pre>
+<h1 id="其他工具">其他工具</h1>
+<pre><code>yaourt - S i3lock-fancy-git
+
+</code></pre>
+<h1 id="连接wifi">连接wifi</h1>
+<pre><code>nmtui
+</code></pre>
+<p>ps：如果通过virtualbox启动，还需要设置分辨率</p>
+<pre><code>pacman - S virtualbox-guest-utils
+gtf 1920 1080 60
+</code></pre>
+<h1 id="常用快捷键">常用快捷键</h1>
+<pre><code>Alt+Shift+E （推出i3）
+Alt+Shift+C （重新加载配置）
+Alt+Shift+R （重启i3）
+Alt+Shift+Q （退出window）
+Alt+shift+Blank （浮动/排列切换）
+
+Alt+Num （切换workspace）
+
+Alt+Enter （terminal）
+Alt+F （全屏）
+Alt+D （打开程序）
+Alt+E （横向纵向切换）
+Alt+W （标签形式）
+Alt+R （resize）
+Alt+ JKL; （光标移动：左下上右）
+
+Alt+H
+Alt+V
+</code></pre>
+<p><picture>
+  <source srcset="../img/1509647-20200727001934018-1810707600.webp" type="image/webp">
+  <img alt="" src="../img/1509647-20200727001934018-1810707600.png">
+</picture></p>
+<p>参考：<a href="https://i3wm.org/docs/userguide.html" rel="noopener nofollow" target="_blank">https://i3wm.org/docs/userguide.html</a></p>
+</div>
+            </div>
+
+            <!-- Post Footer -->
+            <div class="post-footer">
+                <div class="post-navigation">
+                    <a href="../blog_cn.html" class="nav-button">← Back to Home</a>
+                    <a href="0056.html" class="nav-button">Next Post →</a>
+                </div>
+            </div>
+        </article>
+    </div>
+</body>
+</html>

@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>linux服务器升级glibc故障恢复</title>
+    <link rel="stylesheet" href="../css/style3.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header Navigation -->
+        <div class="header">
+            <h1><a href="../blog_cn.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+        </div>
+
+        <!-- Post Container -->
+        <article class="post">
+            <!-- Post Header -->
+            <div class="post-header">
+                <h1>linux服务器升级glibc故障恢复</h1>
+                <div class="post-meta">
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📅</span>
+                        <span>January 24, 2019</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📖</span>
+                        <span>1 min read</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">👁️</span>
+                        <span>6078 views</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Post Content -->
+            <div class="post-content">
+                <div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<p>redhat6系统默认安装的glibc-2.12，有的软件依赖的是glibc-2.14，这时需要升级glibc，下载安装 http://ftp.gnu.org/gnu/glibc/glibc-2.14.tar.gz</p>
+<blockquote>
+<p># ./configure --prefix=/usr --disable-profile --enable-add-ons --with-headers=/usr/include --with-binutils=/usr/bin<br/># make<br/># make install</p>
+</blockquote>
+<p>结果make install报错，同时除了cd外各种命令都用不了，会报各种shared libraries: *: cannot open shared object file: No such file or directory</p>
+<blockquote>
+<p>ls: error while loading shared libraries: libselinux.so.1: cannot open shared object file: No such file or directory</p>
+</blockquote>
+<p>这些shared libraries都位于/lib64/下，而且此时机器无法远程登录，<br/>现在只有一个终端root账号登录在服务器上，除了能执行cd之外什么都做不了，omg<br/>各种google都无法解决，自己努力</p>
+<p>1 首先尝试从其他服务器远程传输/lib64/下的所有文件和link到本机，但是各种传输命令都不能用，比如nc、scp等</p>
+<p>2 其次怀疑有可能是link损坏，尝试手工重建报错的link</p>
+<blockquote>
+<p># ln - s libtinfo.so.5.7 libtinfo.so.5<br/>ln: creating symbolic link `libtinfo.so.5': File exists</p>
+</blockquote>
+<p>虽然ls不能用，但是看起来/lib64/下各种文件和link都还在，那为什么会报No such file or directory？</p>
+<p>3 再次通过export查看一下当前的环境变量（export还能用）：</p>
+<blockquote>
+<p># export<br/>declare - x LD_LIBRARY_PATH="/usr/local/lib"</p>
+</blockquote>
+<p>尝试修改LD_LIBRARY_PATH，增加/lib64：</p>
+<blockquote>
+<p>export LD_LIBRARY_PATH=/lib64:$LD_LIBRARY_PATH</p>
+</blockquote>
+<p>很多命令居然可以用了，这次glibc升级的过程是这样的，以其中一个library为例：</p>
+<p>安装之前：</p>
+<blockquote>
+<p>-rwxr-xr-x  1 root root  161776 Jun 19  2018 ld-2.12.so<br/>lrwxrwxrwx  1 root root      10 Jun 19  2018 ld-linux-x86-64.so.2 - &gt; ld-2.12.so</p>
+</blockquote>
+<p>安装之后：</p>
+<blockquote>
+<p>-rwxr-xr-x  1 root root  161776 Jun 19  2018 ld-2.12.so<br/>-rwxr-xr-x  1 root root  838308 Jan 24 15:41 ld-2.14.so<br/>lrwxrwxrwx  1 root root      10 Jan 24 16:28 ld-linux-x86-64.so.2 - &gt; ld-2.14.so</p>
+</blockquote>
+<p>将这次安装的改动回滚，即将所有的link都改为指回2.12版本</p>
+<blockquote>
+<p># ls - l /lib64|grep 2.14|grep lrw|awk '{print "ln - snf "$11" "$9}'|sed 's/2.14/2.12/g'<br/>ln - snf ld-2.12.so ld-linux-x86-64.so.2<br/>ln - snf libBrokenLocale-2.12.so libBrokenLocale.so.1<br/>ln - snf libanl-2.12.so libanl.so.1<br/>ln - snf libc-2.12.so libc.so.6<br/>ln - snf libcidn-2.12.so libcidn.so.1<br/>ln - snf libcrypt-2.12.so libcrypt.so.1<br/>ln - snf libdl-2.12.so libdl.so.2<br/>ln - snf libm-2.12.so libm.so.6<br/>ln - snf libnsl-2.12.so libnsl.so.1<br/>ln - snf libnss_compat-2.12.so libnss_compat.so.2<br/>ln - snf libnss_dns-2.12.so libnss_dns.so.2<br/>ln - snf libnss_files-2.12.so libnss_files.so.2<br/>ln - snf libnss_hesiod-2.12.so libnss_hesiod.so.2<br/>ln - snf libnss_nis-2.12.so libnss_nis.so.2<br/>ln - snf libnss_nisplus-2.12.so libnss_nisplus.so.2<br/>ln - snf libpthread-2.12.so libpthread.so.0<br/>ln - snf libresolv-2.12.so libresolv.so.2<br/>ln - snf librt-2.12.so librt.so.1<br/>ln - snf libutil-2.12.so libutil.so.1</p>
+</blockquote>
+<p>全部执行一遍，故障恢复，各种命令都可以使用，机器也恢复远程登录。</p>
+</div>
+            </div>
+
+            <!-- Post Footer -->
+            <div class="post-footer">
+                <div class="post-navigation">
+                    <a href="../blog_cn.html" class="nav-button">← Back to Home</a>
+                    <a href="0251.html" class="nav-button">Next Post →</a>
+                </div>
+            </div>
+        </article>
+    </div>
+</body>
+</html>

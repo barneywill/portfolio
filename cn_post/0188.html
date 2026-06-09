@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OpenResty(Nginx+Lua)+Kafka</title>
+    <link rel="stylesheet" href="../css/style3.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header Navigation -->
+        <div class="header">
+            <h1><a href="../blog_cn.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+        </div>
+
+        <!-- Post Container -->
+        <article class="post">
+            <!-- Post Header -->
+            <div class="post-header">
+                <h1>OpenResty(Nginx+Lua)+Kafka</h1>
+                <div class="post-meta">
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📅</span>
+                        <span>March 08, 2019</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📖</span>
+                        <span>5 min read</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">👁️</span>
+                        <span>2137 views</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Post Content -->
+            <div class="post-content">
+                <div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<p>使用docker部署</p>
+<h1>1 下载</h1>
+<blockquote>
+<p># wget https://github.com/doujiang24/lua-resty-kafka/archive/v0.06.tar.gz<br/># tar xvf v0.06.tar.gz</p>
+</blockquote>
+<h1>2 准备配置文件testkafka.conf</h1>
+<p># vi testkafka.conf</p>
+<div class="cnblogs_code">
+<pre>    lua_package_path <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">/usr/local/openresty/lualib/resty/kafka/?.lua;;</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">;
+    lua_need_request_body on;
+    server {
+        listen </span><span style="color: rgba(128, 0, 128, 1)">80</span><span style="color: rgba(0, 0, 0, 1)">;
+        server_name testkafka;
+        location </span>/<span style="color: rgba(0, 0, 0, 1)">test {
+            content_by_lua </span><span style="color: rgba(128, 0, 0, 1)">'
+</span>                <span style="color: rgba(0, 0, 255, 1)">local</span> testfile = <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">/tmp/test.log</span><span style="color: rgba(128, 0, 0, 1)">"</span> 
+
+                <span style="color: rgba(0, 0, 255, 1)">local</span> cjson = <span style="color: rgba(255, 0, 255, 1)">require</span> <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">cjson</span><span style="color: rgba(128, 0, 0, 1)">"</span>
+                <span style="color: rgba(0, 0, 255, 1)">local</span> client = <span style="color: rgba(255, 0, 255, 1)">require</span> <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">resty.kafka.client</span><span style="color: rgba(128, 0, 0, 1)">"</span>
+                <span style="color: rgba(0, 0, 255, 1)">local</span> producer = <span style="color: rgba(255, 0, 255, 1)">require</span> <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">resty.kafka.producer</span><span style="color: rgba(128, 0, 0, 1)">"</span>
+
+                <span style="color: rgba(0, 0, 255, 1)">local</span> broker_list =<span style="color: rgba(0, 0, 0, 1)"> {
+                    { host </span>= <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">127.0.0.1</span><span style="color: rgba(128, 0, 0, 1)">"</span>, port = <span style="color: rgba(128, 0, 128, 1)">9092</span><span style="color: rgba(0, 0, 0, 1)"> }
+                }
+
+                </span><span style="color: rgba(0, 0, 255, 1)">local</span> topic = <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">test</span><span style="color: rgba(128, 0, 0, 1)">"</span>
+                <span style="color: rgba(0, 0, 255, 1)">local</span> key = <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">key</span><span style="color: rgba(128, 0, 0, 1)">"</span>
+                <span style="color: rgba(0, 0, 255, 1)">local</span> message = <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">halo world</span><span style="color: rgba(128, 0, 0, 1)">"</span>
+
+                <span style="color: rgba(0, 128, 0, 1)">--</span><span style="color: rgba(0, 128, 0, 1)"> usually we do not use this library directly</span>
+                <span style="color: rgba(0, 0, 255, 1)">local</span> cli =<span style="color: rgba(0, 0, 0, 1)"> client:new(broker_list)
+                </span><span style="color: rgba(0, 0, 255, 1)">local</span> brokers, partitions =<span style="color: rgba(0, 0, 0, 1)"> cli:fetch_metadata(topic)
+                </span><span style="color: rgba(0, 0, 255, 1)">if</span> <span style="color: rgba(0, 0, 255, 1)">not</span> brokers <span style="color: rgba(0, 0, 255, 1)">then</span><span style="color: rgba(0, 0, 0, 1)">
+                    ngx.say(</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">fetch_metadata failed, err:</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">, partitions)
+                </span><span style="color: rgba(0, 0, 255, 1)">end</span>
+                <span style="color: rgba(0, 128, 0, 1)">--</span><span style="color: rgba(0, 128, 0, 1)">ngx.say("brokers: ", cjson.encode(brokers), "; partitions: ", cjson.encode(partitions))</span>
+
+
+                <span style="color: rgba(0, 128, 0, 1)">--</span><span style="color: rgba(0, 128, 0, 1)"> sync producer_type</span>
+                <span style="color: rgba(0, 0, 255, 1)">local</span> p =<span style="color: rgba(0, 0, 0, 1)"> producer:new(broker_list)
+
+                </span><span style="color: rgba(0, 0, 255, 1)">local</span> f = <span style="color: rgba(255, 0, 255, 1)">io.open</span>(testfile, <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">a+</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">)
+                f:write(topic .. </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">:</span><span style="color: rgba(128, 0, 0, 1)">"</span> .. key .. <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">:</span><span style="color: rgba(128, 0, 0, 1)">"</span> .. message .. <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">\\n</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">)
+                f:close()
+
+                </span><span style="color: rgba(0, 0, 255, 1)">local</span> offset, err =<span style="color: rgba(0, 0, 0, 1)"> p:send(topic, key, message)
+                </span><span style="color: rgba(0, 0, 255, 1)">if</span> <span style="color: rgba(0, 0, 255, 1)">not</span> offset <span style="color: rgba(0, 0, 255, 1)">then</span><span style="color: rgba(0, 0, 0, 1)">
+                    ngx.say(</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">send err:</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">, err)
+                    </span><span style="color: rgba(0, 0, 255, 1)">return</span>
+                <span style="color: rgba(0, 0, 255, 1)">end</span><span style="color: rgba(0, 0, 0, 1)">
+                ngx.say(</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">send success, offset: </span><span style="color: rgba(128, 0, 0, 1)">"</span>, <span style="color: rgba(255, 0, 255, 1)">tonumber</span><span style="color: rgba(0, 0, 0, 1)">(offset))
+
+                </span><span style="color: rgba(0, 128, 0, 1)">--</span><span style="color: rgba(0, 128, 0, 1)"> this is async producer_type and bp will be reused in the whole nginx worker</span>
+                <span style="color: rgba(0, 0, 255, 1)">local</span> bp = producer:new(broker_list, { producer_type = <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">async</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)"> })
+
+                </span><span style="color: rgba(0, 0, 255, 1)">local</span> ok, err =<span style="color: rgba(0, 0, 0, 1)"> bp:send(topic, key, message)
+                </span><span style="color: rgba(0, 0, 255, 1)">if</span> <span style="color: rgba(0, 0, 255, 1)">not</span> ok <span style="color: rgba(0, 0, 255, 1)">then</span><span style="color: rgba(0, 0, 0, 1)">
+                    ngx.say(</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">send err:</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">, err)
+                    </span><span style="color: rgba(0, 0, 255, 1)">return</span>
+                <span style="color: rgba(0, 0, 255, 1)">end</span><span style="color: rgba(0, 0, 0, 1)">
+
+                ngx.say(</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">host : </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">, ngx.var.host)
+                ngx.say(</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">uri : </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">, ngx.var.uri)
+                ngx.say(</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">args : </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">, ngx.var.args)
+                ngx.say(</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">body : </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">, ngx.req.get_body_data())
+                ngx.say(</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">client ip : </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">, ngx.var.remote_addr)
+                ngx.say(</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">time : </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">, ngx.var.time_local)
+                ngx.say(</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">send success, ok:</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">, ok)
+            </span><span style="color: rgba(128, 0, 0, 1)">'</span><span style="color: rgba(128, 0, 0, 1)">;</span>
+<span style="color: rgba(0, 0, 0, 1)">        }
+    }</span></pre>
+</div>
+<p>功能：发送kafka、写日志到/tmp/test.log，打印请求信息</p>
+<p>修改其中broker的ip和端口，以及topic名；</p>
+<h1>3 启动docker</h1>
+<blockquote>
+<p>$ docker - d - p 80:80 - v /path/to/testkafka.conf:/etc/nginx/conf.d/testkafka.conf - v /path/to/lua-resty-kafka-0.06/lib/resty/kafka:/usr/local/openresty/lualib/resty/kafka openresty/openresty</p>
+</blockquote>
+<p>挂载testkafka.conf以及kafka lib目录</p>
+<h1>4 测试</h1>
+<blockquote>
+<p># curl 'http://testkafka/test?a=1&amp;b=2' - d 'hello' - x 127.0.0.1:82<br/>send success, offset: 13<br/>host : testkafka<br/>uri : /test<br/>args : a=1&amp;b=2<br/>body : hello<br/>client ip : 172.17.0.1<br/>time : 08/Mar/2019:14:26:20 +0000<br/>send success, ok:true</p>
+</blockquote>
+<h1>5 更多</h1>
+<p>1）可以将nginx访问日志发送到kafka</p>
+<p>2）可以将请求数据作为消息发送到kafka（从uri中的path解析出topic）</p>
+<h1>6 报错</h1>
+<p>有可能报错：no resolver defined to resolve</p>
+<p>这是因为kafka broker配置的是hostname，而不是ip，而nginx遇到hostname必须通过dns解析，而不能依靠/etc/hosts来解析，所以会报以上错误，这时有两种解决方法：</p>
+<p>1）安装dnsmasq；</p>
+<p>2）修改kafka配置中的advertised.host.name，将其修改为ip即可；</p>
+<p> </p>
+<p>参考：https://github.com/doujiang24/lua-resty-kafka</p>
+<p> </p>
+</div>
+            </div>
+
+            <!-- Post Footer -->
+            <div class="post-footer">
+                <div class="post-navigation">
+                    <a href="../blog_cn.html" class="nav-button">← Back to Home</a>
+                    <a href="0189.html" class="nav-button">Next Post →</a>
+                </div>
+            </div>
+        </article>
+    </div>
+</body>
+</html>

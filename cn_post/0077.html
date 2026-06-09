@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>windows安装oracle客户端</title>
+    <link rel="stylesheet" href="../css/style3.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header Navigation -->
+        <div class="header">
+            <h1><a href="../blog_cn.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+        </div>
+
+        <!-- Post Container -->
+        <article class="post">
+            <!-- Post Header -->
+            <div class="post-header">
+                <h1>windows安装oracle客户端</h1>
+                <div class="post-meta">
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📅</span>
+                        <span>December 31, 2019</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📖</span>
+                        <span>1 min read</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">👁️</span>
+                        <span>442 views</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Post Content -->
+            <div class="post-content">
+                <div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<h1>1 下载安装plsql</h1>
+<p>官方下载地址：https://www.allroundautomations.com/plsqldev.html</p>
+<p>注册码：</p>
+<blockquote>
+<p>product code： 4vkjwhfeh3ufnqnmpr9brvcuyujrx3n3le <br/>serial Number：226959 <br/>password: xs374ca</p>
+</blockquote>
+<h1>2 下载oracle客户端</h1>
+<p>官方下载地址：https://www.oracle.com/database/technologies/instant-client/winx64-64-downloads.html</p>
+<p>Basic Package（zip）</p>
+<p>SQL*Plus Package（zip）</p>
+<p>解压后将目录合并得到</p>
+<p>instantclient_19_5</p>
+<h1>3 将oracle client目录移动到plsql下</h1>
+<p>移动instantclient_19_5到plsql安装目录（比如D:\Program Files\PLSQL Developer 13）下</p>
+<p>在instantclient_19_5下新建目录和文件network/admin/tnsnames.ora</p>
+<div class="cnblogs_code">
+<pre>alias =<span style="color: rgba(0, 0, 0, 1)">
+ (DESCRIPTION </span>=<span style="color: rgba(0, 0, 0, 1)">
+ (ADDRESS </span>= (PROTOCOL = TCP)(HOST = 192.168.1.1)(PORT = 1521<span style="color: rgba(0, 0, 0, 1)">))
+  (CONNECT_DATA </span>=<span style="color: rgba(0, 0, 0, 1)">
+   (SERVER </span>=<span style="color: rgba(0, 0, 0, 1)"> DEDICATED)
+   (SERVICE_NAME </span>=<span style="color: rgba(0, 0, 0, 1)"> orcl)
+  )
+ )</span></pre>
+</div>
+<p>注意windows下一定要显示文件后缀，有可能的坑是文件看起来是tnsnames.ora，实际是tnsnames.ora.txt，这会导致配置失败</p>
+<h1>4 设置环境变量</h1>
+<blockquote>
+<p>ORACLE_HOME=D:\Program Files\PLSQL Developer 13\instantclient_19_5<br/>TNS_ADMIN=D:\Program Files\PLSQL Developer 13\instantclient_19_5\network\admin<br/>NLS_LANG=SIMPLIFIED CHINESE_CHINA.AL32UTF8</p>
+</blockquote>
+<h1>5 设置plsql</h1>
+<p>菜单Config-Perferences</p>
+<p>Oracle-Connection</p>
+<p>设置</p>
+<blockquote>
+<p>Oracle Home=D:\Program Files\PLSQL Developer 13\instantclient_19_5</p>
+<p>OCI Library=D:\Program Files\PLSQL Developer 13\instantclient_19_5\oci.dll</p>
+</blockquote>
+<h1>6 启动plsql</h1>
+<p><picture>
+  <source srcset="../img/1509647-20191231162424484-641429228.webp" type="image/webp">
+  <img alt="" src="../img/1509647-20191231162424484-641429228.png">
+</picture></p>
+</div>
+            </div>
+
+            <!-- Post Footer -->
+            <div class="post-footer">
+                <div class="post-navigation">
+                    <a href="../blog_cn.html" class="nav-button">← Back to Home</a>
+                    <a href="0078.html" class="nav-button">Next Post →</a>
+                </div>
+            </div>
+        </article>
+    </div>
+</body>
+</html>

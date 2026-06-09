@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>为什么hive在大表上加条件后执行limit很慢</title>
+    <link rel="stylesheet" href="../css/style3.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header Navigation -->
+        <div class="header">
+            <h1><a href="../blog_cn.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+        </div>
+
+        <!-- Post Container -->
+        <article class="post">
+            <!-- Post Header -->
+            <div class="post-header">
+                <h1>为什么hive在大表上加条件后执行limit很慢</h1>
+                <div class="post-meta">
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📅</span>
+                        <span>December 12, 2018</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📖</span>
+                        <span>2 min read</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">👁️</span>
+                        <span>2798 views</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Post Content -->
+            <div class="post-content">
+                <div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<p>问题重现</p>
+<blockquote>
+<p>select id from big_table where name = 'sdlkfjalksdjfla' limit 100;</p>
+</blockquote>
+<p>首先看执行计划：</p>
+<blockquote>
+<p>hive&gt; explain select * from big_table where name = 'sdlkfjalksdjfla' limit 100;</p>
+<p>OK</p>
+<p>STAGE DEPENDENCIES:</p>
+<p>  Stage-0 is a root stage</p>
+<p> </p>
+<p>STAGE PLANS:</p>
+<p>  Stage: Stage-0</p>
+<p><strong>    Fetch Operator</strong></p>
+<p>      limit: 100</p>
+<p>      Processor Tree:</p>
+<p>        TableScan</p>
+<p>          alias: big_table </p>
+<p>          Statistics: Num rows: 7497189457 Data size: 1499437891589 Basic stats: COMPLETE Column stats: NONE</p>
+<p>          Filter Operator</p>
+<p>            predicate: (name = 'sdlkfjalksdjfla') (type: boolean)</p>
+<p>            Statistics: Num rows: 3748594728 Data size: 749718945694 Basic stats: COMPLETE Column stats: NONE</p>
+<p>            Select Operator</p>
+<p>              expressions: id (type: string)</p>
+<p>              outputColumnNames: _col0</p>
+<p>              Statistics: Num rows: 3748594728 Data size: 749718945694 Basic stats: COMPLETE Column stats: NONE</p>
+<p>              Limit</p>
+<p>                Number of rows: 100</p>
+<p>                Statistics: Num rows: 100 Data size: 20000 Basic stats: COMPLETE Column stats: NONE</p>
+<p>                ListSink</p>
+<p> </p>
+<p>Time taken: 0.668 seconds, Fetched: 23 row(s)</p>
+</blockquote>
+<p>可见只有一个stage，即Fetch Operator，再看执行过程：</p>
+<blockquote>
+<p>   java.lang.Thread.State: RUNNABLE</p>
+<p>        at <a class="external-link" href="http://sun.nio.ch/" rel="noopener nofollow">sun.nio.ch</a>.EPollArrayWrapper.epollWait(Native Method)</p>
+<p>        at <a class="external-link" href="http://sun.nio.ch/" rel="noopener nofollow">sun.nio.ch</a>.EPollArrayWrapper.poll(EPollArrayWrapper.java:269)</p>
+<p>        at <a class="external-link" href="http://sun.nio.ch/" rel="noopener nofollow">sun.nio.ch</a>.EPollSelectorImpl.doSelect(EPollSelectorImpl.java:79)</p>
+<p>        at <a class="external-link" href="http://sun.nio.ch/" rel="noopener nofollow">sun.nio.ch</a>.SelectorImpl.lockAndDoSelect(SelectorImpl.java:86)</p>
+<p>        - locked &lt;0x00000006c1e00cd8&gt; (a <a class="external-link" href="http://sun.nio.ch/" rel="noopener nofollow">sun.nio.ch</a>.Util$2)</p>
+<p>        - locked &lt;0x00000006c1e00cc8&gt; (a java.util.Collections$UnmodifiableSet)</p>
+<p>        - locked &lt;0x00000006c1e00aa0&gt; (a <a class="external-link" href="http://sun.nio.ch/" rel="noopener nofollow">sun.nio.ch</a>.EPollSelectorImpl)</p>
+<p>        at <a class="external-link" href="http://sun.nio.ch/" rel="noopener nofollow">sun.nio.ch</a>.SelectorImpl.select(SelectorImpl.java:97)</p>
+<p>        at <a class="external-link" href="http://org.apache.hadoop.net/" rel="noopener nofollow">org.apache.hadoop.net</a>.SocketIOWithTimeout$SelectorPool.select(SocketIOWithTimeout.java:335)</p>
+<p>        at <a class="external-link" href="http://org.apache.hadoop.net/" rel="noopener nofollow">org.apache.hadoop.net</a>.SocketIOWithTimeout.doIO(SocketIOWithTimeout.java:157)</p>
+<p>        at <a class="external-link" href="http://org.apache.hadoop.net/" rel="noopener nofollow">org.apache.hadoop.net</a>.SocketInputStream.read(SocketInputStream.java:161)</p>
+<p>        at org.apache.hadoop.hdfs.protocol.datatransfer.PacketReceiver.readChannelFully(PacketReceiver.java:258)</p>
+<p>        at org.apache.hadoop.hdfs.protocol.datatransfer.PacketReceiver.doReadFully(PacketReceiver.java:209)</p>
+<p>        at org.apache.hadoop.hdfs.protocol.datatransfer.PacketReceiver.doRead(PacketReceiver.java:171)</p>
+<p>        at org.apache.hadoop.hdfs.protocol.datatransfer.PacketReceiver.receiveNextPacket(PacketReceiver.java:102)</p>
+<p>        at org.apache.hadoop.hdfs.RemoteBlockReader2.readNextPacket(RemoteBlockReader2.java:186)</p>
+<p>        at org.apache.hadoop.hdfs.RemoteBlockReader2.read(RemoteBlockReader2.java:146)</p>
+<p>        - locked &lt;0x000000076b9bccb0&gt; (a org.apache.hadoop.hdfs.RemoteBlockReader2)</p>
+<p>        at org.apache.hadoop.hdfs.BlockReaderUtil.readAll(BlockReaderUtil.java:32)</p>
+<p>        at org.apache.hadoop.hdfs.RemoteBlockReader2.readAll(RemoteBlockReader2.java:363)</p>
+<p>        at org.apache.hadoop.hdfs.DFSInputStream.actualGetFromOneDataNode(DFSInputStream.java:1072)</p>
+<p>        at org.apache.hadoop.hdfs.DFSInputStream.fetchBlockByteRange(DFSInputStream.java:1000)</p>
+<p>        at org.apache.hadoop.hdfs.DFSInputStream.read(DFSInputStream.java:1333)</p>
+<p>        at org.apache.hadoop.fs.FSInputStream.readFully(FSInputStream.java:78)</p>
+<p>        <strong>at org.apache.hadoop.fs.FSDataInputStream.readFully(FSDataInputStream.java:107)</strong></p>
+<p>        at org.apache.orc.impl.RecordReaderUtils$DefaultDataReader.readStripeFooter(RecordReaderUtils.java:166)</p>
+<p>        at org.apache.orc.impl.RecordReaderImpl.readStripeFooter(RecordReaderImpl.java:239)</p>
+<p>        at org.apache.orc.impl.RecordReaderImpl.beginReadStripe(RecordReaderImpl.java:858)</p>
+<p>        at org.apache.orc.impl.RecordReaderImpl.readStripe(RecordReaderImpl.java:829)</p>
+<p>        at org.apache.orc.impl.RecordReaderImpl.advanceStripe(RecordReaderImpl.java:986)</p>
+<p>        at org.apache.orc.impl.RecordReaderImpl.advanceToNextRow(RecordReaderImpl.java:1021)</p>
+<p>        at org.apache.orc.impl.RecordReaderImpl.nextBatch(RecordReaderImpl.java:1057)</p>
+<p>        at <a class="external-link" href="http://org.apache.hadoop.hive.ql.io/" rel="noopener nofollow">org.apache.hadoop.hive.ql.io</a>.orc.RecordReaderImpl.ensureBatch(RecordReaderImpl.java:77)</p>
+<p>        at <a class="external-link" href="http://org.apache.hadoop.hive.ql.io/" rel="noopener nofollow">org.apache.hadoop.hive.ql.io</a>.orc.RecordReaderImpl.hasNext(RecordReaderImpl.java:89)</p>
+<p>        at <a class="external-link" href="http://org.apache.hadoop.hive.ql.io/" rel="noopener nofollow">org.apache.hadoop.hive.ql.io</a>.orc.OrcInputFormat$OrcRecordReader.next(OrcInputFormat.java:231)</p>
+<p>        at <a class="external-link" href="http://org.apache.hadoop.hive.ql.io/" rel="noopener nofollow">org.apache.hadoop.hive.ql.io</a>.orc.OrcInputFormat$OrcRecordReader.next(OrcInputFormat.java:206)</p>
+<p>        <strong>at org.apache.hadoop.hive.ql.exec.FetchOperator.getNextRow(FetchOperator.java:488)</strong></p>
+<p>        at org.apache.hadoop.hive.ql.exec.FetchOperator.pushRow(FetchOperator.java:428)</p>
+<p>        at org.apache.hadoop.hive.ql.exec.FetchTask.fetch(FetchTask.java:146)</p>
+<p>        <strong>at org.apache.hadoop.hive.ql.Driver.getResults(Driver.java:2098)</strong></p>
+<p>        at org.apache.hadoop.hive.cli.CliDriver.processLocalCmd(CliDriver.java:252)</p>
+<p>        at org.apache.hadoop.hive.cli.CliDriver.processCmd(CliDriver.java:183)</p>
+<p>        at org.apache.hadoop.hive.cli.CliDriver.processLine(CliDriver.java:399)</p>
+<p>        at org.apache.hadoop.hive.cli.CliDriver.executeDriver(CliDriver.java:776)</p>
+<p>        at org.apache.hadoop.hive.cli.CliDriver.run(CliDriver.java:714)</p>
+<p>        at org.apache.hadoop.hive.cli.CliDriver.main(CliDriver.java:641)</p>
+<p>        at sun.reflect.NativeMethodAccessorImpl.invoke0(Native Method)</p>
+<p>        at sun.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:62)</p>
+<p>        at sun.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)</p>
+<p>        at java.lang.reflect.Method.invoke(Method.java:497)</p>
+<p>        at org.apache.hadoop.util.RunJar.run(RunJar.java:221)</p>
+<p>        at org.apache.hadoop.util.RunJar.main(RunJar.java:136)</p>
+</blockquote>
+<p>可见并没有提交远程job而是在本地直接做table scan，如果是在一个大表上加复杂查询条件再做limit就会很慢，因为极有可能需要全表扫描之后才能收集到所需结果（limit条数），这也是为什么对大表不加条件直接limit反而很快的原因。</p>
+<p>如果想修改这种行为，需要修改如下配置：</p>
+<blockquote>
+<p>hive.fetch.task.conversion</p>
+<p>Some select queries can be converted to a single FETCH task, minimizing latency. Currently the query should be single sourced not having any subquery and should not have any aggregations or distincts (which incur RS – ReduceSinkOperator, requiring a MapReduce task), lateral views and joins.</p>
+<p>Supported values are none, minimal and more.<br/>0. none:  Disable hive.fetch.task.conversion<br/>1. minimal:  SELECT *, FILTER on partition columns (WHERE and HAVING clauses), LIMIT only<br/>2. more:  SELECT, FILTER, LIMIT only (including TABLESAMPLE, virtual columns)</p>
+</blockquote>
+<p>这个配置会尝试将query转换为一个fetch任务；</p>
+<p>默认为more，将其改为none再执行上边的sql，就会提交到yarn上执行</p>
+<blockquote>
+<p>set hive.fetch.task.conversion=none;</p>
+</blockquote>
+<p> 相关的配置还有一个</p>
+<blockquote>
+<p>hive.fetch.task.conversion.threshold</p>
+<p>Input threshold (in bytes) for applying hive.fetch.task.conversion. If target table is native, input length is calculated by summation of file lengths. If it's not native, the storage handler for the table can optionally implement the org.apache.hadoop.hive.ql.metadata.InputEstimator interface. A negative threshold means hive.fetch.task.conversion is applied without any input length threshold.</p>
+</blockquote>
+<p>默认为1073741824 (1 GB)</p>
+<p> </p>
+</div>
+            </div>
+
+            <!-- Post Footer -->
+            <div class="post-footer">
+                <div class="post-navigation">
+                    <a href="../blog_cn.html" class="nav-button">← Back to Home</a>
+                    <a href="0339.html" class="nav-button">Next Post →</a>
+                </div>
+            </div>
+        </article>
+    </div>
+</body>
+</html>

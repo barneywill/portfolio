@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>yarn开启日志归集</title>
+    <link rel="stylesheet" href="../css/style3.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header Navigation -->
+        <div class="header">
+            <h1><a href="../blog_cn.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+        </div>
+
+        <!-- Post Container -->
+        <article class="post">
+            <!-- Post Header -->
+            <div class="post-header">
+                <h1>yarn开启日志归集</h1>
+                <div class="post-meta">
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📅</span>
+                        <span>April 01, 2019</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📖</span>
+                        <span>1 min read</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">👁️</span>
+                        <span>670 views</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Post Content -->
+            <div class="post-content">
+                <div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<p>yarn开启日志归集功能，除了配置之外</p>
+<blockquote>
+<p>yarn.log-aggregation-enable=true</p>
+</blockquote>
+<p>还要检查/tmp/logs目录是否存在以及权限，尤其是在开启kerberos之后，有些目录可能不能自动创建成功，需要手工创建：</p>
+<blockquote>
+<p>$ hdfs dfs - mkdir /tmp<br/>$ hdfs dfs - chmod 777 /tmp</p>
+</blockquote>
+<p>每个应用的hdfs日志目录：</p>
+<blockquote>
+<p>/tmp/logs/$user/logs/$applicationId</p>
+</blockquote>
+<p>如果上述日志目录存在但是还是查不出来</p>
+<blockquote>
+<p>Log aggregation has not completed or is not enabled.</p>
+</blockquote>
+<p>可能是因为用户权限，可以切换到对应的用户再查询</p>
+<blockquote>
+<p># sudo - u $user yarn logs - applicationid=$applicationId</p>
+</blockquote>
+<p> </p>
+</div>
+            </div>
+
+            <!-- Post Footer -->
+            <div class="post-footer">
+                <div class="post-navigation">
+                    <a href="../blog_cn.html" class="nav-button">← Back to Home</a>
+                    <a href="0155.html" class="nav-button">Next Post →</a>
+                </div>
+            </div>
+        </article>
+    </div>
+</body>
+</html>

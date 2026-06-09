@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quartz 1 - 简介、源代码解析</title>
+    <link rel="stylesheet" href="../css/style3.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header Navigation -->
+        <div class="header">
+            <h1><a href="../blog_cn.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+        </div>
+
+        <!-- Post Container -->
+        <article class="post">
+            <!-- Post Header -->
+            <div class="post-header">
+                <h1>Quartz 1 - 简介、源代码解析</h1>
+                <div class="post-meta">
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📅</span>
+                        <span>November 02, 2018</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📖</span>
+                        <span>1 min read</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">👁️</span>
+                        <span>649 views</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Post Content -->
+            <div class="post-content">
+                <div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<h1>一简介</h1>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201811/1509647-20181107111736495-981356419.png"/></p>
+<p> </p>
+<h2>官网</h2>
+<p><a href="http://www.quartz-scheduler.org/" rel="noopener nofollow">http://www.quartz-scheduler.org/</a></p>
+<p>What is the Quartz Job Scheduling Library?</p>
+<p>Quartz is a <a href="http://www.quartz-scheduler.org/overview/features.html" rel="noopener nofollow">richly featured</a>, open source job scheduling library that can be integrated within virtually any Java application - from the smallest stand-alone application to the largest e-commerce system. Quartz can be used to create simple or complex schedules for executing tens, hundreds, or even tens-of-thousands of jobs; jobs whose tasks are defined as standard Java components that may execute virtually anything you may program them to do. The Quartz Scheduler includes many enterprise-class features, such as support for JTA transactions and clustering.</p>
+<h1>二 代码解析</h1>
+<h2>开启分布式</h2>
+<p>org.quartz.jobStore.class=org.quartz.impl.jdbcjobstore.JobStoreTX</p>
+<p>org.quartz.jobStore.isClustered=true</p>
+<h2>启动过程</h2>
+<p><strong>QuartzScheduler.start</strong></p>
+<p><strong>         QuartzSchedulerResources.getJobStore</strong></p>
+<p><strong>                  StdSchedulerFactory.instantiate (org.quartz.jobStore.class)</strong></p>
+<p><strong>                          JobStoreSupport.setLockHandler (org.quartz.jobStore.lockHandler.class)</strong></p>
+<p><strong>                          JobStoreSupport.initialize</strong></p>
+<p><strong>                                   setLockHandler (StdRowLockSemaphore)</strong></p>
+<p><strong>         JobStoreSupport.schedulerStarted</strong></p>
+<p><strong>                  ClusterManager.initialize</strong></p>
+<p><strong>                          run</strong></p>
+<p><strong>                                   manage</strong></p>
+<p><strong>                                            doCheckin</strong></p>
+<p><strong>                                                     clusterCheckIn</strong></p>
+<p><strong>                                                     Semaphore.obtainLock</strong></p>
+<p><strong>                                                             StdRowLockSemaphore.executeSQL (select for update and insert)</strong></p>
+<p><strong>                                                     clusterRecover</strong></p>
+<p><strong>                          signalSchedulingChangeImmediately</strong></p>
+<p><strong>                                   SchedulerSignaler.signalSchedulingChange</strong></p>
+<p><strong>                                            QuartzSchedulerThread.signalSchedulingChange</strong></p>
+<p><strong> </strong></p>
+<p><strong>QuartzSchedulerThread.run</strong></p>
+<p><strong>         JobStore.acquireNextTriggers</strong></p>
+<p><strong>         JobStore.triggersFired</strong></p>
+<p> </p>
+<p><strong>各种建表语句地址：https://gitlab.com/quartz-scheduler/quartz/-/tree/master/quartz-core/src/main/resources/org/quartz/impl/jdbcjobstore</strong></p>
+</div>
+            </div>
+
+            <!-- Post Footer -->
+            <div class="post-footer">
+                <div class="post-navigation">
+                    <a href="../blog_cn.html" class="nav-button">← Back to Home</a>
+                    <a href="0355.html" class="nav-button">Next Post →</a>
+                </div>
+            </div>
+        </article>
+    </div>
+</body>
+</html>

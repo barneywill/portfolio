@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>阿里云主机磁盘扩容</title>
+    <link rel="stylesheet" href="../css/style3.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header Navigation -->
+        <div class="header">
+            <h1><a href="../blog_cn.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+        </div>
+
+        <!-- Post Container -->
+        <article class="post">
+            <!-- Post Header -->
+            <div class="post-header">
+                <h1>阿里云主机磁盘扩容</h1>
+                <div class="post-meta">
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📅</span>
+                        <span>December 15, 2019</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📖</span>
+                        <span>1 min read</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">👁️</span>
+                        <span>418 views</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Post Content -->
+            <div class="post-content">
+                <div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<p>控制台操作磁盘扩容后</p>
+<p>1 安装</p>
+<blockquote>
+<p># yum install cloud-utils-growpart<br/># yum install xfsprogs</p>
+</blockquote>
+<p>2 查看所有磁盘</p>
+<blockquote>
+<p># fdisk - l</p>
+</blockquote>
+<p>3 查看分区大小</p>
+<blockquote>
+<p># df - h</p>
+</blockquote>
+<p>4 磁盘扩容</p>
+<blockquote>
+<p># growpart /dev/vda 1</p>
+</blockquote>
+<p>格式：growpart <var class="keyword varname" id="varname-rz5-5bk-x4u">&lt;DeviceName&gt;</var><var class="keyword varname" id="varname-llw-ka3-mmz"> &lt;PartionNumber&gt;</var></p>
+<p>5 分区扩容</p>
+<blockquote>
+<p># resize2fs /dev/vda1</p>
+</blockquote>
+<p>格式：resize2fs <var class="keyword varname" id="varname-tg9-2am-a9n">&lt;PartitionName&gt;</var></p>
+<p>6 确认</p>
+<blockquote>
+<p># df - h</p>
+</blockquote>
+<p> </p>
+<p>参考：https://help.aliyun.com/document_detail/111738.html?spm=a2c4g.11186623.2.30.4ad77f67UvYpVl#concept-ocb-htw-dhb</p>
+</div>
+            </div>
+
+            <!-- Post Footer -->
+            <div class="post-footer">
+                <div class="post-navigation">
+                    <a href="../blog_cn.html" class="nav-button">← Back to Home</a>
+                    <a href="0083.html" class="nav-button">Next Post →</a>
+                </div>
+            </div>
+        </article>
+    </div>
+</body>
+</html>

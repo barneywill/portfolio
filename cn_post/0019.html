@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>kafka执行reassign后部分partition一直is still in progress</title>
+    <link rel="stylesheet" href="../css/style3.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header Navigation -->
+        <div class="header">
+            <h1><a href="../blog_cn.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+        </div>
+
+        <!-- Post Container -->
+        <article class="post">
+            <!-- Post Header -->
+            <div class="post-header">
+                <h1>kafka执行reassign后部分partition一直is still in progress</h1>
+                <div class="post-meta">
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📅</span>
+                        <span>May 19, 2022</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📖</span>
+                        <span>2 min read</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">👁️</span>
+                        <span>586 views</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Post Content -->
+            <div class="post-content">
+                <div class="blogpost-body cnblogs-markdown" id="cnblogs_post_body">
+<h1 id="背景">背景</h1>
+<p>kafka执行reassign后部分partition一直is still in progress，日志如下：</p>
+<p><picture>
+  <source srcset="../img/1509647-20220519173048171-1664228948.webp" type="image/webp">
+  <img alt="" src="../img/1509647-20220519173048171-1664228948.png">
+</picture></p>
+<h1 id="定位">定位</h1>
+<p>经排查发现问题原因是做reassign的时候，将分区从相同broker的一个盘移动到另一个盘，这个操作目前还不被支持，官方解释如下</p>
+<blockquote>
+<ol>
+<li>How to move replica between log directories on the same broker<br/>
+Problem statement:<br/>
+Kafka doesn’t not allow user to move replica to another log directory on the same broker in runtime. This is not needed previously because we use RAID-10 and the load is already balanced across disks. But it will be needed to use JBOD with Kafka.<br/>
+Currently a replica only has two possible states, follower or leader. And it is identified by the 3-tuple (topic, partition, broker). This works for the current implementation because there can be at most one such replica on a broker. However, now we can have two such replicas on a broker when we move replica from one log directory to another log directory on the same broker. Either a replica should be identified by its log directory as well, or the broker needs to persist information under the log directory to tell the destination replica from source replica that is being moved.<br/>
+In addition, user needs to be able to query list of partitions and their size per log directory on any machine so that they can determine how to move replicas to balance the load. While these information may be retrieved via external tools if user can ssh to the machine that is running the Kafka broker, development of such tools may not be easy on all the operating systems that Kafka may run on. Further, a user may not even have the authorization to access the machine. Therefore Kafka needs to provide new request/response to provide this information to users.<br/>
+Solution:<br/>
+The idea is that user can send a AlterReplicaDirRequest which tells broker to move topicPartition directory (which contains all log segments of the topicPartition replica) from the source log directory to a destination log directory. Broker can create a new directory with .move postfix on the destination log directory to hold all log segments of the replica. This allows broker to tell log segments of the replica on the destination log directory from log segments of the replica on the source log directory during broker startup. The broker can create new log segments for the replica on the destination log directory, push data from source log to the destination log, and replace source log with the destination log for this replica once the new log has caught up.</li>
+</ol>
+</blockquote>
+<p>大意为，一个replica有2种状态，follower或者leader，而一个replica是通过topic-partition-broker来区分，注意这里没有到数据盘或者路径，如果在一个broker上从一个盘迁移到另一个盘，这时replica的状态就会出现冲突。<br/>
+这时的解决方法是使用AlterReplicaDirRequest。</p>
+<p><a href="https://cwiki.apache.org/confluence/display/KAFKA/KIP-113%3A+Support+replicas+movement+between+log+directories" rel="noopener nofollow" target="_blank">官方文档</a></p>
+</div>
+            </div>
+
+            <!-- Post Footer -->
+            <div class="post-footer">
+                <div class="post-navigation">
+                    <a href="../blog_cn.html" class="nav-button">← Back to Home</a>
+                    <a href="0020.html" class="nav-button">Next Post →</a>
+                </div>
+            </div>
+        </article>
+    </div>
+</body>
+</html>

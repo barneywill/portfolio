@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Atlas简介、安装</title>
+    <link rel="stylesheet" href="../css/style3.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header Navigation -->
+        <div class="header">
+            <h1><a href="../blog_cn.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+        </div>
+
+        <!-- Post Container -->
+        <article class="post">
+            <!-- Post Header -->
+            <div class="post-header">
+                <h1>Atlas简介、安装</h1>
+                <div class="post-meta">
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📅</span>
+                        <span>January 11, 2020</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📖</span>
+                        <span>10 min read</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">👁️</span>
+                        <span>1583 views</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Post Content -->
+            <div class="post-content">
+                <div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<p> <picture>
+  <source srcset="../img/1509647-20200111141205097-1828012039.webp" type="image/webp">
+  <img alt="" src="../img/1509647-20200111141205097-1828012039.png">
+</picture></p>
+<p>官方：http://atlas.apache.org/</p>
+<p> </p>
+<h1>一 简介</h1>
+<p>元数据管理：数据分类、数据血缘、数据治理</p>
+<p class="sc-eqIVtm optZN">Atlas is a scalable and extensible set of core foundational governance services – enabling enterprises to effectively and efficiently meet their compliance requirements within Hadoop and allows integration with the whole enterprise data ecosystem.</p>
+<p class="sc-eqIVtm optZN">Apache Atlas provides open metadata management and governance capabilities for organizations to build a catalog of their data assets, classify and govern these assets and provide collaboration capabilities around these data assets for data scientists, analysts and the data governance team.</p>
+<h1>二 安装</h1>
+<h2>1 下载</h2>
+<blockquote>
+<p># wget https://www.apache.org/dyn/closer.cgi/atlas/2.0.0/apache-atlas-2.0.0-sources.tar.gz</p>
+</blockquote>
+<h2>2 编译</h2>
+<blockquote>
+<p># tar xvf apache-atlas-2.0.0-sources.tar.gz</p>
+<p># cd apache-atlas-2.0.0-sources</p>
+<p># mvn clean - DskipTests install</p>
+</blockquote>
+<p>注意maven和java有最低版本限制</p>
+<p>maven3.5.0<br/>java1.8.151</p>
+<p>编译完成</p>
+<div class="cnblogs_code">
+<pre>[INFO] ------------------------------------------------------------------------<span style="color: rgba(0, 0, 0, 1)">
+[INFO] Reactor Summary:
+[INFO] 
+[INFO] Apache Atlas Server Build Tools </span>1.0 ................ SUCCESS [  0.460<span style="color: rgba(0, 0, 0, 1)"> s]
+[INFO] apache</span>-atlas 2.0.0 ................................. SUCCESS [  4.248<span style="color: rgba(0, 0, 0, 1)"> s]
+[INFO] Apache Atlas Test Utility Tools </span>2.0.0 .............. SUCCESS [  8.609<span style="color: rgba(0, 0, 0, 1)"> s]
+[INFO] Apache Atlas Integration </span>2.0.0 ..................... SUCCESS [ 16.224<span style="color: rgba(0, 0, 0, 1)"> s]
+[INFO] Apache Atlas Common </span>2.0.0 .......................... SUCCESS [  6.408<span style="color: rgba(0, 0, 0, 1)"> s]
+[INFO] Apache Atlas Client </span>2.0.0 .......................... SUCCESS [  0.340<span style="color: rgba(0, 0, 0, 1)"> s]
+[INFO] atlas</span>-client-common 2.0.0 .......................... SUCCESS [  5.321<span style="color: rgba(0, 0, 0, 1)"> s]
+[INFO] atlas</span>-client-v1 2.0.0 .............................. SUCCESS [  5.371<span style="color: rgba(0, 0, 0, 1)"> s]
+[INFO] Apache Atlas Server API </span>2.0.0 ...................... SUCCESS [  5.095<span style="color: rgba(0, 0, 0, 1)"> s]
+[INFO] Apache Atlas Notification </span>2.0.0 .................... SUCCESS [ 14.133<span style="color: rgba(0, 0, 0, 1)"> s]
+[INFO] atlas</span>-client-v2 2.0.0 .............................. SUCCESS [ 11.227<span style="color: rgba(0, 0, 0, 1)"> s]
+[INFO] Apache Atlas Graph Database Projects </span>2.0.0 ......... SUCCESS [  0.453<span style="color: rgba(0, 0, 0, 1)"> s]
+[INFO] Apache Atlas Graph Database API </span>2.0.0 .............. SUCCESS [ 10.108<span style="color: rgba(0, 0, 0, 1)"> s]
+[INFO] Graph Database Common Code </span>2.0.0 ................... SUCCESS [  7.904<span style="color: rgba(0, 0, 0, 1)"> s]
+[INFO] Apache Atlas JanusGraph</span>-HBase2 Module 2.0.0 ........ SUCCESS [  8.784<span style="color: rgba(0, 0, 0, 1)"> s]
+[INFO] Apache Atlas JanusGraph DB Impl </span>2.0.0 .............. SUCCESS [ 13.466<span style="color: rgba(0, 0, 0, 1)"> s]
+[INFO] Apache Atlas Graph Database Implementation Dependencies </span>2.0.0 SUCCESS [  1.949<span style="color: rgba(0, 0, 0, 1)"> s]
+[INFO] Apache Atlas Authorization </span>2.0.0 ................... SUCCESS [  5.845<span style="color: rgba(0, 0, 0, 1)"> s]
+[INFO] Apache Atlas Repository </span>2.0.0 ...................... SUCCESS [ 26.568<span style="color: rgba(0, 0, 0, 1)"> s]
+[INFO] Apache Atlas UI </span>2.0.0 .............................. SUCCESS [04:17<span style="color: rgba(0, 0, 0, 1)"> min]
+[INFO] Apache Atlas Web Application </span>2.0.0 ................. SUCCESS [08:44<span style="color: rgba(0, 0, 0, 1)"> min]
+[INFO] Apache Atlas Documentation </span>2.0.0 ................... SUCCESS [01:47<span style="color: rgba(0, 0, 0, 1)"> min]
+[INFO] Apache Atlas FileSystem Model </span>2.0.0 ................ SUCCESS [  2.820<span style="color: rgba(0, 0, 0, 1)"> s]
+[INFO] Apache Atlas Plugin Classloader </span>2.0.0 .............. SUCCESS [  4.165<span style="color: rgba(0, 0, 0, 1)"> s]
+[INFO] Apache Atlas Hive Bridge Shim </span>2.0.0 ................ SUCCESS [01:03<span style="color: rgba(0, 0, 0, 1)"> min]
+[INFO] Apache Atlas Hive Bridge </span>2.0.0 ..................... SUCCESS [01:38<span style="color: rgba(0, 0, 0, 1)"> min]
+[INFO] Apache Atlas Falcon Bridge Shim </span>2.0.0 .............. SUCCESS [ 53.172<span style="color: rgba(0, 0, 0, 1)"> s]
+[INFO] Apache Atlas Falcon Bridge </span>2.0.0 ................... SUCCESS [ 12.770<span style="color: rgba(0, 0, 0, 1)"> s]
+[INFO] Apache Atlas Sqoop Bridge Shim </span>2.0.0 ............... SUCCESS [ 29.425<span style="color: rgba(0, 0, 0, 1)"> s]
+[INFO] Apache Atlas Sqoop Bridge </span>2.0.0 .................... SUCCESS [ 14.340<span style="color: rgba(0, 0, 0, 1)"> s]
+[INFO] Apache Atlas Storm Bridge Shim </span>2.0.0 ............... SUCCESS [ 31.160<span style="color: rgba(0, 0, 0, 1)"> s]
+[INFO] Apache Atlas Storm Bridge </span>2.0.0 .................... SUCCESS [  6.921<span style="color: rgba(0, 0, 0, 1)"> s]
+[INFO] Apache Atlas Hbase Bridge Shim </span>2.0.0 ............... SUCCESS [  5.872<span style="color: rgba(0, 0, 0, 1)"> s]
+[INFO] Apache Atlas Hbase Bridge </span>2.0.0 .................... SUCCESS [ 44.294<span style="color: rgba(0, 0, 0, 1)"> s]
+[INFO] Apache HBase </span>- Testing Util 2.0.0 .................. SUCCESS [  5.072<span style="color: rgba(0, 0, 0, 1)"> s]
+[INFO] Apache Atlas Kafka Bridge </span>2.0.0 .................... SUCCESS [ 12.537<span style="color: rgba(0, 0, 0, 1)"> s]
+[INFO] Apache Atlas Distribution </span>2.0.0 .................... SUCCESS [  6.095<span style="color: rgba(0, 0, 0, 1)"> s]
+[INFO] </span>------------------------------------------------------------------------<span style="color: rgba(0, 0, 0, 1)">
+[INFO] BUILD SUCCESS
+[INFO] </span>------------------------------------------------------------------------<span style="color: rgba(0, 0, 0, 1)">
+[INFO] Total time:  </span>23:53<span style="color: rgba(0, 0, 0, 1)"> min
+[INFO] Finished at: </span>2019-12-15T02:37:56+08:00<span style="color: rgba(0, 0, 0, 1)">
+[INFO] </span>------------------------------------------------------------------------</pre>
+</div>
+<p> </p>
+<p>如果使用内置的hbase和solor，修改编译参数如下</p>
+<blockquote>
+<p># mvn clean - DskipTests package - Pdist,embedded-hbase-solr</p>
+</blockquote>
+<p>编译完成</p>
+<div class="cnblogs_code">
+<pre>[INFO] ------------------------------------------------------------------------<span style="color: rgba(0, 0, 0, 1)">
+[INFO] Reactor Summary:
+[INFO] 
+[INFO] Apache Atlas Server Build Tools </span>1.0 ................ SUCCESS [  0.809<span style="color: rgba(0, 0, 0, 1)"> s]
+[INFO] apache</span>-atlas 2.0.0 ................................. SUCCESS [  7.569<span style="color: rgba(0, 0, 0, 1)"> s]
+[INFO] Apache Atlas Test Utility Tools </span>2.0.0 .............. SUCCESS [  5.851<span style="color: rgba(0, 0, 0, 1)"> s]
+[INFO] Apache Atlas Integration </span>2.0.0 ..................... SUCCESS [  5.331<span style="color: rgba(0, 0, 0, 1)"> s]
+[INFO] Apache Atlas Common </span>2.0.0 .......................... SUCCESS [  1.877<span style="color: rgba(0, 0, 0, 1)"> s]
+[INFO] Apache Atlas Client </span>2.0.0 .......................... SUCCESS [  0.180<span style="color: rgba(0, 0, 0, 1)"> s]
+[INFO] atlas</span>-client-common 2.0.0 .......................... SUCCESS [  0.871<span style="color: rgba(0, 0, 0, 1)"> s]
+[INFO] atlas</span>-client-v1 2.0.0 .............................. SUCCESS [  0.841<span style="color: rgba(0, 0, 0, 1)"> s]
+[INFO] Apache Atlas Server API </span>2.0.0 ...................... SUCCESS [  1.282<span style="color: rgba(0, 0, 0, 1)"> s]
+[INFO] Apache Atlas Notification </span>2.0.0 .................... SUCCESS [  2.491<span style="color: rgba(0, 0, 0, 1)"> s]
+[INFO] atlas</span>-client-v2 2.0.0 .............................. SUCCESS [  0.777<span style="color: rgba(0, 0, 0, 1)"> s]
+[INFO] Apache Atlas Graph Database Projects </span>2.0.0 ......... SUCCESS [  0.074<span style="color: rgba(0, 0, 0, 1)"> s]
+[INFO] Apache Atlas Graph Database API </span>2.0.0 .............. SUCCESS [  1.157<span style="color: rgba(0, 0, 0, 1)"> s]
+[INFO] Graph Database Common Code </span>2.0.0 ................... SUCCESS [  0.924<span style="color: rgba(0, 0, 0, 1)"> s]
+[INFO] Apache Atlas JanusGraph</span>-HBase2 Module 2.0.0 ........ SUCCESS [  1.499<span style="color: rgba(0, 0, 0, 1)"> s]
+[INFO] Apache Atlas JanusGraph DB Impl </span>2.0.0 .............. SUCCESS [  4.756<span style="color: rgba(0, 0, 0, 1)"> s]
+[INFO] Apache Atlas Graph Database Implementation Dependencies </span>2.0.0 SUCCESS [  1.388<span style="color: rgba(0, 0, 0, 1)"> s]
+[INFO] Apache Atlas Authorization </span>2.0.0 ................... SUCCESS [  1.554<span style="color: rgba(0, 0, 0, 1)"> s]
+[INFO] Apache Atlas Repository </span>2.0.0 ...................... SUCCESS [  9.838<span style="color: rgba(0, 0, 0, 1)"> s]
+[INFO] Apache Atlas UI </span>2.0.0 .............................. SUCCESS [01:08<span style="color: rgba(0, 0, 0, 1)"> min]
+[INFO] Apache Atlas Web Application </span>2.0.0 ................. SUCCESS [ 52.064<span style="color: rgba(0, 0, 0, 1)"> s]
+[INFO] Apache Atlas Documentation </span>2.0.0 ................... SUCCESS [  4.832<span style="color: rgba(0, 0, 0, 1)"> s]
+[INFO] Apache Atlas FileSystem Model </span>2.0.0 ................ SUCCESS [  2.084<span style="color: rgba(0, 0, 0, 1)"> s]
+[INFO] Apache Atlas Plugin Classloader </span>2.0.0 .............. SUCCESS [  0.717<span style="color: rgba(0, 0, 0, 1)"> s]
+[INFO] Apache Atlas Hive Bridge Shim </span>2.0.0 ................ SUCCESS [  3.103<span style="color: rgba(0, 0, 0, 1)"> s]
+[INFO] Apache Atlas Hive Bridge </span>2.0.0 ..................... SUCCESS [ 10.010<span style="color: rgba(0, 0, 0, 1)"> s]
+[INFO] Apache Atlas Falcon Bridge Shim </span>2.0.0 .............. SUCCESS [  1.386<span style="color: rgba(0, 0, 0, 1)"> s]
+[INFO] Apache Atlas Falcon Bridge </span>2.0.0 ................... SUCCESS [  1.348<span style="color: rgba(0, 0, 0, 1)"> s]
+[INFO] Apache Atlas Sqoop Bridge Shim </span>2.0.0 ............... SUCCESS [  0.246<span style="color: rgba(0, 0, 0, 1)"> s]
+[INFO] Apache Atlas Sqoop Bridge </span>2.0.0 .................... SUCCESS [  6.169<span style="color: rgba(0, 0, 0, 1)"> s]
+[INFO] Apache Atlas Storm Bridge Shim </span>2.0.0 ............... SUCCESS [  0.335<span style="color: rgba(0, 0, 0, 1)"> s]
+[INFO] Apache Atlas Storm Bridge </span>2.0.0 .................... SUCCESS [  1.968<span style="color: rgba(0, 0, 0, 1)"> s]
+[INFO] Apache Atlas Hbase Bridge Shim </span>2.0.0 ............... SUCCESS [  1.834<span style="color: rgba(0, 0, 0, 1)"> s]
+[INFO] Apache Atlas Hbase Bridge </span>2.0.0 .................... SUCCESS [  5.859<span style="color: rgba(0, 0, 0, 1)"> s]
+[INFO] Apache HBase </span>- Testing Util 2.0.0 .................. SUCCESS [  3.876<span style="color: rgba(0, 0, 0, 1)"> s]
+[INFO] Apache Atlas Kafka Bridge </span>2.0.0 .................... SUCCESS [  1.670<span style="color: rgba(0, 0, 0, 1)"> s]
+[INFO] Apache Atlas Distribution </span>2.0.0 .................... SUCCESS [03:31<span style="color: rgba(0, 0, 0, 1)"> min]
+[INFO] </span>------------------------------------------------------------------------<span style="color: rgba(0, 0, 0, 1)">
+[INFO] BUILD SUCCESS
+[INFO] </span>------------------------------------------------------------------------<span style="color: rgba(0, 0, 0, 1)">
+[INFO] Total time:  </span>07:08<span style="color: rgba(0, 0, 0, 1)"> min
+[INFO] Finished at: </span>2019-12-15T19:08:07+08:00<span style="color: rgba(0, 0, 0, 1)">
+[INFO] </span>------------------------------------------------------------------------</pre>
+</div>
+<h2>3 安装</h2>
+<blockquote>
+<p># ls distro/target<br/>apache-atlas-2.0.0-bin.tar.gz</p>
+</blockquote>
+<p>拷贝到安装服务器解压</p>
+<blockquote>
+<p># ls</p>
+<p>bin  conf  data  DISCLAIMER.txt  docs  hbase  hook  hook-bin  LICENSE logs  models  NOTICE  server  solr  tools</p>
+</blockquote>
+<p>默认配置：使用hbase自带zookeeper，使用内置的hbase和solr</p>
+<div class="cnblogs_code">
+<pre><span style="color: rgba(0, 128, 0, 1)">#</span><span style="color: rgba(0, 128, 0, 1)"> vi conf/atlas-env.sh</span><span style="color: rgba(0, 128, 0, 1)">
+#</span><span style="color: rgba(0, 128, 0, 1)"> indicates whether or not a local instance of HBase should be started for Atlas</span>
+export MANAGE_LOCAL_HBASE=<span style="color: rgba(0, 0, 0, 1)">true
+</span><span style="color: rgba(0, 128, 0, 1)">#</span><span style="color: rgba(0, 128, 0, 1)"> indicates whether or not a local instance of Solr should be started for Atlas</span>
+export MANAGE_LOCAL_SOLR=<span style="color: rgba(0, 0, 0, 1)">true
+
+</span><span style="color: rgba(0, 128, 0, 1)">#</span><span style="color: rgba(0, 128, 0, 1)"> vi hbase/conf/hbase-env.sh</span><span style="color: rgba(0, 128, 0, 1)">
+#</span><span style="color: rgba(0, 128, 0, 1)"> Tell HBase whether it should manage it's own instance of ZooKeeper or not.</span><span style="color: rgba(0, 128, 0, 1)">
+#</span><span style="color: rgba(0, 128, 0, 1)"> export HBASE_MANAGES_ZK=true</span></pre>
+</div>
+<p>如果要修改，除了以上配置，还要修改</p>
+<div class="cnblogs_code">
+<pre><span style="color: rgba(0, 128, 0, 1)">#</span><span style="color: rgba(0, 128, 0, 1)"> vi conf/atlas-application.properties</span><span style="color: rgba(0, 128, 0, 1)">
+#</span><span style="color: rgba(0, 128, 0, 1)"># Server port configuration</span>
+atlas.server.http.port=21000</pre>
+</div>
+<p>这个配置文件包含启动端口以及zookeeper、hbase、solr相关配置</p>
+<h2>4 启动</h2>
+<blockquote>
+<p># bin/atlas_start.py</p>
+</blockquote>
+<p>确认服务是否正常</p>
+<blockquote>
+<p># jps</p>
+</blockquote>
+<h3>4.1 zookeeper</h3>
+<blockquote>
+<p># echo stat|nc localhost 2181</p>
+</blockquote>
+<h3>4.2 hbase</h3>
+<blockquote>
+<p># hbase/bin/hbase shell</p>
+</blockquote>
+<h3>4.3 solr</h3>
+<blockquote>
+<p># solr/bin/solr status</p>
+</blockquote>
+<p>如果有个别组件启动失败，可以手工启动</p>
+<p>1）hbase</p>
+<blockquote>
+<p># hbase/bin/start-hbase.sh</p>
+</blockquote>
+<p>2）solr</p>
+<blockquote>
+<p># solr/bin/solr start - c - z localhost:2181 - p 8983 - force<br/># solr/bin/solr create - c fulltext_index - force - d conf/solr/ <br/># solr/bin/solr create - c edge_index - force - d conf/solr/   <br/># solr/bin/solr create - c vertex_index - force - d conf/solr/</p>
+</blockquote>
+<h2>5 访问</h2>
+<p>http://localhost:21000，账号密码：admin/admin</p>
+<p><picture>
+  <source srcset="../img/1509647-20200111142943789-871645022.webp" type="image/webp">
+  <img alt="" src="../img/1509647-20200111142943789-871645022.png">
+</picture></p>
+<p> </p>
+<p> </p>
+<p>登录之后</p>
+<p><picture>
+  <source srcset="../img/1509647-20200111142907639-1381619318.webp" type="image/webp">
+  <img alt="" src="../img/1509647-20200111142907639-1381619318.png">
+</picture></p>
+<p> </p>
+<h2>6 修改账号密码</h2>
+<blockquote>
+<p># cat conf/users-credentials.properties </p>
+<p>#username=group::sha256-password</p>
+<p>admin=ADMIN::8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918</p>
+<p>rangertagsync=RANGER_TAG_SYNC::e3f67240f5117d1753c940dae9eea772d36ed5fe9bd9c94a300e40413f1afb9d</p>
+</blockquote>
+<p>加密地址：https://tool.oschina.net/encrypt?type=2</p>
+<p>修改之后重启；</p>
+<p> </p>
+<p>ps：hbase可能启动失败，查看日志</p>
+<p>hbase/logs/hbase*.log</p>
+<div class="cnblogs_code">
+<pre>2020-01-11 12:49:43,613 ERROR [Thread-22<span style="color: rgba(0, 0, 0, 1)">] master.HMaster: Failed to become active master
+java.lang.IllegalStateException: The procedure WAL relies on the ability to hsync </span><span style="color: rgba(0, 0, 255, 1)">for</span> proper operation during component failures, but the underlying filesystem does <span style="color: rgba(0, 0, 255, 1)">not</span><span style="color: rgba(0, 0, 0, 1)"> support doin
+g so. Please check the config value of </span><span style="color: rgba(128, 0, 0, 1)">'</span><span style="color: rgba(128, 0, 0, 1)">hbase.procedure.store.wal.use.hsync</span><span style="color: rgba(128, 0, 0, 1)">'</span> to set the desired level of robustness <span style="color: rgba(0, 0, 255, 1)">and</span> ensure the config value of <span style="color: rgba(128, 0, 0, 1)">'</span><span style="color: rgba(128, 0, 0, 1)">hbase.wal.dir</span><span style="color: rgba(128, 0, 0, 1)">'</span><span style="color: rgba(0, 0, 0, 1)"> points to a FileSy
+stem mount that can provide it.
+    at org.apache.hadoop.hbase.procedure2.store.wal.WALProcedureStore.rollWriter(WALProcedureStore.java:</span>1044<span style="color: rgba(0, 0, 0, 1)">)
+    at org.apache.hadoop.hbase.procedure2.store.wal.WALProcedureStore.recoverLease(WALProcedureStore.java:</span>383<span style="color: rgba(0, 0, 0, 1)">)
+    at org.apache.hadoop.hbase.procedure2.ProcedureExecutor.init(ProcedureExecutor.java:</span>649<span style="color: rgba(0, 0, 0, 1)">)
+    at org.apache.hadoop.hbase.master.HMaster.createProcedureExecutor(HMaster.java:</span>1282<span style="color: rgba(0, 0, 0, 1)">)
+    at org.apache.hadoop.hbase.master.HMaster.finishActiveMasterInitialization(HMaster.java:</span>842<span style="color: rgba(0, 0, 0, 1)">)
+    at org.apache.hadoop.hbase.master.HMaster.startActiveMasterManager(HMaster.java:</span>2086<span style="color: rgba(0, 0, 0, 1)">)
+    at org.apache.hadoop.hbase.master.HMaster.</span><span style="color: rgba(0, 0, 255, 1)">lambda</span>$run$0(HMaster.java:553<span style="color: rgba(0, 0, 0, 1)">)
+    at java.lang.Thread.run(Thread.java:</span>748<span style="color: rgba(0, 0, 0, 1)">)
+</span>2020-01-11 12:49:43,614 ERROR [Thread-22] master.HMaster: ***** ABORTING master dataone-004,61500,1578718180228: Unhandled exception. Starting shutdown. *****<span style="color: rgba(0, 0, 0, 1)">
+java.lang.IllegalStateException: The procedure WAL relies on the ability to hsync </span><span style="color: rgba(0, 0, 255, 1)">for</span> proper operation during component failures, but the underlying filesystem does <span style="color: rgba(0, 0, 255, 1)">not</span><span style="color: rgba(0, 0, 0, 1)"> support doin
+g so. Please check the config value of </span><span style="color: rgba(128, 0, 0, 1)">'</span><span style="color: rgba(128, 0, 0, 1)">hbase.procedure.store.wal.use.hsync</span><span style="color: rgba(128, 0, 0, 1)">'</span> to set the desired level of robustness <span style="color: rgba(0, 0, 255, 1)">and</span> ensure the config value of <span style="color: rgba(128, 0, 0, 1)">'</span><span style="color: rgba(128, 0, 0, 1)">hbase.wal.dir</span><span style="color: rgba(128, 0, 0, 1)">'</span><span style="color: rgba(0, 0, 0, 1)"> points to a FileSy
+stem mount that can provide it.
+    at org.apache.hadoop.hbase.procedure2.store.wal.WALProcedureStore.rollWriter(WALProcedureStore.java:</span>1044<span style="color: rgba(0, 0, 0, 1)">)
+    at org.apache.hadoop.hbase.procedure2.store.wal.WALProcedureStore.recoverLease(WALProcedureStore.java:</span>383<span style="color: rgba(0, 0, 0, 1)">)
+    at org.apache.hadoop.hbase.procedure2.ProcedureExecutor.init(ProcedureExecutor.java:</span>649<span style="color: rgba(0, 0, 0, 1)">)
+    at org.apache.hadoop.hbase.master.HMaster.createProcedureExecutor(HMaster.java:</span>1282<span style="color: rgba(0, 0, 0, 1)">)
+    at org.apache.hadoop.hbase.master.HMaster.finishActiveMasterInitialization(HMaster.java:</span>842<span style="color: rgba(0, 0, 0, 1)">)
+    at org.apache.hadoop.hbase.master.HMaster.startActiveMasterManager(HMaster.java:</span>2086<span style="color: rgba(0, 0, 0, 1)">)
+    at org.apache.hadoop.hbase.master.HMaster.</span><span style="color: rgba(0, 0, 255, 1)">lambda</span>$run$0(HMaster.java:553<span style="color: rgba(0, 0, 0, 1)">)
+    at java.lang.Thread.run(Thread.java:</span>748)</pre>
+</div>
+<p>需要修改hbase/conf/hbase-site.xml，添加</p>
+<div class="cnblogs_code">
+<pre>  &lt;property&gt;
+    &lt;name&gt;hbase.unsafe.stream.capability.enforce&lt;/name&gt;
+    &lt;value&gt;false&lt;/value&gt;
+  &lt;/property&gt;</pre>
+</div>
+<p>然后启动成功。</p>
+</div>
+            </div>
+
+            <!-- Post Footer -->
+            <div class="post-footer">
+                <div class="post-navigation">
+                    <a href="../blog_cn.html" class="nav-button">← Back to Home</a>
+                    <a href="0076.html" class="nav-button">Next Post →</a>
+                </div>
+            </div>
+        </article>
+    </div>
+</body>
+</html>

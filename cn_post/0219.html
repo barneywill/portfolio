@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mysql 3 -mysql删除历史binlog</title>
+    <link rel="stylesheet" href="../css/style3.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header Navigation -->
+        <div class="header">
+            <h1><a href="../blog_cn.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+        </div>
+
+        <!-- Post Container -->
+        <article class="post">
+            <!-- Post Header -->
+            <div class="post-header">
+                <h1>Mysql 3 -mysql删除历史binlog</h1>
+                <div class="post-meta">
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📅</span>
+                        <span>February 17, 2019</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📖</span>
+                        <span>1 min read</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">👁️</span>
+                        <span>600 views</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Post Content -->
+            <div class="post-content">
+                <div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<p>mysql开启binlog后会在/var/lib/mysql下创建binlog文件，如果手工删除，则下次mysql启动会报错：</p>
+<blockquote>
+<p>mysqld: File './master-bin.000001' not found (Errcode: 2 - No such file or directory)<br/>2019-02-16T17:00:08.484461Z 0 [ERROR] Failed to open log (file './master-bin.000001', errno 2)<br/>2019-02-16T17:00:08.484464Z 0 [ERROR] Could not open log file</p>
+</blockquote>
+<p>正确的删除方法是：</p>
+<blockquote>
+<p>mysql&gt; show binary logs;<br/>+-------------------+------------+<br/>| Log_name          | File_size  |<br/>+-------------------+------------+<br/>| master-bin.000027 |      43442 |<br/>| master-bin.000028 |       7573 |<br/>| master-bin.000029 |     371919 |<br/>+-------------------+------------+<br/>29 rows in set (0.00 sec)</p>
+<p>mysql&gt; purge binary logs to 'master-bin.000029';<br/>Query OK, 0 rows affected, 10 warnings (0.18 sec)</p>
+<p>mysql&gt; show binary logs;<br/>+-------------------+-----------+<br/>| Log_name          | File_size |<br/>+-------------------+-----------+<br/>| master-bin.000029 |    696322 |<br/>+-------------------+-----------+<br/>1 row in set (0.00 sec)</p>
+</blockquote>
+<p>另外也可以在配置文件中配置过期时间</p>
+<blockquote>
+<p># vi /etc/mysql/my.cnf<br/>expire_logs_days = 7</p>
+<p>mysql&gt; reset master;</p>
+</blockquote>
+<p> </p>
+</div>
+            </div>
+
+            <!-- Post Footer -->
+            <div class="post-footer">
+                <div class="post-navigation">
+                    <a href="../blog_cn.html" class="nav-button">← Back to Home</a>
+                    <a href="0220.html" class="nav-button">Next Post →</a>
+                </div>
+            </div>
+        </article>
+    </div>
+</body>
+</html>

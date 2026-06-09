@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spark 7 - spark读取文件split过程（即RDD分区数量）</title>
+    <link rel="stylesheet" href="../css/style3.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header Navigation -->
+        <div class="header">
+            <h1><a href="../blog_cn.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+        </div>
+
+        <!-- Post Container -->
+        <article class="post">
+            <!-- Post Header -->
+            <div class="post-header">
+                <h1>Spark 7 - spark读取文件split过程（即RDD分区数量）</h1>
+                <div class="post-meta">
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📅</span>
+                        <span>December 28, 2018</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📖</span>
+                        <span>11 min read</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">👁️</span>
+                        <span>8236 views</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Post Content -->
+            <div class="post-content">
+                <div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<p>spark 2.1.1</p>
+<p>spark初始化rdd的时候，需要读取文件，通常是hdfs文件，在读文件的时候可以指定最小partition数量，这里只是建议的数量，实际可能比这个要大（比如文件特别多或者特别大时），也可能比这个要小（比如文件只有一个而且很小时），如果没有指定最小partition数量，初始化完成的rdd默认有多少个partition是怎样决定的呢？</p>
+<p>以SparkContext.textfile为例来看下代码：</p>
+<p>org.apache.spark.SparkContext</p>
+<div class="cnblogs_code">
+<pre>  <span style="color: rgba(0, 128, 0, 1)">/**</span><span style="color: rgba(0, 128, 0, 1)">
+   * Read a text file from HDFS, a local file system (available on all nodes), or any
+   * Hadoop-supported file system URI, and return it as an RDD of Strings.
+   </span><span style="color: rgba(0, 128, 0, 1)">*/</span><span style="color: rgba(0, 0, 0, 1)">
+  def textFile(
+      path: String,
+      minPartitions: Int </span>= defaultMinPartitions): RDD[String] =<span style="color: rgba(0, 0, 0, 1)"> withScope {
+    assertNotStopped()
+    hadoopFile(path, classOf[TextInputFormat], classOf[LongWritable], classOf[Text],
+      minPartitions).map(pair </span>=&gt;<span style="color: rgba(0, 0, 0, 1)"> pair._2.toString).setName(path)
+  }
+
+  </span><span style="color: rgba(0, 128, 0, 1)">/**</span><span style="color: rgba(0, 128, 0, 1)">
+   * Default min number of partitions for Hadoop RDDs when not given by user
+   * Notice that we use math.min so the "defaultMinPartitions" cannot be higher than 2.
+   * The reasons for this are discussed in </span><span style="color: rgba(0, 128, 0, 1); text-decoration: underline">https://github.com/mesos/spark/pull/718</span>
+   <span style="color: rgba(0, 128, 0, 1)">*/</span><span style="color: rgba(0, 0, 0, 1)">
+  def defaultMinPartitions: Int </span>= math.min(defaultParallelism, 2<span style="color: rgba(0, 0, 0, 1)">)
+
+  </span><span style="color: rgba(0, 128, 0, 1)">/**</span><span style="color: rgba(0, 128, 0, 1)"> Get an RDD for a Hadoop file with an arbitrary InputFormat
+   *
+   * @note Because Hadoop's RecordReader class re-uses the same Writable object for each
+   * record, directly caching the returned RDD or directly passing it to an aggregation or shuffle
+   * operation will create many references to the same object.
+   * If you plan to directly cache, sort, or aggregate Hadoop writable objects, you should first
+   * copy them using a `map` function.
+   </span><span style="color: rgba(0, 128, 0, 1)">*/</span><span style="color: rgba(0, 0, 0, 1)">
+  def hadoopFile[K, V](
+      path: String,
+      inputFormatClass: Class[_ </span>&lt;<span style="color: rgba(0, 0, 0, 1)">: InputFormat[K, V]],
+      keyClass: Class[K],
+      valueClass: Class[V],
+      minPartitions: Int </span>= defaultMinPartitions): RDD[(K, V)] =<span style="color: rgba(0, 0, 0, 1)"> withScope {
+    assertNotStopped()
+
+    </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> This is a hack to enforce loading hdfs-site.xml.
+    </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> See SPARK-11227 for details.</span>
+<span style="color: rgba(0, 0, 0, 1)">    FileSystem.getLocal(hadoopConfiguration)
+
+    </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> A Hadoop configuration can be about 10 KB, which is pretty big, so broadcast it.</span>
+    val confBroadcast = broadcast(<span style="color: rgba(0, 0, 255, 1)">new</span><span style="color: rgba(0, 0, 0, 1)"> SerializableConfiguration(hadoopConfiguration))
+    val setInputPathsFunc </span>= (jobConf: JobConf) =&gt;<span style="color: rgba(0, 0, 0, 1)"> FileInputFormat.setInputPaths(jobConf, path)
+    </span><span style="color: rgba(0, 0, 255, 1)">new</span><span style="color: rgba(0, 0, 0, 1)"> HadoopRDD(
+      </span><span style="color: rgba(0, 0, 255, 1)">this</span><span style="color: rgba(0, 0, 0, 1)">,
+      confBroadcast,
+      Some(setInputPathsFunc),
+      inputFormatClass,
+      keyClass,
+      valueClass,
+      minPartitions).setName(path)
+  }</span></pre>
+</div>
+<p>可见会直接返回一个HadoopRDD，如果不传最小partition数量，会使用defaultMinPartitions（通常情况下是2），那么HadoopRDD是怎样实现的？</p>
+<p>org.apache.spark.rdd.HadoopRDD</p>
+<div class="cnblogs_code">
+<pre><span style="color: rgba(0, 0, 255, 1)">class</span><span style="color: rgba(0, 0, 0, 1)"> HadoopRDD[K, V](
+    sc: SparkContext,
+    broadcastedConf: Broadcast[SerializableConfiguration],
+    initLocalJobConfFuncOpt: Option[JobConf </span>=&gt;<span style="color: rgba(0, 0, 0, 1)"> Unit],
+    inputFormatClass: Class[_ </span>&lt;<span style="color: rgba(0, 0, 0, 1)">: InputFormat[K, V]],
+    keyClass: Class[K],
+    valueClass: Class[V],
+    minPartitions: Int)
+  </span><span style="color: rgba(0, 0, 255, 1)">extends</span><span style="color: rgba(0, 0, 0, 1)"> RDD[(K, V)](sc, Nil) with Logging {
+...
+  override def getPartitions: Array[Partition] </span>=<span style="color: rgba(0, 0, 0, 1)"> {
+    val jobConf </span>=<span style="color: rgba(0, 0, 0, 1)"> getJobConf()
+    </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> add the credentials here as this can be called before SparkContext initialized</span>
+<span style="color: rgba(0, 0, 0, 1)">    SparkHadoopUtil.get.addCredentials(jobConf)
+    val inputFormat </span>=<span style="color: rgba(0, 0, 0, 1)"> getInputFormat(jobConf)
+    val inputSplits </span>=<span style="color: rgba(0, 0, 0, 1)"> inputFormat.getSplits(jobConf, minPartitions)
+    val array </span>= <span style="color: rgba(0, 0, 255, 1)">new</span><span style="color: rgba(0, 0, 0, 1)"> Array[Partition](inputSplits.size)
+    </span><span style="color: rgba(0, 0, 255, 1)">for</span> (i &lt;- 0<span style="color: rgba(0, 0, 0, 1)"> until inputSplits.size) {
+      array(i) </span>= <span style="color: rgba(0, 0, 255, 1)">new</span><span style="color: rgba(0, 0, 0, 1)"> HadoopPartition(id, i, inputSplits(i))
+    }
+    array
+  }
+...
+  </span><span style="color: rgba(0, 0, 255, 1)">protected</span> def getInputFormat(conf: JobConf): InputFormat[K, V] =<span style="color: rgba(0, 0, 0, 1)"> {
+    val newInputFormat </span>=<span style="color: rgba(0, 0, 0, 1)"> ReflectionUtils.newInstance(inputFormatClass.asInstanceOf[Class[_]], conf)
+      .asInstanceOf[InputFormat[K, V]]
+    newInputFormat match {
+      </span><span style="color: rgba(0, 0, 255, 1)">case</span> c: Configurable =&gt;<span style="color: rgba(0, 0, 0, 1)"> c.setConf(conf)
+      </span><span style="color: rgba(0, 0, 255, 1)">case</span> _ =&gt;<span style="color: rgba(0, 0, 0, 1)">
+    }
+    newInputFormat
+  }</span></pre>
+</div>
+<p>决定分区数量的逻辑在getPartitions中，实际上调用的是InputFormat.getSplits，InputFormat是一个接口，</p>
+<p>org.apache.hadoop.mapred.InputFormat</p>
+<div class="cnblogs_code">
+<pre><span style="color: rgba(0, 0, 255, 1)">public</span> <span style="color: rgba(0, 0, 255, 1)">interface</span> InputFormat&lt;K, V&gt;<span style="color: rgba(0, 0, 0, 1)"> {
+    InputSplit[] getSplits(JobConf var1, </span><span style="color: rgba(0, 0, 255, 1)">int</span> var2) <span style="color: rgba(0, 0, 255, 1)">throws</span><span style="color: rgba(0, 0, 0, 1)"> IOException;
+
+    RecordReader</span>&lt;K, V&gt; getRecordReader(InputSplit var1, JobConf var2, Reporter var3) <span style="color: rgba(0, 0, 255, 1)">throws</span><span style="color: rgba(0, 0, 0, 1)"> IOException;
+}</span></pre>
+</div>
+<p>每种文件格式都有自己的实现类，常见的文件格式avro、orc、parquet、textfile对应的实现类为AvroInputFormat，OrcInputFormat，MapredParquetInputFormat，CombineTextInputFormat，每个实现类都有自己的split逻辑，来看下默认实现：</p>
+<p>org.apache.hadoop.mapred.FileInputFormat</p>
+<div class="cnblogs_code">
+<pre>  <span style="color: rgba(0, 128, 0, 1)">/**</span><span style="color: rgba(0, 128, 0, 1)"> Splits files returned by {</span><span style="color: rgba(128, 128, 128, 1)">@link</span><span style="color: rgba(0, 128, 0, 1)"> #listStatus(JobConf)} when
+   * they're too big.</span><span style="color: rgba(0, 128, 0, 1)">*/</span> 
+  <span style="color: rgba(0, 0, 255, 1)">public</span> InputSplit[] getSplits(JobConf job, <span style="color: rgba(0, 0, 255, 1)">int</span><span style="color: rgba(0, 0, 0, 1)"> numSplits)
+    </span><span style="color: rgba(0, 0, 255, 1)">throws</span><span style="color: rgba(0, 0, 0, 1)"> IOException {
+    FileStatus[] files </span>=<span style="color: rgba(0, 0, 0, 1)"> listStatus(job);
+    
+    </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> Save the number of input files for metrics/loadgen</span>
+<span style="color: rgba(0, 0, 0, 1)">    job.setLong(NUM_INPUT_FILES, files.length);
+    </span><span style="color: rgba(0, 0, 255, 1)">long</span> totalSize = 0;                           <span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> compute total size</span>
+    <span style="color: rgba(0, 0, 255, 1)">for</span> (FileStatus file: files) {                <span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> check we have valid files</span>
+      <span style="color: rgba(0, 0, 255, 1)">if</span><span style="color: rgba(0, 0, 0, 1)"> (file.isDirectory()) {
+        </span><span style="color: rgba(0, 0, 255, 1)">throw</span> <span style="color: rgba(0, 0, 255, 1)">new</span> IOException("Not a file: "+<span style="color: rgba(0, 0, 0, 1)"> file.getPath());
+      }
+      totalSize </span>+=<span style="color: rgba(0, 0, 0, 1)"> file.getLen();
+    }
+
+    </span><span style="color: rgba(0, 0, 255, 1)">long</span> goalSize = totalSize / (numSplits == 0 ? 1<span style="color: rgba(0, 0, 0, 1)"> : numSplits);
+    </span><span style="color: rgba(0, 0, 255, 1)">long</span> minSize =<span style="color: rgba(0, 0, 0, 1)"> Math.max(job.getLong(org.apache.hadoop.mapreduce.lib.input.
+      FileInputFormat.SPLIT_MINSIZE, </span>1<span style="color: rgba(0, 0, 0, 1)">), minSplitSize);
+
+    </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> generate splits</span>
+    ArrayList&lt;FileSplit&gt; splits = <span style="color: rgba(0, 0, 255, 1)">new</span> ArrayList&lt;FileSplit&gt;<span style="color: rgba(0, 0, 0, 1)">(numSplits);
+    NetworkTopology clusterMap </span>= <span style="color: rgba(0, 0, 255, 1)">new</span><span style="color: rgba(0, 0, 0, 1)"> NetworkTopology();
+    </span><span style="color: rgba(0, 0, 255, 1)">for</span><span style="color: rgba(0, 0, 0, 1)"> (FileStatus file: files) {
+      Path path </span>=<span style="color: rgba(0, 0, 0, 1)"> file.getPath();
+      </span><span style="color: rgba(0, 0, 255, 1)">long</span> length =<span style="color: rgba(0, 0, 0, 1)"> file.getLen();
+      </span><span style="color: rgba(0, 0, 255, 1)">if</span> (length != 0<span style="color: rgba(0, 0, 0, 1)">) {
+        FileSystem fs </span>=<span style="color: rgba(0, 0, 0, 1)"> path.getFileSystem(job);
+        BlockLocation[] blkLocations;
+        </span><span style="color: rgba(0, 0, 255, 1)">if</span> (file <span style="color: rgba(0, 0, 255, 1)">instanceof</span><span style="color: rgba(0, 0, 0, 1)"> LocatedFileStatus) {
+          blkLocations </span>=<span style="color: rgba(0, 0, 0, 1)"> ((LocatedFileStatus) file).getBlockLocations();
+        } </span><span style="color: rgba(0, 0, 255, 1)">else</span><span style="color: rgba(0, 0, 0, 1)"> {
+          blkLocations </span>= fs.getFileBlockLocations(file, 0<span style="color: rgba(0, 0, 0, 1)">, length);
+        }
+        </span><span style="color: rgba(0, 0, 255, 1)">if</span><span style="color: rgba(0, 0, 0, 1)"> (isSplitable(fs, path)) {
+          </span><span style="color: rgba(0, 0, 255, 1)">long</span> blockSize =<span style="color: rgba(0, 0, 0, 1)"> file.getBlockSize();
+          </span><span style="color: rgba(0, 0, 255, 1)">long</span> splitSize =<span style="color: rgba(0, 0, 0, 1)"> computeSplitSize(goalSize, minSize, blockSize);
+
+          </span><span style="color: rgba(0, 0, 255, 1)">long</span> bytesRemaining =<span style="color: rgba(0, 0, 0, 1)"> length;
+          </span><span style="color: rgba(0, 0, 255, 1)">while</span> (((<span style="color: rgba(0, 0, 255, 1)">double</span>) bytesRemaining)/splitSize &gt;<span style="color: rgba(0, 0, 0, 1)"> SPLIT_SLOP) {
+            String[] splitHosts </span>=<span style="color: rgba(0, 0, 0, 1)"> getSplitHosts(blkLocations,
+                length</span>-<span style="color: rgba(0, 0, 0, 1)">bytesRemaining, splitSize, clusterMap);
+            splits.add(makeSplit(path, length</span>-<span style="color: rgba(0, 0, 0, 1)">bytesRemaining, splitSize,
+                splitHosts));
+            bytesRemaining </span>-=<span style="color: rgba(0, 0, 0, 1)"> splitSize;
+          }
+
+          </span><span style="color: rgba(0, 0, 255, 1)">if</span> (bytesRemaining != 0<span style="color: rgba(0, 0, 0, 1)">) {
+            String[] splitHosts </span>=<span style="color: rgba(0, 0, 0, 1)"> getSplitHosts(blkLocations, length
+                </span>-<span style="color: rgba(0, 0, 0, 1)"> bytesRemaining, bytesRemaining, clusterMap);
+            splits.add(makeSplit(path, length </span>-<span style="color: rgba(0, 0, 0, 1)"> bytesRemaining, bytesRemaining,
+                splitHosts));
+          }
+        } </span><span style="color: rgba(0, 0, 255, 1)">else</span><span style="color: rgba(0, 0, 0, 1)"> {
+          String[] splitHosts </span>= getSplitHosts(blkLocations,0<span style="color: rgba(0, 0, 0, 1)">,length,clusterMap);
+          splits.add(makeSplit(path, </span>0<span style="color: rgba(0, 0, 0, 1)">, length, splitHosts));
+        }
+      } </span><span style="color: rgba(0, 0, 255, 1)">else</span><span style="color: rgba(0, 0, 0, 1)"> { 
+        </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)">Create empty hosts array for zero length files</span>
+        splits.add(makeSplit(path, 0, length, <span style="color: rgba(0, 0, 255, 1)">new</span> String[0<span style="color: rgba(0, 0, 0, 1)">]));
+      }
+    }
+    LOG.debug(</span>"Total # of splits: " +<span style="color: rgba(0, 0, 0, 1)"> splits.size());
+    </span><span style="color: rgba(0, 0, 255, 1)">return</span> splits.toArray(<span style="color: rgba(0, 0, 255, 1)">new</span><span style="color: rgba(0, 0, 0, 1)"> FileSplit[splits.size()]);
+  }
+  
+  </span><span style="color: rgba(0, 128, 0, 1)">/**</span><span style="color: rgba(0, 128, 0, 1)"> 
+   * This function identifies and returns the hosts that contribute 
+   * most for a given split. For calculating the contribution, rack
+   * locality is treated on par with host locality, so hosts from racks
+   * that contribute the most are preferred over hosts on racks that 
+   * contribute less
+   * </span><span style="color: rgba(128, 128, 128, 1)">@param</span><span style="color: rgba(0, 128, 0, 1)"> blkLocations The list of block locations
+   * </span><span style="color: rgba(128, 128, 128, 1)">@param</span><span style="color: rgba(0, 128, 0, 1)"> offset 
+   * </span><span style="color: rgba(128, 128, 128, 1)">@param</span><span style="color: rgba(0, 128, 0, 1)"> splitSize 
+   * </span><span style="color: rgba(128, 128, 128, 1)">@return</span><span style="color: rgba(0, 128, 0, 1)"> array of hosts that contribute most to this split
+   * </span><span style="color: rgba(128, 128, 128, 1)">@throws</span><span style="color: rgba(0, 128, 0, 1)"> IOException
+   </span><span style="color: rgba(0, 128, 0, 1)">*/</span>
+  <span style="color: rgba(0, 0, 255, 1)">protected</span><span style="color: rgba(0, 0, 0, 1)"> String[] getSplitHosts(BlockLocation[] blkLocations, 
+      </span><span style="color: rgba(0, 0, 255, 1)">long</span> offset, <span style="color: rgba(0, 0, 255, 1)">long</span><span style="color: rgba(0, 0, 0, 1)"> splitSize, NetworkTopology clusterMap)
+  </span><span style="color: rgba(0, 0, 255, 1)">throws</span><span style="color: rgba(0, 0, 0, 1)"> IOException {
+
+    </span><span style="color: rgba(0, 0, 255, 1)">int</span> startIndex =<span style="color: rgba(0, 0, 0, 1)"> getBlockIndex(blkLocations, offset);
+
+    </span><span style="color: rgba(0, 0, 255, 1)">long</span> bytesInThisBlock = blkLocations[startIndex].getOffset() +<span style="color: rgba(0, 0, 0, 1)"> 
+                          blkLocations[startIndex].getLength() </span>-<span style="color: rgba(0, 0, 0, 1)"> offset;
+
+    </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)">If this is the only block, just return</span>
+    <span style="color: rgba(0, 0, 255, 1)">if</span> (bytesInThisBlock &gt;=<span style="color: rgba(0, 0, 0, 1)"> splitSize) {
+      </span><span style="color: rgba(0, 0, 255, 1)">return</span><span style="color: rgba(0, 0, 0, 1)"> blkLocations[startIndex].getHosts();
+    }
+
+    </span><span style="color: rgba(0, 0, 255, 1)">long</span> bytesInFirstBlock =<span style="color: rgba(0, 0, 0, 1)"> bytesInThisBlock;
+    </span><span style="color: rgba(0, 0, 255, 1)">int</span> index = startIndex + 1<span style="color: rgba(0, 0, 0, 1)">;
+    splitSize </span>-=<span style="color: rgba(0, 0, 0, 1)"> bytesInThisBlock;
+
+    </span><span style="color: rgba(0, 0, 255, 1)">while</span> (splitSize &gt; 0<span style="color: rgba(0, 0, 0, 1)">) {
+      bytesInThisBlock </span>=<span style="color: rgba(0, 0, 0, 1)">
+        Math.min(splitSize, blkLocations[index</span>++<span style="color: rgba(0, 0, 0, 1)">].getLength());
+      splitSize </span>-=<span style="color: rgba(0, 0, 0, 1)"> bytesInThisBlock;
+    }
+
+    </span><span style="color: rgba(0, 0, 255, 1)">long</span> bytesInLastBlock =<span style="color: rgba(0, 0, 0, 1)"> bytesInThisBlock;
+    </span><span style="color: rgba(0, 0, 255, 1)">int</span> endIndex = index - 1<span style="color: rgba(0, 0, 0, 1)">;
+    
+    Map </span>&lt;Node,NodeInfo&gt; hostsMap = <span style="color: rgba(0, 0, 255, 1)">new</span> IdentityHashMap&lt;Node,NodeInfo&gt;<span style="color: rgba(0, 0, 0, 1)">();
+    Map </span>&lt;Node,NodeInfo&gt; racksMap = <span style="color: rgba(0, 0, 255, 1)">new</span> IdentityHashMap&lt;Node,NodeInfo&gt;<span style="color: rgba(0, 0, 0, 1)">();
+    String [] allTopos </span>= <span style="color: rgba(0, 0, 255, 1)">new</span> String[0<span style="color: rgba(0, 0, 0, 1)">];
+
+    </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> Build the hierarchy and aggregate the contribution of 
+    </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> bytes at each level. See TestGetSplitHosts.java </span>
+
+    <span style="color: rgba(0, 0, 255, 1)">for</span> (index = startIndex; index &lt;= endIndex; index++<span style="color: rgba(0, 0, 0, 1)">) {
+
+      </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> Establish the bytes in this block</span>
+      <span style="color: rgba(0, 0, 255, 1)">if</span> (index ==<span style="color: rgba(0, 0, 0, 1)"> startIndex) {
+        bytesInThisBlock </span>=<span style="color: rgba(0, 0, 0, 1)"> bytesInFirstBlock;
+      }
+      </span><span style="color: rgba(0, 0, 255, 1)">else</span> <span style="color: rgba(0, 0, 255, 1)">if</span> (index ==<span style="color: rgba(0, 0, 0, 1)"> endIndex) {
+        bytesInThisBlock </span>=<span style="color: rgba(0, 0, 0, 1)"> bytesInLastBlock;
+      }
+      </span><span style="color: rgba(0, 0, 255, 1)">else</span><span style="color: rgba(0, 0, 0, 1)"> {
+        bytesInThisBlock </span>=<span style="color: rgba(0, 0, 0, 1)"> blkLocations[index].getLength();
+      }
+      
+      allTopos </span>=<span style="color: rgba(0, 0, 0, 1)"> blkLocations[index].getTopologyPaths();
+
+      </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> If no topology information is available, just
+      </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> prefix a fakeRack</span>
+      <span style="color: rgba(0, 0, 255, 1)">if</span> (allTopos.length == 0<span style="color: rgba(0, 0, 0, 1)">) {
+        allTopos </span>=<span style="color: rgba(0, 0, 0, 1)"> fakeRacks(blkLocations, index);
+      }
+
+      </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> NOTE: This code currently works only for one level of
+      </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> hierarchy (rack/host). However, it is relatively easy
+      </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> to extend this to support aggregation at different
+      </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> levels </span>
+      
+      <span style="color: rgba(0, 0, 255, 1)">for</span><span style="color: rgba(0, 0, 0, 1)"> (String topo: allTopos) {
+
+        Node node, parentNode;
+        NodeInfo nodeInfo, parentNodeInfo;
+
+        node </span>=<span style="color: rgba(0, 0, 0, 1)"> clusterMap.getNode(topo);
+
+        </span><span style="color: rgba(0, 0, 255, 1)">if</span> (node == <span style="color: rgba(0, 0, 255, 1)">null</span><span style="color: rgba(0, 0, 0, 1)">) {
+          node </span>= <span style="color: rgba(0, 0, 255, 1)">new</span><span style="color: rgba(0, 0, 0, 1)"> NodeBase(topo);
+          clusterMap.add(node);
+        }
+        
+        nodeInfo </span>=<span style="color: rgba(0, 0, 0, 1)"> hostsMap.get(node);
+        
+        </span><span style="color: rgba(0, 0, 255, 1)">if</span> (nodeInfo == <span style="color: rgba(0, 0, 255, 1)">null</span><span style="color: rgba(0, 0, 0, 1)">) {
+          nodeInfo </span>= <span style="color: rgba(0, 0, 255, 1)">new</span><span style="color: rgba(0, 0, 0, 1)"> NodeInfo(node);
+          hostsMap.put(node,nodeInfo);
+          parentNode </span>=<span style="color: rgba(0, 0, 0, 1)"> node.getParent();
+          parentNodeInfo </span>=<span style="color: rgba(0, 0, 0, 1)"> racksMap.get(parentNode);
+          </span><span style="color: rgba(0, 0, 255, 1)">if</span> (parentNodeInfo == <span style="color: rgba(0, 0, 255, 1)">null</span><span style="color: rgba(0, 0, 0, 1)">) {
+            parentNodeInfo </span>= <span style="color: rgba(0, 0, 255, 1)">new</span><span style="color: rgba(0, 0, 0, 1)"> NodeInfo(parentNode);
+            racksMap.put(parentNode,parentNodeInfo);
+          }
+          parentNodeInfo.addLeaf(nodeInfo);
+        }
+        </span><span style="color: rgba(0, 0, 255, 1)">else</span><span style="color: rgba(0, 0, 0, 1)"> {
+          nodeInfo </span>=<span style="color: rgba(0, 0, 0, 1)"> hostsMap.get(node);
+          parentNode </span>=<span style="color: rgba(0, 0, 0, 1)"> node.getParent();
+          parentNodeInfo </span>=<span style="color: rgba(0, 0, 0, 1)"> racksMap.get(parentNode);
+        }
+
+        nodeInfo.addValue(index, bytesInThisBlock);
+        parentNodeInfo.addValue(index, bytesInThisBlock);
+
+      } </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> for all topos</span>
+<span style="color: rgba(0, 0, 0, 1)">    
+    } </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> for all indices</span>
+
+    <span style="color: rgba(0, 0, 255, 1)">return</span><span style="color: rgba(0, 0, 0, 1)"> identifyHosts(allTopos.length, racksMap);
+  }</span></pre>
+</div>
+<p>大致过程如下：</p>
+<p>getSplits首先会拿到所有需要读取的file列表，然后会迭代这个file列表，首先看一个file是否可以再分即isSplitable（默认是true可能被子类覆盖），如果不能再split则直接作为1个split，如果可以再split，则获取这个file的block信息，然后综合根据多个参数来计算出1个split的数据大小即splitSize，然后会将这个file的所有block划分为多个split，划分过程会考虑机架、host等因素，如果是大block，则直接作为一个split，如果是小block可能多个block合并在一个split里（这样能够尽量减少split数量），最终得到的split数量即partition数量；</p>
+<p><br/>注意：上边的过程可能被子类覆盖；</p>
+</div>
+            </div>
+
+            <!-- Post Footer -->
+            <div class="post-footer">
+                <div class="post-navigation">
+                    <a href="../blog_cn.html" class="nav-button">← Back to Home</a>
+                    <a href="0289.html" class="nav-button">Next Post →</a>
+                </div>
+            </div>
+        </article>
+    </div>
+</body>
+</html>

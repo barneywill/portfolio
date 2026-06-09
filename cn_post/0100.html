@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>spring中session失效时间</title>
+    <link rel="stylesheet" href="../css/style3.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header Navigation -->
+        <div class="header">
+            <h1><a href="../blog_cn.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+        </div>
+
+        <!-- Post Container -->
+        <article class="post">
+            <!-- Post Header -->
+            <div class="post-header">
+                <h1>spring中session失效时间</h1>
+                <div class="post-meta">
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📅</span>
+                        <span>July 10, 2019</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📖</span>
+                        <span>2 min read</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">👁️</span>
+                        <span>3503 views</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Post Content -->
+            <div class="post-content">
+                <div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<p>spring项目中将sessionid对应的cookie过期时间设置很长，但是实际session还是在半个小时后失效，跟了一下代码，spring中session实现接口为</p>
+<p>org.springframework.session.SessionRepository</p>
+<div class="cnblogs_code">
+<pre><span style="color: rgba(0, 0, 255, 1)">public</span> <span style="color: rgba(0, 0, 255, 1)">interface</span> SessionRepository&lt;S <span style="color: rgba(0, 0, 255, 1)">extends</span> Session&gt;<span style="color: rgba(0, 0, 0, 1)"> {
+    S createSession();
+
+    </span><span style="color: rgba(0, 0, 255, 1)">void</span><span style="color: rgba(0, 0, 0, 1)"> save(S var1);
+
+    S findById(String var1);
+
+    </span><span style="color: rgba(0, 0, 255, 1)">void</span><span style="color: rgba(0, 0, 0, 1)"> deleteById(String var1);
+}</span></pre>
+</div>
+<p>这个接口有两个实现类：</p>
+<p>MapSessionRepository<br/>RedisOperationsSessionRepository</p>
+<p>单机环境使用前者，分布式环境使用后者，来看后者代码：</p>
+<p>org.springframework.session.data.redis.RedisOperationsSessionRepository</p>
+<div class="cnblogs_code">
+<pre>    <span style="color: rgba(0, 0, 255, 1)">public</span><span style="color: rgba(0, 0, 0, 1)"> RedisOperationsSessionRepository.RedisSession createSession() {
+        RedisOperationsSessionRepository.RedisSession redisSession </span>= <span style="color: rgba(0, 0, 255, 1)">new</span><span style="color: rgba(0, 0, 0, 1)"> RedisOperationsSessionRepository.RedisSession();
+        </span><span style="color: rgba(0, 0, 255, 1)">if</span>(<span style="color: rgba(0, 0, 255, 1)">this</span>.defaultMaxInactiveInterval != <span style="color: rgba(0, 0, 255, 1)">null</span><span style="color: rgba(0, 0, 0, 1)">) {
+            redisSession.setMaxInactiveInterval(Duration.ofSeconds((</span><span style="color: rgba(0, 0, 255, 1)">long</span>)<span style="color: rgba(0, 0, 255, 1)">this</span><span style="color: rgba(0, 0, 0, 1)">.defaultMaxInactiveInterval.intValue()));
+        }
+
+        </span><span style="color: rgba(0, 0, 255, 1)">return</span><span style="color: rgba(0, 0, 0, 1)"> redisSession;
+    }</span></pre>
+</div>
+<p>org.springframework.session.data.redis.RedisOperationsSessionRepository.RedisSession</p>
+<div class="cnblogs_code">
+<pre><span style="color: rgba(0, 0, 0, 1)">        RedisSession() {
+            </span><span style="color: rgba(0, 0, 255, 1)">this</span>(<span style="color: rgba(0, 0, 255, 1)">new</span><span style="color: rgba(0, 0, 0, 1)"> MapSession());
+            </span><span style="color: rgba(0, 0, 255, 1)">this</span>.delta.put("creationTime", Long.valueOf(<span style="color: rgba(0, 0, 255, 1)">this</span><span style="color: rgba(0, 0, 0, 1)">.getCreationTime().toEpochMilli()));
+            </span><span style="color: rgba(0, 0, 255, 1)">this</span>.delta.put("maxInactiveInterval", Integer.valueOf((<span style="color: rgba(0, 0, 255, 1)">int</span>)<span style="color: rgba(0, 0, 255, 1)">this</span><span style="color: rgba(0, 0, 0, 1)">.getMaxInactiveInterval().getSeconds()));
+            </span><span style="color: rgba(0, 0, 255, 1)">this</span>.delta.put("lastAccessedTime", Long.valueOf(<span style="color: rgba(0, 0, 255, 1)">this</span><span style="color: rgba(0, 0, 0, 1)">.getLastAccessedTime().toEpochMilli()));
+            </span><span style="color: rgba(0, 0, 255, 1)">this</span>.isNew = <span style="color: rgba(0, 0, 255, 1)">true</span><span style="color: rgba(0, 0, 0, 1)">;
+            </span><span style="color: rgba(0, 0, 255, 1)">this</span><span style="color: rgba(0, 0, 0, 1)">.flushImmediateIfNecessary();
+        }
+
+        </span><span style="color: rgba(0, 0, 255, 1)">public</span> <span style="color: rgba(0, 0, 255, 1)">boolean</span><span style="color: rgba(0, 0, 0, 1)"> isExpired() {
+            </span><span style="color: rgba(0, 0, 255, 1)">return</span> <span style="color: rgba(0, 0, 255, 1)">this</span><span style="color: rgba(0, 0, 0, 1)">.cached.isExpired();
+        }</span></pre>
+</div>
+<p>org.springframework.session.MapSession</p>
+<div class="cnblogs_code">
+<pre>    <span style="color: rgba(0, 0, 255, 1)">public</span> <span style="color: rgba(0, 0, 255, 1)">boolean</span><span style="color: rgba(0, 0, 0, 1)"> isExpired() {
+        </span><span style="color: rgba(0, 0, 255, 1)">return</span> <span style="color: rgba(0, 0, 255, 1)">this</span><span style="color: rgba(0, 0, 0, 1)">.isExpired(Instant.now());
+    }
+
+    </span><span style="color: rgba(0, 0, 255, 1)">boolean</span><span style="color: rgba(0, 0, 0, 1)"> isExpired(Instant now) {
+        </span><span style="color: rgba(0, 0, 255, 1)">return</span> <span style="color: rgba(0, 0, 255, 1)">this</span>.maxInactiveInterval.isNegative()?<span style="color: rgba(0, 0, 255, 1)">false</span>:now.minus(<span style="color: rgba(0, 0, 255, 1)">this</span>.maxInactiveInterval).compareTo(<span style="color: rgba(0, 0, 255, 1)">this</span>.lastAccessedTime) &gt;= 0<span style="color: rgba(0, 0, 0, 1)">;
+    }</span></pre>
+</div>
+<p> </p>
+<p>可见是在创建session的时候设置两个时间，</p>
+<p>lastAccessedTime<br/>maxInactiveInterval</p>
+<p>如果 当前时间 - maxInactiveInterval &gt; lastAccessedTime 就会认为session过期，设置的方法：</p>
+<blockquote>
+<p>@EnableRedisHttpSession(maxInactiveIntervalInSeconds=2000) </p>
+</blockquote>
+<p> </p>
+</div>
+            </div>
+
+            <!-- Post Footer -->
+            <div class="post-footer">
+                <div class="post-navigation">
+                    <a href="../blog_cn.html" class="nav-button">← Back to Home</a>
+                    <a href="0101.html" class="nav-button">Next Post →</a>
+                </div>
+            </div>
+        </article>
+    </div>
+</body>
+</html>

@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>linux常用命令之文本替换</title>
+    <link rel="stylesheet" href="../css/style3.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header Navigation -->
+        <div class="header">
+            <h1><a href="../blog_cn.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+        </div>
+
+        <!-- Post Container -->
+        <article class="post">
+            <!-- Post Header -->
+            <div class="post-header">
+                <h1>linux常用命令之文本替换</h1>
+                <div class="post-meta">
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📅</span>
+                        <span>December 13, 2018</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📖</span>
+                        <span>1 min read</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">👁️</span>
+                        <span>5963 views</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Post Content -->
+            <div class="post-content">
+                <div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<p>linux常用命令之文本替换</p>
+<h1>1 vi</h1>
+<blockquote>
+<p>vi test_file</p>
+</blockquote>
+<blockquote>
+<p>:%s/h/h1/g</p>
+</blockquote>
+<p>注释：全文替换，将h替换为h1</p>
+<blockquote>
+<p>:1,4s/h/h1/g</p>
+</blockquote>
+<p>注释：将第1行到第4行的h替换为h1</p>
+<blockquote>
+<p>:%s/\n/,/g</p>
+</blockquote>
+<p>注释：将换行符替换为,</p>
+<h1>2 sed</h1>
+<blockquote>
+<p>sed - e 's/h/h1/g' test_file</p>
+</blockquote>
+<p>注释：全文替换，将h替换为h1</p>
+<blockquote>
+<p>sed - e '1,4s/h/h1/g' test_file</p>
+</blockquote>
+<p>注释：将第1行到第4行的h替换为h1</p>
+<blockquote>
+<p>sed ':a;N;$!ba;s/\n/,/g' test_file</p>
+</blockquote>
+<p>注释：将换行符替换为,</p>
+<blockquote>
+<p>sed 'nd' test_file</p>
+</blockquote>
+<p>注释：删除第n行</p>
+<blockquote>
+<p>sed - e '1s/h/h1/g;4s/h/h1/g' test_file</p>
+</blockquote>
+<p>注释：同时进行多个替换，;分隔</p>
+<p> </p>
+<p>如果想直接修改文件，增加 - i 参数；</p>
+<h1>3 直接替换</h1>
+<blockquote>
+<p>$ echo ${var//a/b}</p>
+</blockquote>
+<p> </p>
+</div>
+            </div>
+
+            <!-- Post Footer -->
+            <div class="post-footer">
+                <div class="post-navigation">
+                    <a href="../blog_cn.html" class="nav-button">← Back to Home</a>
+                    <a href="0319.html" class="nav-button">Next Post →</a>
+                </div>
+            </div>
+        </article>
+    </div>
+</body>
+</html>

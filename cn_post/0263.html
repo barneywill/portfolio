@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ambari metrics collector内置standalone hbase启动失败</title>
+    <link rel="stylesheet" href="../css/style3.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header Navigation -->
+        <div class="header">
+            <h1><a href="../blog_cn.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+        </div>
+
+        <!-- Post Container -->
+        <article class="post">
+            <!-- Post Header -->
+            <div class="post-header">
+                <h1>ambari metrics collector内置standalone hbase启动失败</h1>
+                <div class="post-meta">
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📅</span>
+                        <span>January 17, 2019</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📖</span>
+                        <span>1 min read</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">👁️</span>
+                        <span>5040 views</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Post Content -->
+            <div class="post-content">
+                <div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<p>ambari metrics collector内置hbase目录位于</p>
+<blockquote>
+<p>/usr/lib/ams-hbase</p>
+</blockquote>
+<p>配置位于</p>
+<blockquote>
+<p>/etc/ams-hbase/conf</p>
+</blockquote>
+<p>通过ruby启动</p>
+<blockquote>
+<p>/usr/lib/ams-hbase/bin/hirb.rb</p>
+</blockquote>
+<p>实际的启动命令为</p>
+<blockquote>
+<p>/usr/lib/ams-hbase/bin/hbase-daemon.sh --config /etc/ams-hbase/conf foreground_start master</p>
+</blockquote>
+<p>但是启动一段时间报错：</p>
+<blockquote>
+<p>java.lang.RuntimeException: Master not initialized after 200000ms<br/>        at org.apache.hadoop.hbase.util.JVMClusterUtil.waitForEvent(JVMClusterUtil.java:229)<br/>        at org.apache.hadoop.hbase.util.JVMClusterUtil.startup(JVMClusterUtil.java:197)<br/>        at org.apache.hadoop.hbase.LocalHBaseCluster.startup(LocalHBaseCluster.java:413)<br/>        at org.apache.hadoop.hbase.master.HMasterCommandLine.startMaster(HMasterCommandLine.java:232)<br/>        at org.apache.hadoop.hbase.master.HMasterCommandLine.run(HMasterCommandLine.java:140)<br/>        at org.apache.hadoop.util.ToolRunner.run(ToolRunner.java:76)<br/>        at org.apache.hadoop.hbase.util.ServerCommandLine.doMain(ServerCommandLine.java:149)<br/>        at org.apache.hadoop.hbase.master.HMaster.main(HMaster.java:3100)</p>
+</blockquote>
+<p>查看日志发现第一个错：</p>
+<blockquote>
+<p>2019-01-16 16:20:29,295 WARN  [StoreOpener-1588230740-1] util.CommonFSUtils: FileSystem doesn't support setStoragePolicy; HDFS-6584, HDFS-9345 not available. This is normal and expected on earlier Hadoop versions.<br/>java.lang.NoSuchMethodException: org.apache.hadoop.fs.LocalFileSystem.setStoragePolicy(org.apache.hadoop.fs.Path, java.lang.String)<br/>        at java.lang.Class.getDeclaredMethod(Class.java:2130)<br/>        at org.apache.hadoop.hbase.util.CommonFSUtils.invokeSetStoragePolicy(CommonFSUtils.java:533)<br/>        at org.apache.hadoop.hbase.util.CommonFSUtils.setStoragePolicy(CommonFSUtils.java:514)<br/>        at org.apache.hadoop.hbase.util.CommonFSUtils.setStoragePolicy(CommonFSUtils.java:482)<br/>        at org.apache.hadoop.hbase.regionserver.HRegionFileSystem.setStoragePolicy(HRegionFileSystem.java:193)<br/>        at org.apache.hadoop.hbase.regionserver.HStore.&lt;init&gt;(HStore.java:258)<br/>        at org.apache.hadoop.hbase.regionserver.HRegion.instantiateHStore(HRegion.java:5571)<br/>        at org.apache.hadoop.hbase.regionserver.HRegion$1.call(HRegion.java:1025)<br/>        at org.apache.hadoop.hbase.regionserver.HRegion$1.call(HRegion.java:1022)<br/>        at java.util.concurrent.FutureTask.run(FutureTask.java:266)<br/>        at java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:511)<br/>        at java.util.concurrent.FutureTask.run(FutureTask.java:266)<br/>        at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1149)<br/>        at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:624)<br/>        at java.lang.Thread.run(Thread.java:748)</p>
+</blockquote>
+<p>这个错可以忽略，然后是第二个错：</p>
+<blockquote>
+<p>2019-01-17 15:49:08,730 ERROR [Thread-24] master.HMaster: Failed to become active master<br/>java.lang.IllegalStateException: The procedure WAL relies on the ability to hsync for proper operation during component failures, but the underlying filesystem does not support doing so. Please check the config value of 'hbase.procedure.store.wal.use.hsync' to set the desired level of robustness and ensure the config value of 'hbase.wal.dir' points to a FileSystem mount that can provide it.<br/>        at org.apache.hadoop.hbase.procedure2.store.wal.WALProcedureStore.rollWriter(WALProcedureStore.java:1082)<br/>        at org.apache.hadoop.hbase.procedure2.store.wal.WALProcedureStore.recoverLease(WALProcedureStore.java:423)<br/>        at org.apache.hadoop.hbase.procedure2.ProcedureExecutor.init(ProcedureExecutor.java:714)<br/>        at org.apache.hadoop.hbase.master.HMaster.createProcedureExecutor(HMaster.java:1398)<br/>        at org.apache.hadoop.hbase.master.HMaster.finishActiveMasterInitialization(HMaster.java:857)<br/>        at org.apache.hadoop.hbase.master.HMaster.startActiveMasterManager(HMaster.java:2225)<br/>        at org.apache.hadoop.hbase.master.HMaster.lambda$run$0(HMaster.java:568)<br/>        at java.lang.Thread.run(Thread.java:748)</p>
+</blockquote>
+<p>这个可以通过设置hbase.unsafe.stream.capability.enforce=false解决，详见 <a href="https://www.cnblogs.com/barneywill/p/10283076.html" target="_blank">https://www.cnblogs.com/barneywill/p/10283076.html</a></p>
+<p>最后发现很多warn：</p>
+<p> </p>
+<blockquote>
+<p>2019-01-17 18:22:12,657 WARN [Thread-24] master.HMaster: hbase:meta,,1.1588230740 is NOT online; state={1588230740 state=OPEN, ts=1547720528009, server=test-server-01,16020,1547717775199}; ServerCrashProcedures=false. Master startup cannot progress, in holding-pattern until region onlined.<br/>2019-01-17 18:22:13,660 WARN  [Thread-24] master.HMaster: hbase:meta,,1.1588230740 is NOT online; state={1588230740 state=OPEN, ts=1547720528009, server=test-server-01,16020,1547717775199}; ServerCrashProcedures=false. Master startup cannot progress, in holding-pattern until region onlined.<br/>2019-01-17 18:22:15,660 WARN  [Thread-24] master.HMaster: hbase:meta,,1.1588230740 is NOT online; state={1588230740 state=OPEN, ts=1547720528009, server=test-server-01,16020,1547717775199}; ServerCrashProcedures=false. Master startup cannot progress, in holding-pattern until region onlined.<br/>2019-01-17 18:22:19,661 WARN  [Thread-24] master.HMaster: hbase:meta,,1.1588230740 is NOT online; state={1588230740 state=OPEN, ts=1547720528009, server=test-server-01,16020,1547717775199}; ServerCrashProcedures=false. Master startup cannot progress, in holding-pattern until region onlined.<br/>2019-01-17 18:22:27,661 WARN  [Thread-24] master.HMaster: hbase:meta,,1.1588230740 is NOT online; state={1588230740 state=OPEN, ts=1547720528009, server=test-server-01,16020,1547717775199}; ServerCrashProcedures=false. Master startup cannot progress, in holding-pattern until region onlined.<br/>2019-01-17 18:22:43,662 WARN  [Thread-24] master.HMaster: hbase:meta,,1.1588230740 is NOT online; state={1588230740 state=OPEN, ts=1547720528009, server=test-server-01,16020,1547717775199}; ServerCrashProcedures=false. Master startup cannot progress, in holding-pattern until region onlined.</p>
+</blockquote>
+<p>清空hbase.rootdir，hbase.tmp.dir，hbase.zookeeper.property.dataDir这3个目录，同时设置好用户权限，然后重启hbase即可；</p>
+<p> </p>
+</div>
+            </div>
+
+            <!-- Post Footer -->
+            <div class="post-footer">
+                <div class="post-navigation">
+                    <a href="../blog_cn.html" class="nav-button">← Back to Home</a>
+                    <a href="0264.html" class="nav-button">Next Post →</a>
+                </div>
+            </div>
+        </article>
+    </div>
+</body>
+</html>

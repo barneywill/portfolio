@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>股票常用指标计算</title>
+    <link rel="stylesheet" href="../css/style3.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header Navigation -->
+        <div class="header">
+            <h1><a href="../blog_cn.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+        </div>
+
+        <!-- Post Container -->
+        <article class="post">
+            <!-- Post Header -->
+            <div class="post-header">
+                <h1>股票常用指标计算</h1>
+                <div class="post-meta">
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📅</span>
+                        <span>January 02, 2019</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📖</span>
+                        <span>4 min read</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">👁️</span>
+                        <span>1086 views</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Post Content -->
+            <div class="post-content">
+                <div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<p>计算MA和EMA通用方法</p>
+<div class="cnblogs_code">
+<pre>  def getAverageArray(datas : Array[Double], period : Int, maType : MaType = MaType.Ma, weight : Double = 2.0) : ArrayBuffer[Double] =<span style="color: rgba(0, 0, 0, 1)"> {
+    val averageArray </span>=<span style="color: rgba(0, 0, 0, 1)"> ArrayBuffer[Double]()
+    </span><span style="color: rgba(0, 0, 255, 1)">for</span> (i &lt;- 0 until period) averageArray += 0.0<span style="color: rgba(0, 0, 0, 1)">
+    var average </span>= 0.0
+    <span style="color: rgba(0, 0, 255, 1)">for</span> (i &lt;-<span style="color: rgba(0, 0, 0, 1)"> period until datas.size) {
+      </span><span style="color: rgba(0, 0, 255, 1)">if</span> (average == 0.0) average = datas.slice(0, period).sum /<span style="color: rgba(0, 0, 0, 1)"> period
+      maType match {
+        </span><span style="color: rgba(0, 0, 255, 1)">case</span> MaType.Ma =&gt; average = (average * period - datas.apply(i - period) + datas.apply(i)) /<span style="color: rgba(0, 0, 0, 1)"> period
+        </span><span style="color: rgba(0, 0, 255, 1)">case</span> MaType.Ema =&gt; {val percent = weight / (period + weight - 1);average = datas.apply(i) * percent + average * (1 -<span style="color: rgba(0, 0, 0, 1)"> percent)}
+        </span><span style="color: rgba(0, 0, 255, 1)">case</span> _ =&gt; <span style="color: rgba(0, 0, 255, 1)">throw</span> <span style="color: rgba(0, 0, 255, 1)">new</span> RuntimeException("unsupport ma type : " +<span style="color: rgba(0, 0, 0, 1)"> maType)
+      }
+      averageArray </span>+=<span style="color: rgba(0, 0, 0, 1)"> average
+    }
+    averageArray
+  }</span></pre>
+</div>
+<p>计算MA</p>
+<div class="cnblogs_code">
+<pre>  def calculateMa(wrapperList: Array[StockInfoWrapper], period: Int, maType: MaExporter.MaType, weight: Double, getValue : (StockInfo =&gt; java.lang.Double), getAverageMap : (StockInfoWrapper =&gt; util.Map[Integer, java.lang.Double])) =<span style="color: rgba(0, 0, 0, 1)"> {
+    val averageArray </span>= <span style="color: rgba(0, 0, 255, 1)">this</span>.getAverageArray(wrapperList.map(wrapper =&gt;<span style="color: rgba(0, 0, 0, 1)"> getValue(wrapper.getStockInfo)).map(_.toDouble), period, maType)
+    </span><span style="color: rgba(0, 0, 255, 1)">for</span> (i &lt;- 0<span style="color: rgba(0, 0, 0, 1)"> until wrapperList.length) getAverageMap(wrapperList.apply(i)).put(period, averageArray.apply(i))
+  }</span></pre>
+</div>
+<p>计算BOLL</p>
+<div class="cnblogs_code">
+<pre>  def calculateBoll(wrapperList: Array[StockInfoWrapper], period: Int, getValue : (StockInfo =&gt; java.lang.Double), getAverageMap : (StockInfoWrapper =&gt; util.Map[Integer, java.lang.Double])) =<span style="color: rgba(0, 0, 0, 1)"> {
+    var md </span>= 0.0<span style="color: rgba(0, 0, 0, 1)">
+    val averageArray </span>= <span style="color: rgba(0, 0, 255, 1)">this</span>.getAverageArray(wrapperList.map(wrapper =&gt;<span style="color: rgba(0, 0, 0, 1)"> getValue(wrapper.getStockInfo)).map(_.toDouble), period, MaType.Ma)
+    </span><span style="color: rgba(0, 0, 255, 1)">for</span> (i &lt;- 2 *<span style="color: rgba(0, 0, 0, 1)"> period until wrapperList.size) {
+      </span><span style="color: rgba(0, 0, 255, 1)">if</span> (md == 0.0<span style="color: rgba(0, 0, 0, 1)">) {
+        </span><span style="color: rgba(0, 0, 255, 1)">for</span> (j &lt;- period until 2 * period) md += Math.pow(Math.abs(getValue(wrapperList.apply(j).getStockInfo) - averageArray.apply(j)), 2<span style="color: rgba(0, 0, 0, 1)">)
+        md </span>= Math.pow(md / period, 0.5<span style="color: rgba(0, 0, 0, 1)">)
+      }
+      </span><span style="color: rgba(0, 0, 255, 1)">if</span> (md &gt; 0<span style="color: rgba(0, 0, 0, 1)">) {
+        getAverageMap(wrapperList.apply(i)).put(</span>10000, averageArray.apply(i) + avergeBollDayCount.apply(1) *<span style="color: rgba(0, 0, 0, 1)"> md)
+        getAverageMap(wrapperList.apply(i)).put(</span>10001, averageArray.apply(i) - avergeBollDayCount.apply(1) *<span style="color: rgba(0, 0, 0, 1)"> md)
+        md </span>= Math.pow((Math.pow(md, 2) * period - Math.pow(Math.abs(getValue(wrapperList.apply(i - period).getStockInfo) - averageArray.apply(i - period)), 2) + Math.pow(Math.abs(getValue(wrapperList.apply(i).getStockInfo) - averageArray.apply(i)), 2)) / period, 0.5<span style="color: rgba(0, 0, 0, 1)">)
+      }
+    }
+  }</span></pre>
+</div>
+<p>计算MACD</p>
+<div class="cnblogs_code">
+<pre>  def calculateMacd(wrapperList: Array[StockInfoWrapper], period1: Int, period2 : Int, period3 : Int, weight: Double, getValue : (StockInfo =&gt; java.lang.Double), getAverageMap : (StockInfoWrapper =&gt; util.Map[Integer, java.lang.Double])) =<span style="color: rgba(0, 0, 0, 1)"> {
+    val average1Array </span>= <span style="color: rgba(0, 0, 255, 1)">this</span>.getAverageArray(wrapperList.map(wrapper =&gt; getValue(wrapper.getStockInfo)).map(_.toDouble), period1, MaType.Ema, <span style="color: rgba(0, 0, 255, 1)">this</span><span style="color: rgba(0, 0, 0, 1)">.weight)
+    val average2Array </span>= <span style="color: rgba(0, 0, 255, 1)">this</span>.getAverageArray(wrapperList.map(wrapper =&gt; getValue(wrapper.getStockInfo)).map(_.toDouble), period2, MaType.Ema, <span style="color: rgba(0, 0, 255, 1)">this</span><span style="color: rgba(0, 0, 0, 1)">.weight)
+    val diffArray </span>=<span style="color: rgba(0, 0, 0, 1)"> ArrayBuffer[Double]()
+    </span><span style="color: rgba(0, 0, 255, 1)">for</span> (i &lt;- 0 until average1Array.length) diffArray += average1Array.apply(i) -<span style="color: rgba(0, 0, 0, 1)"> average2Array.apply(i)
+    val averageDiffArray </span>= <span style="color: rgba(0, 0, 255, 1)">this</span>.getAverageArray(diffArray.toArray, period3, MaType.Ema, <span style="color: rgba(0, 0, 255, 1)">this</span><span style="color: rgba(0, 0, 0, 1)">.weight)
+    </span><span style="color: rgba(0, 0, 255, 1)">for</span> (i &lt;- 1<span style="color: rgba(0, 0, 0, 1)"> until wrapperList.length) {
+      getAverageMap(wrapperList.apply(i)).put(</span>0, (diffArray.apply(i) - (averageDiffArray.apply(i - 1) * 0.8 + diffArray.apply(i) * 0.2)) * 2<span style="color: rgba(0, 0, 0, 1)">)
+      getAverageMap(wrapperList.apply(i)).put(</span>1<span style="color: rgba(0, 0, 0, 1)">, diffArray.apply(i))
+      getAverageMap(wrapperList.apply(i)).put(</span>2<span style="color: rgba(0, 0, 0, 1)">, averageDiffArray.apply(i))
+    }
+  }</span></pre>
+</div>
+<p>调用</p>
+<div class="cnblogs_code">
+<pre><span style="color: rgba(0, 0, 255, 1)">class</span><span style="color: rgba(0, 0, 0, 1)"> StockInfo(openingprice : Double, highestprice : Double, lowestprice : Double, closingprice : Double, tradevolumn : Double, transactionvalue : Double){}
+</span><span style="color: rgba(0, 0, 255, 1)">class</span><span style="color: rgba(0, 0, 0, 1)"> StockInfoWrapper(stock : StockInfo) {
+  val averagePriceMap </span>=<span style="color: rgba(0, 0, 0, 1)"> Map[Int, Double]()
+  val averageVolumnMap </span>=<span style="color: rgba(0, 0, 0, 1)"> Map[Int, Double]()
+  val averageMacdMap </span>=<span style="color: rgba(0, 0, 0, 1)"> Map[Int, Double]()
+}
+
+  val averagePriceDayCountList </span>= List(18, 28, 50, 250<span style="color: rgba(0, 0, 0, 1)">)
+  val averageVolumnDayCountList </span>= List(5<span style="color: rgba(0, 0, 0, 1)">)
+  val avergeBollDayCount </span>= List(18, 2<span style="color: rgba(0, 0, 0, 1)">)
+  val averageMACDDayCountList </span>= List(12, 26, 9<span style="color: rgba(0, 0, 0, 1)">)
+  val weight </span>= 2.0
+
+    <span style="color: rgba(0, 0, 255, 1)">this</span>.averagePriceDayCountList.foreach(averagePriceDayCount =&gt; <span style="color: rgba(0, 0, 255, 1)">this</span>.calculateMa(wrapperList, averagePriceDayCount, MaType.Ma, <span style="color: rgba(0, 0, 255, 1)">this</span><span style="color: rgba(0, 0, 0, 1)">.weight, _.getClosingprice, _.getAveragePriceMap))
+    </span><span style="color: rgba(0, 0, 255, 1)">this</span>.averageVolumnDayCountList.foreach(averageVolumnDayCount =&gt; <span style="color: rgba(0, 0, 255, 1)">this</span>.calculateMa(wrapperList, averageVolumnDayCount, MaType.Ma, <span style="color: rgba(0, 0, 255, 1)">this</span><span style="color: rgba(0, 0, 0, 1)">.weight, _.getTradevolumn, _.getAverageVolumnMap))
+    </span><span style="color: rgba(0, 0, 255, 1)">this</span>.calculateBoll(wrapperList, avergeBollDayCount.apply(0<span style="color: rgba(0, 0, 0, 1)">), _.getClosingprice, _.getAveragePriceMap)
+    </span><span style="color: rgba(0, 0, 255, 1)">this</span>.calculateMacd(wrapperList, averageMACDDayCountList.apply(0), averageMACDDayCountList.apply(1), averageMACDDayCountList.apply(2), <span style="color: rgba(0, 0, 255, 1)">this</span>.weight, _.getClosingprice, _.getAverageMacdMap)</pre>
+</div>
+<p> </p>
+</div>
+            </div>
+
+            <!-- Post Footer -->
+            <div class="post-footer">
+                <div class="post-navigation">
+                    <a href="../blog_cn.html" class="nav-button">← Back to Home</a>
+                    <a href="0286.html" class="nav-button">Next Post →</a>
+                </div>
+            </div>
+        </article>
+    </div>
+</body>
+</html>

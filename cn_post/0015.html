@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>kafka开启压缩</title>
+    <link rel="stylesheet" href="../css/style3.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header Navigation -->
+        <div class="header">
+            <h1><a href="../blog_cn.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+        </div>
+
+        <!-- Post Container -->
+        <article class="post">
+            <!-- Post Header -->
+            <div class="post-header">
+                <h1>kafka开启压缩</h1>
+                <div class="post-meta">
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📅</span>
+                        <span>May 20, 2022</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📖</span>
+                        <span>1 min read</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">👁️</span>
+                        <span>1289 views</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Post Content -->
+            <div class="post-content">
+                <div class="blogpost-body cnblogs-markdown" id="cnblogs_post_body">
+<p>kafka开启压缩后，可以极大的优化磁盘占用和网络传输开销，以及cpu占用和gc时间，开启压缩的参数为compression.type</p>
+<blockquote>
+<p>Specify the final compression type for a given topic. This configuration accepts the standard compression codecs ('gzip', 'snappy', 'lz4', 'zstd'). It additionally accepts 'uncompressed' which is equivalent to no compression; and 'producer' which means retain the original compression codec set by the producer.</p>
+</blockquote>
+<p><picture>
+  <source srcset="../img/1509647-20220520175003372-551829999.webp" type="image/webp">
+  <img alt="" src="../img/1509647-20220520175003372-551829999.png">
+</picture></p>
+<p>这个参数在broker和producer都可以设置，建议：</p>
+<ul>
+<li>在producer设置，然后broker设置为producer；</li>
+<li>在producer不设置，统一在broker设置；</li>
+</ul>
+<p>ps: 如果两个地方都设置，可能发生两个压缩算法不一致的情况，这样broker在收到消息后需要先解压，再压缩后落盘，增加cpu开销。</p>
+<p>开启压缩后可以通过如下命令确认：</p>
+<blockquote>
+<p>bin/kafka-run-class.sh kafka.tools.DumpLogSegments --files /data/kafka/test-0/00000000000000000000.log --print-data-log | grep compresscodec</p>
+</blockquote>
+<p>各种压缩算法的对比如下：</p>
+<p><picture>
+  <source srcset="../img/1509647-20220520175228292-1450158113.webp" type="image/webp">
+  <img alt="" src="../img/1509647-20220520175228292-1450158113.png">
+</picture></p>
+<p>参考：<br/>
+<a href="https://blog.cloudflare.com/squeezing-the-firehose" rel="noopener nofollow" target="_blank">https://blog.cloudflare.com/squeezing-the-firehose</a><br/>
+<a href="https://stackoverflow.com/questions/67537111/how-do-i-decide-between-lz4-and-snappy-compression" rel="noopener nofollow" target="_blank">https://stackoverflow.com/questions/67537111/how-do-i-decide-between-lz4-and-snappy-compression</a></p>
+</div>
+            </div>
+
+            <!-- Post Footer -->
+            <div class="post-footer">
+                <div class="post-navigation">
+                    <a href="../blog_cn.html" class="nav-button">← Back to Home</a>
+                    <a href="0016.html" class="nav-button">Next Post →</a>
+                </div>
+            </div>
+        </article>
+    </div>
+</body>
+</html>

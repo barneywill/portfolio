@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ambari 2 - 通过Ambari部署ElasticSearch（ELK）</title>
+    <link rel="stylesheet" href="../css/style3.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header Navigation -->
+        <div class="header">
+            <h1><a href="../blog_cn.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+        </div>
+
+        <!-- Post Container -->
+        <article class="post">
+            <!-- Post Header -->
+            <div class="post-header">
+                <h1>Ambari 2 - 通过Ambari部署ElasticSearch（ELK）</h1>
+                <div class="post-meta">
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📅</span>
+                        <span>January 17, 2019</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📖</span>
+                        <span>3 min read</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">👁️</span>
+                        <span>6607 views</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Post Content -->
+            <div class="post-content">
+                <div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<p>ambari2.7.3（hdp3.1） 安装 elasticsearch6.3.2</p>
+<p>ambari的hdp中原生不支持elasticsearch安装，下面介绍如何通过mpack方式使ambari支持elasticsearch安装：</p>
+<h1>一 安装Service</h1>
+<h2>1 下载</h2>
+<p>Mpack include version 6.3.2 of ElasticSearch, Logstash, Kibana, FileBeat, and MetricBeat</p>
+<blockquote>
+<p># wget https://community.hortonworks.com/storage/attachments/87416-elasticsearch-mpack-2600-9.tar.gz</p>
+</blockquote>
+<h2>2 安装mpack</h2>
+<blockquote>
+<p># ambari-server install-mpack --mpack=/path/to/87416-elasticsearch-mpack-2600-9.tar.gz --verbose</p>
+</blockquote>
+<h2>3 重启ambari-server</h2>
+<blockquote>
+<p># ambari-server restart</p>
+</blockquote>
+<p>访问ambari页面发现services中并没有elasticsearch，检查mpack.json发现问题：</p>
+<p>/var/lib/ambari-server/resources/mpacks/elasticsearch-ambari.mpack-6.3.2/mpack.json</p>
+<blockquote>
+<p>        {</p>
+<p>          "service_name" : "ELASTICSEARCH",</p>
+<p>          "service_version" : "6.3.2",</p>
+<p>          "applicable_stacks" : [</p>
+<p>            {</p>
+<p>              "stack_name" : "HDP",</p>
+<p>              "stack_version" : "2.3"</p>
+<p>            },</p>
+<p>            {</p>
+<p>              "stack_name" : "HDP",</p>
+<p>              "stack_version" : "2.4"</p>
+<p>            },</p>
+<p>            {</p>
+<p>              "stack_name" : "HDP",</p>
+<p>              "stack_version" : "2.5"</p>
+<p>            },</p>
+<p>            {</p>
+<p>              "stack_name" : "HDP",</p>
+<p>              "stack_version" : "2.6"</p>
+<p>            }</p>
+<p>          ]</p>
+<p>        }</p>
+</blockquote>
+<p>applicable_stacks表明service只应用到hdp2.3-2.6版本，没有3.1，手工加上；</p>
+<p>mpack详细结构详见：https://cwiki.apache.org/confluence/display/AMBARI/Management+Packs</p>
+<p>要注意直接修改mpack.json然后重启ambari-server不管用，需要重新install mpack：</p>
+<h2>1 卸载</h2>
+<p>ambari-server uninstall-mpack --mpack-name=elasticsearch-ambari.mpack</p>
+<h2>2 修改mpack.json并重新打包</h2>
+<p>elasticsearch_mpack-2.6.0.0-9.tar.gz</p>
+<h2>3 安装mpack（同上）</h2>
+<h2>4 重启ambari-server（同上）</h2>
+<p>这时就可以在页面上看到ElasticSearch, Logstash, Kibana, FileBeat, and MetricBeat</p>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201901/1509647-20190117130611346-1924545927.png"/></p>
+<p> </p>
+<h1>二 部署ElasticSearch</h1>
+<p>下面开始部署ElasticSearch，发现报错：</p>
+<blockquote>
+<p>Traceback (most recent call last):</p>
+<p>  File "/var/lib/ambari-agent/cache/stack-hooks/before-ANY/scripts/hook.py", line 38, in &lt;module&gt;</p>
+<p>    BeforeAnyHook().execute()</p>
+<p>  File "/usr/lib/ambari-agent/lib/resource_management/libraries/script/script.py", line 352, in execute</p>
+<p>    method(env)</p>
+<p>  File "/var/lib/ambari-agent/cache/stack-hooks/before-ANY/scripts/hook.py", line 31, in hook</p>
+<p>    setup_users()</p>
+<p>  File "/var/lib/ambari-agent/cache/stack-hooks/before-ANY/scripts/shared_initialization.py", line 50, in setup_users</p>
+<p>    groups = params.user_to_groups_dict[user],</p>
+<p>KeyError: u'elasticsearch'</p>
+<p>Error: Error: Unable to run the custom hook script ['/usr/bin/python', '/var/lib/ambari-agent/cache/stack-hooks/before-ANY/scripts/hook.py', 'ANY', '/var/lib/ambari-agent/data/command-303.json', '/var/lib/ambari-agent/cache/stack-hooks/before-ANY', '/var/lib/ambari-agent/data/structured-out-303.json', 'INFO', '/var/lib/ambari-agent/tmp', 'PROTOCOL_TLSv1_2', '']</p>
+</blockquote>
+<p>跟进报错的代码：</p>
+<p>/var/lib/ambari-agent/cache/stack-hooks/before-ANY/scripts/shared_initialization.py</p>
+<div class="cnblogs_code">
+<pre>     35   should_create_users_and_groups =<span style="color: rgba(0, 0, 0, 1)"> False
+     </span>36   <span style="color: rgba(0, 0, 255, 1)">if</span><span style="color: rgba(0, 0, 0, 1)"> params.host_sys_prepped:
+     </span>37     should_create_users_and_groups = <span style="color: rgba(0, 0, 255, 1)">not</span><span style="color: rgba(0, 0, 0, 1)"> params.sysprep_skip_create_users_and_groups
+     </span>38   <span style="color: rgba(0, 0, 255, 1)">else</span><span style="color: rgba(0, 0, 0, 1)">:
+     </span>39     should_create_users_and_groups = <span style="color: rgba(0, 0, 255, 1)">not</span><span style="color: rgba(0, 0, 0, 1)"> params.ignore_groupsusers_create
+     </span>40 
+     41   <span style="color: rgba(0, 0, 255, 1)">if</span><span style="color: rgba(0, 0, 0, 1)"> should_create_users_and_groups:
+     </span>42     <span style="color: rgba(0, 0, 255, 1)">for</span> group <span style="color: rgba(0, 0, 255, 1)">in</span><span style="color: rgba(0, 0, 0, 1)"> params.group_list:
+     </span>43<span style="color: rgba(0, 0, 0, 1)">       Group(group,
+     </span>44<span style="color: rgba(0, 0, 0, 1)">       )
+     </span>45 
+     46     <span style="color: rgba(0, 0, 255, 1)">for</span> user <span style="color: rgba(0, 0, 255, 1)">in</span><span style="color: rgba(0, 0, 0, 1)"> params.user_list:
+     </span>47<span style="color: rgba(0, 0, 0, 1)">       User(user,
+     </span>48            uid = get_uid(user) <span style="color: rgba(0, 0, 255, 1)">if</span> params.override_uid == <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">true</span><span style="color: rgba(128, 0, 0, 1)">"</span> <span style="color: rgba(0, 0, 255, 1)">else</span><span style="color: rgba(0, 0, 0, 1)"> None,
+     </span>49            gid =<span style="color: rgba(0, 0, 0, 1)"> params.user_to_gid_dict[user],
+     </span>50            groups =<span style="color: rgba(0, 0, 0, 1)"> params.user_to_groups_dict[user],
+     </span>51            fetch_nonlocal_groups =<span style="color: rgba(0, 0, 0, 1)"> params.fetch_nonlocal_groups,
+     </span>52            )</pre>
+</div>
+<p>这时需要将配置ignore_groupsusers_create打开，查看和修改配置有两种方式：</p>
+<h2>1 命令行</h2>
+<blockquote>
+<p># cd /var/lib/ambari-server/resources/scripts<br/># python configs.py - u admin - p admin - n $cluster_name - l $ambari_server - t 8080 - a get - c cluster-env |grep - i ignore_groupsusers_create<br/>    "ignore_groupsusers_create": "false",<br/># python configs.py - u admin - p admin - n $cluster_name - l $ambari_server - t 8080 - a set - c cluster-env - k  ignore_groupsusers_create - v true</p>
+</blockquote>
+<p>详细参数详见</p>
+<blockquote>
+<p># python configs.py --help</p>
+</blockquote>
+<h2>2 rest api</h2>
+<blockquote>
+<p>curl --user admin:admin - i - H 'X-Requested-By: ambari' - X GET "http://ambari.server:8080/api/v1/clusters/$cluster_name/configurations?type=cluster-env"</p>
+</blockquote>
+<p>从返回的items中找到tag，然后再请求（增加tag参数）：</p>
+<blockquote>
+<p>curl --user admin:admin - i - H 'X-Requested-By: ambari' - X GET "http://ambari.server:8080/api/v1/clusters/$cluster_name/configurations?type=cluster-env&amp;tag=$tag"</p>
+</blockquote>
+<p>返回结果中包含所有的property</p>
+<blockquote>
+<p> "properties" : {<br/>        "agent_mounts_ignore_list" : "",<br/>        "alerts_repeat_tolerance" : "1",<br/>        "enable_external_ranger" : "false",<br/>        "fetch_nonlocal_groups" : "true",<br/>        "hide_yarn_memory_widget" : "false",<br/>        "ignore_bad_mounts" : "false",<br/>        "ignore_groupsusers_create" : "false",</p>
+</blockquote>
+<p>修改需要先将上面的配置保存到一个文件，比如/tmp/configurations.tmp，然后修改，然后再调用接口:</p>
+<blockquote>
+<p>curl --user admin:admin - i - H 'X-Requested-By: ambari' - X PUT - d @/tmp/configurations.tmp http://ambari.server:8080/api/v1/clusters/$cluster_name</p>
+</blockquote>
+<p>然后再部署即可；</p>
+<h1>三 启动ElasticSearch</h1>
+<p>启动elasticsearch，报错：</p>
+<p>1）</p>
+<blockquote>
+<p> File "/usr/lib/ambari-agent/lib/resource_management/libraries/script/config_dictionary.py", line 73, in __getattr__<br/>    raise Fail("Configuration parameter '" + self.name + "' was not found in configurations dictionary!")<br/>resource_management.core.exceptions.Fail: Configuration parameter 'java_home' was not found in configurations dictionary!</p>
+</blockquote>
+<p>需要返回ambari的elasticsearch config页面，将java_home修改为实际的java home路径：</p>
+<blockquote>
+<p># JAVA_HOME must be provided here for OS that use systemd service launch<br/>JAVA_HOME={{java64_home}}</p>
+</blockquote>
+<p>2）</p>
+<blockquote>
+<p>  File "/var/lib/ambari-agent/cache/common-services/ELASTICSEARCH/6.3.2/package/templates/elasticsearch.slave.yaml.j2", line 85, in top-level template code<br/>    gateway.expected_data_nodes: {{ expected_data_nodes }}<br/>  File "/usr/lib/ambari-agent/lib/resource_management/libraries/script/config_dictionary.py", line 73, in __getattr__<br/>    raise Fail("Configuration parameter '" + self.name + "' was not found in configurations dictionary!")<br/>resource_management.core.exceptions.Fail: Configuration parameter 'hostname' was not found in configurations dictionary!</p>
+</blockquote>
+<p>查看报错的文件</p>
+<blockquote>
+<p>/var/lib/ambari-agent/cache/common-services/ELASTICSEARCH/6.3.2/package/templates/elasticsearch.slave.yaml.j2<br/>/var/lib/ambari-agent/cache/common-services/ELASTICSEARCH/6.3.2/package/templates/elasticsearch.master.yaml.j2</p>
+</blockquote>
+<p>发现报错的这行，是因为hostname没有赋值导致，直接去掉这行</p>
+<blockquote>
+<p>node.name: {{ hostname }}</p>
+</blockquote>
+<p>在ambari-server端对应的模板文件为：</p>
+<blockquote>
+<p># grep hostname /var/lib/ambari-server/resources/common-services/ELASTICSEARCH/6.3.2/package/templates/elasticsearch*<br/>/var/lib/ambari-server/resources/common-services/ELASTICSEARCH/6.3.2/package/templates/elasticsearch.master.yaml.j2:node.name: {{ hostname }}<br/>/var/lib/ambari-server/resources/common-services/ELASTICSEARCH/6.3.2/package/templates/elasticsearch.master.yaml.j2.5.6.2:  name: {{hostname}}<br/>/var/lib/ambari-server/resources/common-services/ELASTICSEARCH/6.3.2/package/templates/elasticsearch.slave.yaml.j2:node.name: {{ hostname }}<br/>/var/lib/ambari-server/resources/common-services/ELASTICSEARCH/6.3.2/package/templates/elasticsearch.slave.yaml.j2.5.6.2:  name: {{hostname}}</p>
+</blockquote>
+<p>然后可以启动成功：</p>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201901/1509647-20190119234958557-1177781755.png"/></p>
+<p> </p>
+<p> </p>
+<p>参考：</p>
+<p>https://community.hortonworks.com/articles/215078/how-to-install-elk-stack-632-in-ambari.html<br/>https://community.hortonworks.com/questions/212871/add-custom-service-via-ambari-error.html<br/>https://community.hortonworks.com/articles/63557/how-to-edit-the-cluster-envxml-entries-using-ambar.html</p>
+</div>
+            </div>
+
+            <!-- Post Footer -->
+            <div class="post-footer">
+                <div class="post-navigation">
+                    <a href="../blog_cn.html" class="nav-button">← Back to Home</a>
+                    <a href="0266.html" class="nav-button">Next Post →</a>
+                </div>
+            </div>
+        </article>
+    </div>
+</body>
+</html>

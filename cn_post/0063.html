@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>vscode使用</title>
+    <link rel="stylesheet" href="../css/style3.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header Navigation -->
+        <div class="header">
+            <h1><a href="../blog_cn.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+        </div>
+
+        <!-- Post Container -->
+        <article class="post">
+            <!-- Post Header -->
+            <div class="post-header">
+                <h1>vscode使用</h1>
+                <div class="post-meta">
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📅</span>
+                        <span>June 27, 2020</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📖</span>
+                        <span>2 min read</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">👁️</span>
+                        <span>857 views</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Post Content -->
+            <div class="post-content">
+                <div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<p>VSCode（Visual Studio Code）</p>
+<p><picture>
+  <source srcset="../img/1509647-20200626233258493-823022250.webp" type="image/webp">
+  <img alt="" src="../img/1509647-20200626233258493-823022250.png">
+</picture></p>
+<p>官网：https://code.visualstudio.com/                                                                                                                                                                                                                                                                            </p>
+<p><em><em><picture>
+  <source srcset="../img/1509647-20200626233455963-623378097.webp" type="image/webp">
+  <img alt="" src="../img/1509647-20200626233455963-623378097.png">
+</picture></em></em></p>
+<p>Visual Studio Code is a lightweight but powerful source code editor which runs on your desktop and is available for Windows, macOS and Linux. It comes with built-in support for JavaScript, TypeScript and Node.js and has a rich ecosystem of extensions for other languages (such as C++, C#, Java, Python, PHP, Go) and runtimes (such as .NET and Unity). </p>
+<p>虽然只是editor，但是胜在简洁、启动速度快，在各种插件的加持下相当于小型ide，给人清爽的感觉，缺点是一次只能打开一个项目。</p>
+<h1>一 安装                                                                                                              </h1>
+<p>下载地址：https://code.visualstudio.com/#alt-downloads                                                                                                                                                                              <br/>  提供windows(32/64,zip)、mac、linux(deb/rpm/tar.gz)各个平台的版本，而且免费，不像微软的作风。windows下将以下快捷键中的Cmd改为Ctrl。</p>
+<p><picture>
+  <source srcset="../img/1509647-20200626234201669-1093340419.webp" type="image/webp">
+  <img alt="" src="../img/1509647-20200626234201669-1093340419.png">
+</picture></p>
+<p> </p>
+<p>安装之后，打开左侧插件 （Cmd+Shift+X），开始安装插件                                                                                                                                                                                   </p>
+<h3>通用插件</h3>
+<p>vscode-icons (修改左侧目录树的图标）</p>
+<p>Vim （vi编辑器）</p>
+<p>Vimacs （在vi输入模式增加emacs快捷键）</p>
+<p>Markdown All in One (markdown编辑器）</p>
+<p>TODO Highlight （todo高亮）</p>
+<p>Bracket Pair Colorizer （不同的括号对通过不同的颜色区分）</p>
+<p>Setting Sync （保存你的vscode配置到github，一处配置，所有同步）</p>
+<h3>开发插件 </h3>
+<p>Code Runner（代码执行，在代码片段上或文件上右键run code）</p>
+<p>Git Extension Pack (git套装，包括：Git History / Project Manager / GitLens / gitignore / Open in GitHub...)</p>
+<p>Mysql （连接mysql数据库和查询）</p>
+<h3>语言插件</h3>
+<p>Python Extension Pack (python套装，包括：Python / Visual Code IntelliCode / MagicPython / Django / Jinja)</p>
+<p>Java Extension Pack (java套装，包括：Language Support for Java / Debugger for Java / Java Test Runner / Maven for Java / Java Dependency View / Visual Studio IntelliCode) / Lombok</p>
+<p>Scala Syntax / Scala Language Server</p>
+<p>...</p>
+<p>以上插件相当好用，比如GitLens可以在代码中展示所有的提交历史</p>
+<h2>配置及目录介绍</h2>
+<p>vscode中用户配置位于</p>
+<div>
+<div>
+<ul>
+<li>Windows <code>%APPDATA%\Code\User\settings.json</code></li>
+<li>macOS <code>$HOME/Library/Application Support/Code/User/settings.json</code></li>
+<li>Linux <code>$HOME/.config/Code/User/settings.json</code></li>
+</ul>
+</div>
+
+
+
+
+项目配置位于</div>
+<div>
+<ul>
+<li>$HOME/.vscode</li>
+</ul>
+</div>
+<div>安装的插件就位于 $HOME/.vscode/extensions 下</div>
+<h2>二 使用</h2>
+<p>打开命令面板 （Cmd+Shift+P）                                                                                                                                                                                                 <br/>                                                                                                                                                                                                                          <br/>左侧目录树 （Cmd+Shift+E）                                                                                                                                                                                                   <br/>左侧查找 （Cmd+Shift+F）                                                                                                                                                                                                     <br/>左侧运行 （Cmd+Shift+D）                                                                                                                                                                                                     <br/>左侧插件 （Cmd+Shift+X）</p>
+<p>左侧Git (Ctrl+Shift+G)                                                                                                                                                                                                    <br/>                                                                                                                                                                                                                          <br/>打开终端 （Ctrl+`）</p>
+<p>打开文件 （Cmd+P）</p>
+<p>打开目录 （Cmd+O）</p>
+<p>折叠全部目录树 (Cmd+Shift+Up)</p>
+<p>单个目录折叠展开 (Left / Right)</p>
+<p>一些场景：大小写转换，选中文字，打开命令面板，输入transform，可以从命令提示中选择转换为大写或者小写。</p>
+<h3>1 Java</h3>
+<p>官方教程：https://code.visualstudio.com/docs/languages/java                                                                                                                                                                         </p>
+<p>配置java环境：在 /etc/profile 设置环境变量：JAVA_HOME 和 PATH，设置完成之后重启vscode</p>
+<h4>1.1 Demo版（Hello World）</h4>
+<h5>编写</h5>
+<p>新建文件 （Cmd+N）                                                                                                                                                                                                       <br/>保存文件名为HelloWorld.java （Cmd+S）                                                                                                                                                                                    <br/>编写程序（智能提示）                                                                                                                                                                                                      <br/>输入class</p>
+<p><picture>
+  <source srcset="../img/1509647-20200626235531919-802507323.webp" type="image/webp">
+  <img alt="" src="../img/1509647-20200626235531919-802507323.png">
+</picture></p>
+<p>回车之后</p>
+<p><picture>
+  <source srcset="../img/1509647-20200626235626219-969481440.webp" type="image/webp">
+  <img alt="" src="../img/1509647-20200626235626219-969481440.png">
+</picture></p>
+<p>输入main</p>
+<p><picture>
+  <source srcset="../img/1509647-20200626235813347-1530120253.webp" type="image/webp">
+  <img alt="" src="../img/1509647-20200626235813347-1530120253.png">
+</picture></p>
+<p>回车之后</p>
+<p><picture>
+  <source srcset="../img/1509647-20200626235918853-719681938.webp" type="image/webp">
+  <img alt="" src="../img/1509647-20200626235918853-719681938.png">
+</picture></p>
+<p>输入sysout</p>
+<p><picture>
+  <source srcset="../img/1509647-20200627000006354-474571806.webp" type="image/webp">
+  <img alt="" src="../img/1509647-20200627000006354-474571806.png">
+</picture></p>
+<p>回车之后</p>
+<p><picture>
+  <source srcset="../img/1509647-20200627000057411-1480541028.webp" type="image/webp">
+  <img alt="" src="../img/1509647-20200627000057411-1480541028.png">
+</picture></p>
+<p> 鼠标悬停之后还有提示</p>
+<p><picture>
+  <source srcset="../img/1509647-20200627000336808-1365036848.webp" type="image/webp">
+  <img alt="" src="../img/1509647-20200627000336808-1365036848.png">
+</picture></p>
+<p>体验相当不错.</p>
+<p>其他：</p>
+<ul>
+<li>从左侧Explorer-outline可以查看类结构</li>
+<li>从左侧References可以查看调用层次</li>
+<li>从左侧Search可以全局搜索</li>
+<li>从左侧Test中可以找到所有的测试用例</li>
+<li>从左侧GitLens可以查看当前文件所有git相关记录</li>
+</ul>
+<h5><span style="font-size: 0.83em">运行</span></h5>
+<ul>
+<li>点击main函数上的Run</li>
+<li>在类名上右键 Run Code (Ctrl+Opt+N)</li>
+<li>进入左侧 Run （Cmd+Shift+D），点击 Run and Debug </li>
+<li>进入菜单 Run-Run Debuging (F5)</li>
+</ul>
+<h4>1.2 Maven版</h4>
+<p>安装maven</p>
+<p>打开命令面板 （Cmd+Shift+P）<em id="__mceDel">                                                                                                                                                                                                </em></p>
+<p><em id="__mceDel">输入 java                                                                                                                                                                                                                 <br/>选择 Java: Create Java Project                                                                                                                                                                                            <br/>选择 Maven                                                                                                                                                                                                                <br/>选择 archetype：archetype-quickstart-jdk8                                                                                                                                                                                 <br/></em></p>
+<p>可以通过maven窗口快速执行命令</p>
+<p><picture>
+  <source srcset="../img/1509647-20200627001720908-690654475.webp" type="image/webp">
+  <img alt="" src="../img/1509647-20200627001720908-690654475.png">
+</picture></p>
+<p>通过终端执行mvn命令也可以</p>
+<blockquote>
+<p>mvn clean package - DskipTests=true</p>
+</blockquote>
+<h4>1.3 导入Maven工程</h4>
+<p>打开文件夹 (Cmd+K Cmd+D)</p>
+<p>选择已有的工程目录</p>
+<p>完成</p>
+<h3>2 Scala</h3>
+<p>安装scala环境，在/etc/profile中添加SCALA_HOME和PATH环境变量。</p>
+<p>新建HelloWorld.scala，编写</p>
+<p><picture>
+  <source srcset="../img/1509647-20200627154322468-471326503.webp" type="image/webp">
+  <img alt="" src="../img/1509647-20200627154322468-471326503.png">
+</picture></p>
+<p>运行</p>
+<p>在目录树文件上右键 run code （Ctrl+Opt+N）</p>
+<p>ps: scala目前没有找到运行单元测试的方法.</p>
+<h3>3 Python</h3>
+<p>安装python环境</p>
+<p>新建HelloWorld.py，编写</p>
+<p><picture>
+  <source srcset="../img/1509647-20200627155041302-773703937.webp" type="image/webp">
+  <img alt="" src="../img/1509647-20200627155041302-773703937.png">
+</picture></p>
+<p>运行</p>
+<p>在文件树文件上右键 run code （Ctrl+Opt+N）</p>
+<h3>4 Shell</h3>
+<p>新建testsh，编写</p>
+<p><picture>
+  <source srcset="../img/1509647-20200627165003090-985770386.webp" type="image/webp">
+  <img alt="" src="../img/1509647-20200627165003090-985770386.png">
+</picture></p>
+<p> </p>
+<p>在文件树文件上右键 run code （Ctrl+Opt+N）</p>
+<p> </p>
+</div>
+            </div>
+
+            <!-- Post Footer -->
+            <div class="post-footer">
+                <div class="post-navigation">
+                    <a href="../blog_cn.html" class="nav-button">← Back to Home</a>
+                    <a href="0064.html" class="nav-button">Next Post →</a>
+                </div>
+            </div>
+        </article>
+    </div>
+</body>
+</html>

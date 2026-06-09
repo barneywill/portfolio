@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>curl</title>
+    <link rel="stylesheet" href="../css/style3.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header Navigation -->
+        <div class="header">
+            <h1><a href="../blog_cn.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+        </div>
+
+        <!-- Post Container -->
+        <article class="post">
+            <!-- Post Header -->
+            <div class="post-header">
+                <h1>curl</h1>
+                <div class="post-meta">
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📅</span>
+                        <span>January 16, 2019</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📖</span>
+                        <span>1 min read</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">👁️</span>
+                        <span>553 views</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Post Content -->
+            <div class="post-content">
+                <div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<p>http请求过程如下：</p>
+<blockquote>
+</blockquote>
+<p>工作中经常需要模拟http请求（比如任意修改header和body），curl非常好用，可以通过</p>
+<blockquote>
+<p>curl - h</p>
+</blockquote>
+<p>常看详细的参数列表，下面列一些常用参数：</p>
+<blockquote>
+<p>-v, --verbose Make the operation more talkative</p>
+</blockquote>
+<p><em>显示详细的request和response信息，主要是header、状态码等</em></p>
+<blockquote>
+<p>-u, --user USER[:PASSWORD] Server user and password</p>
+</blockquote>
+<p><em>指定登陆账号和密码，-u user:password</em></p>
+<blockquote>
+<p>-X, --request COMMAND Specify request command to use</p>
+</blockquote>
+<p><em>指定Method，比如Get、Post、Put、Delete等，-X GET</em></p>
+<blockquote>
+<p>-x, --proxy [PROTOCOL://]HOST[:PORT] Use proxy on given port</p>
+</blockquote>
+<p><em>指定代理服务器和端口</em></p>
+<blockquote>
+<p>-o, --output FILE Write output to &lt;file&gt; instead of stdout</p>
+</blockquote>
+<p><em>输出内容到指定文件，下载时使用</em></p>
+<blockquote>
+<p>-H, --header LINE Custom header to pass to server (H)</p>
+</blockquote>
+<p><em>指定任何header，-H 'Cookie: anything'</em></p>
+<blockquote>
+<p>-d, --data DATA HTTP POST data (H)</p>
+</blockquote>
+<p><em>指定post的body，-d '{"name":"value"}'</em></p>
+<p>还可以通过-d指定一个文件的内容，比如 - d@/path/to/file</p>
+<blockquote>
+<p class="p1"><span class="s1">-F, --form &lt;name=content&gt; Specify multipart MIME data</span></p>
+</blockquote>
+<p><em> 支持上传文件, 比如 - F <span class="hljs-string">"filename=@/</span><span class="hljs-string">test/test.tar.gz"</span></em></p>
+<p></p>
+</div>
+            </div>
+
+            <!-- Post Footer -->
+            <div class="post-footer">
+                <div class="post-navigation">
+                    <a href="../blog_cn.html" class="nav-button">← Back to Home</a>
+                    <a href="0267.html" class="nav-button">Next Post →</a>
+                </div>
+            </div>
+        </article>
+    </div>
+</body>
+</html>

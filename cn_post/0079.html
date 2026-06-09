@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>centos命令行通过kvm安装centos</title>
+    <link rel="stylesheet" href="../css/style3.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header Navigation -->
+        <div class="header">
+            <h1><a href="../blog_cn.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+        </div>
+
+        <!-- Post Container -->
+        <article class="post">
+            <!-- Post Header -->
+            <div class="post-header">
+                <h1>centos命令行通过kvm安装centos</h1>
+                <div class="post-meta">
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📅</span>
+                        <span>December 26, 2019</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📖</span>
+                        <span>9 min read</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">👁️</span>
+                        <span>945 views</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Post Content -->
+            <div class="post-content">
+                <div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<h1><picture>
+  <source srcset="../img/1509647-20191226220712867-1355861161.webp" type="image/webp">
+  <img alt="" src="../img/1509647-20191226220712867-1355861161.png">
+</picture></h1>
+<p> </p>
+<p> 官方：http://www.linux-kvm.org</p>
+<h1>一 KVM简介</h1>
+<p>KVM (for Kernel-based Virtual Machine) is a full virtualization solution for Linux on x86 hardware containing virtualization extensions (Intel VT or AMD-V). It consists of a loadable kernel module, kvm.ko, that provides the core virtualization infrastructure and a processor specific module, kvm-intel.ko or kvm-amd.ko.</p>
+<p>Using KVM, one can run multiple virtual machines running unmodified Linux or Windows images. Each virtual machine has private virtualized hardware: a network card, disk, graphics adapter, etc.</p>
+<p>KVM is open source software. The kernel component of KVM is included in mainline Linux, as of 2.6.20. The userspace component of KVM is included in mainline QEMU, as of 1.3.</p>
+<h1>二 安装KVM</h1>
+<p>查看cpu是否支持虚拟化</p>
+<blockquote>
+<p># grep - Ei 'vmx|svm' /proc/cpuinfo</p>
+</blockquote>
+<p>其中vmx为intel，svm为amd</p>
+<p>安装</p>
+<blockquote>
+<p># yum install qemu-kvm qemu-kvm-tools qemu-img virt-manager libvirt libvirt-python libvirt-client bridge-utils virt-viewer virt-install</p>
+</blockquote>
+<p>启动</p>
+<blockquote>
+<p># lsmod |grep kvm<br/># systemctl start libvirtd</p>
+</blockquote>
+<h1>三 修改用户</h1>
+<blockquote>
+<p># vi /etc/libvirt/qemu.conf<br/>#user = "root"<br/>#group = "root"</p>
+</blockquote>
+<p>以上两行取消注释</p>
+<blockquote>
+<p># systemctl restart libvirtd</p>
+</blockquote>
+<h1>四 下载centos</h1>
+<p>http://isoredirect.centos.org/centos/7/isos/x86_64/</p>
+<p><br/>推荐镜像：http://mirrors.cqu.edu.cn/CentOS/7.7.1908/isos/x86_64/</p>
+<h1>五 安装centos</h1>
+<h2>1 nat方式</h2>
+<p><picture>
+  <source srcset="../img/1509647-20191226222033147-218042829.webp" type="image/webp">
+  <img alt="" src="../img/1509647-20191226222033147-218042829.png">
+</picture></p>
+<p> </p>
+<p> </p>
+<blockquote>
+<p># virt-install --name=$myname --memory=61440,maxmemory=61440 --vcpus=16,maxvcpus=16 --os-type=linux --os-variant=rhel7 --location=/root/CentOS-7-x86_64-Minimal-1908.iso --disk path=/kvm/$myname/root.img,size=150 --disk path=/data1/$myname/data1.img,size=300 --bridge=virbr0 --graphics=none --console=pty,target_type=serial --extra-args="console=tty0 console=ttyS0"</p>
+</blockquote>
+<p>注意：<br/>1）--bridge=virbr0，使用kvm自动安装bridge的virbr0；<br/>2）可以根据需要配置多个--disk，size单位为G，最简单的情形只需要配置一个disk来安装系统；</p>
+<h2>2 bridge方式</h2>
+<p><picture>
+  <source srcset="../img/1509647-20191226222051119-873009452.webp" type="image/webp">
+  <img alt="" src="../img/1509647-20191226222051119-873009452.png">
+</picture></p>
+<p> </p>
+<p> </p>
+<h3>1 配置bridge</h3>
+<div class="cnblogs_code">
+<pre><span style="color: rgba(0, 128, 0, 1)">#</span><span style="color: rgba(0, 128, 0, 1)"> cat /etc/sysconfig/network-scripts/ifcfg-br0 </span>
+DEVICE=<span style="color: rgba(0, 0, 0, 1)">br0
+ONBOOT</span>=<span style="color: rgba(0, 0, 0, 1)">yes
+TYPE</span>=<span style="color: rgba(0, 0, 0, 1)">Bridge
+BOOTPROTO</span>=<span style="color: rgba(0, 0, 0, 1)">static
+IPADDR</span>=192.168.1.100<span style="color: rgba(0, 0, 0, 1)">
+GATEWAY</span>=192.168.1.1<span style="color: rgba(0, 0, 0, 1)">
+DNS1</span>=192.168.1.1<span style="color: rgba(0, 0, 0, 1)">
+DEFROUTE</span>=yes</pre>
+</div>
+<h3><br/>2 修改eth0</h3>
+<blockquote>
+<p># vi /etc/sysconfig/network-scripts/ifcfg-eth0</p>
+</blockquote>
+<p>最后追加<br/>BRIDGE=br0</p>
+<h3>3 重启网络</h3>
+<blockquote>
+<p># systemctl restart network</p>
+</blockquote>
+<h3>4 查看bridge</h3>
+<blockquote>
+<p># brctl show</p>
+</blockquote>
+<h3>5 安装centos</h3>
+<blockquote>
+<p># virt-install --name=$myname --memory=61440,maxmemory=61440 --vcpus=16,maxvcpus=16 --os-type=linux --os-variant=rhel7 --location=/root/CentOS-7-x86_64-Minimal-1908.iso --disk path=/kvm/$myname/root.img,size=150 --disk path=/data1/$myname/data1.img,size=300 --bridge=br0 --graphics=none --console=pty,target_type=serial --extra-args="console=tty0 console=ttyS0"</p>
+</blockquote>
+<p>注意：--bridge=br0，使用刚才创建的br0；</p>
+<p><br/>PS：如果先以nat方式安装centos后，想要修改为bridge，可以修改</p>
+<p>1）通过命令</p>
+<div class="cnblogs_code">
+<pre><span style="color: rgba(0, 128, 0, 1)">#</span><span style="color: rgba(0, 128, 0, 1)"> virsh edit $myname</span>
+
+    &lt;interface type=<span style="color: rgba(128, 0, 0, 1)">'</span><span style="color: rgba(128, 0, 0, 1)">bridge</span><span style="color: rgba(128, 0, 0, 1)">'</span>&gt;
+      &lt;mac address=<span style="color: rgba(128, 0, 0, 1)">'</span><span style="color: rgba(128, 0, 0, 1)">52:54:00:e7:32:0d</span><span style="color: rgba(128, 0, 0, 1)">'</span>/&gt;
+      &lt;source bridge=<span style="color: rgba(128, 0, 0, 1)">'</span><span style="color: rgba(128, 0, 0, 1)">br0</span><span style="color: rgba(128, 0, 0, 1)">'</span>/&gt;
+      &lt;model type=<span style="color: rgba(128, 0, 0, 1)">'</span><span style="color: rgba(128, 0, 0, 1)">virtio</span><span style="color: rgba(128, 0, 0, 1)">'</span>/&gt;
+      &lt;address type=<span style="color: rgba(128, 0, 0, 1)">'</span><span style="color: rgba(128, 0, 0, 1)">pci</span><span style="color: rgba(128, 0, 0, 1)">'</span> domain=<span style="color: rgba(128, 0, 0, 1)">'</span><span style="color: rgba(128, 0, 0, 1)">0x0000</span><span style="color: rgba(128, 0, 0, 1)">'</span> bus=<span style="color: rgba(128, 0, 0, 1)">'</span><span style="color: rgba(128, 0, 0, 1)">0x00</span><span style="color: rgba(128, 0, 0, 1)">'</span> slot=<span style="color: rgba(128, 0, 0, 1)">'</span><span style="color: rgba(128, 0, 0, 1)">0x03</span><span style="color: rgba(128, 0, 0, 1)">'</span> function=<span style="color: rgba(128, 0, 0, 1)">'</span><span style="color: rgba(128, 0, 0, 1)">0x0</span><span style="color: rgba(128, 0, 0, 1)">'</span>/&gt;
+    &lt;/interface&gt;</pre>
+</div>
+<p>修改type为bridge，修改bridge为br0</p>
+<p>2）直接修改文件</p>
+<blockquote>
+<p># vi /etc/libvirt/qemu/$myname.xml</p>
+</blockquote>
+<p>修改后重启</p>
+<blockquote>
+<p># sytemctl restart libvirtd</p>
+</blockquote>
+<h1>六 文本界面安装centos</h1>
+<h2>1 初始界面</h2>
+<div class="cnblogs_code">
+<pre>================================================================================
+================================================================================<span style="color: rgba(0, 0, 0, 1)">
+Installation
+
+ </span>1) [x] Language settings                 2<span style="color: rgba(0, 0, 0, 1)">) [!] Time settings
+        (English (United States))                (Timezone </span><span style="color: rgba(0, 0, 255, 1)">is</span> <span style="color: rgba(0, 0, 255, 1)">not</span><span style="color: rgba(0, 0, 0, 1)"> set.)
+ </span>3) [!] Installation source               4<span style="color: rgba(0, 0, 0, 1)">) [!] Software selection
+        (Processing...)                          (Processing...)
+ </span>5) [!] Installation Destination          6<span style="color: rgba(0, 0, 0, 1)">) [x] Kdump
+        (No disks selected)                      (Kdump </span><span style="color: rgba(0, 0, 255, 1)">is</span><span style="color: rgba(0, 0, 0, 1)"> enabled)
+ </span>7) [ ] Network configuration             8<span style="color: rgba(0, 0, 0, 1)">) [!] Root password
+        (Not connected)                          (Password </span><span style="color: rgba(0, 0, 255, 1)">is</span> <span style="color: rgba(0, 0, 255, 1)">not</span><span style="color: rgba(0, 0, 0, 1)"> set.)
+ </span>9<span style="color: rgba(0, 0, 0, 1)">) [!] User creation
+        (No user will be created)
+  Please make your choice </span><span style="color: rgba(0, 0, 255, 1)">from</span> above [<span style="color: rgba(128, 0, 0, 1)">'</span><span style="color: rgba(128, 0, 0, 1)">q</span><span style="color: rgba(128, 0, 0, 1)">'</span> to quit | <span style="color: rgba(128, 0, 0, 1)">'</span><span style="color: rgba(128, 0, 0, 1)">b</span><span style="color: rgba(128, 0, 0, 1)">'</span> to begin installation |
+  <span style="color: rgba(128, 0, 0, 1)">'</span><span style="color: rgba(128, 0, 0, 1)">r</span><span style="color: rgba(128, 0, 0, 1)">'</span><span style="color: rgba(0, 0, 0, 1)"> to refresh]: 
+
+[anaconda] </span>1:main* 2:shell  3:log  4:storage-lo&gt; Switch tab: Alt+Tab | Help: F1 </pre>
+</div>
+<p><br/>注意：[!]为选填，可以按照数字和提示完成各项配置修改；</p>
+<h2>2 关于分区方式</h2>
+<p>其中5) [!] Installation Destination中需要选择分区方式，文本模式下不能定制各个分区的大小，自动分区逻辑为/目录50G，其他分给/home目录，如果想安装后调整默认分区大小，这里要选择LVM</p>
+<div class="cnblogs_code">
+<pre>================================================================================
+================================================================================<span style="color: rgba(0, 0, 0, 1)">
+Partition Scheme Options
+
+[ ] </span>1<span style="color: rgba(0, 0, 0, 1)">) Standard Partition
+
+[ ] </span>2<span style="color: rgba(0, 0, 0, 1)">) Btrfs
+
+[x] </span>3<span style="color: rgba(0, 0, 0, 1)">) LVM
+
+[ ] </span>4<span style="color: rgba(0, 0, 0, 1)">) LVM Thin Provisioning
+
+Select a partition scheme configuration.
+
+  Please make your choice </span><span style="color: rgba(0, 0, 255, 1)">from</span> above [<span style="color: rgba(128, 0, 0, 1)">'</span><span style="color: rgba(128, 0, 0, 1)">q</span><span style="color: rgba(128, 0, 0, 1)">'</span> to quit | <span style="color: rgba(128, 0, 0, 1)">'</span><span style="color: rgba(128, 0, 0, 1)">c</span><span style="color: rgba(128, 0, 0, 1)">'</span> to <span style="color: rgba(0, 0, 255, 1)">continue</span> |
+  <span style="color: rgba(128, 0, 0, 1)">'</span><span style="color: rgba(128, 0, 0, 1)">r</span><span style="color: rgba(128, 0, 0, 1)">'</span><span style="color: rgba(0, 0, 0, 1)"> to refresh]: c
+Generating updated storage configuration
+Checking storage configuration...</span></pre>
+</div>
+<h2>3 准备安装</h2>
+<div class="cnblogs_code">
+<pre>================================================================================
+================================================================================<span style="color: rgba(0, 0, 0, 1)">
+Installation
+
+ </span>1) [x] Language settings                 2<span style="color: rgba(0, 0, 0, 1)">) [x] Time settings
+        (English (United States))                (Asia</span>/<span style="color: rgba(0, 0, 0, 1)">Shanghai timezone)
+ </span>3) [x] Installation source               4<span style="color: rgba(0, 0, 0, 1)">) [x] Software selection
+        (Local media)                            (Minimal Install)
+ </span>5) [x] Installation Destination          6<span style="color: rgba(0, 0, 0, 1)">) [x] Kdump
+        (Automatic partitioning                  (Kdump </span><span style="color: rgba(0, 0, 255, 1)">is</span><span style="color: rgba(0, 0, 0, 1)"> enabled)
+        selected)                         </span>8<span style="color: rgba(0, 0, 0, 1)">) [x] Root password
+ </span>7) [ ] Network configuration                    (Password <span style="color: rgba(0, 0, 255, 1)">is</span><span style="color: rgba(0, 0, 0, 1)"> set.)
+        (Not connected)
+ </span>9<span style="color: rgba(0, 0, 0, 1)">) [ ] User creation
+        (No user will be created)
+  Please make your choice </span><span style="color: rgba(0, 0, 255, 1)">from</span> above [<span style="color: rgba(128, 0, 0, 1)">'</span><span style="color: rgba(128, 0, 0, 1)">q</span><span style="color: rgba(128, 0, 0, 1)">'</span> to quit | <span style="color: rgba(128, 0, 0, 1)">'</span><span style="color: rgba(128, 0, 0, 1)">b</span><span style="color: rgba(128, 0, 0, 1)">'</span> to begin installation |
+  <span style="color: rgba(128, 0, 0, 1)">'</span><span style="color: rgba(128, 0, 0, 1)">r</span><span style="color: rgba(128, 0, 0, 1)">'</span><span style="color: rgba(0, 0, 0, 1)"> to refresh]: b
+[anaconda] </span>1:main* 2:shell  3:log  4:storage-lo&gt; Switch tab: Alt+Tab | Help: F1 </pre>
+</div>
+<p><br/>直到安装完成；</p>
+<h1>七 调整磁盘默认分区大小</h1>
+<p>默认分区大小为/目录50G，其他都分给/home目录，如果要调整，操作过程如下</p>
+<div class="cnblogs_code">
+<pre><span style="color: rgba(0, 128, 0, 1)">#</span><span style="color: rgba(0, 128, 0, 1)"> df - h</span>
+Filesystem               Size  Used Avail Use%<span style="color: rgba(0, 0, 0, 1)"> Mounted on
+devtmpfs                  30G     0   30G   0</span>% /<span style="color: rgba(0, 0, 0, 1)">dev
+tmpfs                     30G     0   30G   0</span>% /dev/<span style="color: rgba(0, 0, 0, 1)">shm
+tmpfs                     30G  </span>8.6M   30G   1% /<span style="color: rgba(0, 0, 0, 1)">run
+tmpfs                     30G     0   30G   0</span>% /sys/fs/<span style="color: rgba(0, 0, 0, 1)">cgroup
+</span>/dev/mapper/centos-root  50G  1.3G   49G   2% /
+/dev/vda1               1014M  149M  866M  15% /<span style="color: rgba(0, 0, 0, 1)">boot
+</span>/dev/mapper/centos-home   84G   33M   84G   1% /<span style="color: rgba(0, 0, 0, 1)">home
+tmpfs                    </span>5.9G     0  5.9G   0% /run/user/<span style="color: rgba(0, 0, 0, 1)">0
+
+</span><span style="color: rgba(0, 128, 0, 1)">#</span><span style="color: rgba(0, 128, 0, 1)"> umount /home</span><span style="color: rgba(0, 128, 0, 1)">
+#</span><span style="color: rgba(0, 128, 0, 1)"> lvremove /dev/mapper/centos-home</span><span style="color: rgba(0, 128, 0, 1)">
+#</span><span style="color: rgba(0, 128, 0, 1)"> lvextend - L +50G /dev/mapper/centos-home</span><span style="color: rgba(0, 128, 0, 1)">
+#</span><span style="color: rgba(0, 128, 0, 1)"> xfs_growfs /dev/mapper/centos-root</span><span style="color: rgba(0, 128, 0, 1)">
+#</span><span style="color: rgba(0, 128, 0, 1)"> lvcreate - L 34G - n home centos</span><span style="color: rgba(0, 128, 0, 1)">
+#</span><span style="color: rgba(0, 128, 0, 1)"> mkfs.xfs /dev/centos/home</span><span style="color: rgba(0, 128, 0, 1)">
+#</span><span style="color: rgba(0, 128, 0, 1)"> mount /dev/mapper/centos-home</span>
+
+<span style="color: rgba(0, 128, 0, 1)">#</span><span style="color: rgba(0, 128, 0, 1)"> df - h</span>
+Filesystem               Size  Used Avail Use%<span style="color: rgba(0, 0, 0, 1)"> Mounted on
+devtmpfs                  30G     0   30G   0</span>% /<span style="color: rgba(0, 0, 0, 1)">dev
+tmpfs                     30G     0   30G   0</span>% /dev/<span style="color: rgba(0, 0, 0, 1)">shm
+tmpfs                     30G  </span>8.6M   30G   1% /<span style="color: rgba(0, 0, 0, 1)">run
+tmpfs                     30G     0   30G   0</span>% /sys/fs/<span style="color: rgba(0, 0, 0, 1)">cgroup
+</span>/dev/mapper/centos-root  100G  1.3G   99G   2% /
+/dev/vda1               1014M  149M  866M  15% /<span style="color: rgba(0, 0, 0, 1)">boot
+</span>/dev/mapper/centos-home   34G   33M   34G   1% /<span style="color: rgba(0, 0, 0, 1)">home
+tmpfs                    </span>5.9G     0  5.9G   0% /run/user/0</pre>
+</div>
+<h1>八 网络</h1>
+<h2>1 nat方式</h2>
+<p>执行</p>
+<blockquote>
+<p># dhclient eth0</p>
+</blockquote>
+<p>即可上网</p>
+<div class="cnblogs_code">
+<pre>[root@test ~]<span style="color: rgba(0, 128, 0, 1)">#</span><span style="color: rgba(0, 128, 0, 1)"> ip addr</span>
+1: lo: &lt;LOOPBACK,UP,LOWER_UP&gt; mtu 65536 qdisc noqueue state UNKNOWN group default qlen 1000<span style="color: rgba(0, 0, 0, 1)">
+    link</span>/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00<span style="color: rgba(0, 0, 0, 1)">
+    inet </span>127.0.0.1/8<span style="color: rgba(0, 0, 0, 1)"> scope host lo
+       valid_lft forever preferred_lft forever
+    inet6 ::</span>1/128<span style="color: rgba(0, 0, 0, 1)"> scope host 
+       valid_lft forever preferred_lft forever
+</span>2: eth0: &lt;BROADCAST,MULTICAST,UP,LOWER_UP&gt; mtu 1500 qdisc pfifo_fast state UP group default qlen 1000<span style="color: rgba(0, 0, 0, 1)">
+    link</span>/ether 52:54:00<span style="color: rgba(0, 0, 0, 1)">:aa:f7:c1 brd ff:ff:ff:ff:ff:ff
+[root@test </span>~]<span style="color: rgba(0, 128, 0, 1)">#</span><span style="color: rgba(0, 128, 0, 1)"> dhclient eth0</span>
+[root@test ~]<span style="color: rgba(0, 128, 0, 1)">#</span><span style="color: rgba(0, 128, 0, 1)"> ip addr</span>
+1: lo: &lt;LOOPBACK,UP,LOWER_UP&gt; mtu 65536 qdisc noqueue state UNKNOWN group default qlen 1000<span style="color: rgba(0, 0, 0, 1)">
+    link</span>/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00<span style="color: rgba(0, 0, 0, 1)">
+    inet </span>127.0.0.1/8<span style="color: rgba(0, 0, 0, 1)"> scope host lo
+       valid_lft forever preferred_lft forever
+    inet6 ::</span>1/128<span style="color: rgba(0, 0, 0, 1)"> scope host 
+       valid_lft forever preferred_lft forever
+</span>2: eth0: &lt;BROADCAST,MULTICAST,UP,LOWER_UP&gt; mtu 1500 qdisc pfifo_fast state UP group default qlen 1000<span style="color: rgba(0, 0, 0, 1)">
+    link</span>/ether 52:54:00<span style="color: rgba(0, 0, 0, 1)">:aa:f7:c1 brd ff:ff:ff:ff:ff:ff
+    inet </span>192.168.122.13/24 brd 192.168.122.255 scope <span style="color: rgba(0, 0, 255, 1)">global</span><span style="color: rgba(0, 0, 0, 1)"> dynamic eth0
+       valid_lft 3597sec preferred_lft 3597sec
+[root@test </span>~]<span style="color: rgba(0, 128, 0, 1)">#</span>
+PING www.a.shifen.com (14.215.177.39) 56(84<span style="color: rgba(0, 0, 0, 1)">) bytes of data.
+</span>64 bytes <span style="color: rgba(0, 0, 255, 1)">from</span> 14.215.177.39 (14.215.177.39): icmp_seq=1 ttl=53 time=23.9 ms</pre>
+</div>
+<h2>2 bridge方式</h2>
+<h3>1）设置静态ip</h3>
+<div class="cnblogs_code">
+<pre><span style="color: rgba(0, 128, 0, 1)">#</span><span style="color: rgba(0, 128, 0, 1)"> cat /etc/sysconfig/network-scripts/ifcfg-eth0 </span>
+TYPE=<span style="color: rgba(0, 0, 0, 1)">Ethernet
+BOOTPROTO</span>=<span style="color: rgba(0, 0, 0, 1)">static
+DEFROUTE</span>=<span style="color: rgba(0, 0, 0, 1)">yes
+NAME</span>=<span style="color: rgba(0, 0, 0, 1)">eth0
+UUID</span>=0a67f932-b328-49ce-8166-<span style="color: rgba(0, 0, 0, 1)">af12fb0b482f
+DEVICE</span>=<span style="color: rgba(0, 0, 0, 1)">eth0
+ONBOOT</span>=<span style="color: rgba(0, 0, 0, 1)">yes
+IPADDR</span>=192.168.1.101<span style="color: rgba(0, 0, 0, 1)">
+GATEWAY</span>=192.168.1.1<span style="color: rgba(0, 0, 0, 1)">
+DNS1</span>=192.168.1.1<span style="color: rgba(0, 0, 0, 1)">
+DEFROUTE</span>=yes</pre>
+</div>
+<h3><br/>2）重启网络</h3>
+<p># systemctl restart network</p>
+<h3>3）测试宿主机（192.168.1.100）和虚拟机（192.168.1.101）之间的连通性</h3>
+<h1>九 常用命令</h1>
+<p>设置kvm自动重启</p>
+<blockquote>
+<p># systemctl enable libvirtd</p>
+</blockquote>
+<p>virsh相关</p>
+<div class="cnblogs_code">
+<pre><span style="color: rgba(0, 128, 0, 1)">#</span><span style="color: rgba(0, 128, 0, 1)"> virsh list --all</span><span style="color: rgba(0, 128, 0, 1)">
+#</span><span style="color: rgba(0, 128, 0, 1)"> virsh console $myname</span><span style="color: rgba(0, 128, 0, 1)">
+#</span><span style="color: rgba(0, 128, 0, 1)"> virsh start $myname</span><span style="color: rgba(0, 128, 0, 1)">
+#</span><span style="color: rgba(0, 128, 0, 1)"> virsh shutdown $myname</span><span style="color: rgba(0, 128, 0, 1)">
+#</span><span style="color: rgba(0, 128, 0, 1)"> virsh destroy $myname</span><span style="color: rgba(0, 128, 0, 1)">
+#</span><span style="color: rgba(0, 128, 0, 1)"> virsh undefine $myname<br/># virsh autostart $myname<br/># virsh autostart --disable $myname</span></pre>
+</div>
+<p><br/>进入虚拟机之后可以安装一些常用命令，比如ifconfig</p>
+<blockquote>
+<p># yum install net-tools</p>
+</blockquote>
+<p>最后可以在宿主机通过virsh连接虚拟机或者远程通过192.168.1.101连接虚拟机；</p>
+<p><br/>参考：<br/>http://www.linux-kvm.org/page/Main_Page</p>
+</div>
+            </div>
+
+            <!-- Post Footer -->
+            <div class="post-footer">
+                <div class="post-navigation">
+                    <a href="../blog_cn.html" class="nav-button">← Back to Home</a>
+                    <a href="0080.html" class="nav-button">Next Post →</a>
+                </div>
+            </div>
+        </article>
+    </div>
+</body>
+</html>

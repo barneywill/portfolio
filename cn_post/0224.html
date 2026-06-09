@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>datanode启动报错：50020端口被占用</title>
+    <link rel="stylesheet" href="../css/style3.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header Navigation -->
+        <div class="header">
+            <h1><a href="../blog_cn.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+        </div>
+
+        <!-- Post Container -->
+        <article class="post">
+            <!-- Post Header -->
+            <div class="post-header">
+                <h1>datanode启动报错：50020端口被占用</h1>
+                <div class="post-meta">
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📅</span>
+                        <span>February 15, 2019</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📖</span>
+                        <span>1 min read</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">👁️</span>
+                        <span>1109 views</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Post Content -->
+            <div class="post-content">
+                <div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<p>集群中有一台datanode一直启动报错如下：</p>
+<blockquote>
+<p>java.net.BindException: Problem binding to [$server1:50020] java.net.BindException: Address already in use; For more details see: http://wiki.apache.org/hadoop/BindException</p>
+</blockquote>
+<p>查看端口是否被占用</p>
+<blockquote>
+<p># netstat - tnlp|grep 50020</p>
+</blockquote>
+<p>发现没有进程在监听50020端口，奇怪，也有可能是从本机50020端口连接到其他服务器，再查（通过netstat或lsof都可以）</p>
+<blockquote>
+<p># netstat - nat|grep 50020<br/>tcp        0      0 $server1:50020      $server2:7050       ESTABLISHED 8578/kudu-tserver</p>
+</blockquote>
+<p>or</p>
+<blockquote>
+<p># lsof - i:50020<br/>COMMAND    PID USER   FD   TYPE  DEVICE SIZE/OFF NODE NAME<br/>kudu-tser 8578 kudu   22u  IPv4 4295504      0t0  TCP cdp-test-server-02.bj:50020-&gt;cdp-test-server-04.bj:7050 (ESTABLISHED)</p>
+</blockquote>
+<p>原来是kudu的一个随机端口占用导致，将tserver重启即可；</p>
+<p> </p>
+</div>
+            </div>
+
+            <!-- Post Footer -->
+            <div class="post-footer">
+                <div class="post-navigation">
+                    <a href="../blog_cn.html" class="nav-button">← Back to Home</a>
+                    <a href="0225.html" class="nav-button">Next Post →</a>
+                </div>
+            </div>
+        </article>
+    </div>
+</body>
+</html>

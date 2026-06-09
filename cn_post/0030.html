@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PostgreSQL</title>
+    <link rel="stylesheet" href="../css/style3.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header Navigation -->
+        <div class="header">
+            <h1><a href="../blog_cn.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+        </div>
+
+        <!-- Post Container -->
+        <article class="post">
+            <!-- Post Header -->
+            <div class="post-header">
+                <h1>PostgreSQL</h1>
+                <div class="post-meta">
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📅</span>
+                        <span>September 17, 2021</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📖</span>
+                        <span>1 min read</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">👁️</span>
+                        <span>216 views</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Post Content -->
+            <div class="post-content">
+                <div class="blogpost-body cnblogs-markdown" id="cnblogs_post_body">
+<h1 id="安装">安装</h1>
+<h2 id="server端">server端</h2>
+<pre><code>yum install https://download.postgresql.org/pub/repos/yum/reporpms/EL-7-x86_64/pgdg-redhat-repo-latest.noarch.rpm - y
+
+yum install postgresql11-server - y
+</code></pre>
+<h2 id="client端">client端</h2>
+<pre><code>yum install postgresql11 - y
+</code></pre>
+<h2 id="初始化">初始化</h2>
+<pre><code>/usr/pgsql-11/bin/postgresql-11-setup initd
+</code></pre>
+<h2 id="修改配置">修改配置</h2>
+<pre><code>vim /var/lib/pgsql/11/data/postgresql.conf
+listen_address = '*'
+
+vim /var/lib/pgsql/11/data/pg_hba.conf
+host all all 0.0.0.0/0 md5
+</code></pre>
+<h1 id="启动">启动</h1>
+<pre><code>systemctl start postgresql-11
+</code></pre>
+<h1 id="登录">登录</h1>
+<pre><code>sudo - su postgres psql - U postgres
+</code></pre>
+<h1 id="创建账号和权限">创建账号和权限</h1>
+<pre><code>CREATE ROLE test WITH LOGIN;
+ALTER ROLE test WITH PASSWORD 'test';
+
+GRANT ALL ON DATABASE mydb TO test;
+GRANT ALL ON SCHEMA myschema TO test;
+GRANT ALL ON TABLE mytable TO test;
+</code></pre>
+<h1 id="连接">连接</h1>
+<pre><code>psql - h $host - p $port - U $user $db
+</code></pre>
+<h1 id="查看库和表">查看库和表</h1>
+<pre><code>show databases：\l
+use $database：\c $database
+show tables：\dt
+desc table：\d $table
+change schema：set search_path to $schema
+</code></pre>
+<h1 id="查看表结构">查看表结构</h1>
+<pre><code>SELECT a.attname as name, format_type(a.atttypid,a.atttypmod) as type, col_description(a.attrelid,a.attnum) as comment 
+FROM pg_attribute as a, pg_namespace b, pg_class as c
+where b.nspname = '${schema}' and b.oid = c.relnamespace and c.relname = '${table}' and a.attrelid = c.oid and a.attnum &gt; 0 and a.attname not like '.%';
+</code></pre>
+</div>
+            </div>
+
+            <!-- Post Footer -->
+            <div class="post-footer">
+                <div class="post-navigation">
+                    <a href="../blog_cn.html" class="nav-button">← Back to Home</a>
+                    <a href="0031.html" class="nav-button">Next Post →</a>
+                </div>
+            </div>
+        </article>
+    </div>
+</body>
+</html>

@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mesos+Marathon+Docker部署nginx</title>
+    <link rel="stylesheet" href="../css/style3.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header Navigation -->
+        <div class="header">
+            <h1><a href="../blog_cn.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+        </div>
+
+        <!-- Post Container -->
+        <article class="post">
+            <!-- Post Header -->
+            <div class="post-header">
+                <h1>Mesos+Marathon+Docker部署nginx</h1>
+                <div class="post-meta">
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📅</span>
+                        <span>February 16, 2019</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📖</span>
+                        <span>2 min read</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">👁️</span>
+                        <span>947 views</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Post Content -->
+            <div class="post-content">
+                <div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<h1>一 安装</h1>
+<p>安装docker：<a href="https://www.cnblogs.com/barneywill/p/10343091.html" target="_blank">https://www.cnblogs.com/barneywill/p/10343091.html</a><br/>安装mesos：<a href="https://www.cnblogs.com/barneywill/p/10324348.html" target="_blank">https://www.cnblogs.com/barneywill/p/10324348.html</a><br/>安装marathon：<a href="https://www.cnblogs.com/barneywill/p/10366688.html" target="_blank">https://www.cnblogs.com/barneywill/p/10366688.html</a></p>
+<h1>二 部署nginx</h1>
+<p>使用docker官方nginx image，如果想用私有docker registry，可以参考：<a href="https://www.cnblogs.com/barneywill/p/10367341.html" target="_blank">https://www.cnblogs.com/barneywill/p/10367341.html</a></p>
+<p>打开marathon页面，使用docker image创建app</p>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201902/1509647-20190216024806651-801709131.png"/></p>
+<p> </p>
+<p>1 开启mesos对docker的支持</p>
+<blockquote>
+<p># echo 'docker,mesos' &gt; /ec/mesos-slave/containerizers<br/># service mesos-slave restart</p>
+</blockquote>
+<p>2 创建app之后nginx正常运行，但是增加端口映射之后（即--network bridge - p 80:80），app一直卡住无法运行，查看mesos master日志如下：</p>
+<blockquote>
+<p># tail - f /var/log/mesos/mesos-master.log.INFO<br/>I0216 01:01:35.815131 25339 master.cpp:9533] Sending offers [ e11dfbd1-316e-4635-9267-8d5089f5ecfa-O171, e11dfbd1-316e-4635-9267-8d5089f5ecfa-O172, e11dfbd1-316e-4635-9267-8d5089f5ecfa-O173, e11dfbd1-316e-4635-9267-8d5089f5ecfa-O174 ] to framework 46ef421b-55ad-4b9f-876c-5d454abd2e6b-0000 (marathon) at scheduler-2655dbf9-0e11-4d1a-934f-5012c504ab07@192.168.0.54:38562<br/>I0216 01:01:35.821087 25338 master.cpp:5886] Processing DECLINE call for offers: [ e11dfbd1-316e-4635-9267-8d5089f5ecfa-O171 ] for framework 46ef421b-55ad-4b9f-876c-5d454abd2e6b-0000 (marathon) at scheduler-2655dbf9-0e11-4d1a-934f-5012c504ab07@192.168.0.54:38562<br/>I0216 01:01:35.821200 25338 master.cpp:11531] Removing offer e11dfbd1-316e-4635-9267-8d5089f5ecfa-O171<br/>I0216 01:01:35.821494 25335 master.cpp:5886] Processing DECLINE call for offers: [ e11dfbd1-316e-4635-9267-8d5089f5ecfa-O173 ] for framework 46ef421b-55ad-4b9f-876c-5d454abd2e6b-0000 (marathon) at scheduler-2655dbf9-0e11-4d1a-934f-5012c504ab07@192.168.0.54:38562<br/>I0216 01:01:35.821557 25335 master.cpp:11531] Removing offer e11dfbd1-316e-4635-9267-8d5089f5ecfa-O173<br/>I0216 01:01:35.821578 25335 master.cpp:5886] Processing DECLINE call for offers: [ e11dfbd1-316e-4635-9267-8d5089f5ecfa-O174 ] for framework 46ef421b-55ad-4b9f-876c-5d454abd2e6b-0000 (marathon) at scheduler-2655dbf9-0e11-4d1a-934f-5012c504ab07@192.168.0.54:38562<br/>I0216 01:01:35.821614 25335 master.cpp:11531] Removing offer e11dfbd1-316e-4635-9267-8d5089f5ecfa-O174<br/>I0216 01:01:35.823659 25334 master.cpp:5886] Processing DECLINE call for offers: [ e11dfbd1-316e-4635-9267-8d5089f5ecfa-O172 ] for framework 46ef421b-55ad-4b9f-876c-5d454abd2e6b-0000 (marathon) at scheduler-2655dbf9-0e11-4d1a-934f-5012c504ab07@192.168.0.54:38562<br/>I0216 01:01:35.823747 25334 master.cpp:11531] Removing offer e11dfbd1-316e-4635-9267-8d5089f5ecfa-O172</p>
+</blockquote>
+<p>可见mesos-master一直向marathon提供resource offer，但是一直被拒绝，再仔细查看日志发现</p>
+<blockquote>
+<p>I0216 01:01:12.527853 25338 master.cpp:7503] Re-registered agent 0548c9c0-dd5f-4b3a-8aca-4668f8aacb69-S9 at slave(1)@192.168.0.1:5051 (server1.bj) with cpus:8; mem:14861; disk:35829; ports:[31000-32000]</p>
+</blockquote>
+<p>发现mesos-slave的资源范围有问题，ports:[31000-32000]，nginx是需要80端口的，所以一直被拒绝，关于resources官方文档描述如下：</p>
+<blockquote>
+<p>--resources=VALUE	</p>
+<p>Total consumable resources per agent. Can be provided in JSON format or as a semicolon-delimited list of key:value pairs, with the role optionally specified.<br/>As a key:value list: name(role):value;name:value...<br/>To use JSON, pass a JSON-formatted string or use --resources=filepath to specify the resources via a file containing a JSON-formatted string. 'filepath' can be of the form file:///path/to/file or /path/to/file.<br/>Example JSON:<br/>[<br/>  {<br/>    "name": "cpus",<br/>    "type": "SCALAR",<br/>    "scalar": {<br/>      "value": 24<br/>    }<br/>  },<br/>  {<br/>    "name": "mem",<br/>    "type": "SCALAR",<br/>    "scalar": {<br/>      "value": 24576<br/>    }<br/>  }<br/>]</p>
+</blockquote>
+<p>参考：http://mesos.apache.org/documentation/latest/configuration/agent/</p>
+<p> </p>
+<p>修改端口范围</p>
+<blockquote>
+<p># echo 'ports(*):[80-80000]' &gt; /etc/mesos-slave/resources<br/># service mesos-slave restart</p>
+</blockquote>
+<p>之前的错误没了，但是又出现新的错</p>
+<blockquote>
+<p>Feb 16 01:37:17 cdp-test-server-04.bj mesos-slave[21714]: E0216 01:37:17.314812 21733 slave.cpp:7311] EXIT with status 1: Failed to perform recovery: Incompatible agent info detected.<br/>Feb 16 01:37:17 cdp-test-server-04.bj mesos-slave[21714]: resources {<br/>Feb 16 01:37:17 cdp-test-server-04.bj mesos-slave[21714]:   name: "ports"<br/>Feb 16 01:37:17 cdp-test-server-04.bj mesos-slave[21714]:   type: RANGES<br/>Feb 16 01:37:17 cdp-test-server-04.bj mesos-slave[21714]:   ranges {<br/>Feb 16 01:37:17 cdp-test-server-04.bj mesos-slave[21714]:     range {<br/>Feb 16 01:37:17 cdp-test-server-04.bj mesos-slave[21714]:       begin: 31000<br/>Feb 16 01:37:17 cdp-test-server-04.bj mesos-slave[21714]:       end: 32000<br/>Feb 16 01:37:17 cdp-test-server-04.bj mesos-slave[21714]:     }<br/>Feb 16 01:37:17 cdp-test-server-04.bj mesos-slave[21714]:   }<br/>Feb 16 01:37:17 cdp-test-server-04.bj mesos-slave[21714]: }</p>
+</blockquote>
+<p>这个错是因为修改resources之后需要充值agent并重启，详见：<a href="https://www.cnblogs.com/barneywill/p/10386239.html" target="_blank">https://www.cnblogs.com/barneywill/p/10386239.html</a></p>
+<blockquote>
+<p># rm - f /var/lib/mesos/meta/slaves/latest<br/># service mesos-slave start</p>
+</blockquote>
+<p>3 如果需要制定在哪台机器上执行，可以设置constraints</p>
+<p>只允许在一台机器上执行</p>
+<blockquote>
+<p>  "constraints": [<br/>    [<br/>      "hostname",<br/>      "CLUSTER",<br/>      "server2.bj"<br/>    ]<br/>  ],</p>
+</blockquote>
+<p>允许在两台机器上执行，但是每台机器只能启动一个</p>
+<blockquote>
+<p> "constraints": [<br/>    [<br/>      "hostname",<br/>      "UNIQUE"<br/>    ],<br/>    [<br/>      "hostname",<br/>      "LIKE",<br/>      "server[1-2].bj"<br/>    ]<br/>  ],</p>
+</blockquote>
+<p>参考：https://mesosphere.github.io/marathon/docs/constraints.html</p>
+<p> </p>
+<p>部署完成后</p>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201902/1509647-20190216025013318-755470009.png"/></p>
+<p> </p>
+<p>还有一点，注意到上边截图中的status是waiting，因为我做了一个restart操作，但是我每个app都指定只部署在一台服务器上，这时其实会一直卡在waiting的，因为marathon在restart时并不会将app先stop再start，而是不断等待mesos-master的resource offer，只有当有可用资源启动新的app之后才会把旧的app停掉，而我这里的app会占用80端口，所以是一个死循环，这时只能手工从docker上去stop container；</p>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201902/1509647-20190216030747323-2119440336.png"/></p>
+<p> </p>
+<p>这样就ok了</p>
+<p> </p>
+</div>
+            </div>
+
+            <!-- Post Footer -->
+            <div class="post-footer">
+                <div class="post-navigation">
+                    <a href="../blog_cn.html" class="nav-button">← Back to Home</a>
+                    <a href="0222.html" class="nav-button">Next Post →</a>
+                </div>
+            </div>
+        </article>
+    </div>
+</body>
+</html>

@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kudu 1 - 简介、安装、使用</title>
+    <link rel="stylesheet" href="../css/style3.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header Navigation -->
+        <div class="header">
+            <h1><a href="../blog_cn.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+        </div>
+
+        <!-- Post Container -->
+        <article class="post">
+            <!-- Post Header -->
+            <div class="post-header">
+                <h1>Kudu 1 - 简介、安装、使用</h1>
+                <div class="post-meta">
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📅</span>
+                        <span>January 21, 2019</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📖</span>
+                        <span>6 min read</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">👁️</span>
+                        <span>3524 views</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Post Content -->
+            <div class="post-content">
+                <div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<p>kudu 1.7</p>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201901/1509647-20190120222229195-1024624277.png"/></p>
+<p>官方：https://kudu.apache.org/</p>
+<p> </p>
+<h1>一 简介</h1>
+<p>kudu有很多概念，有分布式文件系统（HDFS），有一致性算法（Zookeeper），有Table（Hive Table），有Tablet（Hive Table Partition），有列式存储（Parquet），有顺序和随机读取（HBase），所以看起来kudu是一个轻量级的 HDFS + Zookeeper + Hive + Parquet + HBase，除此之外，kudu还有自己的特点，快速写入+读取，使得kudu+impala非常适合OLAP场景，尤其是Time-series场景。</p>
+<p> </p>
+<p>A new addition to the open source Apache Hadoop ecosystem, Apache Kudu completes Hadoop's storage layer to enable fast analytics on fast data.</p>
+<p><em>kudu是hadoop生态的有力补充，使得hadoop存储层也可以支持快速变化数据上的快速分析；</em></p>
+<ul>
+<li>Streamlined Architecture
+<ul>
+<li>　　Kudu provides a combination of fast inserts/updates and efficient columnar scans to enable multiple real-time analytic workloads across a single storage layer. As a new complement to HDFS and Apache HBase, Kudu gives architects the flexibility to address a wider variety of use cases without exotic workarounds.</li>
+</ul>
+</li>
+</ul>
+<p><em>kudu提供了快速写入更新的能力和高效列式扫描的能力，使得直接在存储层上实现实时分析成为可能，简化了传统技术栈；</em></p>
+<ul>
+<li>Faster Analytics
+<ul>
+<li>　　Kudu is specifically designed for use cases that require fast analytics on fast (rapidly changing) data. Engineered to take advantage of next-generation hardware and in-memory processing, Kudu lowers query latency significantly for Apache Impala (incubating) and Apache Spark (initially, with other execution engines to come).</li>
+</ul>
+</li>
+</ul>
+<p><em>kudu被设计为尤其适合在快速变化的数据上进行快速分析的场景，利用下一代硬件以及内存处理的优势，kudu降低了impala和spark的查询延迟；</em></p>
+<p> </p>
+<p>Kudu is a columnar storage manager developed for the Apache Hadoop platform. Kudu shares the common technical properties of Hadoop ecosystem applications: it runs on commodity hardware, is horizontally scalable, and supports highly available operation.</p>
+<p><em>kudu是一个hadoop平台的列式存储层，它继承了hadoop生态的技术特点：通用硬件、水平扩展、高可用；</em></p>
+<p>Kudu’s design sets it apart. Some of Kudu’s benefits include:</p>
+<ul>
+<li>Fast processing of OLAP workloads.</li>
+<li>Integration with MapReduce, Spark and other Hadoop ecosystem components.</li>
+<li>Tight integration with Apache Impala, making it a good, mutable alternative to using HDFS with Apache Parquet.</li>
+<li>Strong but flexible consistency model, allowing you to choose consistency requirements on a per-request basis, including the option for strict-serializable consistency.</li>
+<li>Strong performance for running sequential and random workloads simultaneously.</li>
+<li>Easy to administer and manage with Cloudera Manager.</li>
+<li>High availability. Tablet Servers and Masters use the Raft Consensus Algorithm, which ensures that as long as more than half the total number of replicas is available, the tablet is available for reads and writes. For instance, if 2 out of 3 replicas or 3 out of 5 replicas are available, the tablet is available.</li>
+<li>Reads can be serviced by read-only follower tablets, even in the event of a leader tablet failure.</li>
+<li>Structured data model.</li>
+</ul>
+<p><em>kudu有以上诸多特点：快速OLAP、整合其他hadoop生态组件（比如spark）、整合Impala、快速顺序和随机读取、可配置的数据一致性、高可用、结构化数据模型；</em></p>
+<p>By combining all of these properties, Kudu targets support for families of applications that are difficult or impossible to implement on current generation Hadoop storage technologies. A few examples of applications for which Kudu is a great solution are:</p>
+<ul>
+<li>Reporting applications where newly-arrived data needs to be immediately available for end users</li>
+<li>Time-series applications that must simultaneously support:
+<ul>
+<li>　　queries across large amounts of historic data</li>
+<li>　　granular queries about an individual entity that must return very quickly</li>
+</ul>
+</li>
+<li>Applications that use predictive models to make real-time decisions with periodic refreshes of the predictive model based on all historic data</li>
+</ul>
+<p><em>当kudu有了以上特点之后，使得传统hadoop存储技术很难解决的一些场景成为可能，比如：数据快速变化的报表系统、Timer-series应用、实时决策系统；</em></p>
+<p> </p>
+<h2>kudu架构</h2>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201901/1509647-20190120223156397-230434781.png"/></p>
+<h2>概念</h2>
+<h3>Table</h3>
+<p>A table is where your data is stored in Kudu. A table has a schema and a totally ordered primary key. A table is split into segments called tablets.</p>
+<p><em>Table（类似于hive或hbase的table），有schema和primary key，可以划分为多个Tablet；</em></p>
+<h3>Tablet</h3>
+<p>A tablet is a contiguous segment of a table, similar to a partition in other data storage engines or relational databases. A given tablet is replicated on multiple tablet servers, and at any given point in time, one of these replicas is considered the leader tablet. Any replica can service reads, and writes require consensus among the set of tablet servers serving the tablet.</p>
+<p><em>Tablet（类似于hive中的partition或hbase中的region），tablet是多副本的，存放在多个tablet server上，多个副本中有一个是leader tablet；所有的副本都可以读，但是写操作只有leader可以，写操作利用一致性算法（Raft）；</em></p>
+<h3>Tablet Server</h3>
+<p>A tablet server stores and serves tablets to clients. For a given tablet, one tablet server acts as a leader, and the others act as follower replicas of that tablet. Only leaders service write requests, while leaders or followers each service read requests. Leaders are elected using Raft Consensus Algorithm. One tablet server can serve multiple tablets, and one tablet can be served by multiple tablet servers.</p>
+<p><em>tablet server（类似于hbase中的region server），存放tablet并且相应client请求；一个tablet server存放多个tablet；</em></p>
+<h3>Catalog Table</h3>
+<p>The catalog table is the central location for metadata of Kudu. It stores information about tables and tablets. The catalog table may not be read or written directly. Instead, it is accessible only via metadata operations exposed in the client API.<br/>The catalog table stores two categories of metadata: Tables &amp; Tablets</p>
+<p><em>catalog table存放kudu的metadata（类似于hive和hbase中的metadata），catalog table包含两类metadata：Tables和Tablets</em></p>
+<h3>Master</h3>
+<p>The master keeps track of all the tablets, tablet servers, the Catalog Table, and other metadata related to the cluster. At a given point in time, there can only be one acting master (the leader). If the current leader disappears, a new master is elected using Raft Consensus Algorithm.<br/>The master also coordinates metadata operations for clients. For example, when creating a new table, the client internally sends the request to the master. The master writes the metadata for the new table into the catalog table, and coordinates the process of creating tablets on the tablet servers.<br/>All the master’s data is stored in a tablet, which can be replicated to all the other candidate masters.<br/>Tablet servers heartbeat to the master at a set interval (the default is once per second).</p>
+<p><em>master（类似于hdfs和hbase的master），负责管理所有的tablet、tablet server、catalog table以及其他元数据。同一时间集群中只有一个acting master（leader master），如果leader master挂了，一个新的master会通过Raft算法选举出来。</em><br/><em>所有的master数据都存放在一个tablet中，这个tablet会被复制到所有的candidate master上；</em><br/><em>tablet server会定期向master发送心跳。</em></p>
+<h3>Raft Consensus Algorithm</h3>
+<p>Kudu uses the Raft consensus algorithm as a means to guarantee fault-tolerance and consistency, both for regular tablets and for master data. Through Raft, multiple replicas of a tablet elect a leader, which is responsible for accepting and replicating writes to follower replicas. Once a write is persisted in a majority of replicas it is acknowledged to the client. A given group of N replicas (usually 3 or 5) is able to accept writes with at most (N - 1)/2 faulty replicas.</p>
+<p><em>kudu通过Raft一致性算法（类似于zookeeper中的Paxos算法）来保证tablet和master数据的容错性和一致性。详见：https://raft.github.io/</em></p>
+<h3>Logical Replication</h3>
+<p>Kudu replicates operations, not on-disk data. This is referred to as logical replication, as opposed to physical replication. </p>
+<p><em>kudu使用的是逻辑副本的概念。</em></p>
+<h1>二 安装</h1>
+<h2>1 安装ntp服务</h2>
+<blockquote>
+<p># vi /etc/ntp.conf<br/># service ntpd start<br/># ntpstat</p>
+</blockquote>
+<p> 详见：https://www.cnblogs.com/quchunhui/p/7658853.html</p>
+<h2>2 增加repo</h2>
+<blockquote>
+<p># cat /etc/yum.repos.d/cdh.repo</p>
+<p>[cloudera-cdh5]<br/># Packages for Cloudera's Distribution for Hadoop, Version 5, on RedHat	or CentOS 7 x86_64<br/>name=Cloudera's Distribution for Hadoop, Version 5<br/>baseurl=https://archive.cloudera.com/cdh5/redhat/7/x86_64/cdh/5/<br/>gpgkey =https://archive.cloudera.com/cdh5/redhat/7/x86_64/cdh/RPM-GPG-KEY-cloudera    <br/>gpgcheck = 1</p>
+</blockquote>
+<p>这里没有指定版本，默认会安装最新</p>
+<h2>3 master安装</h2>
+<blockquote>
+<p># yum install kudu kudu-master kudu-client0 kudu-client-devel</p>
+</blockquote>
+<p>配置文件</p>
+<blockquote>
+<p>/etc/kudu/conf/master.gflagfile</p>
+</blockquote>
+<p>可以修改数据路径，如果启动多个master需要配置</p>
+<blockquote>
+<p>--master_addresses=$master1,$master2</p>
+</blockquote>
+<p>启动，可以启动多个master</p>
+<blockquote>
+<p># service kudu-master start</p>
+</blockquote>
+<h2>4 tserver安装</h2>
+<blockquote>
+<p># yum install kudu kudu-tserver kudu-client0 kudu-client-devel</p>
+</blockquote>
+<p>配置文件</p>
+<blockquote>
+<p>/etc/kudu/conf/tserver.gflagfile</p>
+</blockquote>
+<p>修改master地址，可以配置多个</p>
+<blockquote>
+<p>--tserver_master_addrs=$master_server:7051</p>
+</blockquote>
+<p>启动</p>
+<blockquote>
+<p># service kudu-tserver start</p>
+</blockquote>
+<p> </p>
+<p>ps：也可以手工下载rpm：https://archive.cloudera.com/cdh5/redhat/7/x86_64/cdh/5/RPMS/x86_64/</p>
+<blockquote>
+<p>kudu-1.7.0+cdh5.16.1+0-1.cdh5.16.1.p0.3.el7.x86_64.rpm<br/>kudu-client-devel-1.7.0+cdh5.16.1+0-1.cdh5.16.1.p0.3.el7.x86_64.rpm<br/>kudu-client0-1.7.0+cdh5.16.1+0-1.cdh5.16.1.p0.3.el7.x86_64.rpm<br/>kudu-master-1.7.0+cdh5.16.1+0-1.cdh5.16.1.p0.3.el7.x86_64.rpm<br/>kudu-tserver-1.7.0+cdh5.16.1+0-1.cdh5.16.1.p0.3.el7.x86_64.rpm</p>
+</blockquote>
+<p> </p>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201901/1509647-20190120223057094-894151459.png"/></p>
+<h1>三 使用</h1>
+<h2>1 集群相关</h2>
+<p>查看集群整体信息</p>
+<blockquote>
+<p># sudo -u kudu kudu cluster ksck $master</p>
+</blockquote>
+<p>查看master状态或flag</p>
+<blockquote>
+<p># su - kudu kudu master status localhost</p>
+<p># su - kudu kudu master get_flags localhost</p>
+</blockquote>
+<p>查看tserver状态或flag</p>
+<blockquote>
+<p># su - kudu kudu tserver status localhost</p>
+<p># su - kudu kudu tserver get_flags localhost</p>
+</blockquote>
+<p> </p>
+<h2>2 数据相关</h2>
+<p>通过impala-shell读写数据</p>
+<blockquote>
+<p>[$impala_server:21000] &gt; <br/>CREATE TABLE impala.test_kudu (<br/>  id INT,<br/>  name STRING,<br/>  PRIMARY KEY (id)<br/>)<br/>PARTITION BY HASH (id) PARTITIONS 4<br/>STORED AS KUDU<br/>TBLPROPERTIES ('kudu.master_addresses'='$kudu_master:7051');<br/>[$impala_server:21000] &gt; select * from test_kudu;<br/>Query: select * from test_kudu<br/>Query submitted at: 2019-01-21 12:53:04 (Coordinator: http://$impala_server:25000)<br/>Query progress can be monitored at: http://$impala_server:25000/query_plan?query_id=e345f450c0dca86a:4769860f00000000<br/>+----+-------+<br/>| id | name  |<br/>+----+-------+<br/>| 1  | test  |<br/>+----+-------+<br/>Fetched 1 row(s) in 0.13s</p>
+</blockquote>
+<p> </p>
+<p>在kudu中看到新创建的表：</p>
+<p>1）命令行</p>
+<blockquote>
+<p># kudu -h</p>
+<p>Usage: /usr/lib/kudu/bin/kudu &lt;command&gt; [&lt;args&gt;]</p>
+<p> </p>
+<p>&lt;command&gt; can be one of the following:</p>
+<p>         cluster   Operate on a Kudu cluster</p>
+<p>              fs   Operate on a local Kudu filesystem</p>
+<p>   local_replica   Operate on local tablet replicas via the local filesystem</p>
+<p>          master   Operate on a Kudu Master</p>
+<p>             pbc   Operate on PBC (protobuf container) files</p>
+<p>            perf   Measure the performance of a Kudu cluster</p>
+<p>  remote_replica   Operate on remote tablet replicas on a Kudu Tablet Server</p>
+<p>           table   Operate on Kudu tables</p>
+<p>          tablet   Operate on remote Kudu tablets</p>
+<p>            test   Various test actions</p>
+<p>         tserver   Operate on a Kudu Tablet Server</p>
+<p>             wal   Operate on WAL (write-ahead log) files</p>
+</blockquote>
+<p>查看所有的kudu表</p>
+<blockquote>
+<p># kudu table list $master_addresses<br/>impala::impala.test_kudu</p>
+</blockquote>
+<p>删除kudu表</p>
+<blockquote>
+<p># kudu table delete $master_addresses $table_name</p>
+</blockquote>
+<p>2）web ui</p>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201901/1509647-20190121125558650-478234477.png"/></p>
+<p> </p>
+<p>参考：https://kudu.apache.org/docs/administration.html</p>
+<p> </p>
+</div>
+            </div>
+
+            <!-- Post Footer -->
+            <div class="post-footer">
+                <div class="post-navigation">
+                    <a href="../blog_cn.html" class="nav-button">← Back to Home</a>
+                    <a href="0260.html" class="nav-button">Next Post →</a>
+                </div>
+            </div>
+        </article>
+    </div>
+</body>
+</html>

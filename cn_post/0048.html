@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>centos启动进入emergency mode</title>
+    <link rel="stylesheet" href="../css/style3.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header Navigation -->
+        <div class="header">
+            <h1><a href="../blog_cn.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+        </div>
+
+        <!-- Post Container -->
+        <article class="post">
+            <!-- Post Header -->
+            <div class="post-header">
+                <h1>centos启动进入emergency mode</h1>
+                <div class="post-meta">
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📅</span>
+                        <span>December 04, 2020</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📖</span>
+                        <span>1 min read</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">👁️</span>
+                        <span>1141 views</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Post Content -->
+            <div class="post-content">
+                <div class="blogpost-body cnblogs-markdown" id="cnblogs_post_body">
+<p>centos启动进入emergency mode，登录root帐号之后可以通过</p>
+<blockquote>
+<h1 id="journalctl--xb">journalctl - xb</h1>
+</blockquote>
+<p>来查看日志，里边会有具体的错误信息，常见的错误有两种：<br/>
+1）如果你重启前改动过 /etc/fstab，有可能是配置有问题，重新检查该文件，然后再</p>
+<blockquote>
+<h1 id="reboot">reboot</h1>
+</blockquote>
+<p>重启，问题解决;<br/>
+2）如果你重启前有强制断电关机，有可能是关机导致部分内容没有及时从内存写到磁盘导致问题，从日志中找到有问题的分区，到 /etc/fstab中将该分区暂时注释掉，然后再</p>
+<blockquote>
+<h1 id="reboot-1">reboot</h1>
+</blockquote>
+<p>重启，就可以暂时进入系统;<br/>
+要修复有问题的分区，需要根据不同的文件系统来操作，比如xfs文件系统的修复，使用</p>
+<blockquote>
+<h1 id="xfs_repair-devsda1">xfs_repair /dev/sda1</h1>
+</blockquote>
+<p>如果报错，添加-L参数，可能丢失部分数据</p>
+<blockquote>
+<h1 id="xfs_repair--l-devsda1">xfs_repair - L /dev/sda1</h1>
+</blockquote>
+<p>总比什么都丢失强，修复完之后恢复 /etc/fstab，然后重启。</p>
+</div>
+            </div>
+
+            <!-- Post Footer -->
+            <div class="post-footer">
+                <div class="post-navigation">
+                    <a href="../blog_cn.html" class="nav-button">← Back to Home</a>
+                    <a href="0049.html" class="nav-button">Next Post →</a>
+                </div>
+            </div>
+        </article>
+    </div>
+</body>
+</html>

@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>zsh使用</title>
+    <link rel="stylesheet" href="../css/style3.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header Navigation -->
+        <div class="header">
+            <h1><a href="../blog_cn.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+        </div>
+
+        <!-- Post Container -->
+        <article class="post">
+            <!-- Post Header -->
+            <div class="post-header">
+                <h1>zsh使用</h1>
+                <div class="post-meta">
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📅</span>
+                        <span>June 18, 2020</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📖</span>
+                        <span>1 min read</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">👁️</span>
+                        <span>700 views</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Post Content -->
+            <div class="post-content">
+                <div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<p> </p>
+<h1>一 安装zsh</h1>
+<p> </p>
+<blockquote>
+<p># apt-get install zsh (ubuntu)<br/># yum install zsh (redhat &amp; centos)<br/># zypper in zsh (opensuse)<br/># mac自带</p>
+</blockquote>
+<p> </p>
+<h1>二 安装 oh my zsh</h1>
+<blockquote>
+<p>$ sh - c "$(curl - fsSL https://raw.github.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"</p>
+</blockquote>
+<p>官网: https://ohmyz.sh</p>
+<p> </p>
+<p>安装之后会在home目录下增加 .zshrc 文件和 .oh-my-zsh 目录,其他服务器直接拷贝这两个即可</p>
+<p> </p>
+<h1>三 安装 plugin</h1>
+<p> </p>
+<h2>1 zsh-autosuggestions</h2>
+<blockquote>
+<p>git clone https://github.com/zsh-users/zsh-autosuggestions ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-autosuggestions</p>
+<p># vi .zshrc</p>
+<p>plugins=( [plugins...] zsh-autosuggestions)</p>
+</blockquote>
+<p>ps:</p>
+<p>1 多个plugin空格分隔</p>
+<p>2 plugin目录 ~/.oh-my-zsh/custom/plugins,一台安装之后可以直接将插件目录同步到其他服务器</p>
+<p>3 提示之后通过 Ctrl+f 自动补全</p>
+<p>4 提示颜色默认是灰色,可能在某些theme下很不明显,可以如下修改:</p>
+<blockquote>
+<p>vim ~/.oh-my-zsh/custom/plugins/zsh-autosuggestions/zsh-autosuggestions.zsh<br/>typeset - g ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE='fg=yellow'</p>
+</blockquote>
+<h2>2 zsh-syntax-highlighting</h2>
+<p> </p>
+<blockquote>
+<p>git clone https://github.com/zsh-users/zsh-syntax-highlighting.git ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-syntax-highlighting</p>
+<p># vi .zshrc</p>
+<p>plugins=( [plugins...] zsh-syntax-highlighting)</p>
+</blockquote>
+<p> </p>
+<h2>3 autojump</h2>
+<p> </p>
+<p> </p>
+<h1>四 theme</h1>
+<p>查看自带所有主题</p>
+<p> </p>
+<blockquote>
+<p># ls ~/.oh-my-zsh/themes</p>
+</blockquote>
+<p>格式: 主题名.zsh-theme</p>
+<p> </p>
+<blockquote>
+<p># vi .zshrc<br/>ZSH_THEME="robbyrussell"</p>
+</blockquote>
+<p> </p>
+<p>修改ZSH_THEME为主题名</p>
+<p>推荐: mortalscumbag</p>
+<p> </p>
+<h1>五 修改默认shell</h1>
+<h2>1 安装oh-my-zsh时</h2>
+<p>安装结束时选择y</p>
+<h2>2 chsh命令</h2>
+<p># chsh - s /bin/zsh</p>
+<h2>3 修改passwd文件</h2>
+<p># vi /etc/passwd</p>
+<p>将某个用户最后的/bin/bash改为/bin/zsh</p>
+<h1>六 更多</h1>
+<h2>1 d</h2>
+<p>列出之前访问的所有目录</p>
+<blockquote>
+<p># d</p>
+</blockquote>
+<p>通过数字直接进入对应的目录</p>
+<blockquote>
+<p># 0</p>
+</blockquote>
+<p> </p>
+<p><a class="entry" href="https://www.cnblogs.com/barneywill/p/13111438.html" target="_blank"> </a></p>
+</div>
+            </div>
+
+            <!-- Post Footer -->
+            <div class="post-footer">
+                <div class="post-navigation">
+                    <a href="../blog_cn.html" class="nav-button">← Back to Home</a>
+                    <a href="0067.html" class="nav-button">Next Post →</a>
+                </div>
+            </div>
+        </article>
+    </div>
+</body>
+</html>

@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hadoop 4 - hdfs回收站</title>
+    <link rel="stylesheet" href="../css/style3.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header Navigation -->
+        <div class="header">
+            <h1><a href="../blog_cn.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+        </div>
+
+        <!-- Post Container -->
+        <article class="post">
+            <!-- Post Header -->
+            <div class="post-header">
+                <h1>Hadoop 4 - hdfs回收站</h1>
+                <div class="post-meta">
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📅</span>
+                        <span>April 06, 2022</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📖</span>
+                        <span>1 min read</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">👁️</span>
+                        <span>583 views</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Post Content -->
+            <div class="post-content">
+                <div class="blogpost-body cnblogs-markdown" id="cnblogs_post_body">
+<h1 id="配置">配置</h1>
+<h2 id="配置1">配置1</h2>
+<blockquote>
+<p>fs.trash.interval=1440</p>
+</blockquote>
+<p>被删除的文件会进入回收站，默认保留1440分钟后完全删除</p>
+<h2 id="配置2">配置2</h2>
+<blockquote>
+<p>fs.trash.checkpoint.interval=60</p>
+</blockquote>
+<p>回收站checkpoint机制：进入回收站的文件首先进入Current目录，然后定期移动到一个时间戳目录，定期的间隔为60分钟</p>
+<h1 id="过程">过程</h1>
+<h2 id="1-删除命令">1 删除命令</h2>
+<blockquote>
+<p>hdfs dfs rm /tmp/test</p>
+</blockquote>
+<h2 id="2-进入回收站">2 进入回收站</h2>
+<blockquote>
+<p>hdfs://${nn}/user/${user_name}/.Trash/Current/tmp/test</p>
+</blockquote>
+<h2 id="3-定时检查">3 定时检查</h2>
+<blockquote>
+<p>hdfs://${nn}/user/${user_name}/.Trash/Current/tmp/test</p>
+</blockquote>
+<p>移动到</p>
+<blockquote>
+<p>hdfs://${nn}/user/${user_name}/.Trash/${yyMMddHH0000}/tmp/test</p>
+</blockquote>
+<h2 id="4-定时检查24小时后">4 定时检查（24小时后）</h2>
+<p>彻底删除</p>
+<h3 id="备注">备注</h3>
+<p>在 步骤2 和 步骤3 之间，回收站里的数据随时可以恢复，移动会原来的位置即可</p>
+<p>要格外注意的是，在 步骤2 时，有可能在操作过程中提示File Not Exists，这时不要惊慌，文件并没有丢失，其实是进行了 步骤3，文件移动到了另一个目录而已</p>
+</div>
+            </div>
+
+            <!-- Post Footer -->
+            <div class="post-footer">
+                <div class="post-navigation">
+                    <a href="../blog_cn.html" class="nav-button">← Back to Home</a>
+                    <a href="0030.html" class="nav-button">Next Post →</a>
+                </div>
+            </div>
+        </article>
+    </div>
+</body>
+</html>

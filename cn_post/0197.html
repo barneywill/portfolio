@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Docker 5 -docker部署airflow</title>
+    <link rel="stylesheet" href="../css/style3.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header Navigation -->
+        <div class="header">
+            <h1><a href="../blog_cn.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+        </div>
+
+        <!-- Post Container -->
+        <article class="post">
+            <!-- Post Header -->
+            <div class="post-header">
+                <h1>Docker 5 -docker部署airflow</h1>
+                <div class="post-meta">
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📅</span>
+                        <span>March 01, 2019</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📖</span>
+                        <span>1 min read</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">👁️</span>
+                        <span>3814 views</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Post Content -->
+            <div class="post-content">
+                <div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<p>部署方式：docker+airflow+mysql+LocalExecutor</p>
+<p>使用airflow的docker镜像</p>
+<p>https://hub.docker.com/r/puckel/docker-airflow</p>
+<p>使用默认的sqlite+SequentialExecutor启动：</p>
+<blockquote>
+<p>$ docker run -d -p 8080:8080 puckel/docker-airflow webserver</p>
+</blockquote>
+<p>将容器中的airflow.cfg拷贝出来修改</p>
+<blockquote>
+<p>$ docker cp $container_id:/usr/local/airflow/airflow.cfg .</p>
+</blockquote>
+<p>尝试使用自定义airflow.cfg</p>
+<blockquote>
+<p>-v /usr/local/airflow/airflow.cfg:/usr/local/airflow/airflow.cfg</p>
+</blockquote>
+<p>其中修改sql_alchemy_conn为mysql，修改executor = LocalExecutor</p>
+<p>发现使用的还是SequentialExecutor</p>
+<blockquote>
+<p>[2019-02-28 19:37:16,170] {{__init__.py:51}} INFO - Using executor SequentialExecutor</p>
+</blockquote>
+<p>查看Dockerfile：docker-airflow/Dockerfile</p>
+<blockquote>
+<p>ENTRYPOINT ["/entrypoint.sh"]<br/>CMD ["webserver"] # set default arg for entrypoint</p>
+</blockquote>
+<p>发现最后启动的脚本是entrypoint.sh</p>
+<p>查看entrypoint.sh：docker-airflow/script/entrypoint.sh</p>
+<blockquote>
+<p>: "${AIRFLOW__CORE__EXECUTOR:=${EXECUTOR:-Sequential}Executor}"</p>
+<p>...</p>
+<p>if [ "$AIRFLOW__CORE__EXECUTOR" != "SequentialExecutor" ]; then</p>
+<p>  AIRFLOW__CORE__SQL_ALCHEMY_CONN="postgresql+psycopg2://$POSTGRES_USER:$POSTGRES_PASSWORD@$POSTGRES_HOST:$POSTGRES_PORT/$POSTGRES_DB"</p>
+<p>  AIRFLOW__CELERY__RESULT_BACKEND="db+postgresql://$POSTGRES_USER:$POSTGRES_PASSWORD@$POSTGRES_HOST:$POSTGRES_PORT/$POSTGRES_DB"</p>
+<p>  wait_for_port "Postgres" "$POSTGRES_HOST" "$POSTGRES_PORT"</p>
+<p>fi</p>
+<p>...</p>
+<p>case "$1" in</p>
+<p>  webserver)</p>
+<p>    airflow initdb</p>
+<p>    if [ "$AIRFLOW__CORE__EXECUTOR" = "LocalExecutor" ]; then</p>
+<p>      # With the "Local" executor it should all run in one container.</p>
+<p>      airflow scheduler &amp;</p>
+<p>    fi</p>
+<p>    exec airflow webserver</p>
+<p>    ;;</p>
+</blockquote>
+<p>1）取环境变量EXECUTOR（取值为Sequential、Local等）来构造环境变量AIRFLOW__CORE__EXECUTOR；<br/>2）如果AIRFLOW__CORE__EXECUTOR不是SequentialExecutor，就等待postgres（这里强制依赖postgres）；<br/>3）如果启动参数为webserver，同时AIRFLOW__CORE__EXECUTOR=LocalExecutor，自动启动scheduler；</p>
+<p><em>Due to Airflow’s automatic environment variable expansion, you can also set the env var AIRFLOW__CORE__* to temporarily overwrite airflow.cfg.</em></p>
+<p>由于环境变量优先级高于airflow.cfg，所以即使修改了airflow.cfg中executor=LocalExecutor，实际使用的还是SequentialExecutor；将容器中的entrypoint.sh拷贝出来修改</p>
+<blockquote>
+<p>$ docker cp $container_id:/entrypoint.sh .</p>
+</blockquote>
+<p>注释掉以下行</p>
+<blockquote>
+<p>#if [ "$AIRFLOW__CORE__EXECUTOR" != "SequentialExecutor" ]; then</p>
+<p>#  AIRFLOW__CORE__SQL_ALCHEMY_CONN="postgresql+psycopg2://$POSTGRES_USER:$POSTGRES_PASSWORD@$POSTGRES_HOST:$POSTGRES_PORT/$POSTGRES_DB"</p>
+<p>#  AIRFLOW__CELERY__RESULT_BACKEND="db+postgresql://$POSTGRES_USER:$POSTGRES_PASSWORD@$POSTGRES_HOST:$POSTGRES_PORT/$POSTGRES_DB"</p>
+<p>#  wait_for_port "Postgres" "$POSTGRES_HOST" "$POSTGRES_PORT"</p>
+<p>#fi</p>
+</blockquote>
+<p>启动命令</p>
+<blockquote>
+<p>$ docker run -d -p 8080:8080 -e EXECUTOR=Local -v /usr/local/airflow/airflow.cfg:/usr/local/airflow/airflow.cfg -v /usr/local/airflow/entrypoint.sh:/entrypoint.sh  -v /usr/local/airflow/dags:/usr/local/airflow/dags -v /usr/local/airflow/logs:/usr/local/airflow/logs puckel/docker-airflow webserver</p>
+</blockquote>
+<p> </p>
+<p>虽然是单点，但是配合mesos+hdfs nfs可以做成高可用用于生产环境；</p>
+<p><br/>参考：<br/>https://github.com/puckel/docker-airflow</p>
+<p> </p>
+</div>
+            </div>
+
+            <!-- Post Footer -->
+            <div class="post-footer">
+                <div class="post-navigation">
+                    <a href="../blog_cn.html" class="nav-button">← Back to Home</a>
+                    <a href="0198.html" class="nav-button">Next Post →</a>
+                </div>
+            </div>
+        </article>
+    </div>
+</body>
+</html>

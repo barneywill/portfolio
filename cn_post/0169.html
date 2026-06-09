@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Logstash 3 - 应用之http（in和out）</title>
+    <link rel="stylesheet" href="../css/style3.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header Navigation -->
+        <div class="header">
+            <h1><a href="../blog_cn.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+        </div>
+
+        <!-- Post Container -->
+        <article class="post">
+            <!-- Post Header -->
+            <div class="post-header">
+                <h1>Logstash 3 - 应用之http（in和out）</h1>
+                <div class="post-meta">
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📅</span>
+                        <span>March 19, 2019</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📖</span>
+                        <span>1 min read</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">👁️</span>
+                        <span>2295 views</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Post Content -->
+            <div class="post-content">
+                <div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<p>一个logstash很容易通过http打断成两个logstash实现跨服务器或者跨平台间数据同步，比如原来的流程是</p>
+<blockquote>
+<p>logstash: nginx log - &gt; kafka</p>
+</blockquote>
+<p>打断成两个是</p>
+<blockquote>
+<p>logstash1: nginx log - &gt; http out</p>
+<p>logstash2: http in - &gt;kafka</p>
+</blockquote>
+<p>具体如下</p>
+<h1>http out</h1>
+<div class="cnblogs_code">
+<pre></pre>
+<p>  filter {<br/>    ruby {<br/>      code =&gt; "event.cancel if not event.get('message').include?'something'"<br/>    }<br/>  }</p>
+<pre><span style="color: rgba(0, 0, 0, 1)">output {
+    http {
+      url </span>=&gt; <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">http://test.server:10000</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">
+      codec </span>=&gt; <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">plain</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">
+      format </span>=&gt; <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">json</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">
+      content_type </span>=&gt; <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">application/json</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">
+      http_method </span>=&gt; <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">post</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">
+    }</span><span style="color: rgba(0, 0, 0, 1)">
+}</span></pre>
+</div>
+<p>可以通过filter跳过不需要的记录</p>
+<h1>http in</h1>
+<div class="cnblogs_code">
+<pre><span style="color: rgba(0, 0, 0, 1)">input {
+    http {
+        host </span>=&gt; <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">0.0.0.0</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">
+        port </span>=&gt; 10000<span style="color: rgba(0, 0, 0, 1)">
+        additional_codecs </span>=&gt; {<span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">application/json</span><span style="color: rgba(128, 0, 0, 1)">"</span>=&gt;<span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">json</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">}
+        codec </span>=&gt; <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">plain</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">
+        threads </span>=&gt; 4<span style="color: rgba(0, 0, 0, 1)">
+        ssl </span>=&gt;<span style="color: rgba(0, 0, 0, 1)"> false
+    }
+}</span></pre>
+</div>
+<p> </p>
+<p>http in</p>
+<p>参考：https://www.elastic.co/guide/en/logstash/current/plugins-inputs-http.html</p>
+<p>http out</p>
+<p>参考：https://www.elastic.co/guide/en/logstash/current/plugins-outputs-http.html</p>
+<p> </p>
+</div>
+            </div>
+
+            <!-- Post Footer -->
+            <div class="post-footer">
+                <div class="post-navigation">
+                    <a href="../blog_cn.html" class="nav-button">← Back to Home</a>
+                    <a href="0170.html" class="nav-button">Next Post →</a>
+                </div>
+            </div>
+        </article>
+    </div>
+</body>
+</html>

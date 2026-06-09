@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>spring boot启动报错</title>
+    <link rel="stylesheet" href="../css/style3.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header Navigation -->
+        <div class="header">
+            <h1><a href="../blog_cn.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+        </div>
+
+        <!-- Post Container -->
+        <article class="post">
+            <!-- Post Header -->
+            <div class="post-header">
+                <h1>spring boot启动报错</h1>
+                <div class="post-meta">
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📅</span>
+                        <span>June 13, 2019</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📖</span>
+                        <span>1 min read</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">👁️</span>
+                        <span>3621 views</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Post Content -->
+            <div class="post-content">
+                <div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<p>spring boot 启动报错：</p>
+<div class="cnblogs_code">
+<pre>Caused by: java.lang.IllegalArgumentException: LoggerFactory <span style="color: rgba(0, 0, 255, 1)">is</span> <span style="color: rgba(0, 0, 255, 1)">not</span> a Logback LoggerContext but Logback <span style="color: rgba(0, 0, 255, 1)">is</span><span style="color: rgba(0, 0, 0, 1)"> on the classpath. Either remove Logback </span><span style="color: rgba(0, 0, 255, 1)">or</span><span style="color: rgba(0, 0, 0, 1)"> the competing implementation (</span><span style="color: rgba(0, 0, 255, 1)">class</span> org.slf4j.impl.Log4jLoggerFactory loaded <span style="color: rgba(0, 0, 255, 1)">from</span> file:/usr/local/tomcat/webapps/app/WEB-<span style="color: rgba(0, 0, 0, 1)">INF</span>/lib/slf4j-log4j12-1.7.25<span style="color: rgba(0, 0, 0, 1)">.jar). If you are using WebLogic you will need to add </span><span style="color: rgba(128, 0, 0, 1)">'</span><span style="color: rgba(128, 0, 0, 1)">org.slf4j</span><span style="color: rgba(128, 0, 0, 1)">'</span> to prefer-application-packages <span style="color: rgba(0, 0, 255, 1)">in</span> WEB-INF/<span style="color: rgba(0, 0, 0, 1)">weblogic.xml: org.slf4j.impl.Log4jLoggerFactory
+        at org.springframework.util.Assert.instanceCheckFailed(Assert.java:</span>655<span style="color: rgba(0, 0, 0, 1)">)
+        at org.springframework.util.Assert.isInstanceOf(Assert.java:</span>555<span style="color: rgba(0, 0, 0, 1)">)
+        at org.springframework.boot.logging.logback.LogbackLoggingSystem.getLoggerContext(LogbackLoggingSystem.java:</span>286<span style="color: rgba(0, 0, 0, 1)">)
+        at org.springframework.boot.logging.logback.LogbackLoggingSystem.beforeInitialize(LogbackLoggingSystem.java:</span>102<span style="color: rgba(0, 0, 0, 1)">)
+        at org.springframework.boot.context.logging.LoggingApplicationListener.onApplicationStartingEvent(LoggingApplicationListener.java:</span>220<span style="color: rgba(0, 0, 0, 1)">)
+        at org.springframework.boot.context.logging.LoggingApplicationListener.onApplicationEvent(LoggingApplicationListener.java:</span>199<span style="color: rgba(0, 0, 0, 1)">)
+        at org.springframework.context.event.SimpleApplicationEventMulticaster.doInvokeListener(SimpleApplicationEventMulticaster.java:</span>172<span style="color: rgba(0, 0, 0, 1)">)
+        at org.springframework.context.event.SimpleApplicationEventMulticaster.invokeListener(SimpleApplicationEventMulticaster.java:</span>165<span style="color: rgba(0, 0, 0, 1)">)
+        at org.springframework.context.event.SimpleApplicationEventMulticaster.multicastEvent(SimpleApplicationEventMulticaster.java:</span>139<span style="color: rgba(0, 0, 0, 1)">)
+        at org.springframework.context.event.SimpleApplicationEventMulticaster.multicastEvent(SimpleApplicationEventMulticaster.java:</span>127<span style="color: rgba(0, 0, 0, 1)">)
+        at org.springframework.boot.context.event.EventPublishingRunListener.starting(EventPublishingRunListener.java:</span>69<span style="color: rgba(0, 0, 0, 1)">)
+        at org.springframework.boot.SpringApplicationRunListeners.starting(SpringApplicationRunListeners.java:</span>48<span style="color: rgba(0, 0, 0, 1)">)
+        at org.springframework.boot.SpringApplication.run(SpringApplication.java:</span>302<span style="color: rgba(0, 0, 0, 1)">)
+        at org.springframework.boot.web.servlet.support.SpringBootServletInitializer.run(SpringBootServletInitializer.java:</span>157<span style="color: rgba(0, 0, 0, 1)">)
+        at org.springframework.boot.web.servlet.support.SpringBootServletInitializer.createRootApplicationContext(SpringBootServletInitializer.java:</span>137<span style="color: rgba(0, 0, 0, 1)">)
+        at org.springframework.boot.web.servlet.support.SpringBootServletInitializer.onStartup(SpringBootServletInitializer.java:</span>91<span style="color: rgba(0, 0, 0, 1)">)
+        at org.springframework.web.SpringServletContainerInitializer.onStartup(SpringServletContainerInitializer.java:</span>171<span style="color: rgba(0, 0, 0, 1)">)
+        at org.apache.catalina.core.StandardContext.startInternal(StandardContext.java:</span>5139<span style="color: rgba(0, 0, 0, 1)">)
+        at org.apache.catalina.util.LifecycleBase.start(LifecycleBase.java:</span>183<span style="color: rgba(0, 0, 0, 1)">)
+        ... </span>26 more</pre>
+</div>
+<p>出现这个问题通常的原因工程中使用了多个开源jar，每个开源jar都有自己的日志实现方式，比如slf+log4j,slf+logback等，其中slf是一个抽象接口，有很多种实现，但是工程中只能有一种，解决方法在异常中已经提示出来：</p>
+<blockquote>
+<pre><span>Either remove Logback or<span> the competing implementation (class org.slf4j.impl.Log4jLoggerFactory loaded from file:/usr/local/tomcat/webapps/app/WEB-<span>INF/lib/slf4j-log4j12-1.7.25<span>.jar). </span></span></span></span></pre>
+</blockquote>
+<p>需要在logback和slf-log4j之间去掉一个，其中spring boot用的是logback，可以去掉slf-log4j；</p>
+<p>通过</p>
+<blockquote>
+<p>mvn dependency:tree</p>
+</blockquote>
+<p>可以看到那些jar中依赖了slf-log4j，然后修改pom，将其排除掉</p>
+<div class="cnblogs_code">
+<pre>        &lt;dependency&gt;
+            &lt;groupId&gt;org.apache.hadoop&lt;/groupId&gt;
+            &lt;artifactId&gt;hadoop-client&lt;/artifactId&gt;
+            &lt;version&gt;2.6.5&lt;/version&gt;
+            &lt;exclusions&gt;
+                &lt;exclusion&gt;
+                    &lt;groupId&gt;org.slf4j&lt;/groupId&gt;
+                    &lt;artifactId&gt;slf4j-log4j12&lt;/artifactId&gt;
+                &lt;/exclusion&gt;
+            &lt;/exclusions&gt;
+        &lt;/dependency&gt;</pre>
+</div>
+<p>然后打包即可；</p>
+<p> </p>
+</div>
+            </div>
+
+            <!-- Post Footer -->
+            <div class="post-footer">
+                <div class="post-navigation">
+                    <a href="../blog_cn.html" class="nav-button">← Back to Home</a>
+                    <a href="0120.html" class="nav-button">Next Post →</a>
+                </div>
+            </div>
+        </article>
+    </div>
+</body>
+</html>

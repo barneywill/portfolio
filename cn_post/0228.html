@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Zabbix 1 - 简介、安装、使用</title>
+    <link rel="stylesheet" href="../css/style3.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header Navigation -->
+        <div class="header">
+            <h1><a href="../blog_cn.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+        </div>
+
+        <!-- Post Container -->
+        <article class="post">
+            <!-- Post Header -->
+            <div class="post-header">
+                <h1>Zabbix 1 - 简介、安装、使用</h1>
+                <div class="post-meta">
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📅</span>
+                        <span>February 15, 2019</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📖</span>
+                        <span>3 min read</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">👁️</span>
+                        <span>1228 views</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Post Content -->
+            <div class="post-content">
+                <div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<p>zabbix 4</p>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201902/1509647-20190214230525915-1271469802.png"/></p>
+<p>官方：https://www.zabbix.com/</p>
+<p> </p>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201902/1509647-20190214230838017-659179227.png"/> </p>
+<h1>一 简介</h1>
+<p>Monitor anything<br/>Solutions for any kind of IT infrastructure, services, applications, resources</p>
+<p><em>监控一切</em></p>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201902/1509647-20190214230720305-1779816813.png"/></p>
+<p> </p>
+<p>Enterprise-ready<br/>Mature, enterprise-level platform to monitor large-scale IT environments</p>
+<p><em>成熟的企业级监控平台</em></p>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201902/1509647-20190214231308198-587914086.png"/></p>
+<p> </p>
+<p>Zabbix is an enterprise-class open source distributed monitoring solution.</p>
+<p><em>zabbix是一个开源的分布式的企业级监控方案；</em></p>
+<p>Zabbix is software that monitors numerous parameters of a network and the health and integrity of servers. Zabbix uses a flexible notification mechanism that allows users to configure e-mail based alerts for virtually any event. This allows a fast reaction to server problems. Zabbix offers excellent reporting and data visualisation features based on the stored data. This makes Zabbix ideal for capacity planning.</p>
+<p>Zabbix supports both polling and trapping. All Zabbix reports and statistics, as well as configuration parameters, are accessed through a web-based frontend. A web-based frontend ensures that the status of your network and the health of your servers can be assessed from any location. Properly configured, Zabbix can play an important role in monitoring IT infrastructure. This is equally true for small organisations with a few servers and for large companies with a multitude of servers.</p>
+<p> </p>
+<h2>角色</h2>
+<h3>1 Server （zabbix-server）</h3>
+<p>Zabbix server is the central component to which agents report availability and integrity information and statistics. The server is the central repository in which all configuration, statistical and operational data are stored.</p>
+<h3>2 Agent （zabbix-agent）</h3>
+<p>Zabbix agents are deployed on monitoring targets to actively monitor local resources and applications and report the gathered data to Zabbix server.</p>
+<h3>3 Database storage （mysql）</h3>
+<p>All configuration information as well as the data gathered by Zabbix is stored in a database.</p>
+<h3>4 Web interface （httpd）</h3>
+<p>For an easy access to Zabbix from anywhere and from any platform, the web-based interface is provided. The interface is part of Zabbix server, and usually (but not necessarily) runs on the same physical machine as the one running the server.</p>
+<h3>5 Proxy（可选）</h3>
+<p>Zabbix proxy can collect performance and availability data on behalf of Zabbix server. A proxy is an optional part of Zabbix deployment; however, it may be very beneficial to distribute the load of a single Zabbix server.</p>
+<p> </p>
+<h1>二 安装</h1>
+<h2>1 yum安装</h2>
+<blockquote>
+<p># rpm - Uvh https://repo.zabbix.com/zabbix/4.0/rhel/7/x86_64/zabbix-release-4.0-1.el7.noarch.rpm</p>
+<p>agent安装<br/># yum install zabbix-agent</p>
+<p>server安装<br/># yum install zabbix-server-mysql zabbix-web-mysql zabbix-agent</p>
+</blockquote>
+<h2>2 初始化db</h2>
+<blockquote>
+<p>mysql&gt; create database zabbix character set utf8 collate utf8_bin;<br/>mysql&gt; grant all privileges on zabbix.* to zabbix@'%' identified by 'password';</p>
+<p># zcat /usr/share/doc/zabbix-server-mysql*/create.sql.gz | mysql - h$ip - uzabbix - p zabbix</p>
+</blockquote>
+<h2>3 启动server</h2>
+<p>修改数据库配置/时区/端口</p>
+<blockquote>
+<p># vi /etc/zabbix/zabbix_server.conf<br/>DBHost=$ip<br/>DBPassword=password</p>
+<p># vi /etc/httpd/conf.d/zabbix.conf<br/>php_value date.timezone Asia/Shanghai</p>
+<p># vi <span class="s1">/etc/httpd/conf/httpd.conf</span></p>
+<p class="p1"><span class="s1">listen 80</span></p>
+<p># systemctl restart zabbix-server httpd<br/># systemctl enable zabbix-server httpd</p>
+</blockquote>
+<h2>4 启动agent</h2>
+<blockquote>
+<p># vi /etc/zabbix/zabbix_agentd.conf<br/>Server=$server_ip<br/>ServerActive=$server_ip</p>
+<p># systemctl restart zabbix-agent<br/># systemctl enable zabbix-agent</p>
+</blockquote>
+<p> </p>
+<p>参考：https://www.zabbix.com/download?zabbix=4.0&amp;os_distribution=centos&amp;os_version=7&amp;db=mysql</p>
+<h1>三 使用</h1>
+<p>访问 http://$server_ip/zabbix 进入设置向导 </p>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201902/1509647-20190214232518184-1030366495.png"/></p>
+<p>设置db</p>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201902/1509647-20190214232558558-905105041.png"/></p>
+<p>设置完成之后</p>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201902/1509647-20190214233804032-1174338339.png"/></p>
+<p>默认用户密码：Admin/zabbix</p>
+<p>ps：如果登录之后发现zabbix server is not running，10051端口也没有绑定，极有可能是是连接db不通；</p>
+<p> </p>
+<p>参考：https://www.zabbix.com/documentation/4.0/manual/installation/install#installing_frontend</p>
+<p> </p>
+<p>添加host，设置template之后，就可以看到效果了</p>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201902/1509647-20190215003606645-1204646373.png"/></p>
+<p>In addition it is important to take a step back and have a look at the overall data flow within Zabbix. In order to create an item that gathers data you must first create a host. Moving to the other end of the Zabbix spectrum you must first have an item to create a trigger. You must have a trigger to create an action. Thus if you want to receive an alert that your CPU load it too high on <em>Server X</em> you must first create a host entry for <em>Server X</em> followed by an item for monitoring its CPU, then a trigger which activates if the CPU is too high, followed by an action which sends you an email. While that may seem like a lot of steps, with the use of templating it really isn't. However, due to this design it is possible to create a very flexible setup.</p>
+<p> </p>
+<p>使用帮助：https://www.zabbix.com/documentation/4.0/manual/quickstart</p>
+<p> </p>
+<p>关于java gateway</p>
+<p>It is required to install Java gateway only if you want to monitor JMX applications. Java gateway is lightweight and does not require a database.</p>
+<p> </p>
+<p>修改zabbix数据库账号密码</p>
+<blockquote>
+<p>#vi /etc/zabbix/zabbix_server.conf<br/>BPassword=111<br/>#vi /etc/zabbix/web/zabbix.conf.php<br/>DB['PASSWORD'] = '111';</p>
+</blockquote>
+<p> </p>
+<p>注意:</p>
+<p>在完成页面向导之前一定要直接访问httpd(httpd绑定80端口),不要在httpd前增加nginx等代理,否则在页面向导过程页面会报错,无法继续.</p>
+<p>如果想使用nginx,在完成页面向导之后,修改httpd端口为非80端口(比如81),然后在nginx增加代理转发请求到httpd</p>
+<div class="cnblogs_code">
+<pre><span style="color: rgba(0, 0, 0, 1)">server {
+    listen       </span>80<span style="color: rgba(0, 0, 0, 1)">;
+    server_name  zabbix.your.host;
+
+    </span><span style="color: rgba(0, 128, 0, 1)">#</span><span style="color: rgba(0, 128, 0, 1)">charset koi8-r;</span>
+    access_log  /var/log/nginx/<span style="color: rgba(0, 0, 0, 1)">zabbix.access.log  main;
+    error_log </span>/var/log/nginx/<span style="color: rgba(0, 0, 0, 1)">error.log error;
+    rewrite_log on;
+
+    rewrite </span>^/$ /<span style="color: rgba(0, 0, 0, 1)">zabbix last;
+    location </span>^~ /<span style="color: rgba(0, 0, 0, 1)">zabbix {
+        proxy_set_header Host $host;
+    proxy_pass http:</span>//your.httpd.ip:81<span style="color: rgba(0, 0, 0, 1)">;
+    }
+}</span></pre>
+</div>
+<p>安装完成会生成配置文件</p>
+<p>Configuration file "/etc/zabbix/web/zabbix.conf.php" created.</p>
+<p>如果有zabbix需要迁移服务器,注意迁移这个文件,可以避免进入安装流程.</p>
+<p> </p>
+</div>
+            </div>
+
+            <!-- Post Footer -->
+            <div class="post-footer">
+                <div class="post-navigation">
+                    <a href="../blog_cn.html" class="nav-button">← Back to Home</a>
+                    <a href="0229.html" class="nav-button">Next Post →</a>
+                </div>
+            </div>
+        </article>
+    </div>
+</body>
+</html>

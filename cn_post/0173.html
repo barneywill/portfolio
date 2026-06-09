@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Java基础之简单修改jar包中的class</title>
+    <link rel="stylesheet" href="../css/style3.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header Navigation -->
+        <div class="header">
+            <h1><a href="../blog_cn.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+        </div>
+
+        <!-- Post Container -->
+        <article class="post">
+            <!-- Post Header -->
+            <div class="post-header">
+                <h1>Java基础之简单修改jar包中的class</h1>
+                <div class="post-meta">
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📅</span>
+                        <span>March 18, 2019</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📖</span>
+                        <span>3 min read</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">👁️</span>
+                        <span>5565 views</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Post Content -->
+            <div class="post-content">
+                <div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<p>有时需要修改很多jar（假设这些jar都位于lib目录）中其中一个jar中的某一个类，而且又没有原始代码或ide，这时最简单的方式是：</p>
+<h1>1 进入lib目录</h1>
+<div class="cnblogs_code">
+<pre><span style="color: rgba(0, 128, 0, 1)">#</span><span style="color: rgba(0, 128, 0, 1)"> cd lib</span><span style="color: rgba(0, 128, 0, 1)">
+#</span><span style="color: rgba(0, 128, 0, 1)"> ls</span>
+test.jar dependency1.jar dependency2.jar</pre>
+</div>
+<h1>2 查看待修改jar包内类结构</h1>
+<div class="cnblogs_code">
+<pre>$ unzip - <span style="color: rgba(0, 0, 0, 1)">l test.jar
+
+</span><span style="color: rgba(0, 0, 255, 1)">or</span><span style="color: rgba(0, 0, 0, 1)">
+
+$ vim test.jar</span></pre>
+</div>
+<h1>3 解压待修改jar包</h1>
+<div class="cnblogs_code">
+<pre><span style="color: rgba(0, 0, 0, 1)">$ mkdir test_dir
+$ unzip test.jar </span>-d test_dir</pre>
+</div>
+<h1>4 查看class的jdk版本</h1>
+<div class="cnblogs_code">
+<pre>$ vi - b test_dir/package/Class.<span style="color: rgba(0, 0, 255, 1)">class</span><span style="color: rgba(0, 0, 0, 1)">
+:</span>%<span style="color: rgba(0, 0, 0, 1)">!xxd
+
+</span>0000000: cafe babe 0000 0032 0123 0700 0201 0023 .......2.<span style="color: rgba(0, 128, 0, 1)">#</span><span style="color: rgba(0, 128, 0, 1)">.....#</span></pre>
+</div>
+<p>取第15-16位，上例即32，</p>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201903/1509647-20190318151010868-1031177752.png"/></p>
+<h1>5 将要修改的文件放到class同目录下（如果没有源代码可以尝试反编译），并修改</h1>
+<div class="cnblogs_code">
+<pre>$ vi test_dir/package/Class.java</pre>
+</div>
+<h1>6 收集classpath</h1>
+<p>由于jar包可能非常多，所以使用命令来生成</p>
+<div class="cnblogs_code">
+<pre>$ ls *.jar|sed <span style="color: rgba(128, 0, 0, 1)">'</span><span style="color: rgba(128, 0, 0, 1)">:a;N;$!ba;s/\n/:/g</span><span style="color: rgba(128, 0, 0, 1)">'</span><span style="color: rgba(0, 0, 0, 1)">
+test.jar:dependency1.jar:dependency2.jar</span></pre>
+</div>
+<p>注linux下是:分隔，windows下是;分隔</p>
+<h1>7 编译</h1>
+<div class="cnblogs_code">
+<pre>$ javac - <span style="color: rgba(0, 0, 0, 1)">help
+Usage: javac </span>&lt;options&gt; &lt;source files&gt;<span style="color: rgba(0, 0, 0, 1)">
+where possible options include:
+  </span>-<span style="color: rgba(0, 0, 0, 1)">g                         Generate all debugging info
+  </span>-<span style="color: rgba(0, 0, 0, 1)">g:none                    Generate no debugging info
+  </span>-<span style="color: rgba(0, 0, 0, 1)">g:{lines,vars,source}     Generate only some debugging info
+  </span>-<span style="color: rgba(0, 0, 0, 1)">nowarn                    Generate no warnings
+  </span>-verbose                   Output messages about what the compiler <span style="color: rgba(0, 0, 255, 1)">is</span><span style="color: rgba(0, 0, 0, 1)"> doing
+  </span>-<span style="color: rgba(0, 0, 0, 1)">deprecation               Output source locations where deprecated APIs are used
+  </span>-classpath &lt;path&gt;          Specify where to find user <span style="color: rgba(0, 0, 255, 1)">class</span> files <span style="color: rgba(0, 0, 255, 1)">and</span><span style="color: rgba(0, 0, 0, 1)"> annotation processors
+  </span>-cp &lt;path&gt;                 Specify where to find user <span style="color: rgba(0, 0, 255, 1)">class</span> files <span style="color: rgba(0, 0, 255, 1)">and</span><span style="color: rgba(0, 0, 0, 1)"> annotation processors
+  </span>-sourcepath &lt;path&gt;<span style="color: rgba(0, 0, 0, 1)">         Specify where to find input source files
+  </span>-bootclasspath &lt;path&gt;      Override location of bootstrap <span style="color: rgba(0, 0, 255, 1)">class</span><span style="color: rgba(0, 0, 0, 1)"> files
+  </span>-extdirs &lt;dirs&gt;<span style="color: rgba(0, 0, 0, 1)">            Override location of installed extensions
+  </span>-endorseddirs &lt;dirs&gt;<span style="color: rgba(0, 0, 0, 1)">       Override location of endorsed standards path
+  </span>-proc:{none,only}          Control whether annotation processing <span style="color: rgba(0, 0, 255, 1)">and</span>/<span style="color: rgba(0, 0, 255, 1)">or</span> compilation <span style="color: rgba(0, 0, 255, 1)">is</span><span style="color: rgba(0, 0, 0, 1)"> done.
+  </span>-processor &lt;class1&gt;[,&lt;class2&gt;,&lt;class3&gt;<span style="color: rgba(0, 0, 0, 1)">...] Names of the annotation processors to run; bypasses default discovery process
+  </span>-processorpath &lt;path&gt;<span style="color: rgba(0, 0, 0, 1)">      Specify where to find annotation processors
+  </span>-parameters                Generate metadata <span style="color: rgba(0, 0, 255, 1)">for</span><span style="color: rgba(0, 0, 0, 1)"> reflection on method parameters
+  </span>-d &lt;directory&gt;             Specify where to place generated <span style="color: rgba(0, 0, 255, 1)">class</span><span style="color: rgba(0, 0, 0, 1)"> files
+  </span>-s &lt;directory&gt;<span style="color: rgba(0, 0, 0, 1)">             Specify where to place generated source files
+  </span>-h &lt;directory&gt;<span style="color: rgba(0, 0, 0, 1)">             Specify where to place generated native header files
+  </span>-implicit:{none,<span style="color: rgba(0, 0, 255, 1)">class</span>}     Specify whether <span style="color: rgba(0, 0, 255, 1)">or</span> <span style="color: rgba(0, 0, 255, 1)">not</span> to generate <span style="color: rgba(0, 0, 255, 1)">class</span> files <span style="color: rgba(0, 0, 255, 1)">for</span><span style="color: rgba(0, 0, 0, 1)"> implicitly referenced files
+  </span>-encoding &lt;encoding&gt;<span style="color: rgba(0, 0, 0, 1)">       Specify character encoding used by source files
+  </span>-source &lt;release&gt;<span style="color: rgba(0, 0, 0, 1)">          Provide source compatibility with specified release
+  </span>-target &lt;release&gt;          Generate <span style="color: rgba(0, 0, 255, 1)">class</span> files <span style="color: rgba(0, 0, 255, 1)">for</span><span style="color: rgba(0, 0, 0, 1)"> specific VM version
+  </span>-profile &lt;profile&gt;         Check that API used <span style="color: rgba(0, 0, 255, 1)">is</span> available <span style="color: rgba(0, 0, 255, 1)">in</span><span style="color: rgba(0, 0, 0, 1)"> the specified profile
+  </span>-<span style="color: rgba(0, 0, 0, 1)">version                   Version information
+  </span>-<span style="color: rgba(0, 0, 0, 1)">help                      Print a synopsis of standard options
+  </span>-Akey[=value]              Options to <span style="color: rgba(0, 0, 255, 1)">pass</span><span style="color: rgba(0, 0, 0, 1)"> to annotation processors
+  </span>-<span style="color: rgba(0, 0, 0, 1)">X                         Print a synopsis of nonstandard options
+  </span>-J&lt;flag&gt;                   Pass &lt;flag&gt;<span style="color: rgba(0, 0, 0, 1)"> directly to the runtime system
+  </span>-Werror                    Terminate compilation <span style="color: rgba(0, 0, 255, 1)">if</span><span style="color: rgba(0, 0, 0, 1)"> warnings occur
+  @</span>&lt;filename&gt;                Read options <span style="color: rgba(0, 0, 255, 1)">and</span> filenames <span style="color: rgba(0, 0, 255, 1)">from</span> file</pre>
+</div>
+<p>实际命令</p>
+<div class="cnblogs_code">
+<pre>$ javac - cp test.jar:dependency1.jar:dependency2.jar - source 1.6 - target 1.6 - sourcepath test_dir - d test_dir test_dir/package/Class.java</pre>
+</div>
+<h1>8 重新打jar包</h1>
+<div class="cnblogs_code">
+<pre><span style="color: rgba(0, 0, 0, 1)">$ cd test_dir
+$ zip </span>-r test.jar ./*</pre>
+</div>
+<h1>9 删除临时目录和原始jar</h1>
+<div class="cnblogs_code">
+<pre><span style="color: rgba(0, 0, 0, 1)">$ cd ..
+$ cp test_dir</span>/<span style="color: rgba(0, 0, 0, 1)">test.jar test.jar
+$ </span>/bin/rm - rf test_dir</pre>
+</div>
+<h1>10 测试修改生效</h1>
+<p> </p>
+</div>
+            </div>
+
+            <!-- Post Footer -->
+            <div class="post-footer">
+                <div class="post-navigation">
+                    <a href="../blog_cn.html" class="nav-button">← Back to Home</a>
+                    <a href="0174.html" class="nav-button">Next Post →</a>
+                </div>
+            </div>
+        </article>
+    </div>
+</body>
+</html>

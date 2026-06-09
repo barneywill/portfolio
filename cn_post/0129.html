@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>kudu副本数量</title>
+    <link rel="stylesheet" href="../css/style3.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header Navigation -->
+        <div class="header">
+            <h1><a href="../blog_cn.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+        </div>
+
+        <!-- Post Container -->
+        <article class="post">
+            <!-- Post Header -->
+            <div class="post-header">
+                <h1>kudu副本数量</h1>
+                <div class="post-meta">
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📅</span>
+                        <span>May 27, 2019</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📖</span>
+                        <span>1 min read</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">👁️</span>
+                        <span>2834 views</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Post Content -->
+            <div class="post-content">
+                <div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<p>kudu的副本数量是在表上设置，可以通过命令查看</p>
+<div class="cnblogs_code">
+<pre><span style="color: rgba(0, 128, 0, 1)">#</span><span style="color: rgba(0, 128, 0, 1)"> sudo - u kudu kudu cluster ksck $master</span>
+<span style="color: rgba(0, 0, 0, 1)">...
+Summary by table
+            Name            </span>| RF | Status  | Total Tablets | Healthy | Recovering | Under-replicated |<span style="color: rgba(0, 0, 0, 1)"> Unavailable
+</span>----------------------------------------------------------+----+---------+---------------+---------+------------+------------------+-------------<span style="color: rgba(0, 0, 0, 1)">
+ impala::test_db.test_table </span>| 3  | HEALTHY | 4             | 4       | 0          | 0                |<span style="color: rgba(0, 0, 0, 1)"> 0
+...</span></pre>
+</div>
+<p>其中RF即replication factor；</p>
+<p> </p>
+<p>副本数量只能在创建表时指定，创建后不能修改，并且副本数量必须为奇数</p>
+<p><em>By default, Kudu tables created through Impala use a tablet replication factor of 3. To specify the replication factor for a Kudu table, add a TBLPROPERTIES clause to the CREATE TABLE statement as shown below where n is the replication factor you want to use:</em></p>
+<blockquote>
+<p><em>TBLPROPERTIES ('kudu.num_tablet_replicas' = 'n')</em></p>
+</blockquote>
+<p><em>A replication factor must be an odd number.</em></p>
+<p><em>Changing the kudu.num_tablet_replicas table property using ALTER TABLE currently has no effect.</em></p>
+<p> </p>
+<p>参考：<br/>https://kudu.apache.org/docs/kudu_impala_integration.html</p>
+<p> </p>
+</div>
+            </div>
+
+            <!-- Post Footer -->
+            <div class="post-footer">
+                <div class="post-navigation">
+                    <a href="../blog_cn.html" class="nav-button">← Back to Home</a>
+                    <a href="0130.html" class="nav-button">Next Post →</a>
+                </div>
+            </div>
+        </article>
+    </div>
+</body>
+</html>

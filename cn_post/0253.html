@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>用户和组</title>
+    <link rel="stylesheet" href="../css/style3.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header Navigation -->
+        <div class="header">
+            <h1><a href="../blog_cn.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+        </div>
+
+        <!-- Post Container -->
+        <article class="post">
+            <!-- Post Header -->
+            <div class="post-header">
+                <h1>用户和组</h1>
+                <div class="post-meta">
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📅</span>
+                        <span>January 22, 2019</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📖</span>
+                        <span>1 min read</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">👁️</span>
+                        <span>481 views</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Post Content -->
+            <div class="post-content">
+                <div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<p>1 添加、删除用户</p>
+<blockquote>
+<p># useradd $user<br/># userdel $user</p>
+</blockquote>
+<p>2 设置用户密码</p>
+<blockquote>
+<p># passwd $user</p>
+</blockquote>
+<p>/etc/passwd</p>
+<p>3 查看$user的用户和组信息</p>
+<blockquote>
+<p># id $user</p>
+</blockquote>
+<p>4 将用户$user添加到组$group</p>
+<blockquote>
+<p># usermod -G $group $user</p>
+</blockquote>
+<p>or</p>
+<blockquote>
+<p># groupmems -g $group -a $user</p>
+</blockquote>
+<p>5 添加、删除组</p>
+<blockquote>
+<p># groupadd $group<br/># groupdel $group</p>
+</blockquote>
+<p>6 查看组内成员</p>
+<blockquote>
+<p># groupmems -g $group -l</p>
+</blockquote>
+<p>or</p>
+<blockquote>
+<p># grep hadoop /etc/group</p>
+</blockquote>
+<p>7 从组$group中删除用户$user</p>
+<blockquote>
+<p># groupmems -g $group -d $user</p>
+</blockquote>
+<p>8 用户home目录相关</p>
+<p>linux用户home目录通常在/home/$user下，有两种方式：</p>
+<p>1） 创建用户时</p>
+<blockquote>
+<p># useradd -m $user</p>
+</blockquote>
+<p>2） 修改用户home目录</p>
+<blockquote>
+<p># usermod -d /path/to/home $user</p>
+</blockquote>
+<p>9 切换用户</p>
+<blockquote>
+<p># su - $user</p>
+</blockquote>
+<p>切换用户时如果报错</p>
+<blockquote>
+<p>This account is currently not available.</p>
+</blockquote>
+<p>需要修改/etc/passwd，将最后的/sbin/nologin改为/bin/bash即可； </p>
+<p>10 指定或修改uid、gid</p>
+<p>添加用户test和组test，指定uid和gid均为1001</p>
+<blockquote>
+<p># groupadd -g 1001 test<br/># useradd -u 1001 -g test test</p>
+</blockquote>
+<p>修改用户test的uid为1001，修改组test的gid为1001</p>
+<blockquote>
+<p># usermod -u 1001 test<br/># groupmod -g 1001 test</p>
+</blockquote>
+<p> </p>
+</div>
+            </div>
+
+            <!-- Post Footer -->
+            <div class="post-footer">
+                <div class="post-navigation">
+                    <a href="../blog_cn.html" class="nav-button">← Back to Home</a>
+                    <a href="0254.html" class="nav-button">Next Post →</a>
+                </div>
+            </div>
+        </article>
+    </div>
+</body>
+</html>

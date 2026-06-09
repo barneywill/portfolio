@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ORC 1 - 简介</title>
+    <link rel="stylesheet" href="../css/style3.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header Navigation -->
+        <div class="header">
+            <h1><a href="../blog_cn.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+        </div>
+
+        <!-- Post Container -->
+        <article class="post">
+            <!-- Post Header -->
+            <div class="post-header">
+                <h1>ORC 1 - 简介</h1>
+                <div class="post-meta">
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📅</span>
+                        <span>November 07, 2018</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📖</span>
+                        <span>4 min read</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">👁️</span>
+                        <span>2415 views</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Post Content -->
+            <div class="post-content">
+                <div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201811/1509647-20181107164754667-168486965.png"/></p>
+<p><a class="external-link" href="https://orc.apache.org/" rel="noopener nofollow">https://orc.apache.org</a></p>
+<p> </p>
+<p>Optimized Row Columnar (ORC) file</p>
+<p>行列混合存储</p>
+<blockquote>
+<p>层次结构：</p>
+<p><strong>file - &gt; stripes -&gt; row groups(10000 rows)</strong></p>
+</blockquote>
+<p> </p>
+<h2 id="Parquet、Avro、ORC、Kudu-Background">Background</h2>
+<p>Back in January 2013, we created ORC files as part of the initiative to <strong>massively speed up Apache Hive</strong> and <strong>improve the storage efficiency of data stored in Apache Hadoop</strong>. The focus was on enabling high speed processing and reducing file sizes.</p>
+<blockquote>
+<p>ORC是为了加速hive查询以及节省hadoop磁盘空间而生的；</p>
+</blockquote>
+<p>ORC is a <strong>self-describing type-aware columnar file format</strong> designed for Hadoop workloads. It is optimized for large streaming reads, but with integrated support for finding required rows quickly. Storing data in a columnar format lets the reader read, decompress, and process only the values that are required for the current query. Because ORC files are type-aware, the writer chooses the most appropriate encoding for the type and builds an internal index as the file is written.</p>
+<blockquote>
+<p>ORC是一种自描述的列式存储文件类型，它为了大规模流式读取而特别优化，同时也支持快速定位需要的行；列式存储使得reader可以只读取、解压和处理他们需要的值；</p>
+</blockquote>
+<p><strong>Predicate pushdown</strong> uses those indexes to determine which <strong>stripes</strong> in a <strong>file</strong> need to be read for a particular query and the row indexes can narrow the search to a particular set of 10,000 rows. ORC supports the complete set of types in Hive, including the complex types: structs, lists, maps, and unions.<br/>( In ORC, <strong>the minimum and maximum values of each column are recorded per file, per stripe (~1M rows), and every 10,000 rows.</strong> Using this information, the reader should skip any segment that could not possibly match the query predicate. <br/>Predicate pushdown is amazing when it works, but for a lot of data sets, it doesn't work at all. If the data has a large number of distinct values and is well-shuffled, the minimum and maximum stats will cover almost the entire range of values, rendering predicate pushdown ineffective. )</p>
+<blockquote>
+<p>Predicate Pushdown谓词下推，是一个来自RDBMS的概念，即在不影响结果的前提下，尽量将过滤条件提前执行，这样可以显著减少过程中的数据量；</p>
+<p>ORC的Predicate Pushdown使用index来判断在一个file中哪些stripes需要被读取，并且可以将查询范围缩小到10000行的集合；实现原理在ORC中，每个file/每个stripe/每10000行，都有索引会记录该数据范围内每列最大最小值等统计信息，所以可以很容易的根据查询条件判断是否需要读取相应的file/stripe/10000行；</p>
+<p>ORC支持hive中所有的数据类型；</p>
+</blockquote>
+<p>ORC files are divided in to stripes that are roughly 64MB by default. The stripes in a file are independent of each other and form the natural unit of distributed work. <strong>Within each stripe, the columns are separated from each other so the reader can read just the columns that are required.</strong></p>
+<blockquote>
+<p>ORC file会被分块成为多个stripes，每个stripes大概64M，大概100w行；一个文件中的不同stripes是相互独立的；在一个stripe中，不同的列也是分开存储的；</p>
+</blockquote>
+<p><strong> </strong></p>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201811/1509647-20181107164821436-361989275.png"/></p>
+<p> </p>
+<p>ORC uses type specific readers and writers that provide <strong>light weight compression techniques</strong> such as dictionary encoding, bit packing, delta encoding, and run length encoding – resulting in dramatically smaller files. Additionally, ORC can apply generic compression using zlib, or Snappy on top of the lightweight compression for even smaller files. However, storage savings are only part of the gain. ORC supports <strong>projection</strong>, which selects subsets of the columns for reading, so that queries reading only one column read only the required bytes. Furthermore, ORC files include <strong>light weight indexes</strong> that include the minimum and maximum values for each column in each set of 10,000 rows and the entire file. Using pushdown filters from Hive, the file reader can skip entire sets of rows that aren’t important for this query.</p>
+<blockquote>
+<p>ORC使用类型相关的reader和writer来提供轻量级的压缩技术，结果是文件尺寸被极大的缩小了；除此之外，ORC还可以在内置轻量级压缩的基础上使用常用的压缩格式比如zlib、snappy等；</p>
+</blockquote>
+<p>ORC stores the top level index at the end of the file. The overall structure of the file is given in the figure above. <strong>The file’s tail consists of 3 parts; the file metadata, file footer and postscript.</strong><br/>The metadata for ORC is stored using <strong>Protocol Buffers</strong>, which provides the ability to add new fields without breaking readers.</p>
+<blockquote>
+<p>ORC在文件的末尾存储顶级index；文件末尾包含3个部分：metadata、footer、postscript；metadata是使用Protocol Buffer格式（可以增加新的列并且不影响读旧数据）存储的；</p>
+</blockquote>
+<h2 id="Parquet、Avro、ORC、Kudu-Stripes">Stripes</h2>
+<p>The body of ORC files consists of a series of stripes. Stripes are large (typically ~200MB) and independent of each other and are often processed by different tasks. The defining characteristic for columnar storage formats is that the data for each column is stored separately and that reading data out of the file should be proportional to the number of columns read.</p>
+<blockquote>
+<p>每一个ORC file都包含多个stripes，stripes之间相互独立，可以被不同的任务并行处理；</p>
+</blockquote>
+<p>In ORC files, <strong>each column is stored in several streams that are stored next to each other in the file</strong>.</p>
+<p>The stripe footer contains the encoding of each column and the directory of the streams including their location.</p>
+<p>Stripes have three sections: a set of indexes for the rows within the stripe, the data itself, and a stripe footer. Both the indexes and the data sections are divided by columns so that only the data for the required columns needs to be read.</p>
+<blockquote>
+<p>stripes有3个部分：index集合、data、footer；其中index和data中，列和列之间都是分开存放的；</p>
+</blockquote>
+<p>The row group indexes consist of a ROW_INDEX stream for each primitive column that has an entry for each row group. Row groups are controlled by the writer and default to 10,000 rows. Each RowIndexEntry gives the position of each stream for the column and the statistics for that row group.</p>
+<blockquote>
+<p>row group默认是10000行；</p>
+</blockquote>
+<p>Bloom Filters are added to ORC indexes from Hive 1.2.0 onwards. Predicate pushdown can make use of bloom filters to better prune the row groups that do not satisfy the filter condition. A BLOOM_FILTER stream records a bloom filter entry for <strong>each row group</strong> (default to 10,000 rows) in a column. Only the row groups that satisfy min/max row index evaluation will be evaluated against the bloom filter index.</p>
+<blockquote>
+<p>从hive1.2开始，Bloom Filter被引入，可以更好的支持Predicate Pushdown；</p>
+</blockquote>
+</div>
+            </div>
+
+            <!-- Post Footer -->
+            <div class="post-footer">
+                <div class="post-navigation">
+                    <a href="../blog_cn.html" class="nav-button">← Back to Home</a>
+                    <a href="0347.html" class="nav-button">Next Post →</a>
+                </div>
+            </div>
+        </article>
+    </div>
+</body>
+</html>

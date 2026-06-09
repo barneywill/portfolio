@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mysql 1 - 常用命令</title>
+    <link rel="stylesheet" href="../css/style3.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header Navigation -->
+        <div class="header">
+            <h1><a href="../blog_cn.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+        </div>
+
+        <!-- Post Container -->
+        <article class="post">
+            <!-- Post Header -->
+            <div class="post-header">
+                <h1>Mysql 1 - 常用命令</h1>
+                <div class="post-meta">
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📅</span>
+                        <span>January 15, 2019</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📖</span>
+                        <span>1 min read</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">👁️</span>
+                        <span>338 views</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Post Content -->
+            <div class="post-content">
+                <div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<h1>1 创建用户</h1>
+<blockquote>
+<p>CREATE USER 'username'@'host' IDENTIFIED BY 'password';</p>
+</blockquote>
+<p>比如</p>
+<blockquote>
+<p>create user 'test_user'@'%' identified by 'test';</p>
+</blockquote>
+<p>ps：如果只允许本机登录则host=localhost，如果允许从任意远程主机登陆则host=%</p>
+<p>修改密码</p>
+<blockquote>
+<p>SET PASSWORD FOR 'username'@'host' = PASSWORD('newpassword');</p>
+</blockquote>
+<h1>2 授权</h1>
+<blockquote>
+<p>GRANT privileges ON dbname.tablename TO 'username'@'host'</p>
+</blockquote>
+<p>比如</p>
+<blockquote>
+<p>GRANT ALL ON test_db.* TO 'test_user'@'%';</p>
+</blockquote>
+<p>撤销权限</p>
+<blockquote>
+<p>REVOKE privilege ON dbname.tablename FROM 'username'@'host';</p>
+</blockquote>
+<h1>3 查看某个用户的授权</h1>
+<blockquote>
+<p>show grants for test_user;</p>
+</blockquote>
+<h1>4 数据导出</h1>
+<blockquote>
+<p>$ mysqldump - u dbuser - p dbname [tablename1] [tablename2] &gt; dump.sql</p>
+</blockquote>
+<p>ps：tablename可选</p>
+<p>如果想导出所有database，dataname处传 --all-databases</p>
+<p>更多参数：</p>
+<p>--no-create-info　不导出建表语句</p>
+<p>--skip-add-locks　跳过锁表语句</p>
+<p>--where="..."　　只导出满足条件的数据</p>
+<h1>5 数据导入</h1>
+<blockquote>
+<p>mysql&gt;source /path/dump.sql</p>
+</blockquote>
+<p>或者</p>
+<blockquote>
+<p>$ mysql - uusername - p dbname &lt; dump.sql</p>
+</blockquote>
+<h1>6 定位问题</h1>
+<blockquote>
+<p>mysql&gt;show processlist;</p>
+<p>mysql&gt;show variables;</p>
+<p> </p>
+<p>mysql&gt;show index from $db.$table;</p>
+<p> </p>
+<p>mysql&gt;select @@profiling;</p>
+<p>mysql&gt;set profiling=1;</p>
+<p>mysql&gt;select * from $table;</p>
+<p>mysql&gt;show profiles;</p>
+<p>mysql&gt;show profile all for query $query_id;</p>
+<p>mysql&gt;set profiling=0;</p>
+</blockquote>
+<h1>7 修改字符集</h1>
+<blockquote>
+<p>mysql&gt; alter database $database_name character set utf8;<br/>mysql&gt; alter table $table_name default character set utf8;<br/>mysql&gt; alter table $table_name change $column_name $column_name varchar(50) character utf8;</p>
+</blockquote>
+<p> </p>
+</div>
+            </div>
+
+            <!-- Post Footer -->
+            <div class="post-footer">
+                <div class="post-navigation">
+                    <a href="../blog_cn.html" class="nav-button">← Back to Home</a>
+                    <a href="0272.html" class="nav-button">Next Post →</a>
+                </div>
+            </div>
+        </article>
+    </div>
+</body>
+</html>

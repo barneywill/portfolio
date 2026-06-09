@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>docker报错Exited (137)</title>
+    <link rel="stylesheet" href="../css/style3.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header Navigation -->
+        <div class="header">
+            <h1><a href="../blog_cn.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+        </div>
+
+        <!-- Post Container -->
+        <article class="post">
+            <!-- Post Header -->
+            <div class="post-header">
+                <h1>docker报错Exited (137)</h1>
+                <div class="post-meta">
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📅</span>
+                        <span>April 09, 2019</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📖</span>
+                        <span>2 min read</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">👁️</span>
+                        <span>25695 views</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Post Content -->
+            <div class="post-content">
+                <div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<p>docker container启动失败，报错：Exited (137) *** ago，比如</p>
+<blockquote>
+<p>Exited (137) 16 seconds ago</p>
+</blockquote>
+<p>这时通过docker logs查不到任何日志，从mesos上看stderr相关的只有一句</p>
+<blockquote>
+<p>I0409 16:56:26.408077 8583 executor.cpp:736] Container exited with status 137</p>
+</blockquote>
+<p>通过docker inspect查看container状态为</p>
+<div class="cnblogs_code">
+<pre>        <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">State</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">: {
+            </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">Status</span><span style="color: rgba(128, 0, 0, 1)">"</span>: <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">exited</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">,
+            </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">Running</span><span style="color: rgba(128, 0, 0, 1)">"</span>: <span style="color: rgba(0, 0, 255, 1)">false</span><span style="color: rgba(0, 0, 0, 1)">,
+            </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">Paused</span><span style="color: rgba(128, 0, 0, 1)">"</span>: <span style="color: rgba(0, 0, 255, 1)">false</span><span style="color: rgba(0, 0, 0, 1)">,
+            </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">Restarting</span><span style="color: rgba(128, 0, 0, 1)">"</span>: <span style="color: rgba(0, 0, 255, 1)">false</span><span style="color: rgba(0, 0, 0, 1)">,
+            </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">OOMKilled</span><span style="color: rgba(128, 0, 0, 1)">"</span>: <span style="color: rgba(0, 0, 255, 1)">true</span><span style="color: rgba(0, 0, 0, 1)">,
+            </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">Dead</span><span style="color: rgba(128, 0, 0, 1)">"</span>: <span style="color: rgba(0, 0, 255, 1)">false</span><span style="color: rgba(0, 0, 0, 1)">,
+            </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">Pid</span><span style="color: rgba(128, 0, 0, 1)">"</span>: 0<span style="color: rgba(0, 0, 0, 1)">,
+            </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">ExitCode</span><span style="color: rgba(128, 0, 0, 1)">"</span>: 137<span style="color: rgba(0, 0, 0, 1)">,
+            </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">Error</span><span style="color: rgba(128, 0, 0, 1)">"</span>: <span style="color: rgba(128, 0, 0, 1)">""</span><span style="color: rgba(0, 0, 0, 1)">,
+            </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">StartedAt</span><span style="color: rgba(128, 0, 0, 1)">"</span>: <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">2019-04-09T08:50:48.058583459Z</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">,
+            </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">FinishedAt</span><span style="color: rgba(128, 0, 0, 1)">"</span>: <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">2019-04-09T08:50:55.456317695Z</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">
+        },</span></pre>
+</div>
+<p>可见是因为OOMKilled，通过journalctl查看oom日志如下：</p>
+<div class="cnblogs_code">
+<pre><span style="color: rgba(0, 128, 0, 1)">#</span><span style="color: rgba(0, 128, 0, 1)"> journalctl - k | grep - i - e memory - e oom</span>
+Apr 09 16:00:14 cdp-test-server-05.bj kernel: java invoked oom-killer: gfp_mask=0xd0, order=0, oom_score_adj=0<span style="color: rgba(0, 0, 0, 1)">
+Apr </span>09 16:00:14 cdp-test-server-05.bj kernel:  [&lt;ffffffff8c3ba524&gt;] oom_kill_process+0x254/0x3d0<span style="color: rgba(0, 0, 0, 1)">
+Apr </span>09 16:00:14 cdp-test-server-05.bj kernel:  [&lt;ffffffff8c435346&gt;] mem_cgroup_oom_synchronize+0x546/0x570<span style="color: rgba(0, 0, 0, 1)">
+Apr </span>09 16:00:14 cdp-test-server-05.bj kernel:  [&lt;ffffffff8c3badb4&gt;] pagefault_out_of_memory+0x14/0x90<span style="color: rgba(0, 0, 0, 1)">
+Apr </span>09 16:00:14 cdp-test-server-05.bj kernel: memory: usage 524288kB, limit 524288kB, failcnt 8430<span style="color: rgba(0, 0, 0, 1)">
+Apr </span>09 16:00:14 cdp-test-server-05.bj kernel: memory+swap: usage 524288kB, limit 1048576kB, failcnt 0<span style="color: rgba(0, 0, 0, 1)">
+Apr </span>09 16:00:14 cdp-test-server-05.bj kernel: Memory cgroup stats <span style="color: rgba(0, 0, 255, 1)">for</span> /docker/<span style="color: rgba(0, 0, 0, 1)">3aafdee2b919fa936815fbb88ebd8bb3131c185690284491f583c62ff382b1fe: cache:20KB rss:524268KB rss_huge:0KB mapped_file:8KB swap:0KB inactive_anon:0KB active_anon:524236KB inactive_file:8KB active_file:8KB unevictable:0KB
+Apr </span>09 16:00:14 cdp-test-server-05<span style="color: rgba(0, 0, 0, 1)">.bj kernel: [ pid ]   uid  tgid total_vm      rss nr_ptes swapents oom_score_adj name
+Apr </span>09 16:00:14 cdp-test-server-05.bj kernel: Memory cgroup out of memory: Kill <span style="color: rgba(0, 0, 255, 1)">process</span> 10768 (java) score 1021 or sacrifice child</pre>
+</div>
+<p> </p>
+<p>原因是container只分配了512M，但是需要1G（比如配置文件里设置-Xms1G - Xmx1G）</p>
+<p><br/>参考：https://success.docker.com/article/what-causes-a-container-to-exit-with-code-137</p>
+</div>
+            </div>
+
+            <!-- Post Footer -->
+            <div class="post-footer">
+                <div class="post-navigation">
+                    <a href="../blog_cn.html" class="nav-button">← Back to Home</a>
+                    <a href="0148.html" class="nav-button">Next Post →</a>
+                </div>
+            </div>
+        </article>
+    </div>
+</body>
+</html>

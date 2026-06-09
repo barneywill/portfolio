@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>spark job之间会停顿几分钟</title>
+    <link rel="stylesheet" href="../css/style3.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header Navigation -->
+        <div class="header">
+            <h1><a href="../blog_cn.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+        </div>
+
+        <!-- Post Container -->
+        <article class="post">
+            <!-- Post Header -->
+            <div class="post-header">
+                <h1>spark job之间会停顿几分钟</h1>
+                <div class="post-meta">
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📅</span>
+                        <span>December 27, 2018</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📖</span>
+                        <span>1 min read</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">👁️</span>
+                        <span>853 views</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Post Content -->
+            <div class="post-content">
+                <div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<p>今天遇到一个问题，spark应用中在一个循环里执行sql，每个sql都会向一张表写入数据，比如</p>
+<blockquote>
+<p>insert overwrite table test_table partition(dt) select * from test_table_another;</p>
+</blockquote>
+<p>除了执行sql没有其他逻辑，每个sql都会对应1个job，在spark web ui上看到job和job之间会停顿几分钟，并且非常有规律，任何两个job之间都会停顿，是不是很神奇？</p>
+<p> </p>
+<p>答案揭晓：</p>
+<p>spark在执行insert overwrite table partition的时候，分为两个部分，一个是执行select（读数据），一个是执行load partition（写数据），具体详见执行计划；</p>
+<p>每个sql对应1个job，这个job执行的select部分（读数据），不包含load partition部分（写数据），因为spark为了兼容hive，直接使用hive的元数据库，所有ddl操作都是通过反射直接调用hive的代码（spark2.1依赖的是hive1.2），这个过程并不包含在spark job中，所以看起来job执行完之后停顿了几分钟才执行下个job，这里停顿的几分钟其实是在做load partition操作（写数据）；</p>
+<p> </p>
+<p>这里还有另外一个问题，hive1.2在loadPartition删除文件时是串行操作，非常慢，这个问题在hive2时改为线程池解决，具体代码及问题解析详见：<a href="https://www.cnblogs.com/barneywill/p/10154922.html" target="_blank">https://www.cnblogs.com/barneywill/p/10154922.html</a></p>
+<p> </p>
+</div>
+            </div>
+
+            <!-- Post Footer -->
+            <div class="post-footer">
+                <div class="post-navigation">
+                    <a href="../blog_cn.html" class="nav-button">← Back to Home</a>
+                    <a href="0292.html" class="nav-button">Next Post →</a>
+                </div>
+            </div>
+        </article>
+    </div>
+</body>
+</html>

@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>hbase hmaster启动报错</title>
+    <link rel="stylesheet" href="../css/style3.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header Navigation -->
+        <div class="header">
+            <h1><a href="../blog_cn.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+        </div>
+
+        <!-- Post Container -->
+        <article class="post">
+            <!-- Post Header -->
+            <div class="post-header">
+                <h1>hbase hmaster启动报错</h1>
+                <div class="post-meta">
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📅</span>
+                        <span>May 13, 2021</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📖</span>
+                        <span>1 min read</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">👁️</span>
+                        <span>464 views</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Post Content -->
+            <div class="post-content">
+                <div class="blogpost-body cnblogs-markdown" id="cnblogs_post_body">
+<h2 id="现象">现象</h2>
+<p>hbase hmaster启动报错</p>
+<blockquote>
+<p>master.HMaster: Failed to become active master java.lang.IllegalStateException: The procedure WAL relies on the ability to hsync for proper operation during component failures, but the underlying filesystem does not support doing so. Please check the config value of 'hbase.procedure.store.wal.use.hsync' to set the desired level of robustness and ensure the config value of 'hbase.wal.dir' points to a FileSystem mount that can provide it.</p>
+</blockquote>
+<h2 id="环境">环境</h2>
+<ul>
+<li>hbase1.6</li>
+<li>hadoop2.9</li>
+</ul>
+<h2 id="两种方法">两种方法：</h2>
+<h3 id="1不推荐">1）不推荐</h3>
+<pre><code>&lt;property&gt;
+  &lt;name&gt;hbase.unsafe.stream.capability.enforce&lt;/name&gt;
+  &lt;value&gt;false&lt;/value&gt;
+&lt;/property&gt;
+</code></pre>
+<h3 id="2更改hadoop依赖">2）更改hadoop依赖</h3>
+<p>hbase预编译的，编译依赖的hadoop版本为2.8.5，实际使用的hadoop是2.9.2，将$HBASE_HOME/lib/hadoop-*-2.8.5.jar 全部换成 hadoop-*-2.9.2.jar，所需新版本jar包在这个目录下：$HADOOP_HOME/share/hadoop/</p>
+<p>操作之后重启hbase即可</p>
+<p>参考：<a href="https://stackoverflow.com/questions/48709569/hbase-error-illegalstateexception-when-starting-master-hsync" rel="noopener nofollow" target="_blank">https://stackoverflow.com/questions/48709569/hbase-error-illegalstateexception-when-starting-master-hsync</a></p>
+</div>
+            </div>
+
+            <!-- Post Footer -->
+            <div class="post-footer">
+                <div class="post-navigation">
+                    <a href="../blog_cn.html" class="nav-button">← Back to Home</a>
+                    <a href="0046.html" class="nav-button">Next Post →</a>
+                </div>
+            </div>
+        </article>
+    </div>
+</body>
+</html>

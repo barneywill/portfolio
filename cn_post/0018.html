@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>kafka部分topic出现消息丢失</title>
+    <link rel="stylesheet" href="../css/style3.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header Navigation -->
+        <div class="header">
+            <h1><a href="../blog_cn.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+        </div>
+
+        <!-- Post Container -->
+        <article class="post">
+            <!-- Post Header -->
+            <div class="post-header">
+                <h1>kafka部分topic出现消息丢失</h1>
+                <div class="post-meta">
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📅</span>
+                        <span>May 20, 2022</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📖</span>
+                        <span>2 min read</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">👁️</span>
+                        <span>2674 views</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Post Content -->
+            <div class="post-content">
+                <div class="blogpost-body cnblogs-markdown" id="cnblogs_post_body">
+<h1 id="背景">背景</h1>
+<p>有同学反馈kafka某个topic有消息丢失（消费比生产的要少），丢失率大概20%</p>
+<h1 id="排查">排查</h1>
+<p>出现问题的topic的replication-factor为2，partition数量为5，该topic状态如下：</p>
+<p><picture>
+  <source srcset="../img/1509647-20220520161118206-232887920.webp" type="image/webp">
+  <img alt="" src="../img/1509647-20220520161118206-232887920.png">
+</picture></p>
+<p>有一个topic处于Under Replicated状态，ISR只有1个，193节点被踢掉之后没有进来，而且也没替换为其他节点。</p>
+<p>首先看producer有没有报错，kafka 2.0中producer发送方式为async+interceptor方式，通过interceptor.class来指定自定义拦截器</p>
+<p><picture>
+  <source srcset="../img/1509647-20220520161158006-64991256.webp" type="image/webp">
+  <img alt="" src="../img/1509647-20220520161158006-64991256.png">
+</picture></p>
+<p>所有的错误都会回调interceptor</p>
+<p><picture>
+  <source srcset="../img/1509647-20220520161229846-644966799.webp" type="image/webp">
+  <img alt="" src="../img/1509647-20220520161229846-644966799.png">
+</picture></p>
+<p>通过增加interceptor并在onSendError打印错误日志发现有报错：</p>
+<blockquote>
+<p>ERROR ninebot.iot.hub.KafkaTest 100 - send error :Messages are rejected since there are fewer in-sync replicas than required.<br/>
+org.apache.kafka.common.errors.NotEnoughReplicasException: Messages are rejected since there are fewer in-sync replicas than required.</p>
+</blockquote>
+<p>报错的直接原因为：partition-0只有1个replica，少于配置的2个，所有发到这个partition的消息会被拒绝</p>
+<p>在192节点上发现有如下日志：</p>
+<pre><code>2021-07-27 17:41:47,159 INFO kafka.cluster.Partition: [Partition test-7 broker=192] Shrinking ISR from 192,193 to 192
+2021-07-27 17:51:07,551 ERROR kafka.server.ReplicaManager: [ReplicaManager broker=192] Error processing append operation on partition test-7
+org.apache.kafka.common.errors.NotEnoughReplicasException: Number of insync replicas for partition test-7 is [1], below required minimum [2]
+</code></pre>
+<p>进一步搜索Shrinking ISR from日志发现当时有大量的partition都将193节点踢掉。<br/>
+查看kafka的代码发现，shrink isr的条件是follower的lastCaughtUpTimeMs超时</p>
+<p><picture>
+  <source srcset="../img/1509647-20220520161334884-263830708.webp" type="image/webp">
+  <img alt="" src="../img/1509647-20220520161334884-263830708.png">
+</picture></p>
+<p>查看193节点日志发现当时有个报错</p>
+<pre><code>2021-07-27 17:41:11,547 INFO kafka.server.epoch.LeaderEpochFileCache: Updated PartitionLeaderEpoch. New: {epoch:15, offset:201}, Current: {epoch:-1, offset:-1} for Partition: test-1. Cache now contains 0 entries.
+2021-07-27 17:41:11,549 WARN kafka.log.Log: [Log partition=test-1, dir=/data/kafka] Newly rolled segment file /data/kafka/test-1/00000000000000000201.log already exists; deleting it first
+2021-07-27 17:41:11,549 WARN kafka.log.Log: [Log partition=test-1, dir=/data/kafka] Newly rolled segment file /data/kafka/test-1/00000000000000000201.index already exists; deleting it first
+2021-07-27 17:41:11,549 WARN kafka.log.Log: [Log partition=test-1, dir=/data/kafka] Newly rolled segment file /data/kafka/test-1/00000000000000000201.timeindex already exists; deleting it first
+2021-07-27 17:41:11,550 ERROR kafka.server.ReplicaFetcherThread: [ReplicaFetcher replicaId=193, leaderId=192, fetcherId=2] Error due to
+org.apache.kafka.common.KafkaException: Error processing data for partition test-1 offset 201
+at kafka.server.AbstractFetcherThread$$anonfun$processFetchRequest$2$$anonfun$apply$mcV$sp$1$$anonfun$apply$2.apply(AbstractFetcherThread.scala:207)
+at kafka.server.AbstractFetcherThread$$anonfun$processFetchRequest$2$$anonfun$apply$mcV$sp$1$$anonfun$apply$2.apply(AbstractFetcherThread.scala:172)
+at scala.Option.foreach(Option.scala:257)
+at kafka.server.AbstractFetcherThread$$anonfun$processFetchRequest$2$$anonfun$apply$mcV$sp$1.apply(AbstractFetcherThread.scala:172)
+at kafka.server.AbstractFetcherThread$$anonfun$processFetchRequest$2$$anonfun$apply$mcV$sp$1.apply(AbstractFetcherThread.scala:169)
+at scala.collection.mutable.ResizableArray$class.foreach(ResizableArray.scala:59)
+at scala.collection.mutable.ArrayBuffer.foreach(ArrayBuffer.scala:48)
+at kafka.server.AbstractFetcherThread$$anonfun$processFetchRequest$2.apply$mcV$sp(AbstractFetcherThread.scala:169)
+at kafka.server.AbstractFetcherThread$$anonfun$processFetchRequest$2.apply(AbstractFetcherThread.scala:169)
+at kafka.server.AbstractFetcherThread$$anonfun$processFetchRequest$2.apply(AbstractFetcherThread.scala:169)
+at kafka.utils.CoreUtils$.inLock(CoreUtils.scala:251)
+at kafka.server.AbstractFetcherThread.processFetchRequest(AbstractFetcherThread.scala:167)
+at kafka.server.AbstractFetcherThread.doWork(AbstractFetcherThread.scala:114)
+at kafka.utils.ShutdownableThread.run(ShutdownableThread.scala:82)
+Caused by: org.apache.kafka.common.KafkaException: Trying to roll a new log segment for topic partition test-1 with start offset 201 while it already exists.
+at kafka.log.Log$$anonfun$roll$2.apply(Log.scala:1498)
+at kafka.log.Log$$anonfun$roll$2.apply(Log.scala:1465)
+at kafka.log.Log.maybeHandleIOException(Log.scala:1842)
+at kafka.log.Log.roll(Log.scala:1465)
+at kafka.log.Log.kafka$log$Log$$maybeRoll(Log.scala:1450)
+at kafka.log.Log$$anonfun$append$2.apply(Log.scala:858)
+at kafka.log.Log$$anonfun$append$2.apply(Log.scala:752)
+at kafka.log.Log.maybeHandleIOException(Log.scala:1842)
+at kafka.log.Log.append(Log.scala:752)
+at kafka.log.Log.appendAsFollower(Log.scala:733)
+at kafka.cluster.Partition$$anonfun$doAppendRecordsToFollowerOrFutureReplica$1.apply(Partition.scala:606)
+at kafka.utils.CoreUtils$.inLock(CoreUtils.scala:251)
+at kafka.utils.CoreUtils$.inReadLock(CoreUtils.scala:257)
+at kafka.cluster.Partition.doAppendRecordsToFollowerOrFutureReplica(Partition.scala:593)
+at kafka.cluster.Partition.appendRecordsToFollowerOrFutureReplica(Partition.scala:613)
+at kafka.server.ReplicaFetcherThread.processPartitionData(ReplicaFetcherThread.scala:127)
+at kafka.server.ReplicaFetcherThread.processPartitionData(ReplicaFetcherThread.scala:40)
+at kafka.server.AbstractFetcherThread$$anonfun$processFetchRequest$2$$anonfun$apply$mcV$sp$1$$anonfun$apply$2.apply(AbstractFetcherThread.scala:186)
+... 13 more
+2021-07-27 17:41:11,550 INFO kafka.server.ReplicaFetcherThread: [ReplicaFetcher replicaId=193, leaderId=192, fetcherId=2] Stopped
+</code></pre>
+<p>调用过程如下：</p>
+<blockquote>
+<p>AbstractFetcherThread.processFetchRequest<br/>
+→ ReplicaFetcherThread.processPartitionData<br/>
+→ Partition.appendRecordsToFollowerOrFutureReplica<br/>
+→ Log.maybeRoll<br/>
+→ Log.roll</p>
+</blockquote>
+<p>Log.roll代码如下：</p>
+<p><picture>
+  <source srcset="../img/1509647-20220520161414391-1752889813.webp" type="image/webp">
+  <img alt="" src="../img/1509647-20220520161414391-1752889813.png">
+</picture></p>
+<p>从日志看出，首先有3个delete操作</p>
+<blockquote>
+<p>Newly rolled segment file /data/kafka/test-1/00000000000000000201.log already exists; deleting it first<br/>
+Newly rolled segment file /data/kafka/test-1/00000000000000000201.index already exists; deleting it first<br/>
+Newly rolled segment file /data/kafka/test-1/00000000000000000201.timeindex already exists; deleting it first</p>
+</blockquote>
+<p>然后报错</p>
+<blockquote>
+<p>Trying to roll a new log segment for topic partition test-1 with start offset 201 while it already exists.</p>
+</blockquote>
+<p>说明删除失败，怀疑当时文件正在打开写入，导致删除失败</p>
+<p>服务器文件情况如下：</p>
+<pre><code># ls /data/kafka/test-1/ -l
+total 4
+-rw-r--r-- 1 kafka kafka 10485760 Jul 27 17:41 00000000000000000201.index
+-rw-r--r-- 1 kafka kafka 0 Jul 27 17:41 00000000000000000201.log
+-rw-r--r-- 1 kafka kafka 10485756 Jul 27 17:41 00000000000000000201.timeindex
+-rw-r--r-- 1 kafka kafka 11 Jul 27 17:41 leader-epoch-checkpoint
+</code></pre>
+<p>为什么一个ReplicaFetcherThread报错会导致25个partition剔除193？</p>
+<p>ReplicaFetcherManager的父类AbstractFetcherManager中有一个变量</p>
+<blockquote>
+<p>private[server] val fetcherThreadMap = new mutable.HashMap[BrokerIdAndFetcherId, AbstractFetcherThread]</p>
+</blockquote>
+<p>这个map会以brokerId和fetcherId为key来存放ReplicaFetcherThread，可以认为1个source broker对应1个fetcher thread，这个fetcher thread中会负责所有在source broker上partition的同步，ReplicaFetcherThread的报错导致整个线程退出，</p>
+<p><picture>
+  <source srcset="../img/1509647-20220520161500863-1655832348.webp" type="image/webp">
+  <img alt="" src="../img/1509647-20220520161500863-1655832348.png">
+</picture></p>
+<p>然后会影响所有在source broker上的partition同步，导致这些partition同时踢掉193</p>
+<p>为什么当时会删除失败？</p>
+<p>发现kafka官方的jira上已经有提过该bug</p>
+<p><a href="https://issues.apache.org/jira/browse/KAFKA-6388" rel="noopener nofollow" target="_blank">https://issues.apache.org/jira/browse/KAFKA-6388</a></p>
+<p>并且该bug已经修复</p>
+<p><a href="https://github.com/apache/kafka/pull/6006/commits/f39a9f533f7bedf28dbaca7644b99808e163ea4d" rel="noopener nofollow" target="_blank">https://github.com/apache/kafka/pull/6006/commits/f39a9f533f7bedf28dbaca7644b99808e163ea4d</a></p>
+<p>将prev检查及抛出异常代码去掉</p>
+<p>升级kafka，从2.0到2.1，从2.1开始该bug已经修复<br/>
+<picture>
+  <source srcset="../img/1509647-20220520161541104-2057829869.webp" type="image/webp">
+  <img alt="" src="../img/1509647-20220520161541104-2057829869.png">
+</picture></p>
+</div>
+            </div>
+
+            <!-- Post Footer -->
+            <div class="post-footer">
+                <div class="post-navigation">
+                    <a href="../blog_cn.html" class="nav-button">← Back to Home</a>
+                    <a href="0019.html" class="nav-button">Next Post →</a>
+                </div>
+            </div>
+        </article>
+    </div>
+</body>
+</html>

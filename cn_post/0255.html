@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>hive通过外部表读写hbase数据</title>
+    <link rel="stylesheet" href="../css/style3.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header Navigation -->
+        <div class="header">
+            <h1><a href="../blog_cn.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+        </div>
+
+        <!-- Post Container -->
+        <article class="post">
+            <!-- Post Header -->
+            <div class="post-header">
+                <h1>hive通过外部表读写hbase数据</h1>
+                <div class="post-meta">
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📅</span>
+                        <span>January 21, 2019</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📖</span>
+                        <span>1 min read</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">👁️</span>
+                        <span>2408 views</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Post Content -->
+            <div class="post-content">
+                <div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<p>在hive中创建外部表：</p>
+<blockquote>
+<p>CREATE EXTERNAL TABLE hive_hbase_table(<br/>key string, <br/>name string,<br/>desc string<br/>) <br/>STORED BY 'org.apache.hadoop.hive.hbase.HBaseStorageHandler' <br/>WITH SERDEPROPERTIES<br/>("hbase.columns.mapping" = ":key,columfamily:name,columnfamily:desc")<br/>TBLPROPERTIES("hbase.table.name" = "hbase_table");</p>
+</blockquote>
+<p>主要是配置hbase.table.name和hbase.columns.mapping，一个是hbase表名，一个是hbase字段和hive字段的一一映射，然后就可以从hive中读写hbase数据：</p>
+<blockquote>
+<p>select * from hive_hbase_table limit 10;</p>
+<p>insert into table hive_hbase_table select 'testkey', 'testname', 'testdesc';</p>
+</blockquote>
+<p> </p>
+</div>
+            </div>
+
+            <!-- Post Footer -->
+            <div class="post-footer">
+                <div class="post-navigation">
+                    <a href="../blog_cn.html" class="nav-button">← Back to Home</a>
+                    <a href="0256.html" class="nav-button">Next Post →</a>
+                </div>
+            </div>
+        </article>
+    </div>
+</body>
+</html>

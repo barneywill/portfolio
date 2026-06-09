@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ansible 1 -简介、安装和使用</title>
+    <link rel="stylesheet" href="../css/style3.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header Navigation -->
+        <div class="header">
+            <h1><a href="../blog_cn.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+        </div>
+
+        <!-- Post Container -->
+        <article class="post">
+            <!-- Post Header -->
+            <div class="post-header">
+                <h1>Ansible 1 -简介、安装和使用</h1>
+                <div class="post-meta">
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📅</span>
+                        <span>January 13, 2019</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📖</span>
+                        <span>2 min read</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">👁️</span>
+                        <span>454 views</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Post Content -->
+            <div class="post-content">
+                <div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201901/1509647-20190113170240143-1570514080.png"/></p>
+<p>官方：https://www.ansible.com/</p>
+<h1>一 简介</h1>
+<p>Ansible is a radically simple IT automation engine that automates cloud provisioning, configuration management, application deployment, intra-service orchestration, and many other IT needs.</p>
+<p>It uses no agents and no additional custom security infrastructure, so it's easy to deploy - and most importantly, it uses a very simple language (YAML, in the form of Ansible Playbooks) that allow you to describe your automation jobs in a way that approaches plain English.</p>
+<p>ansible的好处是快速、简单、易用、不需要安装agent，可以方便的用于配置管理和应用部署等自动化场景；</p>
+<h1>二 安装</h1>
+<h2>1 安装</h2>
+<blockquote>
+<p>yum install -y ansible</p>
+</blockquote>
+<h2>2 测试</h2>
+<blockquote>
+<p># ansible --version</p>
+<p>ansible 2.7.5</p>
+<p>  config file = /etc/ansible/ansible.cfg</p>
+<p>  configured module search path = [u'/root/.ansible/plugins/modules', u'/usr/share/ansible/plugins/modules']</p>
+<p>  ansible python module location = /usr/lib/python2.7/site-packages/ansible</p>
+<p>  executable location = /usr/bin/ansible</p>
+<p>  python version = 2.7.5 (default, Jul 13 2018, 13:06:57) [GCC 4.8.5 20150623 (Red Hat 4.8.5-28)]</p>
+</blockquote>
+<h2>3 配置目录结构</h2>
+<blockquote>
+<p># ls /etc/ansible/<br/>ansible.cfg  hosts  roles</p>
+</blockquote>
+<h1>三 使用</h1>
+<p>首先在/etc/ansible/hosts中根据部署结构将server划分到多个group，然后可以针对某个group执行某些操作；</p>
+<h2>1 添加server分组配置</h2>
+<blockquote>
+<p>vi /etc/ansible/hosts</p>
+<p>[all-servers]<br/>192.168.0.54<br/>192.168.0.55<br/>192.168.0.56</p>
+</blockquote>
+<p>以上配置了一个server_group名为all-servers，其中包含3台server；</p>
+<p>可以通过--list查看某个server_group下的所有server：</p>
+<blockquote>
+<p># ansible all-servers --list</p>
+<p>  hosts (3):</p>
+<p>    192.168.0.54</p>
+<p>    192.168.0.55</p>
+<p>    192.168.0.56</p>
+</blockquote>
+<h2>2 执行操作</h2>
+<p>格式</p>
+<blockquote>
+<p>ansible $server_group -m $module_name -a $module_args</p>
+</blockquote>
+<p>例如ping：</p>
+<blockquote>
+<p># ansible all-servers -m ping</p>
+<p>192.168.0.54 | SUCCESS =&gt; {</p>
+<p>    "changed": false,</p>
+<p>    "ping": "pong"</p>
+<p>}</p>
+<p>192.168.0.55 | SUCCESS =&gt; {</p>
+<p>    "changed": false,</p>
+<p>    "ping": "pong"</p>
+<p>}</p>
+<p>192.168.0.56 | SUCCESS =&gt; {</p>
+<p>    "changed": false,</p>
+<p>    "ping": "pong"</p>
+<p>}</p>
+</blockquote>
+<p>例如command：</p>
+<blockquote>
+<p># ansible all-servers -m command -a "date"<br/>192.168.0.54 | CHANGED | rc=0 &gt;&gt;<br/>Sun Jan 13 17:14:06 CST 2019</p>
+<p>192.168.0.56 | CHANGED | rc=0 &gt;&gt;<br/>Sun Jan 13 17:14:06 CST 2019</p>
+<p>192.168.0.55 | CHANGED | rc=0 &gt;&gt;<br/>Sun Jan 13 17:14:06 CST 2019</p>
+</blockquote>
+<p>具体的module_name有哪些？可以通过命令查看</p>
+<blockquote>
+<p># ansible-doc -l</p>
+</blockquote>
+<p>某个module_name的帮助也可以通过命令查看</p>
+<blockquote>
+<p># ansible-doc $module_name</p>
+</blockquote>
+<p>比如：</p>
+<blockquote>
+<p># ansible-doc shell</p>
+<p>&gt; SHELL    (/usr/lib/python2.7/site-packages/ansible/modules/commands/shell.py)</p>
+<p> </p>
+<p>        The `shell' module takes the command name followed by a list of space-delimited arguments. It is almost exactly like the [command] module but runs the command</p>
+<p>        through a shell (`/bin/sh') on the remote node. For Windows targets, use the [win_shell] module instead.</p>
+<p> </p>
+<p># ansible-doc copy</p>
+<p>&gt; COPY    (/usr/lib/python2.7/site-packages/ansible/modules/files/copy.py)</p>
+<p> </p>
+<p>        The `copy' module copies a file from the local or remote machine to a location on the remote machine. Use the [fetch] module to copy files from remote locations to</p>
+<p>        the local box. If you need variable interpolation in copied files, use the [template] module. For Windows targets, use the [win_copy] module instead.</p>
+</blockquote>
+<p> </p>
+<p>常用module：ping，command，shell，copy，file，script，cron等...</p>
+<p>比如向某个group的所有server拷贝文件命令：</p>
+<blockquote>
+<p># ansible all-servers -m copy -a 'src=/tmp/1.log dest=/tmp/'</p>
+</blockquote>
+<p>比如查看某个group的所有server的磁盘占用情况：</p>
+<blockquote>
+<p># ansible all-servers -m shell -a "df -h"</p>
+</blockquote>
+<p>另外也可以直接指定ip来操作，比如：</p>
+<blockquote>
+<p># ansible 192.168.0.55 -m ping</p>
+</blockquote>
+<p> </p>
+<p>其实如果只需要远程执行命令，ssh也可以</p>
+<blockquote>
+<p>ssh 192.168.0.55 "date" </p>
+</blockquote>
+<p> </p>
+</div>
+            </div>
+
+            <!-- Post Footer -->
+            <div class="post-footer">
+                <div class="post-navigation">
+                    <a href="../blog_cn.html" class="nav-button">← Back to Home</a>
+                    <a href="0277.html" class="nav-button">Next Post →</a>
+                </div>
+            </div>
+        </article>
+    </div>
+</body>
+</html>

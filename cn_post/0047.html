@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>centos命令行操作u盘或移动硬盘整理</title>
+    <link rel="stylesheet" href="../css/style3.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header Navigation -->
+        <div class="header">
+            <h1><a href="../blog_cn.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+        </div>
+
+        <!-- Post Container -->
+        <article class="post">
+            <!-- Post Header -->
+            <div class="post-header">
+                <h1>centos命令行操作u盘或移动硬盘整理</h1>
+                <div class="post-meta">
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📅</span>
+                        <span>December 05, 2020</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📖</span>
+                        <span>1 min read</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">👁️</span>
+                        <span>765 views</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Post Content -->
+            <div class="post-content">
+                <div class="blogpost-body cnblogs-markdown" id="cnblogs_post_body">
+<p>u盘或移动硬盘插入usb之后，通过</p>
+<blockquote>
+<h1 id="fdisk--l">fdisk - l</h1>
+</blockquote>
+<p>可以找到分区，比如 /dev/sdc1，然后挂载</p>
+<blockquote>
+<h1 id="mount-devsdc1-usb">mount /dev/sdc1 /usb</h1>
+</blockquote>
+<p>如果有报错，可能是不同的文件系统问题，如下：</p>
+<p>1 ntfs文件系统</p>
+<blockquote>
+<h1 id="yum-install-ntfs-3g">yum install ntfs-3g</h1>
+<h1 id="mount--t-ntfs-3g-devsdc1-usb">mount - t ntfs-3g /dev/sdc1 /usb</h1>
+</blockquote>
+<p>2 exfat文件系统</p>
+<blockquote>
+<h1 id="yum-install--y-httplinuxrodownloadnuxdextopel7x86_64nux-dextop-release-0-5el7nuxnoarchrpm">yum install - y <a href="http://li.nux.ro/download/nux/dextop/el7/x86_64/nux-dextop-release-0-5.el7.nux.noarch.rpm" rel="noopener nofollow" target="_blank">http://li.nux.ro/download/nux/dextop/el7/x86_64/nux-dextop-release-0-5.el7.nux.noarch.rpm</a></h1>
+<h1 id="yum-install-exfat-utils-fuse-exfat">yum install exfat-utils fuse-exfat</h1>
+<h1 id="mount--t-exfat-devsdc1-usb">mount - t exfat /dev/sdc1 /usb</h1>
+</blockquote>
+<p>如果发现u盘或移动硬盘打开之后中文文件名乱码，要设置字符集，比如</p>
+<blockquote>
+<h1 id="mount--o-iocharsetutf8-devsdc1-usb">mount - o iocharset=utf8 /dev/sdc1 /usb</h1>
+</blockquote>
+<p>用完u盘或移动硬盘之后要先弹出再移除，弹出操作如下：</p>
+<h1 id="yum-install-udisks2">yum install udisks2</h1>
+<h1 id="udisksctl-unmount--b-devsdc1">udisksctl unmount - b /dev/sdc1</h1>
+<h1 id="udisksctl-power-off--b-devsdc1">udisksctl power-off - b /dev/sdc1</h1>
+<p>如果写操作提示readonly file system，需要重新mount</p>
+<h1 id="mount--o-remount-rw-path">mount - o remount rw /path</h1>
+</div>
+            </div>
+
+            <!-- Post Footer -->
+            <div class="post-footer">
+                <div class="post-navigation">
+                    <a href="../blog_cn.html" class="nav-button">← Back to Home</a>
+                    <a href="0048.html" class="nav-button">Next Post →</a>
+                </div>
+            </div>
+        </article>
+    </div>
+</body>
+</html>

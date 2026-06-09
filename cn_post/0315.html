@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Could not transfer artifact org.apache.maven:maven. from/to central. Received fatal alert: protocol_version</title>
+    <link rel="stylesheet" href="../css/style3.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header Navigation -->
+        <div class="header">
+            <h1><a href="../blog_cn.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+        </div>
+
+        <!-- Post Container -->
+        <article class="post">
+            <!-- Post Header -->
+            <div class="post-header">
+                <h1>Could not transfer artifact org.apache.maven:maven. from/to central. Received fatal alert: protocol_version</h1>
+                <div class="post-meta">
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📅</span>
+                        <span>December 18, 2018</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📖</span>
+                        <span>1 min read</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">👁️</span>
+                        <span>4231 views</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Post Content -->
+            <div class="post-content">
+                <div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<p>maven编译工程报错</p>
+<blockquote>
+<p>[ERROR] Failed to execute goal net.alchim31.maven:scala-maven-plugin:3.2.2:add-source (scala-compile-first) on project trade: Execution scala-compile-first of goal net.alchim31.maven:scala-maven-plugin:3.2.2:add-source failed: Plugin net.alchim31.maven:scala-maven-plugin:3.2.2 or one of its dependencies could not be resolved: Failed to collect dependencies at net.alchim31.maven:scala-maven-plugin:jar:3.2.2 - &gt; org.apache.maven:maven-core:jar:3.0.4 - &gt; org.apache.maven:maven-model:jar:3.0.4: Failed to read artifact descriptor for org.apache.maven:maven-model:jar:3.0.4:<strong> Could not transfer artifact org.apache.maven:maven-model:pom:3.0.4 from/to central (https://repo.maven.apache.org/maven2): Received fatal alert: protocol_version</strong> - &gt; [Help 1]<br/>[ERROR] <br/>[ERROR] To see the full stack trace of the errors, re-run Maven with the - e switch.<br/>[ERROR] Re-run Maven using the - X switch to enable full debug logging.<br/>[ERROR] <br/>[ERROR] For more information about the errors and possible solutions, please read the following articles:<br/>[ERROR] [Help 1] http://cwiki.apache.org/confluence/display/MAVEN/PluginResolutionException</p>
+</blockquote>
+<p>但是手工通过浏览器访问maven仓库一切正常</p>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201812/1509647-20181218002650395-422352493.png"/></p>
+<p>手工下载放到本地repository，然后再编译，这个错没了，又报下一个错，这么多包一个一个手工下载实在伤不起，</p>
+<p>wtf，仔细一看，报错还有一句：<strong>Received fatal alert: protocol_version</strong></p>
+<p>原来是因为这个，官网地址：https://central.sonatype.org/articles/2018/May/04/discontinued-support-for-tlsv11-and-below/ </p>
+<p>这里粘贴一下answer：</p>
+<blockquote>
+<p>If you are using http to access Central, or Java 8+ with https urls, you are not affected.</p>
+<p>If you are on Java 7, it supports TLS 1.2 but <em>it is disabled by default</em> in versions before 1.7.0_131-b31, and the following Apache Maven workaround functions for older Java 7 users:</p>
+<pre><code>mvn - Dhttps.protocols=TLSv1,TLSv1.1,TLSv1.2 &lt;goals&gt;
+</code></pre>
+<p>or add the following to your environment or build script:</p>
+<pre><code>export MAVEN_OPTS=-Dhttps.protocols=TLSv1,TLSv1.1,TLSv1.2
+</code></pre>
+<p>If you are on Java 6, you will need to switch back to http or upgrade to a more modern Java version. Very recent versions of Java 6 claim to have TLS 1.2 support, but we have not confirmed it yet. </p>
+</blockquote>
+<p>原来是因为maven中央仓库不再支持<a href="https://central.sonatype.org/articles/2018/May/04/discontinued-support-for-tlsv11-and-below/" rel="noopener nofollow" title="Permalink to Discontinued support for TLSv1.1 and below">TLSv1.1</a>导致，jdk改为1.8问题解决。</p>
+<p> </p>
+</div>
+            </div>
+
+            <!-- Post Footer -->
+            <div class="post-footer">
+                <div class="post-navigation">
+                    <a href="../blog_cn.html" class="nav-button">← Back to Home</a>
+                    <a href="0316.html" class="nav-button">Next Post →</a>
+                </div>
+            </div>
+        </article>
+    </div>
+</body>
+</html>

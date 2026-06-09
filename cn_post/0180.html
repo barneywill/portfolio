@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Presto 1 - 简介、安装、使用</title>
+    <link rel="stylesheet" href="../css/style3.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header Navigation -->
+        <div class="header">
+            <h1><a href="../blog_cn.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+        </div>
+
+        <!-- Post Container -->
+        <article class="post">
+            <!-- Post Header -->
+            <div class="post-header">
+                <h1>Presto 1 - 简介、安装、使用</h1>
+                <div class="post-meta">
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📅</span>
+                        <span>March 14, 2019</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📖</span>
+                        <span>5 min read</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">👁️</span>
+                        <span>3424 views</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Post Content -->
+            <div class="post-content">
+                <div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<p>presto 0.217</p>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201903/1509647-20190305191704632-1608206922.png"/></p>
+<p>官方：http://prestodb.github.io/</p>
+<p> </p>
+<h1>一 简介</h1>
+<p>Presto is an open source distributed SQL query engine for running interactive analytic queries against data sources of all sizes ranging from gigabytes to petabytes.</p>
+<p>Presto was designed and written from the ground up for interactive analytics and approaches the speed of commercial data warehouses while scaling to the size of organizations like Facebook.</p>
+<p><em>presto是一个开源的分布式sql查询引擎，用于大规模（从GB到PB）数据源的交互式分析查询，并且达到商业数据仓库的查询速度；</em></p>
+<p>Presto allows querying data where it lives, including Hive, Cassandra, relational databases or even proprietary data stores. A single Presto query can combine data from multiple sources, allowing for analytics across your entire organization.</p>
+<p>Presto is targeted at analysts who expect response times ranging from sub-second to minutes. Presto breaks the false choice between having fast analytics using an expensive commercial solution or using a slow "free" solution that requires excessive hardware.</p>
+<p><em>presto允许直接查询外部数据，包括hive、cassandra、rdbms以及文件系统比如hdfs；一个presto查询中可以同时使用多个数据源的数据来得到结果；presto在‘昂贵且快的商业解决方案’和‘免费且慢的开源解决方案’之间提供了一个新的选择；</em></p>
+<p>Facebook uses Presto for interactive queries against several internal data stores, including their 300PB data warehouse. Over 1,000 Facebook employees use Presto daily to run more than 30,000 queries that in total scan over a petabyte each per day.</p>
+<p><em>facebook使用presto来进行多个内部数据源的交互式查询，包括300PB的数据仓库；每天有超过1000个facebook员工在PB级数据上使用presto运行超过30000个查询；</em></p>
+<p><br/>Leading internet companies including Airbnb and Dropbox are using Presto.</p>
+<p>业界领先的互联网公司包括airbnb和dropbox都在使用presto，下面是airbnb的评价：</p>
+<p><em>Presto is amazing. Lead engineer Andy Kramolisch got it into production in just a few days. It's an order of magnitude faster than Hive in most our use cases. It reads directly from HDFS, so unlike Redshift, there isn't a lot of ETL before you can use it. It just works.</em></p>
+<p>--Christopher Gutierrez, Manager of Online Analytics, Airbnb</p>
+<h2><br/>架构</h2>
+<p>Presto is a distributed system that runs on a cluster of machines. A full installation includes a coordinator and multiple workers. Queries are submitted from a client such as the Presto CLI to the coordinator. The coordinator parses, analyzes and plans the query execution, then distributes the processing to the workers.</p>
+<p><em>presto是一个运行在集群上的分布式系统，包括一个coordinator和多个worker，client（比如presto cli）提交查询到coordinator，然后coordinator解析、分析和计划查询如何执行，然后将任务分配给worker；</em></p>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201903/1509647-20190314112039159-969490890.png"/></p>
+<p> </p>
+<p>Presto supports pluggable connectors that provide data for queries. The requirements vary by connector.</p>
+<p>presto提供插件化的connector来支持外部数据查询，原生支持hive、cassandra、elasticsearch、kafka、kudu、mongodb、mysql、redis等众多外部数据源；</p>
+<p>详细参考：https://prestodb.github.io/docs/current/connector.html</p>
+<h1>二 安装</h1>
+<h2>1 下载</h2>
+<blockquote>
+<p># wget https://repo1.maven.org/maven2/com/facebook/presto/presto-server/0.217/presto-server-0.217.tar.gz<br/># tar xvf presto-server-0.217.tar.gz<br/># cd presto-server-0.217</p>
+</blockquote>
+<h2>2 准备数据目录</h2>
+<p>Presto needs a data directory for storing logs, etc. We recommend creating a data directory outside of the installation directory, which allows it to be easily preserved when upgrading Presto.</p>
+<h2>3 准备配置目录</h2>
+<p>Create an etc directory inside the installation directory. This will hold the following configuration:</p>
+<ul>
+<li>Node Properties: environmental configuration specific to each node</li>
+<li>JVM Config: command line options for the Java Virtual Machine</li>
+<li>Config Properties: configuration for the Presto server</li>
+<li>Catalog Properties: configuration for Connectors (data sources)</li>
+</ul>
+<div class="cnblogs_code">
+<pre><span style="color: rgba(0, 128, 0, 1)">#</span><span style="color: rgba(0, 128, 0, 1)"> mkdir etc</span>
+
+<span style="color: rgba(0, 128, 0, 1)">#</span><span style="color: rgba(0, 128, 0, 1)"> cat etc/node.properties</span>
+node.environment=<span style="color: rgba(0, 0, 0, 1)">production
+node.id</span>=ffffffff-ffff-ffff-ffff-<span style="color: rgba(0, 0, 0, 1)">ffffffffffff
+node.data</span>-dir=/var/presto/<span style="color: rgba(0, 0, 0, 1)">data
+
+</span><span style="color: rgba(0, 128, 0, 1)">#</span><span style="color: rgba(0, 128, 0, 1)"> cat etc/jvm.config</span>
+-<span style="color: rgba(0, 0, 0, 1)">server
+</span>-<span style="color: rgba(0, 0, 0, 1)">Xmx16G
+</span>-XX:+<span style="color: rgba(0, 0, 0, 1)">UseG1GC
+</span>-XX:G1HeapRegionSize=<span style="color: rgba(0, 0, 0, 1)">32M
+</span>-XX:+<span style="color: rgba(0, 0, 0, 1)">UseGCOverheadLimit
+</span>-XX:+<span style="color: rgba(0, 0, 0, 1)">ExplicitGCInvokesConcurrent
+</span>-XX:+<span style="color: rgba(0, 0, 0, 1)">HeapDumpOnOutOfMemoryError
+</span>-XX:+<span style="color: rgba(0, 0, 0, 1)">ExitOnOutOfMemoryError
+
+</span><span style="color: rgba(0, 128, 0, 1)">#</span><span style="color: rgba(0, 128, 0, 1)"> cat etc/config.properties</span>
+
+<span style="color: rgba(0, 128, 0, 1)">#</span><span style="color: rgba(0, 128, 0, 1)"> coordinator</span>
+coordinator=<span style="color: rgba(0, 0, 0, 1)">true
+node</span>-scheduler.include-coordinator=<span style="color: rgba(0, 0, 0, 1)">false
+http</span>-server.http.port=8080<span style="color: rgba(0, 0, 0, 1)">
+query.max</span>-memory=<span style="color: rgba(0, 0, 0, 1)">50GB
+query.max</span>-memory-per-node=<span style="color: rgba(0, 0, 0, 1)">1GB
+query.max</span>-total-memory-per-node=<span style="color: rgba(0, 0, 0, 1)">2GB
+discovery</span>-server.enabled=<span style="color: rgba(0, 0, 0, 1)">true
+discovery.uri</span>=http://example.net:8080
+
+<span style="color: rgba(0, 128, 0, 1)">#</span><span style="color: rgba(0, 128, 0, 1)"> worker</span>
+coordinator=<span style="color: rgba(0, 0, 0, 1)">false
+http</span>-server.http.port=8080<span style="color: rgba(0, 0, 0, 1)">
+query.max</span>-memory=<span style="color: rgba(0, 0, 0, 1)">50GB
+query.max</span>-memory-per-node=<span style="color: rgba(0, 0, 0, 1)">1GB
+query.max</span>-total-memory-per-node=<span style="color: rgba(0, 0, 0, 1)">2GB
+discovery.uri</span>=http://example.net:8080
+
+<span style="color: rgba(0, 128, 0, 1)">#</span><span style="color: rgba(0, 128, 0, 1)"> cat etc/log.properties</span>
+com.facebook.presto=INFO</pre>
+</div>
+<p>注意：<br/>1）coordinator和worker的config.properties不同，主要是coordinator上会开启discovery服务</p>
+<p><em>discovery-server.enabled: Presto uses the Discovery service to find all the nodes in the cluster. Every Presto instance will register itself with the Discovery service on startup. In order to simplify deployment and avoid running an additional service, the Presto coordinator can run an embedded version of the Discovery service. It shares the HTTP server with Presto and thus uses the same port.</em></p>
+<p>2）如果coordinator和worker位于不同机器，则设置</p>
+<blockquote>
+<p>node-scheduler.include-coordinator=false</p>
+</blockquote>
+<p>如果coordinator和worker位于相同机器，则设置</p>
+<blockquote>
+<p>node-scheduler.include-coordinator=true</p>
+</blockquote>
+<p><em>node-scheduler.include-coordinator: Allow scheduling work on the coordinator. For larger clusters, processing work on the coordinator can impact query performance because the machine’s resources are not available for the critical task of scheduling, managing and monitoring query execution.</em></p>
+<p> </p>
+<p>更多参数：https://prestodb.github.io/docs/current/admin/properties.html</p>
+<h2>4 配置connector</h2>
+<p>Presto accesses data via connectors, which are mounted in catalogs. The connector provides all of the schemas and tables inside of the catalog. For example, the Hive connector maps each Hive database to a schema, so if the Hive connector is mounted as the hive catalog, and Hive contains a table clicks in database web, that table would be accessed in Presto as hive.web.clicks.</p>
+<p>以hive为例</p>
+<div class="cnblogs_code">
+<pre><span style="color: rgba(0, 128, 0, 1)">#</span><span style="color: rgba(0, 128, 0, 1)"> mkdir etc/catalog</span>
+
+<span style="color: rgba(0, 128, 0, 1)">#</span><span style="color: rgba(0, 128, 0, 1)"> cat etc/catalog/hive.properties</span>
+connector.name=hive-<span style="color: rgba(0, 0, 0, 1)">hadoop2
+hive.metastore.uri</span>=thrift://example.net:9083
+<span style="color: rgba(0, 128, 0, 1)">#</span><span style="color: rgba(0, 128, 0, 1)">hive.config.resources=/etc/hadoop/conf/core-site.xml,/etc/hadoop/conf/hdfs-site.xml</span></pre>
+</div>
+<p>详细参考：https://prestodb.github.io/docs/current/connector.html</p>
+<h2>5 启动</h2>
+<h3>调试启动</h3>
+<blockquote>
+<p># bin/launcher run --verbose</p>
+</blockquote>
+<p>Presto requires Java 8u151+ (found 1.8.0_141)</p>
+<p>需要jdk1.8.151以上</p>
+<h3>正常之后，后台启动</h3>
+<blockquote>
+<p># bin/launcher start</p>
+</blockquote>
+<h1>三 使用</h1>
+<h2>1 下载cli</h2>
+<div class="cnblogs_code">
+<pre><span style="color: rgba(0, 128, 0, 1)">#</span><span style="color: rgba(0, 128, 0, 1)"> wget https://repo1.maven.org/maven2/com/facebook/presto/presto-cli/0.217/presto-cli-0.217-executable.jar</span><span style="color: rgba(0, 128, 0, 1)">
+#</span><span style="color: rgba(0, 128, 0, 1)"> mv presto-cli-0.217-executable.jar presto</span><span style="color: rgba(0, 128, 0, 1)">
+#</span><span style="color: rgba(0, 128, 0, 1)"> chmod +x presto</span><span style="color: rgba(0, 128, 0, 1)">
+#</span><span style="color: rgba(0, 128, 0, 1)"> ./presto --server localhost:8080 --catalog hive --schema default<br/>presto&gt; show schemas;<br/></span></pre>
+</div>
+<p>默认的分页是less，输入q退出</p>
+<h2>2 jdbc</h2>
+<div class="cnblogs_code">
+<pre><span style="color: rgba(0, 128, 0, 1)">#</span><span style="color: rgba(0, 128, 0, 1)"> wget https://repo1.maven.org/maven2/com/facebook/presto/presto-jdbc/0.217/presto-jdbc-0.217.jar</span><span style="color: rgba(0, 128, 0, 1)">
+#</span><span style="color: rgba(0, 128, 0, 1)"> export HIVE_AUX_JARS_PATH=/path/to/presto-jdbc-0.217.jar</span><span style="color: rgba(0, 128, 0, 1)">
+#</span><span style="color: rgba(0, 128, 0, 1)"> beeline -d com.facebook.presto.jdbc.PrestoDriver - u jdbc:presto://example.net:8080/hive/sales - n hadoop</span></pre>
+</div>
+<p>jdbc url格式：</p>
+<p>jdbc:presto://host:port/catalog/schema</p>
+<p> </p>
+<h2>问题</h2>
+<h3>1 查询parquet格式数据报错：</h3>
+<blockquote>
+<p>Query 20190314_072428_00009_enu46 failed: Corrupted statistics for column "[test_column] BINARY" in Parquet file ...</p>
+</blockquote>
+<p>On version 0.216 presto incorrectly assumes that a binary column statistic is corrupt due to wrong ordering of accented values.</p>
+<p>可先将版本降到0.215</p>
+<p>https://repo1.maven.org/maven2/com/facebook/presto/presto-server/0.215/presto-server-0.215.tar.gz<br/>https://repo1.maven.org/maven2/com/facebook/presto/presto-cli/0.215/presto-cli-0.215-executable.jar<br/>https://repo1.maven.org/maven2/com/facebook/presto/presto-jdbc/0.215/presto-jdbc-0.215.jar</p>
+<p>详细参考：https://github.com/prestodb/presto/issues/12338</p>
+<h3>2  使用hive2.3.4的beeline连接presto报错</h3>
+<div class="cnblogs_code">
+<pre>$ beeline - d com.facebook.presto.jdbc.PrestoDriver - u <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">jdbc:presto://localhost:8080/hive</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">
+Error: Unrecognized connection property 'url' (state</span>=,code=0)</pre>
+</div>
+<p>问题详见：<a href="https://www.cnblogs.com/barneywill/p/10565750.html" target="_blank">https://www.cnblogs.com/barneywill/p/10565750.html</a></p>
+<p> </p>
+<p>参考：https://prestodb.github.io/overview.html</p>
+<p> </p>
+</div>
+            </div>
+
+            <!-- Post Footer -->
+            <div class="post-footer">
+                <div class="post-navigation">
+                    <a href="../blog_cn.html" class="nav-button">← Back to Home</a>
+                    <a href="0181.html" class="nav-button">Next Post →</a>
+                </div>
+            </div>
+        </article>
+    </div>
+</body>
+</html>

@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>linux系统蓝牙设备频繁断开</title>
+    <link rel="stylesheet" href="../css/style3.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header Navigation -->
+        <div class="header">
+            <h1><a href="../blog_cn.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+        </div>
+
+        <!-- Post Container -->
+        <article class="post">
+            <!-- Post Header -->
+            <div class="post-header">
+                <h1>linux系统蓝牙设备频繁断开</h1>
+                <div class="post-meta">
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📅</span>
+                        <span>December 13, 2020</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📖</span>
+                        <span>1 min read</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">👁️</span>
+                        <span>2408 views</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Post Content -->
+            <div class="post-content">
+                <div class="blogpost-body cnblogs-markdown" id="cnblogs_post_body">
+<p>linux系统运行一段时间之后蓝牙设备失灵，但是系统中还是显示连接状态，这时需要将蓝牙关闭再打开然后重新连接设备恢复，</p>
+<p>要彻底解决需要修改grub</p>
+<pre><code># vim /etc/default/grub
+GRUB_CMDLINE_LINUX="usbcore.autosuspend=-1 "
+</code></pre>
+<p>修改之后更新</p>
+<pre><code># grub-update
+</code></pre>
+<p>如果没有grub-update命令，比如opensuse，使用以下命令</p>
+<pre><code># grub2-mkconfig - o /boot/grub2/grub.cfg
+</code></pre>
+<p>改完之后重启系统</p>
+<pre><code># reboot
+</code></pre>
+<p>然后检查是否生效</p>
+<pre><code># cat /sys/module/usbcore/parameters/autosuspend
+-1
+</code></pre>
+</div>
+            </div>
+
+            <!-- Post Footer -->
+            <div class="post-footer">
+                <div class="post-navigation">
+                    <a href="../blog_cn.html" class="nav-button">← Back to Home</a>
+                    <a href="0047.html" class="nav-button">Next Post →</a>
+                </div>
+            </div>
+        </article>
+    </div>
+</body>
+</html>

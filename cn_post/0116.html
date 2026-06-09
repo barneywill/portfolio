@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>docker容器中使用jvm工具</title>
+    <link rel="stylesheet" href="../css/style3.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header Navigation -->
+        <div class="header">
+            <h1><a href="../blog_cn.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+        </div>
+
+        <!-- Post Container -->
+        <article class="post">
+            <!-- Post Header -->
+            <div class="post-header">
+                <h1>docker容器中使用jvm工具</h1>
+                <div class="post-meta">
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📅</span>
+                        <span>June 15, 2019</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📖</span>
+                        <span>3 min read</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">👁️</span>
+                        <span>1804 views</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Post Content -->
+            <div class="post-content">
+                <div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<p>java应用中经常需要用到jvm工具来进行一些操作，如果java应用部署在docker容器中，如何使用jvm工具？</p>
+<p>首先要看使用的docker镜像，</p>
+<ul>
+<li>比如常用的openjdk镜像分为jdk和jre，只有jdk版本才有jvm工具，所以可以直接使用jdk版本的openjdk；</li>
+<li>比如常用的tomcat镜像则没有jdk和jre选择，默认使用都是jre，所以没有jvm工具，tomcat镜像中的jdk目录如下：</li>
+</ul>
+<div class="cnblogs_code">
+<pre><span style="color: rgba(0, 128, 0, 1)">#</span><span style="color: rgba(0, 128, 0, 1)"> ls /usr/lib/jvm/java-1.8-openjdk</span>
+<span style="color: rgba(0, 0, 0, 1)">bin  jre  lib
+</span><span style="color: rgba(0, 128, 0, 1)">#</span><span style="color: rgba(0, 128, 0, 1)"> ls /usr/lib/jvm/java-1.8-openjdk/bin</span>
+<span style="color: rgba(0, 0, 0, 1)">appletviewer  orbd          rmid          tnameserv
+java          pack200       rmiregistry   unpack200
+keytool       policytool    servertool
+</span><span style="color: rgba(0, 128, 0, 1)">#</span><span style="color: rgba(0, 128, 0, 1)"> ls /usr/lib/jvm/java-1.8-openjdk/lib</span>
+amd64</pre>
+</div>
+<p>这时可以采用挂载的方式，将jdk文件挂载到容器中然后执行，首先要找到对应的jdk文件，第一步是找到当前容器的操作系统版本，</p>
+<p> </p>
+<p>常见的几个版本：</p>
+<p>Alpine</p>
+<div class="cnblogs_code">
+<pre>cat /etc/os-<span style="color: rgba(0, 0, 0, 1)">release
+NAME</span>=<span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">Alpine Linux</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">
+ID</span>=<span style="color: rgba(0, 0, 0, 1)">alpine
+VERSION_ID</span>=3.9.3<span style="color: rgba(0, 0, 0, 1)">
+PRETTY_NAME</span>=<span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">Alpine Linux v3.9</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">
+HOME_URL</span>=<span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">https://alpinelinux.org/</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">
+BUG_REPORT_URL</span>=<span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">https://bugs.alpinelinux.org/</span><span style="color: rgba(128, 0, 0, 1)">"</span></pre>
+</div>
+<p>Debian</p>
+<div class="cnblogs_code">
+<pre><span style="color: rgba(0, 128, 0, 1)">#</span><span style="color: rgba(0, 128, 0, 1)"> cat /etc/os-release</span>
+PRETTY_NAME=<span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">Debian GNU/Linux 9 (stretch)</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">
+NAME</span>=<span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">Debian GNU/Linux</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">
+VERSION_ID</span>=<span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">9</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">
+VERSION</span>=<span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">9 (stretch)</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">
+ID</span>=<span style="color: rgba(0, 0, 0, 1)">debian
+HOME_URL</span>=<span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">https://www.debian.org/</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">
+SUPPORT_URL</span>=<span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">https://www.debian.org/support</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">
+BUG_REPORT_URL</span>=<span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">https://bugs.debian.org/</span><span style="color: rgba(128, 0, 0, 1)">"</span></pre>
+</div>
+<p>Centos</p>
+<div class="cnblogs_code">
+<pre><span style="color: rgba(0, 128, 0, 1)">#</span><span style="color: rgba(0, 128, 0, 1)"> cat /etc/os-release</span>
+NAME=<span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">CentOS Linux</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">
+VERSION</span>=<span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">7 (Core)</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">
+ID</span>=<span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">centos</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">
+ID_LIKE</span>=<span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">rhel fedora</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">
+VERSION_ID</span>=<span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">7</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">
+PRETTY_NAME</span>=<span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">CentOS Linux 7 (Core)</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">
+ANSI_COLOR</span>=<span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">0;31</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">
+CPE_NAME</span>=<span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">cpe:/o:centos:centos:7</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">
+HOME_URL</span>=<span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">https://www.centos.org/</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">
+BUG_REPORT_URL</span>=<span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">https://bugs.centos.org/</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">
+
+CENTOS_MANTISBT_PROJECT</span>=<span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">CentOS-7</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">
+CENTOS_MANTISBT_PROJECT_VERSION</span>=<span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">7</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">
+REDHAT_SUPPORT_PRODUCT</span>=<span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">centos</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">
+REDHAT_SUPPORT_PRODUCT_VERSION</span>=<span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">7</span><span style="color: rgba(128, 0, 0, 1)">"</span></pre>
+</div>
+<p> </p>
+<p>然后根据操作系统版本找到对应的jdk镜像，比如openjdk</p>
+<blockquote>
+<p>openjdk:&lt;version&gt; 基于debian<br/>openjdk:&lt;version&gt;-alpine 基于alpine</p>
+</blockquote>
+<p>而tomcat镜像是基于alpine，所以下载openjdk:8-jdk-alpine，8是具体的jdk版本，下载之后，将jdk目录拷贝出来</p>
+<blockquote>
+<p>/usr/lib/jvm/java-1.8-openjdk/</p>
+</blockquote>
+<p>想要使用jvm工具，有几种方式：</p>
+<ul>
+<li>直接将文件拷贝到容器中；</li>
+<li>将需要的文件挂载到容器中；</li>
+<li>将jdk目录挂载到容器中，直接替换原来的jdk目录；</li>
+</ul>
+<p>前边两种方式只需要少量的几个文件，一个是$JAVA_HOME/lib/tools.jar，一个是$JAVA_HOME/bin/中具体的jvm工具比如jmap、jstack、jstat等，将文件拷贝或挂载到容器中的指定位置即可使用；</p>
+<p>最后一种最简单，挂载jdk目录之后所有的jvm工具都可以使用；</p>
+<div class="cnblogs_code">
+<pre><span style="color: rgba(0, 128, 0, 1)">#</span><span style="color: rgba(0, 128, 0, 1)"> docker exec - it $container_id jstat - gcutil $pid</span>
+<span style="color: rgba(0, 0, 0, 1)">  S0     S1     E      O      M     CCS    YGC     YGCT    FGC    FGCT     GCT
+  </span>0.00 100.00  73.20  60.74  95.79  93.92    417    3.163     8    1.213    4.376</pre>
+</div>
+<p> </p>
+<p>参考：</p>
+<p>https://hub.docker.com/_/openjdk</p>
+<p>https://hub.docker.com/_/tomcat</p>
+<p> </p>
+</div>
+            </div>
+
+            <!-- Post Footer -->
+            <div class="post-footer">
+                <div class="post-navigation">
+                    <a href="../blog_cn.html" class="nav-button">← Back to Home</a>
+                    <a href="0117.html" class="nav-button">Next Post →</a>
+                </div>
+            </div>
+        </article>
+    </div>
+</body>
+</html>

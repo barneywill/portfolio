@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Zookeeper 3 - 选举算法</title>
+    <link rel="stylesheet" href="../css/style3.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header Navigation -->
+        <div class="header">
+            <h1><a href="../blog_cn.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+        </div>
+
+        <!-- Post Container -->
+        <article class="post">
+            <!-- Post Header -->
+            <div class="post-header">
+                <h1>Zookeeper 3 - 选举算法</h1>
+                <div class="post-meta">
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📅</span>
+                        <span>November 01, 2018</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📖</span>
+                        <span>4 min read</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">👁️</span>
+                        <span>1083 views</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Post Content -->
+            <div class="post-content">
+                <div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<p>提到zookeeper选举算法，就不得不提Paxos算法，因为zookeeper选举算法是Paxos算法的一个变种；</p>
+<p> </p>
+<p>Paxos要解决的问题是：在一个分布式网络环境中有众多的参与者，但是每个参与者都不可靠，可能随时掉线等，这时这些参与者如何针对某个看法达成一致；</p>
+<blockquote>
+<p>类似的问题现实生活中有很多，比如一个团队要组织团建，团队中有10个人，每个人都有自己想去的地方，如何就团建的目的地达成一致？</p>
+<p>最简单的方式是把团队全体叫到会议室开会，很快就可以根据少数服从多数的原则，确定一个大多数人都满意的目的地；</p>
+<p>如果将问题改为：团队10个人分别在世界的10个地方出差，作息时间各不相同，并且只能通过邮件联系，这时如何确定团建的目的地？</p>
+</blockquote>
+<h2 id="Zookeeper-1Paxos算法">1 Paxos算法</h2>
+<p><a class="external-link" href="https://en.wikipedia.org/wiki/Paxos_(computer_science)" rel="noopener nofollow">https://en.wikipedia.org/wiki/Paxos_(computer_science)</a></p>
+<p><a class="external-link" href="https://zh.wikipedia.org/zh-cn/Paxos%E7%AE%97%E6%B3%95" rel="noopener nofollow">https://zh.wikipedia.org/zh-cn/Paxos%E7%AE%97%E6%B3%95</a> </p>
+<p><strong>Paxos</strong> is a family of protocols for solving <a class="external-link" href="https://en.wikipedia.org/wiki/Consensus_(computer_science)" rel="noopener nofollow" title="Consensus (computer science)">consensus</a> in a network of unreliable processors. Consensus is the process of agreeing on one result among a group of participants. This problem becomes difficult when the participants or their communication medium may experience failures.</p>
+<h2 id="Zookeeper-1.1Roles">1.1 Roles</h2>
+<p>Paxos describes the actions of the processors by their roles in the protocol: client, acceptor, proposer, learner, and leader. In typical implementations, a single processor may play one or more roles at the same time. This does not affect the correctness of the protocol—it is usual to coalesce roles to improve the latency and/or number of messages in the protocol.</p>
+<ul>
+<li>Client 
+<ul>
+<li>The Client issues a request to the distributed system, and waits for a response. For instance, a write request on a file in a distributed file server.</li>
+</ul>
+</li>
+<li>Acceptor (Voters) 
+<ul>
+<li>The Acceptors act as the fault-tolerant "memory" of the protocol. Acceptors are collected into groups called Quorums. Any message sent to an Acceptor must be sent to a Quorum of Acceptors. Any message received from an Acceptor is ignored unless a copy is received from each Acceptor in a Quorum.</li>
+</ul>
+</li>
+<li>Proposer 
+<ul>
+<li>A Proposer advocates a client request, attempting to convince the Acceptors to agree on it, and acting as a coordinator to move the protocol forward when conflicts occur.</li>
+</ul>
+</li>
+<li>Learner 
+<ul>
+<li>Learners act as the replication factor for the protocol. Once a Client request has been agreed on by the Acceptors, the Learner may take action (i.e.: execute the request and send a response to the client). To improve availability of processing, additional Learners can be added.</li>
+</ul>
+</li>
+<li>Leader 
+<ul>
+<li>Paxos requires a distinguished Proposer (called the leader) to make progress. Many processes may believe they are leaders, but the protocol only guarantees progress if one of them is eventually chosen. If two processes believe they are leaders, they may stall the protocol by continuously proposing conflicting updates. However, the safety properties are still preserved in that case.</li>
+</ul>
+</li>
+</ul>
+<blockquote>
+<p>client有很多个，并且每个client都有很多idea，但是只有一个client的一个idea最终会被大家接受；client想让一个idea被接收，首先会把idea告诉proposor，proposor收到一个idea之后会提交给多个acceptor进行表决，如果超过半数的acceptor表决通过，则表示idea被大家接受；learner会及时收到acceptor的表决结果；</p>
+<p>由于实际表决过程是并发的，所以表决过程分为多个阶段，并且增加版本version的概念，这里有点类似于乐观锁；</p>
+</blockquote>
+<blockquote>
+<p>一个形象的例子是在某个腐败的国家里，政府有一个项目要招标，然后有很多公司（client）都想拿到该项目（idea），决定该项目给谁的是有一个政府内部高层人士（acceptor）小组讨论决定，但是他们深藏不漏，公司需要通过一些政商通吃的中介（proposor），给高层人士输送贿赂（version），每个高层人士收到一个贿赂之后会表示不再接受不高于这个贿赂的其他贿赂并且支持当前这个贿赂的公司，如果一个公司能够成功贿赂小组中多数高层人士，那么这个公司可以拿到这个项目；</p>
+</blockquote>
+<h2 id="Zookeeper-1.2BasicPaxos"><span class="mw-headline">1.2 Basic Paxos</span></h2>
+<ul>
+<li>
+<h3 id="Zookeeper-Phase1a:Prepare"><span class="mw-headline">Phase 1a: <em>Prepare</em></span></h3>
+</li>
+<li>
+<h3 id="Zookeeper-Phase1b:Promise"><span class="mw-headline">Phase 1b: <em>Promise</em></span></h3>
+</li>
+<li>
+<h3 id="Zookeeper-Phase2a:AcceptRequest"><span class="mw-headline">Phase 2a: <em>Accept Request</em></span></h3>
+</li>
+<li>
+<h3 id="Zookeeper-Phase2b:Accepted"><span class="mw-headline">Phase 2b: <em>Accepted</em></span></h3>
+</li>
+</ul>
+<p>首先将议员的角色分为 proposers，acceptors，和 learners（允许身兼数职）。proposers 提出提案，提案信息包括提案编号和提议的 value；acceptor 收到提案后可以接受（accept）提案，若提案获得多数 acceptors 的接受，则称该提案被批准（chosen）；learners 只能“学习”被批准的提案。划分角色后，就可以更精确的定义问题：</p>
+<ol>
+<li>决议（value）只有在被 proposers 提出后才能被批准（未经批准的决议称为“提案（proposal）”）；</li>
+<li>在一次 Paxos 算法的执行实例中，只批准（chosen）一个 value；</li>
+<li>learners 只能获得被批准（chosen）的 value。</li>
+</ol>
+<p>作者通过不断加强上述3个约束（主要是第二个）获得了 Paxos 算法。</p>
+<pre>P1：一个 acceptor 必须接受（accept）第一次收到的提案。</pre>
+<pre>P1a：当且仅当acceptor没有回应过编号大于n的prepare请求时，acceptor接受（accept）编号为n的提案。</pre>
+<pre>P2：一旦一个具有 value v 的提案被批准（chosen），那么之后批准（chosen）的提案必须具有 value v。</pre>
+<pre>P2a：一旦一个具有 value v 的提案被批准（chosen），那么之后任何 acceptor 再次接受（accept）的提案必须具有 value v。</pre>
+<pre>P2b：一旦一个具有 value v 的提案被批准（chosen），那么以后任何 proposer 提出的提案必须具有 value v。</pre>
+<pre>P2c：如果一个编号为 n 的提案具有 value v，那么存在一个多数派，要么他们中所有人都没有接受（accept）编号小于 n 
+的任何提案，要么他们已经接受（accept）的所有编号小于 n 的提案中编号最大的那个提案具有 value v。</pre>
+<h2 id="Zookeeper-2ZookeeperLeaderElection">2 Zookeeper Leader Election</h2>
+<p>每个zookeeper服务器都相当于client+proposor+acceptor+learner</p>
+<p>Vote（提案编号、提议的 value）：myid、zxid、epoch</p>
+<p>初始值：</p>
+<div class="cnblogs_code">
+<pre>currentVote = <span style="color: rgba(0, 0, 255, 1)">new</span> Vote(myid, getLastLoggedZxid(), getCurrentEpoch());</pre>
+</div>
+<p>其他人的Vote：</p>
+<div class="cnblogs_code">
+<pre>HashMap&lt;Long, Vote&gt; recvset = <span style="color: rgba(0, 0, 255, 1)">new</span> HashMap&lt;Long, Vote&gt;();</pre>
+</div>
+<pre></pre>
+<p>zookeeper的选举算法做了很多简化，将Paxos的value和version合并成Vote，是为了保证能够在最短的时间内选举出新的leader，同时避免数据丢失和数据同步，来看以下几种情况：</p>
+<ul>
+<li>集群第一次启动，所有服务器的zxid和epoch一样，在集群的半数服务器启动后谁的myid最大，谁将会成为leader；比如5台服务器，id分别为1/2/3/4/5，当你顺序启动1/2/3/4/5的时候，3启动后3将会成为leader，4/5启动后会成为follower；当你顺序启动5/4/3/2/1的时候，3启动后5将会成为leader；</li>
+<li>集群重启，在集群的半数服务器启动后，谁的epoch最大（每次选举成功后leader会将epoch+1），谁将会成为leader，如果大家的epoch相同，谁的zxid最大（即谁拥有最新的数据），谁将会成为leader；</li>
+</ul>
+<p> </p>
+<p>选举核心类及调用流程：</p>
+<p>org.apache.zookeeper.server.quorum.Election</p>
+<p>org.apache.zookeeper.server.quorum.FastLeaderElection implements Election</p>
+<p>         <strong>lookForLeader</strong></p>
+<p>                  sendNotifications</p>
+<p>                  <strong>totalOrderPredicate</strong></p>
+<p>                  termPredicate</p>
+<p>                          org.apache.zookeeper.server.quorum.flexible.QuorumMaj</p>
+<p>                                   <strong>containsQuorum</strong></p>
+<p>                  QuorumPeer.setPeerState</p>
+<p> </p>
+<p>是否超过半数判断</p>
+<div class="cnblogs_code">
+<pre>    <span style="color: rgba(0, 0, 255, 1)">public</span> <span style="color: rgba(0, 0, 255, 1)">boolean</span> containsQuorum(HashSet&lt;Long&gt;<span style="color: rgba(0, 0, 0, 1)"> set){
+
+        </span><span style="color: rgba(0, 0, 255, 1)">return</span> (set.size() &gt;<span style="color: rgba(0, 0, 0, 1)"> half);
+
+    }</span></pre>
+</div>
+<p>Vote大小判断 </p>
+<div class="cnblogs_code">
+<pre>    <span style="color: rgba(0, 0, 255, 1)">protected</span> <span style="color: rgba(0, 0, 255, 1)">boolean</span> totalOrderPredicate(<span style="color: rgba(0, 0, 255, 1)">long</span> newId, <span style="color: rgba(0, 0, 255, 1)">long</span> newZxid, <span style="color: rgba(0, 0, 255, 1)">long</span> newEpoch, <span style="color: rgba(0, 0, 255, 1)">long</span> curId, <span style="color: rgba(0, 0, 255, 1)">long</span> curZxid, <span style="color: rgba(0, 0, 255, 1)">long</span><span style="color: rgba(0, 0, 0, 1)"> curEpoch) {
+
+        LOG.debug(</span>"id: " + newId + ", proposed id: " + curId + ", zxid: 0x" +<span style="color: rgba(0, 0, 0, 1)">
+
+                Long.toHexString(newZxid) </span>+ ", proposed zxid: 0x" +<span style="color: rgba(0, 0, 0, 1)"> Long.toHexString(curZxid));
+
+        </span><span style="color: rgba(0, 0, 255, 1)">if</span>(self.getQuorumVerifier().getWeight(newId) == 0<span style="color: rgba(0, 0, 0, 1)">){
+
+            </span><span style="color: rgba(0, 0, 255, 1)">return</span> <span style="color: rgba(0, 0, 255, 1)">false</span><span style="color: rgba(0, 0, 0, 1)">;
+
+        }
+
+       
+
+        </span><span style="color: rgba(0, 128, 0, 1)">/*</span><span style="color: rgba(0, 128, 0, 1)">
+
+         * We return true if one of the following three cases hold:
+
+         * 1- New epoch is higher
+
+         * 2- New epoch is the same as current epoch, but new zxid is higher
+
+         * 3- New epoch is the same as current epoch, new zxid is the same
+
+         *  as current zxid, but server id is higher.
+
+         </span><span style="color: rgba(0, 128, 0, 1)">*/</span>
+
+       
+
+        <span style="color: rgba(0, 0, 255, 1)">return</span> ((newEpoch &gt; curEpoch) ||<span style="color: rgba(0, 0, 0, 1)">
+
+                ((newEpoch </span>== curEpoch) &amp;&amp;<span style="color: rgba(0, 0, 0, 1)">
+
+                ((newZxid </span>&gt; curZxid) || ((newZxid == curZxid) &amp;&amp; (newId &gt;<span style="color: rgba(0, 0, 0, 1)"> curId)))));
+
+    }</span></pre>
+</div>
+<p> </p>
+<p>参考：</p>
+<p>https://zookeeper.apache.org/doc/r3.4.13/zookeeperInternals.html#sc_atomicBroadcast</p>
+<p>https://lamport.azurewebsites.net/pubs/paxos-simple.pdf</p>
+<p> </p>
+</div>
+            </div>
+
+            <!-- Post Footer -->
+            <div class="post-footer">
+                <div class="post-navigation">
+                    <a href="../blog_cn.html" class="nav-button">← Back to Home</a>
+                    <a href="0360.html" class="nav-button">Next Post →</a>
+                </div>
+            </div>
+        </article>
+    </div>
+</body>
+</html>

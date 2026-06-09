@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kylin频繁OOM问题</title>
+    <link rel="stylesheet" href="../css/style3.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header Navigation -->
+        <div class="header">
+            <h1><a href="../blog_cn.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+        </div>
+
+        <!-- Post Container -->
+        <article class="post">
+            <!-- Post Header -->
+            <div class="post-header">
+                <h1>Kylin频繁OOM问题</h1>
+                <div class="post-meta">
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📅</span>
+                        <span>December 13, 2018</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📖</span>
+                        <span>2 min read</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">👁️</span>
+                        <span>946 views</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Post Content -->
+            <div class="post-content">
+                <div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<p>公司一个kylin集群，每到周二下午就会逐个节点OOM退出，非常有规律，kylin集群5个节点，每个节点分配的内存已经不断增加到70多G，但是问题依旧；</p>
+<p><br/>经排查发现，每周二下午kylin集群的请求量确实会多一些，有可能是kylin的bug，也可能是其他原因，当节点kylin进程内存占用上升时，打印线程堆栈发现，有很多线程都被卡住，synchronized，各种Manager，比如CubeManager、DictionaryManager、MetadataManager，以MetadataManager为例查看kylin代码发现，这些Manager的套路差不多，都有clearCache、getInstance（synchronized），然后getInstance中会调用Constructor，Constructor中会加载一堆东西，这个加载过程比较慢，所以getInstance会长时间synchronized：</p>
+<p><br/>org.apache.kylin.metadata.MetadataManager</p>
+<div class="cnblogs_code">
+<pre>    <span style="color: rgba(0, 0, 255, 1)">public</span> <span style="color: rgba(0, 0, 255, 1)">static</span> <span style="color: rgba(0, 0, 255, 1)">void</span><span style="color: rgba(0, 0, 0, 1)"> clearCache() {
+        CACHE.clear();
+    }
+    
+    </span><span style="color: rgba(0, 0, 255, 1)">public</span> <span style="color: rgba(0, 0, 255, 1)">static</span><span style="color: rgba(0, 0, 0, 1)"> MetadataManager getInstance(KylinConfig config) {
+        MetadataManager r </span>=<span style="color: rgba(0, 0, 0, 1)"> CACHE.get(config);
+        </span><span style="color: rgba(0, 0, 255, 1)">if</span> (r != <span style="color: rgba(0, 0, 255, 1)">null</span><span style="color: rgba(0, 0, 0, 1)">) {
+            </span><span style="color: rgba(0, 0, 255, 1)">return</span><span style="color: rgba(0, 0, 0, 1)"> r;
+        }
+
+        </span><span style="color: rgba(0, 0, 255, 1)">synchronized</span> (MetadataManager.<span style="color: rgba(0, 0, 255, 1)">class</span><span style="color: rgba(0, 0, 0, 1)">) {
+            r </span>=<span style="color: rgba(0, 0, 0, 1)"> CACHE.get(config);
+            </span><span style="color: rgba(0, 0, 255, 1)">if</span> (r != <span style="color: rgba(0, 0, 255, 1)">null</span><span style="color: rgba(0, 0, 0, 1)">) {
+                </span><span style="color: rgba(0, 0, 255, 1)">return</span><span style="color: rgba(0, 0, 0, 1)"> r;
+            }
+            </span><span style="color: rgba(0, 0, 255, 1)">try</span><span style="color: rgba(0, 0, 0, 1)"> {
+                r </span>= <span style="color: rgba(0, 0, 255, 1)">new</span><span style="color: rgba(0, 0, 0, 1)"> MetadataManager(config);
+                CACHE.put(config, r);
+                </span><span style="color: rgba(0, 0, 255, 1)">if</span> (CACHE.size() &gt; 1<span style="color: rgba(0, 0, 0, 1)">) {
+                    logger.warn(</span>"More than one singleton exist"<span style="color: rgba(0, 0, 0, 1)">);
+                }
+
+                </span><span style="color: rgba(0, 0, 255, 1)">return</span><span style="color: rgba(0, 0, 0, 1)"> r;
+            } </span><span style="color: rgba(0, 0, 255, 1)">catch</span><span style="color: rgba(0, 0, 0, 1)"> (IOException e) {
+                </span><span style="color: rgba(0, 0, 255, 1)">throw</span> <span style="color: rgba(0, 0, 255, 1)">new</span> IllegalStateException("Failed to init MetadataManager from " +<span style="color: rgba(0, 0, 0, 1)"> config, e);
+            }
+        }
+    }
+
+    </span><span style="color: rgba(0, 0, 255, 1)">private</span> MetadataManager(KylinConfig config) <span style="color: rgba(0, 0, 255, 1)">throws</span><span style="color: rgba(0, 0, 0, 1)"> IOException {
+        init(config);
+    }
+
+    </span><span style="color: rgba(0, 0, 255, 1)">private</span> <span style="color: rgba(0, 0, 255, 1)">void</span> init(KylinConfig config) <span style="color: rgba(0, 0, 255, 1)">throws</span><span style="color: rgba(0, 0, 0, 1)"> IOException {
+        </span><span style="color: rgba(0, 0, 255, 1)">this</span>.config =<span style="color: rgba(0, 0, 0, 1)"> config;
+        </span><span style="color: rgba(0, 0, 255, 1)">this</span>.srcTableMap = <span style="color: rgba(0, 0, 255, 1)">new</span> CaseInsensitiveStringCache&lt;&gt;(config, "table"<span style="color: rgba(0, 0, 0, 1)">);
+        </span><span style="color: rgba(0, 0, 255, 1)">this</span>.srcTableExdMap = <span style="color: rgba(0, 0, 255, 1)">new</span> CaseInsensitiveStringCache&lt;&gt;(config, "table_ext"<span style="color: rgba(0, 0, 0, 1)">);
+        </span><span style="color: rgba(0, 0, 255, 1)">this</span>.dataModelDescMap = <span style="color: rgba(0, 0, 255, 1)">new</span> CaseInsensitiveStringCache&lt;&gt;(config, "data_model"<span style="color: rgba(0, 0, 0, 1)">);
+        </span><span style="color: rgba(0, 0, 255, 1)">this</span>.extFilterMap = <span style="color: rgba(0, 0, 255, 1)">new</span> CaseInsensitiveStringCache&lt;&gt;(config, "external_filter"<span style="color: rgba(0, 0, 0, 1)">);
+
+        reloadAllSourceTable();
+        reloadAllTableExt();
+        reloadAllDataModel();
+        reloadAllExternalFilter();
+
+        </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> touch lower level metadata before registering my listener</span>
+        Broadcaster.getInstance(config).registerListener(<span style="color: rgba(0, 0, 255, 1)">new</span> SrcTableSyncListener(), "table"<span style="color: rgba(0, 0, 0, 1)">);
+        Broadcaster.getInstance(config).registerListener(</span><span style="color: rgba(0, 0, 255, 1)">new</span> SrcTableExtSyncListener(), "table_ext"<span style="color: rgba(0, 0, 0, 1)">);
+        Broadcaster.getInstance(config).registerListener(</span><span style="color: rgba(0, 0, 255, 1)">new</span> DataModelSyncListener(), "data_model"<span style="color: rgba(0, 0, 0, 1)">);
+        Broadcaster.getInstance(config).registerListener(</span><span style="color: rgba(0, 0, 255, 1)">new</span> ExtFilterSyncListener(), "external_filter"<span style="color: rgba(0, 0, 0, 1)">);
+    }</span></pre>
+</div>
+<p> </p>
+<p>查看了kylin各个版本的代码，发现都是这个套路，看来kylin不认为这是一个问题，这确实会导致一些潜在的问题，比如高负载时，忽然要刷新，这时就会有大量的请求被synchronized，这个会导致OOM吗？</p>
+<p><br/>进一步检查线程堆栈发现，当时tomcat的线程池几乎被占满，这个也很容易理解，之前的请求被synchronized，还不断有新的请求进来，然后线程池就满了，忽然想到，一旦synchronized结束，所有的请求都开始同时处理，而且其中一些请求可能会占用比较多的内存，这样内存可能瞬间就扛不住了，这是一个雪崩效应，上面的场景其实和压测的场景差不多，即服务器满负荷运转，线程池所有的线程都在处理请求，如果tomcat配置的线程池数量太大了，服务器就撑不住了，OOM就是因为这个，如果不改这个配置，内存配置的再大也没用，还是会OOM，把tomcat线程池配置小一些即可；</p>
+<p> </p>
+<p>另外还有一种方法，就是在Load Balancer上加控制，一旦响应很慢，就标记unhealthy，把请求分给其他节点，这样就不会在synchronized的节点上堆积大量请求，也可以避免问题；</p>
+</div>
+            </div>
+
+            <!-- Post Footer -->
+            <div class="post-footer">
+                <div class="post-navigation">
+                    <a href="../blog_cn.html" class="nav-button">← Back to Home</a>
+                    <a href="0326.html" class="nav-button">Next Post →</a>
+                </div>
+            </div>
+        </article>
+    </div>
+</body>
+</html>

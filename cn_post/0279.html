@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>yarn中查看每个应用实时占用的内存和cpu资源</title>
+    <link rel="stylesheet" href="../css/style3.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header Navigation -->
+        <div class="header">
+            <h1><a href="../blog_cn.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+        </div>
+
+        <!-- Post Container -->
+        <article class="post">
+            <!-- Post Header -->
+            <div class="post-header">
+                <h1>yarn中查看每个应用实时占用的内存和cpu资源</h1>
+                <div class="post-meta">
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📅</span>
+                        <span>January 10, 2019</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📖</span>
+                        <span>2 min read</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">👁️</span>
+                        <span>14798 views</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Post Content -->
+            <div class="post-content">
+                <div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<p>在yarn中的application详情页面</p>
+<blockquote>
+<p>http://resourcemanager/cluster/app/$applicationId</p>
+</blockquote>
+<p>或者通过application命令</p>
+<blockquote>
+<p>yarn application - status $applicationId</p>
+</blockquote>
+<p>只能看到应用启动以来占用的资源*时间统计，比如：</p>
+<blockquote>
+<p>Aggregate Resource Allocation : 3962853 MB-seconds, 1466 vcore-seconds</p>
+</blockquote>
+<p>到处都找不到这个应用当前实时的资源占用情况，比如当前占用了多少内存多少核，跟进yarn代码发现其实是有这个统计的：</p>
+<p>org.apache.hadoop.yarn.api.records.ApplicationResourceUsageReport</p>
+<div class="cnblogs_code">
+<pre>  <span style="color: rgba(0, 0, 255, 1)">public</span> <span style="color: rgba(0, 0, 255, 1)">static</span><span style="color: rgba(0, 0, 0, 1)"> ApplicationResourceUsageReport newInstance(
+      </span><span style="color: rgba(0, 0, 255, 1)">int</span> numUsedContainers, <span style="color: rgba(0, 0, 255, 1)">int</span><span style="color: rgba(0, 0, 0, 1)"> numReservedContainers, Resource usedResources,
+      Resource reservedResources, Resource neededResources, </span><span style="color: rgba(0, 0, 255, 1)">long</span><span style="color: rgba(0, 0, 0, 1)"> memorySeconds,
+      </span><span style="color: rgba(0, 0, 255, 1)">long</span><span style="color: rgba(0, 0, 0, 1)"> vcoreSeconds) {
+    ApplicationResourceUsageReport report </span>=<span style="color: rgba(0, 0, 0, 1)">
+        Records.newRecord(ApplicationResourceUsageReport.</span><span style="color: rgba(0, 0, 255, 1)">class</span><span style="color: rgba(0, 0, 0, 1)">);
+    report.setNumUsedContainers(numUsedContainers);
+    report.setNumReservedContainers(numReservedContainers);
+    report.setUsedResources(usedResources);
+    report.setReservedResources(reservedResources);
+    report.setNeededResources(neededResources);
+    report.setMemorySeconds(memorySeconds);
+    report.setVcoreSeconds(vcoreSeconds);
+    </span><span style="color: rgba(0, 0, 255, 1)">return</span><span style="color: rgba(0, 0, 0, 1)"> report;
+  }</span></pre>
+</div>
+<p>其中usedResources就是当前的实时占用资源情况，包括内存和cpu，这个统计是在YarnScheduler的接口中返回：</p>
+<p>org.apache.hadoop.yarn.server.resourcemanager.scheduler.YarnScheduler</p>
+<div class="cnblogs_code">
+<pre>  <span style="color: rgba(0, 128, 0, 1)">/**</span><span style="color: rgba(0, 128, 0, 1)">
+   * Get a resource usage report from a given app attempt ID.
+   * </span><span style="color: rgba(128, 128, 128, 1)">@param</span><span style="color: rgba(0, 128, 0, 1)"> appAttemptId the id of the application attempt
+   * </span><span style="color: rgba(128, 128, 128, 1)">@return</span><span style="color: rgba(0, 128, 0, 1)"> resource usage report for this given attempt
+   </span><span style="color: rgba(0, 128, 0, 1)">*/</span><span style="color: rgba(0, 0, 0, 1)">
+  @LimitedPrivate(</span>"yarn"<span style="color: rgba(0, 0, 0, 1)">)
+  @Evolving
+  ApplicationResourceUsageReport getAppResourceUsageReport(
+      ApplicationAttemptId appAttemptId);</span></pre>
+</div>
+<p>getAppResourceUsageReport方法被RMAppAttemptImpl.getApplicationResourceUsageReport调用：</p>
+<p>org.apache.hadoop.yarn.server.resourcemanager.rmapp.attempt.RMAppAttemptImpl</p>
+<div class="cnblogs_code">
+<pre><span style="color: rgba(0, 0, 0, 1)">  @Override
+  </span><span style="color: rgba(0, 0, 255, 1)">public</span><span style="color: rgba(0, 0, 0, 1)"> ApplicationResourceUsageReport getApplicationResourceUsageReport() {
+    </span><span style="color: rgba(0, 0, 255, 1)">this</span><span style="color: rgba(0, 0, 0, 1)">.readLock.lock();
+    </span><span style="color: rgba(0, 0, 255, 1)">try</span><span style="color: rgba(0, 0, 0, 1)"> {
+      ApplicationResourceUsageReport report </span>=<span style="color: rgba(0, 0, 0, 1)">
+          scheduler.getAppResourceUsageReport(</span><span style="color: rgba(0, 0, 255, 1)">this</span><span style="color: rgba(0, 0, 0, 1)">.getAppAttemptId());
+      </span><span style="color: rgba(0, 0, 255, 1)">if</span> (report == <span style="color: rgba(0, 0, 255, 1)">null</span><span style="color: rgba(0, 0, 0, 1)">) {
+        report </span>=<span style="color: rgba(0, 0, 0, 1)"> RMServerUtils.DUMMY_APPLICATION_RESOURCE_USAGE_REPORT;
+      }
+      AggregateAppResourceUsage resUsage </span>=
+          <span style="color: rgba(0, 0, 255, 1)">this</span><span style="color: rgba(0, 0, 0, 1)">.attemptMetrics.getAggregateAppResourceUsage();
+      report.setMemorySeconds(resUsage.getMemorySeconds());
+      report.setVcoreSeconds(resUsage.getVcoreSeconds());
+      </span><span style="color: rgba(0, 0, 255, 1)">return</span><span style="color: rgba(0, 0, 0, 1)"> report;
+    } </span><span style="color: rgba(0, 0, 255, 1)">finally</span><span style="color: rgba(0, 0, 0, 1)"> {
+      </span><span style="color: rgba(0, 0, 255, 1)">this</span><span style="color: rgba(0, 0, 0, 1)">.readLock.unlock();
+    }
+  }</span></pre>
+</div>
+<p>RMAppAttemptImpl.getApplicationResourceUsageReport被两个地方调用：</p>
+<h1>第一个调用</h1>
+<p>org.apache.hadoop.yarn.server.resourcemanager.rmapp.RMAppImpl</p>
+<div class="cnblogs_code">
+<pre>  <span style="color: rgba(0, 0, 255, 1)">public</span><span style="color: rgba(0, 0, 0, 1)"> ApplicationReport createAndGetApplicationReport(String clientUserName,
+      </span><span style="color: rgba(0, 0, 255, 1)">boolean</span><span style="color: rgba(0, 0, 0, 1)"> allowAccess) {
+...
+          appUsageReport </span>=<span style="color: rgba(0, 0, 0, 1)"> currentAttempt.getApplicationResourceUsageReport();
+...</span></pre>
+</div>
+<p>RMAppImpl.createAndGetApplicationReport会被ClientRMService.getApplications和ClientRMService.getApplicationReport调用，这两个方法分别对应命令</p>
+<blockquote>
+<p>yarn application - list<br/>yarn application - status $applicationId</p>
+</blockquote>
+<p>这两个地方展示信息的时候都没展示usedResources，可能作者觉得这个实时资源占用统计没那么重要。</p>
+<p>详见：<br/>org.apache.hadoop.yarn.server.resourcemanager.ClientRMService</p>
+<h1>第二个调用</h1>
+<p>org.apache.hadoop.yarn.server.resourcemanager.webapp.dao.AppInfo</p>
+<div class="cnblogs_code">
+<pre>  <span style="color: rgba(0, 0, 255, 1)">public</span><span style="color: rgba(0, 0, 0, 1)"> AppInfo(RMApp app, Boolean hasAccess, String schemePrefix) {
+...
+          ApplicationResourceUsageReport resourceReport </span>=<span style="color: rgba(0, 0, 0, 1)"> attempt
+              .getApplicationResourceUsageReport();
+          </span><span style="color: rgba(0, 0, 255, 1)">if</span> (resourceReport != <span style="color: rgba(0, 0, 255, 1)">null</span><span style="color: rgba(0, 0, 0, 1)">) {
+            Resource usedResources </span>=<span style="color: rgba(0, 0, 0, 1)"> resourceReport.getUsedResources();
+            allocatedMB </span>=<span style="color: rgba(0, 0, 0, 1)"> usedResources.getMemory();
+            allocatedVCores </span>=<span style="color: rgba(0, 0, 0, 1)"> usedResources.getVirtualCores();
+            runningContainers </span>=<span style="color: rgba(0, 0, 0, 1)"> resourceReport.getNumUsedContainers();
+          }
+...</span></pre>
+</div>
+<p>这个构造函数会在RMWebServices.getApp和RMWebServices.getApps时被调用，这是个service接口，对应url分别为：</p>
+<blockquote>
+<p>http://resourcemanager/ws/v1/cluster/apps/$applicationId<br/>http://resourcemanager/ws/v1/cluster/apps?state=RUNNING</p>
+</blockquote>
+<p>这两个接口的返回值中有实时资源占用情况如下：</p>
+<blockquote>
+<p>&lt;allocatedMB&gt;56320&lt;/allocatedMB&gt;<br/>&lt;allocatedVCores&gt;21&lt;/allocatedVCores&gt;</p>
+</blockquote>
+<p>分别对应实时内存占用和实时CPU占用；</p>
+<p>详见：<br/>org.apache.hadoop.yarn.server.resourcemanager.webapp.RMWebServices</p>
+<p> </p>
+<p>如果你发现spark应用内存的占用比你分配的要多，可以参考这里：<a href="https://www.cnblogs.com/barneywill/p/10102353.html" target="_blank">https://www.cnblogs.com/barneywill/p/10102353.html</a></p>
+<p> </p>
+</div>
+            </div>
+
+            <!-- Post Footer -->
+            <div class="post-footer">
+                <div class="post-navigation">
+                    <a href="../blog_cn.html" class="nav-button">← Back to Home</a>
+                    <a href="0280.html" class="nav-button">Next Post →</a>
+                </div>
+            </div>
+        </article>
+    </div>
+</body>
+</html>

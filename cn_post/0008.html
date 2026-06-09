@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HDFS</title>
+    <link rel="stylesheet" href="../css/style3.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header Navigation -->
+        <div class="header">
+            <h1><a href="../blog_cn.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+        </div>
+
+        <!-- Post Container -->
+        <article class="post">
+            <!-- Post Header -->
+            <div class="post-header">
+                <h1>HDFS</h1>
+                <div class="post-meta">
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📅</span>
+                        <span>May 31, 2022</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📖</span>
+                        <span>1 min read</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">👁️</span>
+                        <span>326 views</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Post Content -->
+            <div class="post-content">
+                <div class="blogpost-body cnblogs-markdown" id="cnblogs_post_body">
+<p><a href="https://hadoop.apache.org" rel="noopener nofollow" target="_blank">https://hadoop.apache.org</a><br/>
+A distributed file system that provides high-throughput access to application data.</p>
+<p>特点：</p>
+<ul>
+<li>大文件、一次写入多次读取，修改只支持Append</li>
+<li>多副本</li>
+<li>流式、非低延时</li>
+</ul>
+<h1 id="一-概念">一 概念</h1>
+<h2 id="元数据file-block机架副本读数据写数据">元数据、File-Block、机架、副本、读数据、写数据</h2>
+<p><picture>
+  <source srcset="../img/1509647-20220531154909864-1358881016.webp" type="image/webp">
+  <img alt="" src="../img/1509647-20220531154909864-1358881016.png">
+</picture></p>
+<h2 id="file-blockreplication">File-Block、Replication</h2>
+<p><picture>
+  <source srcset="../img/1509647-20220531154952144-620675250.webp" type="image/webp">
+  <img alt="" src="../img/1509647-20220531154952144-620675250.png">
+</picture></p>
+<h1 id="qjm部署">QJM部署</h1>
+<p>NameNode、DataNode、ZKFC、JournalNode<br/>
+<picture>
+  <source srcset="../img/1509647-20220531155104665-63090709.webp" type="image/webp">
+  <img alt="" src="../img/1509647-20220531155104665-63090709.png">
+</picture></p>
+<h1 id="ha">HA</h1>
+<h3 id="zk节点">zk节点</h3>
+<ul>
+<li>/hadoop-ha/${dfs.nameservices}/ActiveBreadCrumb 永久节点</li>
+<li>/hadoop-ha/${dfs.nameservices}/ActiveStandbyElectorLock 临时节点</li>
+</ul>
+<p>代码</p>
+<blockquote>
+<p>org.apache.hadoop.hdfs.tools.DFSZKFailoverController</p>
+</blockquote>
+<p><picture>
+  <source srcset="../img/1509647-20220531155226892-410110885.webp" type="image/webp">
+  <img alt="" src="../img/1509647-20220531155226892-410110885.png">
+</picture></p>
+<h1 id="二-常用命令">二 常用命令</h1>
+<blockquote>
+<p>hdfs dfs - ls /<br/>
+hdfs dfs - du - h /<br/>
+hdfs dfsadmin - report<br/>
+hdfs haadmin - getAllServiceState<br/>
+hdfs fsck /tmp/36c8b0727c814dc2ae5d520a45fadeb0.51c9f1f1e3652991ed3071c6c0bb0264 - files - blocks - locations - racks<br/>
+hdfs dfs - setrep 2 /user/hive/warehouse/temp.db/test_ext_o/000000_0<br/>
+hdfs balancer - threshold 10<br/>
+hadoop distcp hdfs://master1:8020/foo/a hdfs://master1:8020/foo/b hdfs://master2:8020/bar/foo</p>
+</blockquote>
+<h1 id="三-读写过程">三 读写过程</h1>
+<h2 id="读">读</h2>
+<p><picture>
+  <source srcset="../img/1509647-20220531155905623-1585941282.webp" type="image/webp">
+  <img alt="" src="../img/1509647-20220531155905623-1585941282.png">
+</picture></p>
+<h2 id="写">写</h2>
+<p><picture>
+  <source srcset="../img/1509647-20220531155938375-142050237.webp" type="image/webp">
+  <img alt="" src="../img/1509647-20220531155938375-142050237.png">
+</picture></p>
+<h1 id="四-namenode相关">四 Namenode相关</h1>
+<h2 id="文件">文件</h2>
+<p>全量+增量<br/>
+fsimage、edit log</p>
+<h2 id="内存估算">内存估算</h2>
+<p>Total = 198 ∗ num(Directory + Files) + 176 ∗ num(blocks) + 2% ∗ size(JVM Memory Size)</p>
+<h1 id="五-datanode相关">五 Datanode相关</h1>
+<h2 id="分配策略">分配策略</h2>
+<p>选择策略：</p>
+<ul>
+<li>1 当前机架（相对hdfs client而言）chooseLocalNode</li>
+<li>2 远程机架（相对hdfs client而言）chooseRemoteRack</li>
+<li>3 另一机架</li>
+<li>4 全部随机 chooseRandom</li>
+</ul>
+<p>代码：</p>
+<blockquote>
+<p>org.apache.hadoop.hdfs.DFSOutputStream$DataStreamer.findNewDatanode</p>
+</blockquote>
+<h2 id="副本检查">副本检查</h2>
+<p>BlockManager中启动线程ReplicationMonitor，ReplicationMonitor定期检查哪些block存在副本缺失，并将待复制block信息通知原始DataNode，DataNode收到信息后会不断复制block，默认一次2个block；</p>
+<p>代码：</p>
+<blockquote>
+<p>org.apache.hadoop.hdfs.server.blockmanagement.BlockManager</p>
+</blockquote>
+<p>相关配置：</p>
+<blockquote>
+<p>dfs.replication<br/>
+dfs.namenode.replication.interval<br/>
+dfs.namenode.replication.work.multiplier.per.iteration<br/>
+dfs.namenode.replication.max-streams</p>
+</blockquote>
+<h1 id="六-安全模式">六 安全模式</h1>
+<p>SafeMode 是 NameNode 的一种特殊状态，在这种状态下，文件系统只接受读数据请求，而不接受上传、删除、修改等变更请求。<br/>
+在 NameNode 主节点启动时，HDFS 首先进入安全模式，DataNode 在启动的时候会向 NameNode 发送心跳信号并汇报可用的 block 的状态，当整个系统达到安全标准时，HDFS 自动离开安全模式。<br/>
+安全标准：block缺失率低于0.1%<br/>
+dfs.namenode.safemode.threshold-pct=0.999</p>
+<p>退出安全模式命令</p>
+<blockquote>
+<p>hdfs dfsadmin - safemode leave</p>
+</blockquote>
+</div>
+            </div>
+
+            <!-- Post Footer -->
+            <div class="post-footer">
+                <div class="post-navigation">
+                    <a href="../blog_cn.html" class="nav-button">← Back to Home</a>
+                    <a href="0009.html" class="nav-button">Next Post →</a>
+                </div>
+            </div>
+        </article>
+    </div>
+</body>
+</html>

@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>logstash设置jdbc_default_timezone后报错</title>
+    <link rel="stylesheet" href="../css/style3.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header Navigation -->
+        <div class="header">
+            <h1><a href="../blog_cn.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+        </div>
+
+        <!-- Post Container -->
+        <article class="post">
+            <!-- Post Header -->
+            <div class="post-header">
+                <h1>logstash设置jdbc_default_timezone后报错</h1>
+                <div class="post-meta">
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📅</span>
+                        <span>March 22, 2019</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📖</span>
+                        <span>4 min read</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">👁️</span>
+                        <span>2156 views</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Post Content -->
+            <div class="post-content">
+                <div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<p>logstash6.6.0-6.6.2版本使用jdbc input plugin时如果设置了jdbc_default_timezone，会报错：</p>
+<div class="cnblogs_code">
+<pre>{ 2012 rufus-<span style="color: rgba(0, 0, 0, 1)">scheduler intercepted an error:
+  </span>2012<span style="color: rgba(0, 0, 0, 1)">   job:
+  </span>2012     Rufus::Scheduler::CronJob <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">* * * * *</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)"> {}
+  </span>2012<span style="color: rgba(0, 0, 0, 1)">   error:
+  </span>2012     2012
+  2012<span style="color: rgba(0, 0, 0, 1)">     NoMethodError
+  </span>2012     undefined method `utc_total_offset_rational' <span style="color: rgba(0, 0, 255, 1)">for</span> <span style="color: rgba(0, 128, 0, 1)">#</span><span style="color: rgba(0, 128, 0, 1)">&lt;TZInfo::TransitionsTimezonePeriod:0x78b60bbe&gt;</span>
+Did you mean?<span style="color: rgba(0, 0, 0, 1)">  utc_total_offset
+  </span>2012       /data/logstash-6.6.2/vendor/bundle/jruby/2.3.0/gems/sequel-5.17.0/lib/sequel/extensions/named_timezones.rb:81:<span style="color: rgba(0, 0, 255, 1)">in</span><span style="color: rgba(0, 0, 0, 1)"> `convert_output_datetime_other'
+  </span>2012       /data/logstash-6.6.2/vendor/bundle/jruby/2.3.0/gems/sequel-5.17.0/lib/sequel/timezones.rb:54:<span style="color: rgba(0, 0, 255, 1)">in</span><span style="color: rgba(0, 0, 0, 1)"> `convert_output_timestamp'
+  </span>2012       /data/logstash-6.6.2/vendor/bundle/jruby/2.3.0/gems/sequel-5.17.0/lib/sequel/database/misc.rb:219:<span style="color: rgba(0, 0, 255, 1)">in</span><span style="color: rgba(0, 0, 0, 1)"> `from_application_timestamp'
+  </span>2012       /data/logstash-6.6.2/vendor/bundle/jruby/2.3.0/gems/sequel-5.17.0/lib/sequel/dataset/sql.rb:1058:<span style="color: rgba(0, 0, 255, 1)">in</span><span style="color: rgba(0, 0, 0, 1)"> `format_timestamp'
+  </span>2012       /data/logstash-6.6.2/vendor/bundle/jruby/2.3.0/gems/sequel-5.17.0/lib/sequel/dataset/sql.rb:1226:<span style="color: rgba(0, 0, 255, 1)">in</span><span style="color: rgba(0, 0, 0, 1)"> `literal_datetime'
+  </span>2012       /data/logstash-6.6.2/vendor/bundle/jruby/2.3.0/gems/sequel-5.17.0/lib/sequel/dataset/sql.rb:1231:<span style="color: rgba(0, 0, 255, 1)">in</span><span style="color: rgba(0, 0, 0, 1)"> `literal_datetime_append'
+  </span>2012       /data/logstash-6.6.2/vendor/bundle/jruby/2.3.0/gems/sequel-5.17.0/lib/sequel/dataset/sql.rb:105:<span style="color: rgba(0, 0, 255, 1)">in</span><span style="color: rgba(0, 0, 0, 1)"> `literal_append'
+  </span>2012       /data/logstash-6.6.2/vendor/bundle/jruby/2.3.0/gems/sequel-5.17.0/lib/sequel/dataset/sql.rb:602:<span style="color: rgba(0, 0, 255, 1)">in</span><span style="color: rgba(0, 0, 0, 1)"> `placeholder_literal_string_sql_append'
+  </span>2012       /data/logstash-6.6.2/vendor/bundle/jruby/2.3.0/gems/sequel-5.17.0/lib/sequel/sql.rb:112:<span style="color: rgba(0, 0, 255, 1)">in</span><span style="color: rgba(0, 0, 0, 1)"> `to_s_append'
+  </span>2012       /data/logstash-6.6.2/vendor/bundle/jruby/2.3.0/gems/sequel-5.17.0/lib/sequel/dataset/sql.rb:1236:<span style="color: rgba(0, 0, 255, 1)">in</span><span style="color: rgba(0, 0, 0, 1)"> `literal_expression_append'
+  </span>2012       /data/logstash-6.6.2/vendor/bundle/jruby/2.3.0/gems/sequel-5.17.0/lib/sequel/dataset/sql.rb:89:<span style="color: rgba(0, 0, 255, 1)">in</span><span style="color: rgba(0, 0, 0, 1)"> `literal_append'
+  </span>2012       /data/logstash-6.6.2/vendor/bundle/jruby/2.3.0/gems/sequel-5.17.0/lib/sequel/dataset/sql.rb:1571:<span style="color: rgba(0, 0, 255, 1)">in</span><span style="color: rgba(0, 0, 0, 1)"> `static_sql'
+  </span>2012       /data/logstash-6.6.2/vendor/bundle/jruby/2.3.0/gems/sequel-5.17.0/lib/sequel/dataset/sql.rb:236:<span style="color: rgba(0, 0, 255, 1)">in</span><span style="color: rgba(0, 0, 0, 1)"> `select_sql'
+  </span>2012       /data/logstash-6.6.2/vendor/bundle/jruby/2.3.0/gems/sequel-5.17.0/lib/sequel/dataset/sql.rb:147:<span style="color: rgba(0, 0, 255, 1)">in</span><span style="color: rgba(0, 0, 0, 1)"> `sql'
+  </span>2012       /data/logstash-6.6.2/vendor/bundle/jruby/2.3.0/gems/sequel-5.17.0/lib/sequel/dataset/sql.rb:1585:<span style="color: rgba(0, 0, 255, 1)">in</span><span style="color: rgba(0, 0, 0, 1)"> `subselect_sql_append'
+  </span>2012       /data/logstash-6.6.2/vendor/bundle/jruby/2.3.0/gems/sequel-5.17.0/lib/sequel/dataset/sql.rb:1211:<span style="color: rgba(0, 0, 255, 1)">in</span><span style="color: rgba(0, 0, 0, 1)"> `literal_dataset_append'
+  </span>2012       /data/logstash-6.6.2/vendor/bundle/jruby/2.3.0/gems/sequel-5.17.0/lib/sequel/dataset/sql.rb:109:<span style="color: rgba(0, 0, 255, 1)">in</span><span style="color: rgba(0, 0, 0, 1)"> `literal_append'
+  </span>2012       /data/logstash-6.6.2/vendor/bundle/jruby/2.3.0/gems/sequel-5.17.0/lib/sequel/dataset/sql.rb:271:<span style="color: rgba(0, 0, 255, 1)">in</span><span style="color: rgba(0, 0, 0, 1)"> `aliased_expression_sql_append'
+  </span>2012       /data/logstash-6.6.2/vendor/bundle/jruby/2.3.0/gems/sequel-5.17.0/lib/sequel/sql.rb:112:<span style="color: rgba(0, 0, 255, 1)">in</span><span style="color: rgba(0, 0, 0, 1)"> `to_s_append'
+  </span>2012       /data/logstash-6.6.2/vendor/bundle/jruby/2.3.0/gems/sequel-5.17.0/lib/sequel/dataset/sql.rb:1236:<span style="color: rgba(0, 0, 255, 1)">in</span><span style="color: rgba(0, 0, 0, 1)"> `literal_expression_append'
+  </span>2012       /data/logstash-6.6.2/vendor/bundle/jruby/2.3.0/gems/sequel-5.17.0/lib/sequel/dataset/sql.rb:89:<span style="color: rgba(0, 0, 255, 1)">in</span><span style="color: rgba(0, 0, 0, 1)"> `literal_append'
+  </span>2012       /data/logstash-6.6.2/vendor/bundle/jruby/2.3.0/gems/sequel-5.17.0/lib/sequel/dataset/sql.rb:1104:<span style="color: rgba(0, 0, 255, 1)">in</span><span style="color: rgba(0, 0, 0, 1)"> `identifier_append'
+  </span>2012       /data/logstash-6.6.2/vendor/bundle/jruby/2.3.0/gems/sequel-5.17.0/lib/sequel/dataset/sql.rb:1114:<span style="color: rgba(0, 0, 255, 1)">in</span> `block <span style="color: rgba(0, 0, 255, 1)">in</span><span style="color: rgba(0, 0, 0, 1)"> identifier_list_append'
+  </span>2012       org/jruby/RubyArray.java:1734:<span style="color: rgba(0, 0, 255, 1)">in</span><span style="color: rgba(0, 0, 0, 1)"> `each'
+  </span>2012       /data/logstash-6.6.2/vendor/bundle/jruby/2.3.0/gems/sequel-5.17.0/lib/sequel/dataset/sql.rb:1112:<span style="color: rgba(0, 0, 255, 1)">in</span><span style="color: rgba(0, 0, 0, 1)"> `identifier_list_append'
+  </span>2012       /data/logstash-6.6.2/vendor/bundle/jruby/2.3.0/gems/sequel-5.17.0/lib/sequel/dataset/sql.rb:1542:<span style="color: rgba(0, 0, 255, 1)">in</span><span style="color: rgba(0, 0, 0, 1)"> `source_list_append'
+  </span>2012       /data/logstash-6.6.2/vendor/bundle/jruby/2.3.0/gems/sequel-5.17.0/lib/sequel/dataset/sql.rb:1395:<span style="color: rgba(0, 0, 255, 1)">in</span><span style="color: rgba(0, 0, 0, 1)"> `select_from_sql'
+  </span>2012       /data/logstash-6.6.2/vendor/bundle/jruby/2.3.0/gems/sequel-5.17.0/lib/sequel/dataset/sql.rb:244:<span style="color: rgba(0, 0, 255, 1)">in</span><span style="color: rgba(0, 0, 0, 1)"> `select_sql'
+  </span>2012       /data/logstash-6.6.2/vendor/bundle/jruby/2.3.0/gems/sequel-5.17.0/lib/sequel/dataset/actions.rb:729:<span style="color: rgba(0, 0, 255, 1)">in</span> `single_value!<span style="color: rgba(0, 0, 0, 1)">'
+  </span>2012       /data/logstash-6.6.2/vendor/bundle/jruby/2.3.0/gems/sequel-5.17.0/lib/sequel/dataset/actions.rb:110:<span style="color: rgba(0, 0, 255, 1)">in</span><span style="color: rgba(0, 0, 0, 1)"> `count'
+  </span>2012       /data/logstash-6.6.2/vendor/bundle/jruby/2.3.0/gems/sequel-5.17.0/lib/sequel/extensions/pagination.rb:58:<span style="color: rgba(0, 0, 255, 1)">in</span><span style="color: rgba(0, 0, 0, 1)"> `each_page'
+  </span>2012       /data/logstash-6.6.2/vendor/bundle/jruby/2.3.0/gems/logstash-input-jdbc-4.3.13/lib/logstash/plugin_mixins/jdbc/jdbc.rb:251:<span style="color: rgba(0, 0, 255, 1)">in</span><span style="color: rgba(0, 0, 0, 1)"> `perform_query'
+  </span>2012       /data/logstash-6.6.2/vendor/bundle/jruby/2.3.0/gems/logstash-input-jdbc-4.3.13/lib/logstash/plugin_mixins/jdbc/jdbc.rb:229:<span style="color: rgba(0, 0, 255, 1)">in</span><span style="color: rgba(0, 0, 0, 1)"> `execute_statement'
+  </span>2012       /data/logstash-6.6.2/vendor/bundle/jruby/2.3.0/gems/logstash-input-jdbc-4.3.13/lib/logstash/inputs/jdbc.rb:277:<span style="color: rgba(0, 0, 255, 1)">in</span><span style="color: rgba(0, 0, 0, 1)"> `execute_query'
+  </span>2012       /data/logstash-6.6.2/vendor/bundle/jruby/2.3.0/gems/logstash-input-jdbc-4.3.13/lib/logstash/inputs/jdbc.rb:258:<span style="color: rgba(0, 0, 255, 1)">in</span> `block <span style="color: rgba(0, 0, 255, 1)">in</span><span style="color: rgba(0, 0, 0, 1)"> run'
+  </span>2012       /data/logstash-6.6.2/vendor/bundle/jruby/2.3.0/gems/rufus-scheduler-3.0.9/lib/rufus/scheduler/jobs.rb:234:<span style="color: rgba(0, 0, 255, 1)">in</span><span style="color: rgba(0, 0, 0, 1)"> `do_call'
+  </span>2012       /data/logstash-6.6.2/vendor/bundle/jruby/2.3.0/gems/rufus-scheduler-3.0.9/lib/rufus/scheduler/jobs.rb:258:<span style="color: rgba(0, 0, 255, 1)">in</span><span style="color: rgba(0, 0, 0, 1)"> `do_trigger'
+  </span>2012       /data/logstash-6.6.2/vendor/bundle/jruby/2.3.0/gems/rufus-scheduler-3.0.9/lib/rufus/scheduler/jobs.rb:300:<span style="color: rgba(0, 0, 255, 1)">in</span> `block <span style="color: rgba(0, 0, 255, 1)">in</span><span style="color: rgba(0, 0, 0, 1)"> start_work_thread'
+  </span>2012       /data/logstash-6.6.2/vendor/bundle/jruby/2.3.0/gems/rufus-scheduler-3.0.9/lib/rufus/scheduler/jobs.rb:299:<span style="color: rgba(0, 0, 255, 1)">in</span> `block <span style="color: rgba(0, 0, 255, 1)">in</span><span style="color: rgba(0, 0, 0, 1)"> start_work_thread'
+  </span>2012       org/jruby/RubyKernel.java:1292:<span style="color: rgba(0, 0, 255, 1)">in</span><span style="color: rgba(0, 0, 0, 1)"> `loop'
+  </span>2012       /data/logstash-6.6.2/vendor/bundle/jruby/2.3.0/gems/rufus-scheduler-3.0.9/lib/rufus/scheduler/jobs.rb:289:<span style="color: rgba(0, 0, 255, 1)">in</span> `block <span style="color: rgba(0, 0, 255, 1)">in</span><span style="color: rgba(0, 0, 0, 1)"> start_work_thread'
+  </span>2012<span style="color: rgba(0, 0, 0, 1)">   tz:
+  </span>2012<span style="color: rgba(0, 0, 0, 1)">     ENV['TZ']: 
+  </span>2012     Time.now: 2019-03-22 11:23:04 +0800
+  2012<span style="color: rgba(0, 0, 0, 1)">   scheduler:
+  </span>2012     object_id: 2010
+  2012<span style="color: rgba(0, 0, 0, 1)">     opts:
+  </span>2012       {:max_work_threads=&gt;1<span style="color: rgba(0, 0, 0, 1)">}
+  </span>2012       frequency: 0.3
+  2012       scheduler_lock: <span style="color: rgba(0, 128, 0, 1)">#</span><span style="color: rgba(0, 128, 0, 1)">&lt;Rufus::Scheduler::NullLock:0x17bfc482&gt;</span>
+  2012       trigger_lock: <span style="color: rgba(0, 128, 0, 1)">#</span><span style="color: rgba(0, 128, 0, 1)">&lt;Rufus::Scheduler::NullLock:0x6b986244&gt;</span>
+  2012     uptime: 63.011622<span style="color: rgba(0, 0, 0, 1)"> (1m3s13)
+  </span>2012     down?: <span style="color: rgba(0, 0, 255, 1)">false</span>
+  2012     threads: 2
+  2012       thread: <span style="color: rgba(0, 128, 0, 1)">#</span><span style="color: rgba(0, 128, 0, 1)">&lt;Thread:0x5aaa15f6&gt;</span>
+  2012<span style="color: rgba(0, 0, 0, 1)">       thread_key: rufus_scheduler_2010
+  </span>2012       work_threads: 1
+  2012         active: 1
+  2012         vacant: 0
+  2012         max_work_threads: 1
+  2012<span style="color: rgba(0, 0, 0, 1)">       mutexes: {}
+  </span>2012     jobs: 1
+  2012       at_jobs: 0
+  2012       in_jobs: 0
+  2012       every_jobs: 0
+  2012       interval_jobs: 0
+  2012       cron_jobs: 1
+  2012     running_jobs: 1
+  2012     work_queue: 0</pre>
+</div>
+<p>这个bug是由于升级zinfo1.2.5-&gt;2.0.0导致的</p>
+<blockquote>
+<p>$LOGSTASH_HOME/vendor/bundle/jruby/2.3.0/gems/tzinfo-2.0.0</p>
+</blockquote>
+<p>预计会在下个版本修复，只能先降级到6.5.4版本；</p>
+<p> </p>
+<p>参考：<br/>https://github.com/logstash-plugins/logstash-input-jdbc/issues/325</p>
+<p> </p>
+</div>
+            </div>
+
+            <!-- Post Footer -->
+            <div class="post-footer">
+                <div class="post-navigation">
+                    <a href="../blog_cn.html" class="nav-button">← Back to Home</a>
+                    <a href="0165.html" class="nav-button">Next Post →</a>
+                </div>
+            </div>
+        </article>
+    </div>
+</body>
+</html>

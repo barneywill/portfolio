@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Java基础之Nginx缓存</title>
+    <link rel="stylesheet" href="../css/style3.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header Navigation -->
+        <div class="header">
+            <h1><a href="../blog_cn.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+        </div>
+
+        <!-- Post Container -->
+        <article class="post">
+            <!-- Post Header -->
+            <div class="post-header">
+                <h1>Java基础之Nginx缓存</h1>
+                <div class="post-meta">
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📅</span>
+                        <span>June 16, 2019</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📖</span>
+                        <span>2 min read</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">👁️</span>
+                        <span>869 views</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Post Content -->
+            <div class="post-content">
+                <div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<h2> </h2>
+<h2>1 proxy_ignore_headers</h2>
+<h3>1.1 Set-Cookie</h3>
+<p>By default, nginx does not caches requests with Set-Cookie.</p>
+<p>默认情况下：Nginx不会缓存response中带有Set-Cookie的请求；</p>
+<p> </p>
+<p>If a header includes the “Set-Cookie” field, such a response will not be cached. Processing of one or more of these response header fields can be disabled using the <a href="http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_ignore_headers" rel="noopener nofollow">proxy_ignore_headers</a> directive.</p>
+<p>这时需要使用proxy_ignore_headers指令；</p>
+<p> <img alt="" src="https://img2018.cnblogs.com/blog/1509647/201812/1509647-20181213221810940-1303682642.png"/></p>
+<p>Nginx会根据proxy_ignore_headers忽略resin返回的response中的相关的header；</p>
+<p>proxy_ignore_header指令：</p>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201812/1509647-20181213221752123-1480603261.png"/></p>
+<p>Disables processing of certain response header fields from the proxied server. The following fields can be ignored: “X-Accel-Redirect”, “X-Accel-Expires”, “X-Accel-Limit-Rate” (1.1.6), “X-Accel-Buffering” (1.1.6), “X-Accel-Charset” (1.1.6), “Expires”, “Cache-Control”, and “Set-Cookie” (0.8.44).</p>
+<h3>1.2 Cache-Control</h3>
+<p>Public  指示响应可被任何缓存区缓存。</p>
+<p><strong>Private</strong>  指示对于单个用户的整个或部分响应消息，不能被共享缓存处理。这允许服务器仅仅描述当用户的部分响应消息，此响应消息对于其他用户的请求无效。</p>
+<p><strong>no-cache</strong>  指示请求或响应消息不能缓存（HTTP/1.0用Pragma的no-cache替换）</p>
+<p> </p>
+<p>根据什么能被缓存</p>
+<p>no-store  用于防止重要的信息被无意的发布。在请求消息中发送将使得请求和响应消息都不使用缓存。</p>
+<p>根据缓存超时</p>
+<p><strong>max-age</strong>  指示客户机可以接收生存期不大于指定时间（以秒为单位）的响应。</p>
+<p>min-fresh  指示客户机可以接收响应时间小于当前时间加上指定时间的响应。</p>
+<p>max-stale  指示客户机可以接收超出超时期间的响应消息。如果指定max-stale消息的值，那么客户机可以接收超出超时期指定值之内的响应消息。</p>
+<p> </p>
+<p>经测试，cache-control为private和no-cache时也不能生成缓存文件；</p>
+<p>也需要使用proxy_ignore_header指令：</p>
+<p> <img alt="" src="https://img2018.cnblogs.com/blog/1509647/201812/1509647-20181213221729824-109475193.png"/></p>
+<p> </p>
+<h3>1.3 Expires</h3>
+<p>Parameters of caching can also be set directly in the response header. This has a higher precedence than setting of caching time using the directive. The “X-Accel-Expires” header field sets caching time of a response in seconds. The value 0 disables to cache a response. If a value starts with the prefix @, it sets an absolute time in seconds since Epoch, up to which the response may be cached. If header does not include the “X-Accel-Expires” field, parameters of caching may be set in the header fields “Expires” or “Cache-Control”. </p>
+<p> </p>
+<p>Expires和Cache-Control会影响缓存的有效期，这个有效期默认是在配置文件中配置的：</p>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201812/1509647-20181213221710456-1592328037.png"/></p>
+<p> </p>
+<p>除非确实想由resin来设置过期时间，也需要使用proxy_ignore_header指令：</p>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201812/1509647-20181213221654559-239281790.png"/></p>
+<p> </p>
+<p>经过以上三步配置后，nginx会忽略resin返回response中影响缓存是否生成以及缓存时间的header，缓存文件就可以正常生成；</p>
+<p> </p>
+<h2>2 proxy_hide_header</h2>
+<p>By default, nginx does not pass the header fields “Date”, “Server”, “X-Pad”, and “X-Accel-...” from the response of a proxied server to a client. Theproxy_hide_header directive sets additional fields that will not be passed.</p>
+<p> </p>
+<p>由于第一次访问resin，resin会返回Set-Cookie:JSESSIONID=…，而nginx会将resin的返回原封不动的存为缓存文件：</p>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201812/1509647-20181213221604308-115563338.png"/></p>
+<p> </p>
+<p>打开缓存文件发现，第一行为乱码，可能是nginx控制缓存时间相关的字节，第二行为该缓存文件的KEY，下边就是一个完整的HTTP响应，包括完整的header和body，命中缓存的时候，nginx会将该响应直接返回而不再请求resin；</p>
+<p>为了避免串Session的问题，需要增加proxy_hide_header指令：</p>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201812/1509647-20181213221627129-149009494.png"/></p>
+<p> </p>
+<p>来保证nginx在使用缓存的同时隐藏响应中相关header；</p>
+<p> </p>
+<p>Proxy_hide_header指令：</p>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201812/1509647-20181213221534587-1332018449.png"/></p>
+<p> </p>
+<p>详细请查看 <a href="http://wiki.nginx.org/HttpProxyModule" rel="noopener nofollow">http://wiki.nginx.org/HttpProxyModule</a>；</p>
+<p> </p>
+<h1>3 memcached module</h1>
+<p>另外，nginx还有一个memcached模块也可以用来作为页面缓存，即Nginx / memcached module：</p>
+<p>The Nginx / Memcached module allows you to setup the previous architecture, using <a href="http://nginx.org/" rel="noopener nofollow">Nginx</a> as a HTTP reverse proxy, and <a href="http://memcached.org/" rel="noopener nofollow">Memcached</a> as storage. (Note: memcached is often used as shared HTTP session storage)</p>
+<p>The module <a href="http://wiki.nginx.org/HttpMemcachedModule" rel="noopener nofollow">Nginx memcached</a> works very well. But it has a big limitation: it can not store HTTP headers with data. For example, pages served by Nginx via Memcached storage have the default Nginx Content-Type. Moreover, it is quite difficult to store multiple type of data in Memcached : CSS, JS, images, HTML, json … You can add some specifics HTTP headers, but only in Nginx configuration. These headers will be shared by every resources served by Nginx/Memached, unless you put lot of ugly “if” in the configuration.</p>
+<p>使用memcached做页面缓存的话避免了使用proxy_cache在每台nginx上都有一份缓存的问题，而且purge的时候也更简单；</p>
+</div>
+            </div>
+
+            <!-- Post Footer -->
+            <div class="post-footer">
+                <div class="post-navigation">
+                    <a href="../blog_cn.html" class="nav-button">← Back to Home</a>
+                    <a href="0114.html" class="nav-button">Next Post →</a>
+                </div>
+            </div>
+        </article>
+    </div>
+</body>
+</html>

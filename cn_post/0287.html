@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>用户行为分析--见证scala的强大</title>
+    <link rel="stylesheet" href="../css/style3.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header Navigation -->
+        <div class="header">
+            <h1><a href="../blog_cn.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+        </div>
+
+        <!-- Post Container -->
+        <article class="post">
+            <!-- Post Header -->
+            <div class="post-header">
+                <h1>用户行为分析--见证scala的强大</h1>
+                <div class="post-meta">
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📅</span>
+                        <span>December 29, 2018</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📖</span>
+                        <span>2 min read</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">👁️</span>
+                        <span>955 views</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Post Content -->
+            <div class="post-content">
+                <div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<h1>一 场景分析</h1>
+<p>用户行为分析应用的场景很多，像线上网站访问统计，线下客流分析（比如图像人脸识别、wifi探针等），比较核心的指标有几个：</p>
+<blockquote>
+<p>PV | UV | SD | SC</p>
+</blockquote>
+<p>指标说明：</p>
+<p><em>PV（Page View）：网站浏览量或者商场门店的访问量</em><br/><em>UV（Unique Visitor）：独立访客数，即去重后的人数</em><br/><em>SD（Session Duration）：单次会话停留时间</em><br/><em>SC（Session Count）：会话次数</em></p>
+<p> </p>
+<p>用户行为分析的原始数据通常是一系列时间离散数据，比如网站访问记录：用户在一个时间点访问了一个网页，然后又在下个时间点访问了下个网页；</p>
+<p> 这些原始数据可以抽象为：</p>
+<blockquote>
+<p>User | Timestamp | Target</p>
+</blockquote>
+<p>即用户在什么时间点访问了什么目标；</p>
+<p> </p>
+<p>统计PV、UV比较简单，但是在时间离散数据的基础上，要计算SD、SC这两个指标，常用的方式是设置过期时间阈值，如果用户两次访问的时间间隔超过阈值，则认为是两次Session；然后在一次Session的所有数据中取时间最早和最晚的数据来统计本次Session Duration；</p>
+<h1>二 统计示例</h1>
+<p>输入数据</p>
+<blockquote>
+<p>(user1, 2018-12-01 01:00:00, t1)<br/>(user1, 2018-12-01 01:01:30, t1)<br/>(user1, 2018-12-01 01:06:00, t1)<br/>(user1, 2018-12-01 01:20:00, t1)<br/>(user1, 2018-12-01 01:24:00, t1)</p>
+</blockquote>
+<p>可以统计出</p>
+<blockquote>
+<p>PV=5，UV=1</p>
+</blockquote>
+<p>过期时间阈值设置为5分钟，以上数据应该统计出来2次Session，分别是：</p>
+<blockquote>
+<p>Session1： (2018-12-01 01:00:00 到 2018-12-01 01:06:00)，Duration：6分钟<br/>Session2： (2018-12-01 01:20:00 到 2018-12-01 01:24:00)，Duration：4分钟</p>
+</blockquote>
+<p>实际处理时还要数据乱序的问题，尤其是在实时计算中，你想好怎样做了吗？</p>
+<p>容易想到的方式是先做group然后将所有的timestamp排序后一次遍历统计出SD和SC，不过这种方式占用内存比较大，性能略差，而且只能用在离线计算中。</p>
+<p> </p>
+<h1>三 代码实现</h1>
+<p>下面给出scala实现，来见证scala的强大：</p>
+<h2>scala核心代码（一步foldLeft）</h2>
+<p>scala</p>
+<div class="cnblogs_code">
+<pre>  val expireInSecond = 300<span style="color: rgba(0, 0, 0, 1)">
+  def mergeTimeArray(arr1 : ArrayBuffer[(Long, Long)], arr2 : ArrayBuffer[(Long, Long)]) : ArrayBuffer[(Long, Long)] </span>=<span style="color: rgba(0, 0, 0, 1)"> {
+    </span><span style="color: rgba(0, 0, 255, 1)">if</span> (arr1.head._1.equals(0l<span style="color: rgba(0, 0, 0, 1)">)) arr2
+    </span><span style="color: rgba(0, 0, 255, 1)">else</span> <span style="color: rgba(0, 0, 255, 1)">if</span> (arr2.head._1.equals(0l<span style="color: rgba(0, 0, 0, 1)">)) arr1
+    </span><span style="color: rgba(0, 0, 255, 1)">else</span> (arr1 ++ arr2).sortBy(_._1).foldLeft(ArrayBuffer[(Long, Long)]())((result, item) =&gt; <span style="color: rgba(0, 0, 255, 1)">if</span> (!result.isEmpty &amp;&amp; result.last._2 + expireInSecond &gt;= item._1) {result.update(result.length - 1, (result.last._1, math.max(result.last._2, item._2))); result} <span style="color: rgba(0, 0, 255, 1)">else</span> result +=<span style="color: rgba(0, 0, 0, 1)"> item)
+  }</span></pre>
+</div>
+<h2>spark核心代码（2步map 1步aggregateByKey）</h2>
+<p>scala</p>
+<div class="cnblogs_code">
+<pre>  <span style="color: rgba(0, 128, 0, 1)">/**</span><span style="color: rgba(0, 128, 0, 1)">
+    * </span><span style="color: rgba(128, 128, 128, 1)">@param</span><span style="color: rgba(0, 128, 0, 1)"> data (user, timestamp, target)
+    * </span><span style="color: rgba(128, 128, 128, 1)">@return</span><span style="color: rgba(0, 128, 0, 1)"> (user, target, session_count, session_duration)
+    </span><span style="color: rgba(0, 128, 0, 1)">*/</span><span style="color: rgba(0, 0, 0, 1)">
+  def process(data : RDD[(String, Long, String)]) : RDD[(String, String, Integer, Double)] </span>=<span style="color: rgba(0, 0, 0, 1)"> {
+    </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)">((user, target), timestamp)</span>
+    data.map(item =&gt;<span style="color: rgba(0, 0, 0, 1)"> ((item._1, item._3), item._2))
+      </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)">((user, target), Array[(startTime, endTime)])</span>
+      .aggregateByKey(ArrayBuffer((0l, 0l)))((result : ArrayBuffer[(Long, Long)], timestamp: Long) =&gt; mergeTimeArray(result, ArrayBuffer((timestamp, timestamp))), (result1 : ArrayBuffer[(Long, Long)], result2 : ArrayBuffer[(Long, Long)]) =&gt;<span style="color: rgba(0, 0, 0, 1)"> mergeTimeArray(result1, result2))
+      </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)">(user, target, session_count, session_duration)</span>
+      .map(item =&gt; (item._1._1, item._1._2, item._2.length, item._2.foldLeft(0l)((result, item) =&gt; result + (item._2 - item._1)).toDouble /<span style="color: rgba(0, 0, 0, 1)"> item._2.length))
+  }</span></pre>
+</div>
+<p>测试运行</p>
+<div class="cnblogs_code">
+<pre>  def main(args : Array[String]) : Unit =<span style="color: rgba(0, 0, 0, 1)"> {
+    val conf </span>= <span style="color: rgba(0, 0, 255, 1)">new</span> SparkConf().setAppName("UserAnalysis").setMaster("local[2]"<span style="color: rgba(0, 0, 0, 1)">)
+    val sc </span>= <span style="color: rgba(0, 0, 255, 1)">new</span><span style="color: rgba(0, 0, 0, 1)"> SparkContext(conf)
+    val arr </span>= Array(("user1", 1546054000l, "t1"), ("user1", 1546054090l, "t1"), ("user1", 1546054360l, "t1"), ("user1", 1546055200l, "t1"), ("user1", 1546055440l, "t1"<span style="color: rgba(0, 0, 0, 1)">))
+    </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)">(user, timestamp, target)</span>
+    val data : RDD[(String, Long, String)] =<span style="color: rgba(0, 0, 0, 1)"> sc.parallelize(arr)
+    </span><span style="color: rgba(0, 0, 255, 1)">this</span><span style="color: rgba(0, 0, 0, 1)">.process(data).foreach(println)
+  }</span></pre>
+</div>
+<p>输出</p>
+<p>(user1,t1,2,300.0)</p>
+<p> </p>
+</div>
+            </div>
+
+            <!-- Post Footer -->
+            <div class="post-footer">
+                <div class="post-navigation">
+                    <a href="../blog_cn.html" class="nav-button">← Back to Home</a>
+                    <a href="0288.html" class="nav-button">Next Post →</a>
+                </div>
+            </div>
+        </article>
+    </div>
+</body>
+</html>

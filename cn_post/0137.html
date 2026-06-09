@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kudu 4 - spark读写kudu</title>
+    <link rel="stylesheet" href="../css/style3.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header Navigation -->
+        <div class="header">
+            <h1><a href="../blog_cn.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+        </div>
+
+        <!-- Post Container -->
+        <article class="post">
+            <!-- Post Header -->
+            <div class="post-header">
+                <h1>Kudu 4 - spark读写kudu</h1>
+                <div class="post-meta">
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📅</span>
+                        <span>May 15, 2019</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📖</span>
+                        <span>4 min read</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">👁️</span>
+                        <span>5269 views</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Post Content -->
+            <div class="post-content">
+                <div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<p>spark2.4.3+kudu1.9</p>
+<p> </p>
+<h1>1 批量读</h1>
+<div class="cnblogs_code">
+<pre>val df = spark.read.format(<span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">kudu</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">)
+      .options(Map(</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">kudu.master</span><span style="color: rgba(128, 0, 0, 1)">"</span> - &gt; <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">master:7051</span><span style="color: rgba(128, 0, 0, 1)">"</span>, <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">kudu.table</span><span style="color: rgba(128, 0, 0, 1)">"</span> - &gt; <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">impala::test_db.test_table</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">))
+      .load
+df.createOrReplaceTempView(</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">tmp_table</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">)
+spark.sql(</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">select * from tmp_table limit 10</span><span style="color: rgba(128, 0, 0, 1)">"</span>).show()</pre>
+</div>
+<h1>2 批量写</h1>
+<div class="cnblogs_code">
+<pre><span style="color: rgba(0, 0, 255, 1)">import</span><span style="color: rgba(0, 0, 0, 1)"> org.apache.kudu.spark.kudu.{KuduContext, KuduWriteOptions}
+
+val kuduMaster </span>= <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">master:7051</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">
+val table </span>= <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">impala::test_db.test_table</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">
+
+val kuduContext </span>=<span style="color: rgba(0, 0, 0, 1)"> new KuduContext(kuduMaster, sc)
+
+kuduContext.upsertRows(df, table, new KuduWriteOptions(false, true))</span></pre>
+</div>
+<h1>3 单个读/条件读</h1>
+<div class="cnblogs_code">
+<pre><span style="color: rgba(0, 0, 0, 1)">cd $SPARK_HOME
+bin</span>/spark-shell --packages org.apache.kudu:kudu-spark2_2.11:1.9<span style="color: rgba(0, 0, 0, 1)">.0
+
+</span><span style="color: rgba(0, 0, 255, 1)">import</span><span style="color: rgba(0, 0, 0, 1)"> org.apache.kudu.client.{KuduPredicate, RowResult}
+</span><span style="color: rgba(0, 0, 255, 1)">import</span><span style="color: rgba(0, 0, 0, 1)"> org.apache.kudu.spark.kudu.KuduContext
+
+val kuduMaster </span>= <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">master:7051</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">
+val table </span>= <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">impala::test_db.test_table</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">
+
+val kuduContext </span>=<span style="color: rgba(0, 0, 0, 1)"> new KuduContext(kuduMaster, sc)
+val table </span>=<span style="color: rgba(0, 0, 0, 1)"> kuduContext.syncClient.openTable(table)
+val predicate </span>= KuduPredicate.newComparisonPredicate(table.getSchema().getColumn(<span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">id</span><span style="color: rgba(128, 0, 0, 1)">"</span>),KuduPredicate.ComparisonOp.EQUAL, <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">testid</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">)
+val scanner </span>=<span style="color: rgba(0, 0, 0, 1)"> kuduContext.syncClient.newScannerBuilder(table).addPredicate(predicate).build()
+
+scanner.hasMoreRows
+val rows </span>=<span style="color: rgba(0, 0, 0, 1)"> scanner.nextRows
+rows.hasNext
+val row </span>=<span style="color: rgba(0, 0, 0, 1)"> rows.next
+
+println(row.getString(0))</span></pre>
+</div>
+<h1>4 单个写</h1>
+<div class="cnblogs_code">
+<pre><span style="color: rgba(0, 0, 0, 1)">cd $SPARK_HOME
+bin</span>/spark-shell --packages org.apache.kudu:kudu-spark2_2.11:1.9<span style="color: rgba(0, 0, 0, 1)">.0
+
+</span><span style="color: rgba(0, 0, 255, 1)">import</span><span style="color: rgba(0, 0, 0, 1)"> org.apache.kudu.client.{KuduPredicate, RowResult}
+</span><span style="color: rgba(0, 0, 255, 1)">import</span><span style="color: rgba(0, 0, 0, 1)"> org.apache.kudu.spark.kudu.KuduContext
+</span><span style="color: rgba(0, 0, 255, 1)">import</span><span style="color: rgba(0, 0, 0, 1)"> org.apache.kudu.client.SessionConfiguration
+
+val kuduMaster </span>= <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">172.26.192.219:7051</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">
+
+val kuduContext </span>=<span style="color: rgba(0, 0, 0, 1)"> new KuduContext(kuduMaster, sc)
+val kuduClient </span>=<span style="color: rgba(0, 0, 0, 1)"> kuduContext.syncClient
+val kuduTable </span>= kuduClient.openTable(<span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">impala::dataone_xishaoye.tbl_order_union</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">)
+val kuduSession </span>=<span style="color: rgba(0, 0, 0, 1)"> kuduClient.newSession()
+
+</span>//<span style="color: rgba(0, 0, 0, 1)">AUTO_FLUSH_BACKGROUND AUTO_FLUSH_SYNC MANUAL_FLUSH
+kuduSession.setFlushMode(SessionConfiguration.FlushMode.AUTO_FLUSH_SYNC)
+kuduSession.setMutationBufferSpace(</span>1000<span style="color: rgba(0, 0, 0, 1)">)
+
+val insert </span>=<span style="color: rgba(0, 0, 0, 1)"> kuduTable.newInsert()
+val row </span>=<span style="color: rgba(0, 0, 0, 1)"> insert.getRow()
+row.addString(0, </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">hello</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">)
+kuduSession.apply(insert)
+</span>//kuduSession.flush</pre>
+</div>
+<p>其他：newInsert/newUpdate/newDelete/newUpsert</p>
+<h1>5 错误定位</h1>
+<p>如果apply之后发现修改没有生效，并且确认已经提交，可能有报错（不会抛异常），需要从OperationResponse中打印错误信息</p>
+<div class="cnblogs_code">
+<pre>val opResponse =<span style="color: rgba(0, 0, 0, 1)"> session.apply(op)
+</span><span style="color: rgba(0, 0, 255, 1)">if</span> (opResponse != null &amp;&amp; opResponse.hasRowError) println(opResponse.getRowError.toString)</pre>
+</div>
+<p>注意一定要使用FlushMode.AUTO_FLUSH_SYNC，详见源代码</p>
+<p>org.apache.kudu.client.KuduSession</p>
+<div class="cnblogs_code">
+<pre><span style="color: rgba(0, 0, 0, 1)">    public OperationResponse apply(Operation operation) throws KuduException {
+        </span><span style="color: rgba(0, 0, 255, 1)">while</span><span style="color: rgba(0, 0, 0, 1)">(true) {
+            </span><span style="color: rgba(0, 0, 255, 1)">try</span><span style="color: rgba(0, 0, 0, 1)"> {
+                Deferred</span>&lt;OperationResponse&gt; d =<span style="color: rgba(0, 0, 0, 1)"> this.session.apply(operation);
+                </span><span style="color: rgba(0, 0, 255, 1)">if</span>(this.getFlushMode() ==<span style="color: rgba(0, 0, 0, 1)"> FlushMode.AUTO_FLUSH_SYNC) {
+                    </span><span style="color: rgba(0, 0, 255, 1)">return</span><span style="color: rgba(0, 0, 0, 1)"> (OperationResponse)d.join();
+                }
+
+                </span><span style="color: rgba(0, 0, 255, 1)">return</span><span style="color: rgba(0, 0, 0, 1)"> null;
+            } catch (PleaseThrottleException var5) {
+                PleaseThrottleException ex </span>=<span style="color: rgba(0, 0, 0, 1)"> var5;
+
+                </span><span style="color: rgba(0, 0, 255, 1)">try</span><span style="color: rgba(0, 0, 0, 1)"> {
+                    ex.getDeferred().join();
+                } catch (Exception var4) {
+                    LOG.error(</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">Previous batch had this exception</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">, var4);
+                }
+            } catch (Exception var6) {
+                throw KuduException.transformException(var6);
+            }
+        }
+    }</span></pre>
+</div>
+<p> </p>
+<p>参考：</p>
+<p>https://kudu.apache.org/docs/developing.html</p>
+<p> </p>
+</div>
+            </div>
+
+            <!-- Post Footer -->
+            <div class="post-footer">
+                <div class="post-navigation">
+                    <a href="../blog_cn.html" class="nav-button">← Back to Home</a>
+                    <a href="0138.html" class="nav-button">Next Post →</a>
+                </div>
+            </div>
+        </article>
+    </div>
+</body>
+</html>

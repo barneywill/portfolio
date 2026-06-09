@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Airflow 1 - 简介、安装、使用</title>
+    <link rel="stylesheet" href="../css/style3.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header Navigation -->
+        <div class="header">
+            <h1><a href="../blog_cn.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+        </div>
+
+        <!-- Post Container -->
+        <article class="post">
+            <!-- Post Header -->
+            <div class="post-header">
+                <h1>Airflow 1 - 简介、安装、使用</h1>
+                <div class="post-meta">
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📅</span>
+                        <span>January 26, 2019</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📖</span>
+                        <span>11 min read</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">👁️</span>
+                        <span>4556 views</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Post Content -->
+            <div class="post-content">
+                <div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<p>airflow 1.10.0</p>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201901/1509647-20190121220322096-104537366.png"/></p>
+<p>官方：http://airflow.apache.org/</p>
+<p> </p>
+<h1>一 简介</h1>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201902/1509647-20190219160427742-1794928727.png"/></p>
+<p>Airflow is a platform to programmatically author, schedule and monitor workflows.</p>
+<p>Use airflow to author workflows as directed acyclic graphs (DAGs) of tasks. The airflow scheduler executes your tasks on an array of workers while following the specified dependencies. Rich command line utilities make performing complex surgeries on DAGs a snap. The rich user interface makes it easy to visualize pipelines running in production, monitor progress, and troubleshoot issues when needed.</p>
+<p>When workflows are defined as code, they become more maintainable, versionable, testable, and collaborative.</p>
+<p>airflow是一个可以通过python代码来编排、调度和监控工作流的平台；工作流是一系列task的dag（directed acyclic graphs，有向无环图）；</p>
+<p> </p>
+<h2>1 集群角色</h2>
+<h3>webserver</h3>
+<p>web server 使用 gunicorn 服务器，通过airflow.cfg中workers配置并发进程数；</p>
+<h3>scheduler</h3>
+<p>The Airflow scheduler monitors all tasks and all DAGs, and triggers the task instances whose dependencies have been met. Behind the scenes, it spins up a subprocess, which monitors and stays in sync with a folder for all DAG objects it may contain, and periodically (every minute or so) collects DAG parsing results and inspects active tasks to see whether they can be triggered.</p>
+<h3>worker</h3>
+<p>四种Executor：SequentialExecutor、LocalExecutor、CeleryExecutor、MesosExecutor：</p>
+<p>1）Airflow uses a sqlite database, which you should outgrow fairly quickly since no parallelization is possible using this database backend. It works in conjunction with the SequentialExecutor which will only run task instances sequentially. <br/>2）LocalExecutor, tasks will be executed as subprocesses; <br/>3）CeleryExecutor is one of the ways you can scale out the number of workers. For this to work, you need to setup a Celery backend (RabbitMQ, Redis, …) and change your airflow.cfg to point the executor parameter to CeleryExecutor and provide the related Celery settings.</p>
+<blockquote>
+<p>broker_url = amqp://guest:guest@rabbitmq_server:5672/<br/>broker_url = redis://$redis_server:6379/0</p>
+</blockquote>
+<p>4）MesosExecutor allows you to schedule airflow tasks on a Mesos cluster.</p>
+<blockquote>
+<p>[mesos]<br/>master = localhost:5050</p>
+</blockquote>
+<p>SequentialExecutor搭配sqlite库使用，LocalExecutor使用子进程来执行任务，CeleryExecutor需要依赖backend执行（比如RabbitMQ或Redis），MesosExecutor会提交任务到mesos集群；</p>
+<h2>2 概念</h2>
+<h3>DAG</h3>
+<p>In Airflow, a DAG – or a Directed Acyclic Graph – is a collection of all the tasks you want to run, organized in a way that reflects their relationships and dependencies.</p>
+<p>dag是一系列task的集合按照依赖关系组织成有向无环图，相当于workflow；</p>
+<h3>Operator</h3>
+<p>An operator describes a single task in a workflow. Operators are usually (but not always) atomic, meaning they can stand on their own and don’t need to share resources with any other operators. The DAG will make sure that operators run in the correct certain order; other than those dependencies, operators generally run independently. In fact, they may run on two completely different machines.</p>
+<p>operator描述了工作流中的一个task，是一个抽象的概念，相当于抽象task定义；</p>
+<h3>Task</h3>
+<p>Once an operator is instantiated, it is referred to as a “task”. The instantiation defines specific values when calling the abstract operator, and the parameterized task becomes a node in a DAG.</p>
+<p>operator实例化（构造函数）之后成为task，task是一个具体的概念，作为dag的一部分；</p>
+<h3>DAG Run</h3>
+<p>A DAG Run is an object representing an instantiation of the DAG in time.</p>
+<p>dag run是一个dag的实例对象，相当于workflow instance；</p>
+<h3>Task Instance</h3>
+<p>A task instance represents a specific run of a task and is characterized as the combination of a dag, a task, and a point in time. Task instances also have an indicative state, which could be “running”, “success”, “failed”, “skipped”, “up for retry”, etc.</p>
+<p>task每次执行都会生成一个task instance，每个task instance都有状态，比如running、success、failed等；</p>
+<h1>二 安装</h1>
+<h2>ambari安装</h2>
+<p>详见：<a href="https://www.cnblogs.com/barneywill/p/10284804.html" target="_blank">https://www.cnblogs.com/barneywill/p/10284804.html</a></p>
+<h2>docker安装</h2>
+<p>详见：<a href="https://www.cnblogs.com/barneywill/p/10397260.html" target="_blank">https://www.cnblogs.com/barneywill/p/10397260.html</a></p>
+<h2>手工安装 </h2>
+<h3>1 检查python</h3>
+<blockquote>
+<p># python --version</p>
+</blockquote>
+<h3>2 安装pip</h3>
+<blockquote>
+<p># curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py<br/># python get-pip.py</p>
+</blockquote>
+<p>pip is already installed if you are using Python 2 &gt;=2.7.9 or Python 3 &gt;=3.4 downloaded from python.org</p>
+<h3>3 安装airflow</h3>
+<blockquote>
+<p># pip install apache-airflow</p>
+</blockquote>
+<p>1）如果报错：</p>
+<blockquote>
+<p>    Complete output from command python setup.py egg_info:<br/>    Traceback (most recent call last):<br/>      File "&lt;string&gt;", line 1, in &lt;module&gt;<br/>      File "/tmp/pip-install-xR3O9b/apache-airflow/setup.py", line 394, in &lt;module&gt;<br/>        do_setup()<br/>      File "/tmp/pip-install-xR3O9b/apache-airflow/setup.py", line 259, in do_setup<br/>        verify_gpl_dependency()<br/>      File "/tmp/pip-install-xR3O9b/apache-airflow/setup.py", line 49, in verify_gpl_dependency<br/>        raise RuntimeError("By default one of Airflow's dependencies installs a GPL "<br/>    RuntimeError: By default one of Airflow's dependencies installs a GPL dependency (unidecode). To avoid this dependency set SLUGIFY_USES_TEXT_UNIDECODE=yes in your environment when you install or upgrade Airflow. To force installing the GPL version set AIRFLOW_GPL_UNIDECODE<br/> <br/>    ----------------------------------------<br/>Command "python setup.py egg_info" failed with error code 1 in /tmp/pip-install-xR3O9b/apache-airflow/</p>
+</blockquote>
+<p>需要设置环境变量</p>
+<blockquote>
+<p># export SLUGIFY_USES_TEXT_UNIDECODE=yes</p>
+</blockquote>
+<p>2）如果报错：</p>
+<blockquote>
+<p>    psutil/_psutil_linux.c:12:20: fatal error: Python.h: No such file or directory<br/>     #include &lt;Python.h&gt;<br/>                        ^<br/>    compilation terminated.<br/>    error: command 'gcc' failed with exit status 1<br/> <br/>    ----------------------------------------<br/>Command "/bin/python -u -c "import setuptools, tokenize;__file__='/tmp/pip-install-v4aq0G/psutil/setup.py';f=getattr(tokenize, 'open', open)(__file__);code=f.read().replace('\r\n', '\n');f.close();exec(compile(code, __file__, 'exec'))" install --record /tmp/pip-record-2jrZ_B/install-record.txt --single-version-externally-managed --compile" failed with error code 1 in /tmp/pip-install-v4aq0G/psutil/</p>
+</blockquote>
+<p>需要安装</p>
+<blockquote>
+<p># yum install python-devel </p>
+</blockquote>
+<h3>4 设置环境变量</h3>
+<blockquote>
+<p># export AIRFLOW_HOME=/path/to/airflow</p>
+</blockquote>
+<p>默认在 /usr/local/airflow</p>
+<h3>5 验证</h3>
+<blockquote>
+<p># whereis airflow<br/>airflow: /usr/bin/airflow</p>
+<p># airflow version<br/>  ____________       _____________<br/> ____    |__( )_________  __/__  /________      __<br/>____  /| |_  /__  ___/_  /_ __  /_  __ \_ | /| / /<br/>___  ___ |  / _  /   _  __/ _  / / /_/ /_ |/ |/ /<br/> _/_/  |_/_/  /_/    /_/    /_/  \____/____/|__/<br/>   v1.10.1</p>
+</blockquote>
+<p>自动创建$AIRFLOW_HOME/airflow.cfg</p>
+<h3>6 修改数据库配置</h3>
+<blockquote>
+<p>$AIRFLOW_HOME/airflow.cfg</p>
+</blockquote>
+<p>修改如下配置</p>
+<blockquote>
+<p># The SqlAlchemy connection string to the metadata database.<br/># SqlAlchemy supports many different database engine, more information<br/># their website<br/>sql_alchemy_conn = mysql://airflow:airflow@localhost:3306/airflow</p>
+<p># The executor class that airflow should use. Choices include<br/># SequentialExecutor, LocalExecutor, CeleryExecutor, DaskExecutor<br/>executor = LocalExecutor</p>
+<p># Default timezone in case supplied date times are naive<br/># can be utc (default), system, or any IANA timezone string (e.g. Europe/Amsterdam)<br/>default_timezone = Asia/Shanghai</p>
+</blockquote>
+<p>修改sql_alchemy_conn为mysql或postgres连接串，同时将executor改为LocalExecutor</p>
+<h3>7 初始化db</h3>
+<blockquote>
+<p># airflow initdb</p>
+</blockquote>
+<h3>8 常用命令 </h3>
+<blockquote>
+<p># airflow -h</p>
+</blockquote>
+<p>如果报错</p>
+<blockquote>
+<p>No handlers could be found for logger "airflow.logging_config"<br/>Traceback (most recent call last):<br/>  File "/usr/bin/airflow", line 21, in &lt;module&gt;<br/>    from airflow import configuration<br/>  File "/usr/lib/python2.7/site-packages/airflow/__init__.py", line 36, in &lt;module&gt;<br/>    from airflow import settings<br/>  File "/usr/lib/python2.7/site-packages/airflow/settings.py", line 229, in &lt;module&gt;<br/>    configure_logging()<br/>  File "/usr/lib/python2.7/site-packages/airflow/logging_config.py", line 71, in configure_logging<br/>    raise e<br/>ValueError: Unable to configure handler 'task': Cannot resolve 'airflow.utils.log.file_task_handler.FileTaskHandler': cannot import name UnrewindableBodyError</p>
+</blockquote>
+<p>重装urllib3</p>
+<blockquote>
+<p># pip uninstall urllib3<br/># pip install urllib3</p>
+</blockquote>
+<p>如果还有问题，重装chardet、idna、urllib3</p>
+<h1>三 使用</h1>
+<h2>1 dag</h2>
+<p>dag示例：</p>
+<div class="cnblogs_code">
+<pre><span style="color: rgba(0, 0, 255, 1)">from</span> datetime <span style="color: rgba(0, 0, 255, 1)">import</span><span style="color: rgba(0, 0, 0, 1)"> timedelta, datetime
+</span><span style="color: rgba(0, 0, 255, 1)">import</span><span style="color: rgba(0, 0, 0, 1)"> airflow
+</span><span style="color: rgba(0, 0, 255, 1)">from</span> airflow <span style="color: rgba(0, 0, 255, 1)">import</span><span style="color: rgba(0, 0, 0, 1)"> DAG
+</span><span style="color: rgba(0, 0, 255, 1)">from</span> airflow.operators.bash_operator <span style="color: rgba(0, 0, 255, 1)">import</span><span style="color: rgba(0, 0, 0, 1)"> BashOperator
+</span><span style="color: rgba(0, 0, 255, 1)">from</span> airflow.operators.python_operator <span style="color: rgba(0, 0, 255, 1)">import</span><span style="color: rgba(0, 0, 0, 1)"> PythonOperator
+</span><span style="color: rgba(0, 0, 255, 1)">from</span> airflow.operators.dummy_operator <span style="color: rgba(0, 0, 255, 1)">import</span><span style="color: rgba(0, 0, 0, 1)"> DummyOperator
+
+default_args </span>=<span style="color: rgba(0, 0, 0, 1)"> {
+    </span><span style="color: rgba(128, 0, 0, 1)">'</span><span style="color: rgba(128, 0, 0, 1)">owner</span><span style="color: rgba(128, 0, 0, 1)">'</span>: <span style="color: rgba(128, 0, 0, 1)">'</span><span style="color: rgba(128, 0, 0, 1)">www</span><span style="color: rgba(128, 0, 0, 1)">'</span><span style="color: rgba(0, 0, 0, 1)">,
+    </span><span style="color: rgba(128, 0, 0, 1)">'</span><span style="color: rgba(128, 0, 0, 1)">depends_on_past</span><span style="color: rgba(128, 0, 0, 1)">'</span><span style="color: rgba(0, 0, 0, 1)">: False,
+    </span><span style="color: rgba(128, 0, 0, 1)">'</span><span style="color: rgba(128, 0, 0, 1)">start_date</span><span style="color: rgba(128, 0, 0, 1)">'</span>: datetime(2019, 1, 25<span style="color: rgba(0, 0, 0, 1)">),
+    </span><span style="color: rgba(128, 0, 0, 1)">'</span><span style="color: rgba(128, 0, 0, 1)">email</span><span style="color: rgba(128, 0, 0, 1)">'</span>: [<span style="color: rgba(128, 0, 0, 1)">'</span><span style="color: rgba(128, 0, 0, 1)">test@cdp.com</span><span style="color: rgba(128, 0, 0, 1)">'</span><span style="color: rgba(0, 0, 0, 1)">],
+    </span><span style="color: rgba(128, 0, 0, 1)">'</span><span style="color: rgba(128, 0, 0, 1)">email_on_failure</span><span style="color: rgba(128, 0, 0, 1)">'</span><span style="color: rgba(0, 0, 0, 1)">: False,
+    </span><span style="color: rgba(128, 0, 0, 1)">'</span><span style="color: rgba(128, 0, 0, 1)">email_on_retry</span><span style="color: rgba(128, 0, 0, 1)">'</span><span style="color: rgba(0, 0, 0, 1)">: False,
+    </span><span style="color: rgba(128, 0, 0, 1)">'</span><span style="color: rgba(128, 0, 0, 1)">retries</span><span style="color: rgba(128, 0, 0, 1)">'</span>: 1<span style="color: rgba(0, 0, 0, 1)">,
+    </span><span style="color: rgba(128, 0, 0, 1)">'</span><span style="color: rgba(128, 0, 0, 1)">retry_delay</span><span style="color: rgba(128, 0, 0, 1)">'</span>: timedelta(minutes=5<span style="color: rgba(0, 0, 0, 1)">),
+}
+
+dag </span>=<span style="color: rgba(0, 0, 0, 1)"> DAG(
+    </span><span style="color: rgba(128, 0, 0, 1)">'</span><span style="color: rgba(128, 0, 0, 1)">hello_dag</span><span style="color: rgba(128, 0, 0, 1)">'</span><span style="color: rgba(0, 0, 0, 1)">,
+    default_args</span>=<span style="color: rgba(0, 0, 0, 1)">default_args,
+    description</span>=<span style="color: rgba(128, 0, 0, 1)">'</span><span style="color: rgba(128, 0, 0, 1)">hello world DAG</span><span style="color: rgba(128, 0, 0, 1)">'</span><span style="color: rgba(0, 0, 0, 1)">,
+    schedule_interval</span>=<span style="color: rgba(128, 0, 0, 1)">'</span><span style="color: rgba(128, 0, 0, 1)">*/5 * * * *</span><span style="color: rgba(128, 0, 0, 1)">'</span><span style="color: rgba(0, 0, 0, 1)">
+)
+
+start_operator </span>= DummyOperator(task_id=<span style="color: rgba(128, 0, 0, 1)">'</span><span style="color: rgba(128, 0, 0, 1)">start_task</span><span style="color: rgba(128, 0, 0, 1)">'</span>, dag=<span style="color: rgba(0, 0, 0, 1)">dag)
+
+sh_hello_operator </span>=<span style="color: rgba(0, 0, 0, 1)"> BashOperator(
+    task_id</span>=<span style="color: rgba(128, 0, 0, 1)">'</span><span style="color: rgba(128, 0, 0, 1)">sh_hello_task</span><span style="color: rgba(128, 0, 0, 1)">'</span><span style="color: rgba(0, 0, 0, 1)">,
+    depends_on_past</span>=<span style="color: rgba(0, 0, 0, 1)">False,
+    bash_command</span>=<span style="color: rgba(128, 0, 0, 1)">'</span><span style="color: rgba(128, 0, 0, 1)">echo "hello {{ params.p }} : "`date` &gt;&gt; /tmp/test.txt</span><span style="color: rgba(128, 0, 0, 1)">'</span><span style="color: rgba(0, 0, 0, 1)">,
+    params</span>={<span style="color: rgba(128, 0, 0, 1)">'</span><span style="color: rgba(128, 0, 0, 1)">p</span><span style="color: rgba(128, 0, 0, 1)">'</span>:<span style="color: rgba(128, 0, 0, 1)">'</span><span style="color: rgba(128, 0, 0, 1)">world</span><span style="color: rgba(128, 0, 0, 1)">'</span><span style="color: rgba(0, 0, 0, 1)">},
+    dag</span>=<span style="color: rgba(0, 0, 0, 1)">dag
+)
+
+
+</span><span style="color: rgba(0, 0, 255, 1)">def</span><span style="color: rgba(0, 0, 0, 1)"> print_hello():
+    </span><span style="color: rgba(0, 0, 255, 1)">return</span> <span style="color: rgba(128, 0, 0, 1)">'</span><span style="color: rgba(128, 0, 0, 1)">Hello world!</span><span style="color: rgba(128, 0, 0, 1)">'</span><span style="color: rgba(0, 0, 0, 1)">
+ 
+py_hello_operator </span>=<span style="color: rgba(0, 0, 0, 1)"> PythonOperator(
+    task_id</span>=<span style="color: rgba(128, 0, 0, 1)">'</span><span style="color: rgba(128, 0, 0, 1)">py_hello_task</span><span style="color: rgba(128, 0, 0, 1)">'</span><span style="color: rgba(0, 0, 0, 1)">,
+    python_callable</span>=<span style="color: rgba(0, 0, 0, 1)">print_hello,
+    dag</span>=<span style="color: rgba(0, 0, 0, 1)">dag)
+
+start_operator </span>&gt;&gt;<span style="color: rgba(0, 0, 0, 1)"> sh_hello_operator
+sh_hello_operator </span>&gt;&gt; py_hello_operator</pre>
+</div>
+<p>示例dag中包含常用的BashOperator和PythonOperator，以及task之间的依赖关系</p>
+<p> </p>
+<p>页面上看起来是这样的</p>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201901/1509647-20190126162257834-1301392912.png"/></p>
+<p> </p>
+<p>Airflow Python script is really just a configuration file specifying the DAG’s structure as code. The actual tasks defined here will run in a different context from the context of this script. Different tasks run on different workers at different points in time, which means that this script cannot be used to cross communicate between tasks.</p>
+<p>People sometimes think of the DAG definition file as a place where they can do some actual data processing - that is not the case at all! The script’s purpose is to define a DAG object. It needs to evaluate quickly (seconds, not minutes) since the scheduler will execute it periodically to reflect the changes if any.</p>
+<p>airflow的python脚本只是定义dag的结构，实际执行时每个task都会在不同的worker或者不同的context下执行，所以不要在脚本中传递变量或者执行实际业务逻辑，脚本会被scheduler定期执行来刷新dag；</p>
+<p> </p>
+<p>Airflow leverages the power of Jinja Templating and provides the pipeline author with a set of built-in parameters and macros. Airflow also provides hooks for the pipeline author to define their own parameters, macros and templates.</p>
+<p>dag脚本中支持jinja模板，jinja模板详见：http://jinja.pocoo.org/docs/dev/api/</p>
+<p> </p>
+<p>参考：http://airflow.apache.org/tutorial.html#it-s-a-dag-definition-file</p>
+<h2>2 本地测试dag及task执行</h2>
+<p>Time to run some tests. First let’s make sure that the pipeline parses. Let’s assume we’re saving the code from the previous step in tutorial.py in the DAGs folder referenced in your airflow.cfg. The default location for your DAGs is ~/airflow/dags.</p>
+<blockquote>
+<p># test your code without syntax error<br/># python ~/airflow/dags/$dag.py</p>
+<p># print the list of active DAGs<br/># airflow list_dags</p>
+<p># prints the list of tasks the dag_id<br/>airflow list_tasks $dag_id</p>
+<p># prints the hierarchy of tasks in the DAG<br/>airflow list_tasks $dag_id --tree</p>
+<p># test your task instance<br/># airflow test $dag_id $task_id 2015-01-01</p>
+<p># run your task instance<br/># airflow run $dag_id $task_id 2015-01-01</p>
+<p># get the status of task<br/># airflow task_state $dag_id $task_id 2015-01-01</p>
+<p># trigger a dag run<br/># airflow trigger_dag $dag_id 2015-01-01</p>
+<p># get the status of dag<br/># airflow dag_state $dag 2015-01-01</p>
+<p># run a backfill over 2 days<br/># airflow backfill $dag_id -s 2015-01-01 -e 2015-01-02</p>
+<p> </p>
+</blockquote>
+<p>airflow run|test 都可以执行task，区别是run会进行很多检查，比如：</p>
+<blockquote>
+<p>dependency 'Trigger Rule' FAILED: Task's trigger rule 'all_success' requires all upstream tasks to have succeeded, but found 1 non-success(es).<br/>dependency 'Task Instance State' FAILED: Task is in the 'success' state which is not a valid state for execution. The task must be cleared in order to be run.</p>
+</blockquote>
+<p>执行task之后日志位于~/airflow/logs/$dag_id/$task_id/下；</p>
+<h2>3 启动服务器</h2>
+<blockquote>
+<p># start the web server, default port is 8080<br/>airflow webserver -p 8080</p>
+<p># start the scheduler<br/>airflow scheduler</p>
+<p># visit localhost:8080 in the browser and enable the example dag in the home page</p>
+</blockquote>
+<p>将定义dag的py文件拷贝到$AIRFLOW_HOME/dags/目录下，scheduler会自动发现和加载，日志位于$AIRFLOW_HOME/logs/$dag_id/$task_id/目录下，airflow会定期从dags目录加载dag</p>
+<blockquote>
+<p>[2019-03-01 03:20:39,174] {{models.py:273}} INFO - Filling up the DagBag from /usr/local/airflow/dags</p>
+</blockquote>
+<p> </p>
+<p>访问 http://$server_ip:8080/admin/</p>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201901/1509647-20190126164442981-386189091.png"/></p>
+<h2>4 高可用集群</h2>
+<p>airflow中web server和worker都可以启动多个，但是scheduler只能启动一个，这样造成了airflow的单点，目前已经有第三方开源方案来解决这个问题：</p>
+<p>Airflow Scheduler Failover Controller</p>
+<p>地址：https://github.com/teamclairvoyant/airflow-scheduler-failover-controller</p>
+<p>实现原理</p>
+<p>The Airflow Scheduler Failover Controller (ASFC) is a mechanism that ensures that only one Scheduler instance is running in an Airflow Cluster at a time. This way you don't come across the issues we described in the "Motivation" section above.</p>
+<p>You will first need to startup the ASFC on each of the instances you want the scheduler to be running on. When you start up multiple instances of the ASFC one of them takes on the Active state and the other takes on a Standby state. There is a heart beat mechanism setup to track if the Active ASFC is still active. If the Active ASFC misses multiple heart beats, the Standby ASFC becomes active.</p>
+<p>The Active ASFC will poll every 10 seconds to see if the scheduler is running on the desired node. If it is not, the ASFC will try to restart the daemon. If the scheduler daemons still doesn't startup, the daemon is started on another node in the cluster.</p>
+<p>安装</p>
+<blockquote>
+<p># git clone https://github.com/teamclairvoyant/airflow-scheduler-failover-controller<br/># cd airflow-scheduler-failover-controller<br/># pip install -e .</p>
+</blockquote>
+<p>报错</p>
+<blockquote>
+<p>Collecting airflow&gt;=1.7.0 (from scheduler-failover-controller==1.0.1)<br/>  Could not find a version that satisfies the requirement airflow&gt;=1.7.0 (from scheduler-failover-controller==1.0.1) (from versions: 0.6)<br/>No matching distribution found for airflow&gt;=1.7.0 (from scheduler-failover-controller==1.0.1)</p>
+</blockquote>
+<p>查看</p>
+<blockquote>
+<p># vi setup.py<br/>    install_requires=[<br/>        'airflow&gt;=1.7.0',<br/>        'kazoo&gt;=2.2.1',<br/>        'coverage&gt;=4.2',<br/>        'eventlet&gt;=0.9.7',<br/>    ],</p>
+<p># pip list|grep airflow<br/>apache-airflow               1.10.0</p>
+</blockquote>
+<p>需要将setup.py中airflow改为apache-airflow，安装之后启动</p>
+<blockquote>
+<p># scheduler_failover_controller -h</p>
+</blockquote>
+<p>会报错</p>
+<blockquote>
+<p>pkg_resources.ContextualVersionConflict: (Flask-Login 0.2.11 (/usr/lib64/python2.7/site-packages), Requirement.parse('Flask-Login&lt;0.5,&gt;=0.3'), set(['flask-appbuilder']))</p>
+</blockquote>
+<p>重装Flask-Login</p>
+<blockquote>
+<p># pip uninstall Flask-Login<br/># pip install Flask-Login</p>
+</blockquote>
+<p>重装之后是Flask-Login 0.4.1，满足要求，但是又会报错</p>
+<blockquote>
+<p>apache-airflow 1.10.0 has requirement flask-login==0.2.11, but you'll have flask-login 0.4.1 which is incompatible.</p>
+</blockquote>
+<p>所以Airflow Scheduler Failover Controller和airflow1.10.0不兼容；</p>
+<p> </p>
+</div>
+            </div>
+
+            <!-- Post Footer -->
+            <div class="post-footer">
+                <div class="post-navigation">
+                    <a href="../blog_cn.html" class="nav-button">← Back to Home</a>
+                    <a href="0248.html" class="nav-button">Next Post →</a>
+                </div>
+            </div>
+        </article>
+    </div>
+</body>
+</html>

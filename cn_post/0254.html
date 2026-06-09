@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>hive通过外部表读写elasticsearch数据</title>
+    <link rel="stylesheet" href="../css/style3.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header Navigation -->
+        <div class="header">
+            <h1><a href="../blog_cn.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+        </div>
+
+        <!-- Post Container -->
+        <article class="post">
+            <!-- Post Header -->
+            <div class="post-header">
+                <h1>hive通过外部表读写elasticsearch数据</h1>
+                <div class="post-meta">
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📅</span>
+                        <span>January 21, 2019</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📖</span>
+                        <span>1 min read</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">👁️</span>
+                        <span>3732 views</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Post Content -->
+            <div class="post-content">
+                <div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<p>hive通过外部表读写elasticsearch数据，和读写hbase数据差不多，差别是需要下载elasticsearch-hadoop-hive-6.6.2.jar，然后使用其中的EsStorageHandler；</p>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201901/1509647-20190121205227441-1515656179.png"/></p>
+<p>Connect the massive data storage and deep processing power of Hadoop with the real-time search and analytics of Elasticsearch. The Elasticsearch-Hadoop (ES-Hadoop) connector lets you get quick insight from your big data and makes working in the Hadoop ecosystem even better.</p>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201901/1509647-20190121205832529-1367391414.png"/></p>
+<p>官方：https://www.elastic.co/products/hadoop<br/>下载：https://www.elastic.co/downloads/hadoop</p>
+<p> </p>
+<p>目前最新的版本是6.6.2</p>
+<blockquote>
+<p># wget https://artifacts.elastic.co/downloads/elasticsearch-hadoop/elasticsearch-hadoop-6.6.2.zip<br/># unzip elasticsearch-hadoop-6.6.2.zip</p>
+</blockquote>
+<p>使用其中的elasticsearch-hadoop-6.6.2/dist/elasticsearch-hadoop-hive-6.6.2.jar</p>
+<blockquote>
+<p>add jar /path/to/elasticsearch-hadoop-hive-6.6.2.jar;</p>
+<p>CREATE EXTERNAL TABLE hive_elasticsearch_table (<br/>id string,<br/>name string,<br/>desc string<br/>)<br/>STORED BY 'org.elasticsearch.hadoop.hive.EsStorageHandler'<br/>TBLPROPERTIES(<br/>'es.nodes' = '$es_server1:9200,$es_server2:9200',<br/>'es.index.auto.create' = 'false',<br/>'es.resource' = 'testdoc/testtype',<br/>'es.read.metadata' = 'true',<br/>'es.mapping.names' = 'id:_metadata._id, name:name, desc:desc');</p>
+</blockquote>
+<p> 主要是配置es.nodes、es.resource和es.mapping.names，一个是es服务器地址，一个是index名和type名，一个是hive字段和es字段的一一映射，然后就可以在hive中读写es数据：</p>
+<blockquote>
+<p>select * from hive_elasticsearch_table limit 10;<br/>insert into table hive_elasticsearch_table select '2', 'testname', 'testdesc';</p>
+</blockquote>
+<p>但是这样发现id是被hash过的</p>
+<blockquote>
+<p>+------------------------------+--------------------------------+--------------------------------+--+<br/>| hive_elasticsearch_table.id  | hive_elasticsearch_table.name  | hive_elasticsearch_table.desc  |<br/>+------------------------------+--------------------------------+--------------------------------+--+<br/>| 6mpoc2gBohlnD12tvBoF         | testname                       | testdesc                       |<br/>+------------------------------+--------------------------------+--------------------------------+--+</p>
+</blockquote>
+<p>还需要再加一个es.mapping.id，定义哪个字段是document的id</p>
+<blockquote>
+<p>CREATE EXTERNAL TABLE hive_elasticsearch_table (<br/>id string,<br/>name string,<br/>desc string<br/>)<br/>STORED BY 'org.elasticsearch.hadoop.hive.EsStorageHandler'<br/>TBLPROPERTIES(<br/>'es.nodes' = '$es_server1:9200,$es_server2:9200',<br/>'es.index.auto.create' = 'false',<br/>'es.resource' = 'testdoc/testtype',<br/>'es.read.metadata' = 'true',<br/>'es.mapping.id' = 'id',<br/>'es.mapping.names' = 'id:_metadata._id, name:name, desc:desc');</p>
+</blockquote>
+<p>这次正常了</p>
+<blockquote>
+<p>+------------------------------+--------------------------------+--------------------------------+--+<br/>| hive_elasticsearch_table.id  | hive_elasticsearch_table.name  | hive_elasticsearch_table.desc  |<br/>+------------------------------+--------------------------------+--------------------------------+--+<br/>| 6mpoc2gBohlnD12tvBoF         | testname                       | testdesc                       |<br/>| 4                            | hello                          | world                          |<br/>+------------------------------+--------------------------------+--------------------------------+--+</p>
+</blockquote>
+<p> </p>
+<p>关于字段类型映射，详见：https://www.elastic.co/guide/en/elasticsearch/hadoop/current/mapping.html </p>
+<p> </p>
+</div>
+            </div>
+
+            <!-- Post Footer -->
+            <div class="post-footer">
+                <div class="post-navigation">
+                    <a href="../blog_cn.html" class="nav-button">← Back to Home</a>
+                    <a href="0255.html" class="nav-button">Next Post →</a>
+                </div>
+            </div>
+        </article>
+    </div>
+</body>
+</html>

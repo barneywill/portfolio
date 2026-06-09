@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>windows linux双系统</title>
+    <link rel="stylesheet" href="../css/style3.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header Navigation -->
+        <div class="header">
+            <h1><a href="../blog_cn.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+        </div>
+
+        <!-- Post Container -->
+        <article class="post">
+            <!-- Post Header -->
+            <div class="post-header">
+                <h1>windows linux双系统</h1>
+                <div class="post-meta">
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📅</span>
+                        <span>March 05, 2019</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📖</span>
+                        <span>1 min read</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">👁️</span>
+                        <span>806 views</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Post Content -->
+            <div class="post-content">
+                <div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<h1>1 下载iso</h1>
+<h2>opensuse</h2>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201903/1509647-20190305204802340-847354955.png"/></p>
+<p>下载：</p>
+<p>http://download.opensuse.org/distribution/openSUSE-stable/iso/openSUSE-Leap-15.0-DVD-x86_64.iso</p>
+<p>以c盘为例，将iso拷贝到c盘根目录，同时将iso中的两个文件放到c盘根目录</p>
+<p>boot/x86_64/loader/linux</p>
+<p>boot/x86_64/loader/initrd</p>
+<h2>ubuntu</h2>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201903/1509647-20190305204826982-34955017.png"/></p>
+<p>https://www.ubuntu.com/download/desktop</p>
+<p>以c盘为例，将iso拷贝到c盘根目录，同时将iso中的两个文件放到c盘根目录</p>
+<p>casper/initrd.lz</p>
+<p>casper/vmlinuz.efi</p>
+<p> </p>
+<h1>2 下载easybcd2.3 </h1>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201903/1509647-20190305204331250-1728227550.png"/></p>
+<p>操作</p>
+<p>Add New Entry - &gt; NeoGrub - &gt; Install - &gt; Configure</p>
+<p>会弹出记事本，然后编辑</p>
+<h2>opensuse</h2>
+<blockquote>
+<p>title Install openSUSE<br/>root (hd0,0)<br/>kernel (hd0,0)/linux boot=casper iso-scan/filename=/openSUSE.iso ro quiet splash nouveau.modeset=0<br/>initrd (hd0,0)/initrd</p>
+</blockquote>
+<h2>ubuntu</h2>
+<blockquote>
+<p>title Install Ubuntu<br/>root (hd0,0)<br/>kernel (hd0,0)/vmlinuz.efi boot=casper iso-scan/filename=/ubuntu.iso<br/>initrd (hd0,0)/initrd.lz<br/>title reboot<br/>reboot<br/>title halt<br/>halt</p>
+</blockquote>
+<p>其中c盘默认是(hd0,0)，如果找不到文件，可以改为(hd0,1)，也可以直接从磁盘管理里看c盘是第几个盘；另外iso的文件名字要改为实际的文件名；</p>
+<p>然后就会多出一个启动条目NeoGrub Bootloader，重启windows之后选择新的启动条目，按照linux即可；</p>
+<p> </p>
+<p>如果是英伟达显卡，安装opensuse时可能卡在绿色进度条，这时需要添加</p>
+<p>nouveau.modeset=0</p>
+<p>即可，详见上边的配置；</p>
+<p> </p>
+<p>安装完linux之后，回到windows，将刚才新增的启动条目NeoGrub Bootloader删掉，然后再增加一个新的linux启动条目，Drive选择你刚才安装的磁盘</p>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201903/1509647-20190308224820234-2119263047.png"/></p>
+<p> </p>
+</div>
+            </div>
+
+            <!-- Post Footer -->
+            <div class="post-footer">
+                <div class="post-navigation">
+                    <a href="../blog_cn.html" class="nav-button">← Back to Home</a>
+                    <a href="0194.html" class="nav-button">Next Post →</a>
+                </div>
+            </div>
+        </article>
+    </div>
+</body>
+</html>

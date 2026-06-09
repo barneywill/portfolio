@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>mysql启动失败</title>
+    <link rel="stylesheet" href="../css/style3.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header Navigation -->
+        <div class="header">
+            <h1><a href="../blog_cn.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+        </div>
+
+        <!-- Post Container -->
+        <article class="post">
+            <!-- Post Header -->
+            <div class="post-header">
+                <h1>mysql启动失败</h1>
+                <div class="post-meta">
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📅</span>
+                        <span>April 07, 2020</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📖</span>
+                        <span>1 min read</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">👁️</span>
+                        <span>601 views</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Post Content -->
+            <div class="post-content">
+                <div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<p>mysql启动报错：</p>
+<div class="cnblogs_code">
+<pre><span style="color: rgba(128, 0, 128, 1)">2020</span>-<span style="color: rgba(128, 0, 128, 1)">04</span>-07T11:<span style="color: rgba(128, 0, 128, 1)">32</span>:<span style="color: rgba(128, 0, 128, 1)">03</span>.523605Z <span style="color: rgba(128, 0, 128, 1)">0</span> [ERROR] InnoDB: Ignoring the redo log due to missing MLOG_CHECKPOINT between the checkpoint <span style="color: rgba(128, 0, 128, 1)">238665084</span> and the end <span style="color: rgba(128, 0, 128, 1)">238664704</span><span style="color: rgba(0, 0, 0, 1)">.
+</span><span style="color: rgba(128, 0, 128, 1)">2020</span>-<span style="color: rgba(128, 0, 128, 1)">04</span>-07T11:<span style="color: rgba(128, 0, 128, 1)">32</span>:<span style="color: rgba(128, 0, 128, 1)">03</span>.523756Z <span style="color: rgba(128, 0, 128, 1)">0</span><span style="color: rgba(0, 0, 0, 1)"> [ERROR] InnoDB: Plugin initialization aborted with error Generic error
+</span><span style="color: rgba(128, 0, 128, 1)">2020</span>-<span style="color: rgba(128, 0, 128, 1)">04</span>-07T11:<span style="color: rgba(128, 0, 128, 1)">32</span>:<span style="color: rgba(128, 0, 128, 1)">04</span>.129533Z <span style="color: rgba(128, 0, 128, 1)">0</span> [ERROR] Plugin <span style="color: rgba(128, 0, 0, 1)">'</span><span style="color: rgba(128, 0, 0, 1)">InnoDB</span><span style="color: rgba(128, 0, 0, 1)">'</span><span style="color: rgba(0, 0, 0, 1)"> init function returned error.
+</span><span style="color: rgba(128, 0, 128, 1)">2020</span>-<span style="color: rgba(128, 0, 128, 1)">04</span>-07T11:<span style="color: rgba(128, 0, 128, 1)">32</span>:<span style="color: rgba(128, 0, 128, 1)">04</span>.129618Z <span style="color: rgba(128, 0, 128, 1)">0</span> [ERROR] Plugin <span style="color: rgba(128, 0, 0, 1)">'</span><span style="color: rgba(128, 0, 0, 1)">InnoDB</span><span style="color: rgba(128, 0, 0, 1)">'</span> registration <span style="color: rgba(0, 0, 255, 1)">as</span><span style="color: rgba(0, 0, 0, 1)"> a STORAGE ENGINE failed.
+</span><span style="color: rgba(128, 0, 128, 1)">2020</span>-<span style="color: rgba(128, 0, 128, 1)">04</span>-07T11:<span style="color: rgba(128, 0, 128, 1)">32</span>:<span style="color: rgba(128, 0, 128, 1)">04</span>.129644Z <span style="color: rgba(128, 0, 128, 1)">0</span><span style="color: rgba(0, 0, 0, 1)"> [ERROR] Failed to initialize builtin plugins.
+</span><span style="color: rgba(128, 0, 128, 1)">2020</span>-<span style="color: rgba(128, 0, 128, 1)">04</span>-07T11:<span style="color: rgba(128, 0, 128, 1)">32</span>:<span style="color: rgba(128, 0, 128, 1)">04</span>.129652Z <span style="color: rgba(128, 0, 128, 1)">0</span> [ERROR] Aborting</pre>
+</div>
+<p>解决方法：</p>
+<p>删除以下文件后重启</p>
+<blockquote>
+<p>/var/lib/mysql/ib_logfile0<br/>/var/lib/mysql/ib_logfile1</p>
+</blockquote>
+<p> </p>
+<p>参考：https://spin.atomicobject.com/2011/05/09/mysql-failed-registration-of-innodb-as-a-storage-engine/</p>
+<p> </p>
+</div>
+            </div>
+
+            <!-- Post Footer -->
+            <div class="post-footer">
+                <div class="post-navigation">
+                    <a href="../blog_cn.html" class="nav-button">← Back to Home</a>
+                    <a href="0071.html" class="nav-button">Next Post →</a>
+                </div>
+            </div>
+        </article>
+    </div>
+</body>
+</html>

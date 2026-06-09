@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YARN</title>
+    <link rel="stylesheet" href="../css/style3.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header Navigation -->
+        <div class="header">
+            <h1><a href="../blog_cn.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+        </div>
+
+        <!-- Post Container -->
+        <article class="post">
+            <!-- Post Header -->
+            <div class="post-header">
+                <h1>YARN</h1>
+                <div class="post-meta">
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📅</span>
+                        <span>May 31, 2022</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📖</span>
+                        <span>1 min read</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">👁️</span>
+                        <span>297 views</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Post Content -->
+            <div class="post-content">
+                <div class="blogpost-body cnblogs-markdown" id="cnblogs_post_body">
+<p><a href="https://hadoop.apache.org" rel="noopener nofollow" target="_blank">https://hadoop.apache.org</a><br/>
+A framework for job scheduling and cluster resource management.</p>
+<h1 id="一-部署">一 部署</h1>
+<h2 id="角色">角色</h2>
+<h3 id="resourcemanagernodemanager">ResourceManager、NodeManager</h3>
+<p><picture>
+  <source srcset="../img/1509647-20220531160829706-1445589635.webp" type="image/webp">
+  <img alt="" src="../img/1509647-20220531160829706-1445589635.png">
+</picture></p>
+<h2 id="客户端">客户端</h2>
+<h3 id="jobappmastercontainer">Job、AppMaster、Container</h3>
+<p>AppMaster是一个YARN job运行时第一个由ResourceManager启动的container，然后负责整个job的运行，包括container的申请、启动、kill、状态检查等。<br/>
+每种类型的job都需要提供自己的AppMaster。<br/>
+YARN只提供了MapReduce类型job的AppMaster。</p>
+<p>Spark on YARN的AppMaster：</p>
+<blockquote>
+<p>org.apache.spark.deploy.yarn.ApplicationMaster</p>
+</blockquote>
+<h2 id="ha">HA</h2>
+<h3 id="zk节点">zk节点</h3>
+<blockquote>
+<p>/yarn-leader-election/${yarn.resourcemanager.cluster-id}/ActiveBreadCrumb<br/>
+/yarn-leader-election/${yarn.resourcemanager.cluster-id}/ActiveStandbyElectorLock</p>
+</blockquote>
+<p>代码：</p>
+<blockquote>
+<p>org.apache.hadoop.yarn.server.resourcemanager.EmbeddedElectorService</p>
+</blockquote>
+<h1 id="二-常用命令">二 常用命令</h1>
+<blockquote>
+<p>yarn node<br/>
+yarn queue - status root<br/>
+yarn top<br/>
+yarn application - list - appStates ALL - appTypes MapReduce|more<br/>
+yarn rmadmin<br/>
+yarn logs - applicationid=$applicationId</p>
+</blockquote>
+<h1 id="三-资源管理">三 资源管理</h1>
+<h2 id="计算资源">计算资源</h2>
+<p>CPU、内存</p>
+<h2 id="管理">管理</h2>
+<p>queue<br/>
+scheduler</p>
+<ul>
+<li>FIFO：先进先出</li>
+<li>Capacity：按百分比配置</li>
+<li>Fair：按具体的核数和内存数配置</li>
+</ul>
+<h1 id="四-api">四 API</h1>
+<blockquote>
+<p><a href="http://:8088$ip/ws/v1/cluster/metrics" target="_blank">http://:8088$ip/ws/v1/cluster/metrics</a><br/>
+<a href="http://:8088$ip/ws/v1/cluster/scheduler" target="_blank">http://:8088$ip/ws/v1/cluster/scheduler</a><br/>
+<a href="http://:8088$ip/ws/v1/cluster/apps" target="_blank">http://:8088$ip/ws/v1/cluster/apps</a></p>
+</blockquote>
+<p>通过API获取指标之后对接ELK<br/>
+<picture>
+  <source srcset="../img/1509647-20220531161424793-1913233054.webp" type="image/webp">
+  <img alt="" src="../img/1509647-20220531161424793-1913233054.png">
+</picture></p>
+<h1 id="五-数据本地性-data-locality">五 数据本地性 Data Locality</h1>
+<p>Moving Computation is Cheaper than Moving Data</p>
+<h2 id="spark-task分配过程">Spark Task分配过程</h2>
+<p>job-&gt;stage-task<br/>
+resourceOffer会调用getAllowedLocalityLevel来获取当前允许启动任务的locality级别，getAllowedLocalityLevel内部通过时间delay以及是否有更多task来控制允许哪些级别，比如一开始只允许PROCESS_LOCAL级别，delay一段时间之后，再允许启动PROCESS_LOCAL和NODE_LOCAL级别的task</p>
+<p>Data Locality等级：PROCESS_LOCAL, NODE_LOCAL, NO_PREF, RACK_LOCAL, ANY<br/>
+配置：spark.locality.wait</p>
+<h2 id="impala">Impala</h2>
+<p>Efficiently retrieving data from HDFS is a challenge for all SQL-on-Hadoop systems. In order to perform data scans from both disk and memory at or near hardware speed, Impala uses an HDFS feature called short-circuit local reads to bypass the DataNode protocol when reading from local disk. Impala can read at almost disk bandwidth (approx.100MB/s per disk) and is typically able to saturate all available disks. We have measured that with 12 disks, Impala is capable of sustaining I/O at 1.2GB/sec.</p>
+</div>
+            </div>
+
+            <!-- Post Footer -->
+            <div class="post-footer">
+                <div class="post-navigation">
+                    <a href="../blog_cn.html" class="nav-button">← Back to Home</a>
+                    <a href="0008.html" class="nav-button">Next Post →</a>
+                </div>
+            </div>
+        </article>
+    </div>
+</body>
+</html>

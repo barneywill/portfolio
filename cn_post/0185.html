@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Benchmark 4 - TPC-DS测试结果（hive/hive on spark/spark sql/impala/presto）</title>
+    <link rel="stylesheet" href="../css/style3.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header Navigation -->
+        <div class="header">
+            <h1><a href="../blog_cn.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+        </div>
+
+        <!-- Post Container -->
+        <article class="post">
+            <!-- Post Header -->
+            <div class="post-header">
+                <h1>Benchmark 4 - TPC-DS测试结果（hive/hive on spark/spark sql/impala/presto）</h1>
+                <div class="post-meta">
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📅</span>
+                        <span>March 11, 2019</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📖</span>
+                        <span>1 min read</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">👁️</span>
+                        <span>4638 views</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Post Content -->
+            <div class="post-content">
+                <div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<h1>1 测试集群</h1>
+<p>内存：256G<br/>CPU：32Core （Intel(R) Xeon(R) CPU E5-2640 v3 @ 2.60GHz）<br/>Disk（系统盘）：300G<br/>Disk（数据盘）：1.5T*1</p>
+<h1>2 测试数据</h1>
+<ul>
+<li>tpcds parquet 10g</li>
+<li>tpcds orc 10g</li>
+</ul>
+<h1>3 测试对象</h1>
+<ul>
+<li>hive-2.3.4 【set mapreduce.map.memory.mb=4096; set mapreduce.map.java.opts=-Xmx3072m;】【yarn 200g*3】</li>
+<li>hive-2.3.4 on spark-2.4.0 【--master yarn --driver-memory 4g --num-executors 10 --executor-memory 4g】</li>
+<li>spark-2.4.0 【--master yarn --driver-memory 4g --num-executors 10 --executor-memory 4g】</li>
+<li>impala-2.12 【MEM_LIMIT=20gb * 3】</li>
+</ul>
+<p>默认配置，未经优化；</p>
+<h1>4 测试结果</h1>
+<h2>4.1 parquet</h2>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201903/1509647-20190320184622785-1823171254.png"/></p>
+<p>ps：0 means 执行失败</p>
+<p> </p>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201903/1509647-20190320184826201-172962802.png"/></p>
+<p> </p>
+<h2>4.2 orc</h2>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201903/1509647-20190320173032843-377338916.png"/></p>
+<p>ps：0 means 执行失败</p>
+<p> </p>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201903/1509647-20190320173642828-218509256.png"/></p>
+<p> </p>
+<p>可见：</p>
+<p>hive orc相比parquet性能提升22%；<br/>spark parquet相比orc性能提升36%；</p>
+<p> </p>
+</div>
+            </div>
+
+            <!-- Post Footer -->
+            <div class="post-footer">
+                <div class="post-navigation">
+                    <a href="../blog_cn.html" class="nav-button">← Back to Home</a>
+                    <a href="0186.html" class="nav-button">Next Post →</a>
+                </div>
+            </div>
+        </article>
+    </div>
+</body>
+</html>

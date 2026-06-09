@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>自制https证书</title>
+    <link rel="stylesheet" href="../css/style3.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header Navigation -->
+        <div class="header">
+            <h1><a href="../blog_cn.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+        </div>
+
+        <!-- Post Container -->
+        <article class="post">
+            <!-- Post Header -->
+            <div class="post-header">
+                <h1>自制https证书</h1>
+                <div class="post-meta">
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📅</span>
+                        <span>March 28, 2020</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📖</span>
+                        <span>1 min read</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">👁️</span>
+                        <span>588 views</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Post Content -->
+            <div class="post-content">
+                <div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<p>替换以下命令和配置中的your.domain为你的域名</p>
+<h1>1 生成ca.key</h1>
+<blockquote>
+<p>openssl genrsa - des3 - out ca.key 2048</p>
+</blockquote>
+<p>输入ca.key的密码，4位以上</p>
+<h1>2 生成ca.crt</h1>
+<blockquote>
+<p>openssl req - new - x509 - days 7305 - key ca.key - out ca.crt</p>
+</blockquote>
+<p>输入ca.key的密码<br/>填写：Common Name (eg, your name or your server's hostname) [] 为your.domain</p>
+<h1>3 生成your.domain.pem</h1>
+<blockquote>
+<p>openssl genrsa - des3 - out your.domain.pem 1024</p>
+</blockquote>
+<p>输入your.domain.pem的密码，4位以上</p>
+<h1>4 生成your.domain.key</h1>
+<blockquote>
+<p>openssl rsa - in your.domain.pem - out your.domain.key</p>
+</blockquote>
+<p>输入your.domain.pem的密码</p>
+<h1>5 生成your.domain.csr</h1>
+<blockquote>
+<p>openssl req - new - key your.domain.pem - out your.domain.csr</p>
+</blockquote>
+<p>输入your.domain.pem的密码<br/>填写：Common Name (eg, your name or your server's hostname) [] 为your.domain</p>
+<h1>6 生成your.domain.crt</h1>
+<blockquote>
+<p>openssl ca - policy policy_anything - days 1460 - cert ca.crt - keyfile ca.key - in your.domain.csr - out your.domain.crt</p>
+</blockquote>
+<p>输入ca.key的密码</p>
+<p>最后一步可能报错：</p>
+<blockquote>
+<p>/etc/pki/CA/index.txt: No such file or directory<br/>unable to open '/etc/pki/CA/index.txt'<br/>139707575097232:error:02001002:system library:fopen:No such file or directory:bss_file.c:402:fopen('/etc/pki/CA/index.txt','r')<br/>139707575097232:error:20074002:BIO routines:FILE_CTRL:system lib:bss_file.c:404:</p>
+</blockquote>
+<p>解决方法：</p>
+<blockquote>
+<p># touch /etc/pki/CA/index.txt</p>
+</blockquote>
+<h1>7 nginx配置证书</h1>
+<blockquote>
+<p>server {<br/>    listen       443 ssl;<br/>    server_name  your.domain;</p>
+<p>    ssl_certificate /etc/nginx/conf.d/ssl/your.domain.crt;<br/>    ssl_certificate_key /etc/nginx/conf.d/ssl/your.domain.key;</p>
+</blockquote>
+</div>
+            </div>
+
+            <!-- Post Footer -->
+            <div class="post-footer">
+                <div class="post-navigation">
+                    <a href="../blog_cn.html" class="nav-button">← Back to Home</a>
+                    <a href="0072.html" class="nav-button">Next Post →</a>
+                </div>
+            </div>
+        </article>
+    </div>
+</body>
+</html>

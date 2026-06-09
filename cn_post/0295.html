@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hive 1 - Hive SQL执行过程之代码流程</title>
+    <link rel="stylesheet" href="../css/style3.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header Navigation -->
+        <div class="header">
+            <h1><a href="../blog_cn.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+        </div>
+
+        <!-- Post Container -->
+        <article class="post">
+            <!-- Post Header -->
+            <div class="post-header">
+                <h1>Hive 1 - Hive SQL执行过程之代码流程</h1>
+                <div class="post-meta">
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📅</span>
+                        <span>December 27, 2018</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📖</span>
+                        <span>14 min read</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">👁️</span>
+                        <span>3784 views</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Post Content -->
+            <div class="post-content">
+                <div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<p>hive 2.1</p>
+<p> </p>
+<p>hive执行sql有两种方式：</p>
+<ul>
+<li>执行hive命令，又细分为hive - e，hive - f，hive交互式；</li>
+<li>执行beeline命令，beeline会连接远程thrift server；</li>
+</ul>
+<p>下面分别看这些场景下sql是怎样被执行的：</p>
+<h1>1 hive命令</h1>
+<h2>启动命令</h2>
+<p>启动hive客户端命令</p>
+<blockquote>
+<p>$HIVE_HOME/bin/hive</p>
+</blockquote>
+<p>等价于</p>
+<blockquote>
+<p>$HIVE_HOME/bin/hive --service cli</p>
+</blockquote>
+<p>会调用</p>
+<blockquote>
+<p>$HIVE_HOME/bin/ext/cli.sh</p>
+</blockquote>
+<p>实际启动类为：org.apache.hadoop.hive.cli.CliDriver</p>
+<h2>代码解析</h2>
+<p>org.apache.hadoop.hive.cli.CliDriver</p>
+<div class="cnblogs_code">
+<pre>  <span style="color: rgba(0, 0, 255, 1)">public</span> <span style="color: rgba(0, 0, 255, 1)">static</span> <span style="color: rgba(0, 0, 255, 1)">void</span> main(String[] args) <span style="color: rgba(0, 0, 255, 1)">throws</span><span style="color: rgba(0, 0, 0, 1)"> Exception {
+    </span><span style="color: rgba(0, 0, 255, 1)">int</span> ret = <span style="color: rgba(0, 0, 255, 1)">new</span><span style="color: rgba(0, 0, 0, 1)"> CliDriver().run(args);
+    System.exit(ret);
+  }
+
+  </span><span style="color: rgba(0, 0, 255, 1)">public</span>  <span style="color: rgba(0, 0, 255, 1)">int</span> run(String[] args) <span style="color: rgba(0, 0, 255, 1)">throws</span><span style="color: rgba(0, 0, 0, 1)"> Exception {
+...
+    </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> execute cli driver work</span>
+    <span style="color: rgba(0, 0, 255, 1)">try</span><span style="color: rgba(0, 0, 0, 1)"> {
+      </span><span style="color: rgba(0, 0, 255, 1)">return</span><span style="color: rgba(0, 0, 0, 1)"> executeDriver(ss, conf, oproc);
+    } </span><span style="color: rgba(0, 0, 255, 1)">finally</span><span style="color: rgba(0, 0, 0, 1)"> {
+      ss.resetThreadName();
+      ss.close();
+    }
+...
+
+  </span><span style="color: rgba(0, 0, 255, 1)">private</span> <span style="color: rgba(0, 0, 255, 1)">int</span><span style="color: rgba(0, 0, 0, 1)"> executeDriver(CliSessionState ss, HiveConf conf, OptionsProcessor oproc)
+      </span><span style="color: rgba(0, 0, 255, 1)">throws</span><span style="color: rgba(0, 0, 0, 1)"> Exception {
+...
+    </span><span style="color: rgba(0, 0, 255, 1)">if</span> (ss.execString != <span style="color: rgba(0, 0, 255, 1)">null</span><span style="color: rgba(0, 0, 0, 1)">) {
+      </span><span style="color: rgba(0, 0, 255, 1)">int</span> cmdProcessStatus =<span style="color: rgba(0, 0, 0, 1)"> cli.processLine(ss.execString);
+      </span><span style="color: rgba(0, 0, 255, 1)">return</span><span style="color: rgba(0, 0, 0, 1)"> cmdProcessStatus;
+    }
+...
+    </span><span style="color: rgba(0, 0, 255, 1)">try</span><span style="color: rgba(0, 0, 0, 1)"> {
+      </span><span style="color: rgba(0, 0, 255, 1)">if</span> (ss.fileName != <span style="color: rgba(0, 0, 255, 1)">null</span><span style="color: rgba(0, 0, 0, 1)">) {
+        </span><span style="color: rgba(0, 0, 255, 1)">return</span><span style="color: rgba(0, 0, 0, 1)"> cli.processFile(ss.fileName);
+      }
+    } </span><span style="color: rgba(0, 0, 255, 1)">catch</span><span style="color: rgba(0, 0, 0, 1)"> (FileNotFoundException e) {
+      System.err.println(</span>"Could not open input file for reading. (" + e.getMessage() + ")"<span style="color: rgba(0, 0, 0, 1)">);
+      </span><span style="color: rgba(0, 0, 255, 1)">return</span> 3<span style="color: rgba(0, 0, 0, 1)">;
+    }
+...
+    </span><span style="color: rgba(0, 0, 255, 1)">while</span> ((line = reader.readLine(curPrompt + "&gt; ")) != <span style="color: rgba(0, 0, 255, 1)">null</span><span style="color: rgba(0, 0, 0, 1)">) {
+      </span><span style="color: rgba(0, 0, 255, 1)">if</span> (!prefix.equals(""<span style="color: rgba(0, 0, 0, 1)">)) {
+        prefix </span>+= '\n'<span style="color: rgba(0, 0, 0, 1)">;
+      }
+      </span><span style="color: rgba(0, 0, 255, 1)">if</span> (line.trim().startsWith("--"<span style="color: rgba(0, 0, 0, 1)">)) {
+        </span><span style="color: rgba(0, 0, 255, 1)">continue</span><span style="color: rgba(0, 0, 0, 1)">;
+      }
+      </span><span style="color: rgba(0, 0, 255, 1)">if</span> (line.trim().endsWith(";") &amp;&amp; !line.trim().endsWith("\\;"<span style="color: rgba(0, 0, 0, 1)">)) {
+        line </span>= prefix +<span style="color: rgba(0, 0, 0, 1)"> line;
+        ret </span>= cli.processLine(line, <span style="color: rgba(0, 0, 255, 1)">true</span><span style="color: rgba(0, 0, 0, 1)">);
+...
+
+  </span><span style="color: rgba(0, 0, 255, 1)">public</span> <span style="color: rgba(0, 0, 255, 1)">int</span> processFile(String fileName) <span style="color: rgba(0, 0, 255, 1)">throws</span><span style="color: rgba(0, 0, 0, 1)"> IOException {
+...
+      rc </span>=<span style="color: rgba(0, 0, 0, 1)"> processReader(bufferReader);
+...
+
+  </span><span style="color: rgba(0, 0, 255, 1)">public</span> <span style="color: rgba(0, 0, 255, 1)">int</span> processReader(BufferedReader r) <span style="color: rgba(0, 0, 255, 1)">throws</span><span style="color: rgba(0, 0, 0, 1)"> IOException {
+    String line;
+    StringBuilder qsb </span>= <span style="color: rgba(0, 0, 255, 1)">new</span><span style="color: rgba(0, 0, 0, 1)"> StringBuilder();
+
+    </span><span style="color: rgba(0, 0, 255, 1)">while</span> ((line = r.readLine()) != <span style="color: rgba(0, 0, 255, 1)">null</span><span style="color: rgba(0, 0, 0, 1)">) {
+      </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> Skipping through comments</span>
+      <span style="color: rgba(0, 0, 255, 1)">if</span> (! line.startsWith("--"<span style="color: rgba(0, 0, 0, 1)">)) {
+        qsb.append(line </span>+ "\n"<span style="color: rgba(0, 0, 0, 1)">);
+      }
+    }
+
+    </span><span style="color: rgba(0, 0, 255, 1)">return</span><span style="color: rgba(0, 0, 0, 1)"> (processLine(qsb.toString()));
+  }
+  
+  </span><span style="color: rgba(0, 0, 255, 1)">public</span> <span style="color: rgba(0, 0, 255, 1)">int</span> processLine(String line, <span style="color: rgba(0, 0, 255, 1)">boolean</span><span style="color: rgba(0, 0, 0, 1)"> allowInterrupting) {
+...
+        ret </span>=<span style="color: rgba(0, 0, 0, 1)"> processCmd(command);
+...
+
+  </span><span style="color: rgba(0, 0, 255, 1)">public</span> <span style="color: rgba(0, 0, 255, 1)">int</span><span style="color: rgba(0, 0, 0, 1)"> processCmd(String cmd) {
+...
+        CommandProcessor proc </span>=<span style="color: rgba(0, 0, 0, 1)"> CommandProcessorFactory.get(tokens, (HiveConf) conf);
+        ret </span>=<span style="color: rgba(0, 0, 0, 1)"> processLocalCmd(cmd, proc, ss);
+...
+
+  </span><span style="color: rgba(0, 0, 255, 1)">int</span><span style="color: rgba(0, 0, 0, 1)"> processLocalCmd(String cmd, CommandProcessor proc, CliSessionState ss) {
+    </span><span style="color: rgba(0, 0, 255, 1)">int</span> tryCount = 0<span style="color: rgba(0, 0, 0, 1)">;
+    </span><span style="color: rgba(0, 0, 255, 1)">boolean</span><span style="color: rgba(0, 0, 0, 1)"> needRetry;
+    </span><span style="color: rgba(0, 0, 255, 1)">int</span> ret = 0<span style="color: rgba(0, 0, 0, 1)">;
+
+    </span><span style="color: rgba(0, 0, 255, 1)">do</span><span style="color: rgba(0, 0, 0, 1)"> {
+      </span><span style="color: rgba(0, 0, 255, 1)">try</span><span style="color: rgba(0, 0, 0, 1)"> {
+        needRetry </span>= <span style="color: rgba(0, 0, 255, 1)">false</span><span style="color: rgba(0, 0, 0, 1)">;
+        </span><span style="color: rgba(0, 0, 255, 1)">if</span> (proc != <span style="color: rgba(0, 0, 255, 1)">null</span><span style="color: rgba(0, 0, 0, 1)">) {
+          </span><span style="color: rgba(0, 0, 255, 1)">if</span> (proc <span style="color: rgba(0, 0, 255, 1)">instanceof</span><span style="color: rgba(0, 0, 0, 1)"> Driver) {
+            Driver qp </span>=<span style="color: rgba(0, 0, 0, 1)"> (Driver) proc;
+            PrintStream out </span>=<span style="color: rgba(0, 0, 0, 1)"> ss.out;
+            </span><span style="color: rgba(0, 0, 255, 1)">long</span> start =<span style="color: rgba(0, 0, 0, 1)"> System.currentTimeMillis();
+            </span><span style="color: rgba(0, 0, 255, 1)">if</span><span style="color: rgba(0, 0, 0, 1)"> (ss.getIsVerbose()) {
+              out.println(cmd);
+            }
+
+            qp.setTryCount(tryCount);
+            ret </span>=<span style="color: rgba(0, 0, 0, 1)"> qp.run(cmd).getResponseCode();
+...
+              </span><span style="color: rgba(0, 0, 255, 1)">while</span><span style="color: rgba(0, 0, 0, 1)"> (qp.getResults(res)) {
+                </span><span style="color: rgba(0, 0, 255, 1)">for</span><span style="color: rgba(0, 0, 0, 1)"> (String r : res) {
+                  out.println(r);
+                }
+...</span></pre>
+</div>
+<p>CliDriver.main会调用run，run会调用executeDriver，在executeDriver中对应上边提到的三种情况：</p>
+<ul>
+<li>一种是hive - e执行sql，此时ss.execString非空，执行完进程退出；</li>
+<li>一种是hive - f执行sql文件，此时ss.fileName非空，执行完进程退出；</li>
+<li>一种是hive交互式执行sql，此时会不断读取reader.readLine，然后执行失去了并输出结果；</li>
+</ul>
+<p>上述三种情况最终都会调用processLine，processLine会调用processLocalCmd，在processLocalCmd中会先调用到Driver.run执行sql，执行完之后再调用Driver.getResults输出结果，这也是Driver最重要的两个接口，Driver实现后边再看；</p>
+<h1>2 beeline命令</h1>
+<p>beeline需要连接到hive thrift server，先看hive thrift server如何启动：</p>
+<h2>hive thrift server</h2>
+<h3>启动命令</h3>
+<p>启动hive thrift server命令</p>
+<blockquote>
+<p>$HIVE_HOME/bin/hiveserver2</p>
+</blockquote>
+<p>等价于</p>
+<blockquote>
+<p>$HIVE_HOME/bin/hive --service hiveserver2</p>
+</blockquote>
+<p>会调用</p>
+<blockquote>
+<p>$HIVE_HOME/bin/ext/hiveserver2.sh</p>
+</blockquote>
+<p>实际启动类为：org.apache.hive.service.server.HiveServer2</p>
+<h3>启动过程</h3>
+<blockquote>
+<p>HiveServer2.main</p>
+<p>         startHiveServer2</p>
+<p>                  init</p>
+<p>                          addService-CLIService,ThriftBinaryCLIService</p>
+<p>                  start</p>
+<p>                          Service.start</p>
+<p>                                   CLIService.start</p>
+<p>                                   ThriftBinaryCLIService.start</p>
+<p>                                            TThreadPoolServer.serve</p>
+</blockquote>
+<h3> 类结构：【接口或父类-&gt;子类】</h3>
+<blockquote>
+<p>TServer-&gt;TThreadPoolServer</p>
+<p>         TProcessorFactory-&gt;SQLPlainProcessorFactory</p>
+<p>                  TProcessor-&gt;TSetIpAddressProcessor</p>
+<p>                          ThriftCLIService-&gt;ThriftBinaryCLIService</p>
+<p>                                   CLIService</p>
+<p>                                            HiveSession</p>
+</blockquote>
+<h3>代码解析</h3>
+<p>org.apache.hive.service.cli.thrift.ThriftBinaryCLIService</p>
+<div class="cnblogs_code">
+<pre>  <span style="color: rgba(0, 0, 255, 1)">public</span><span style="color: rgba(0, 0, 0, 1)"> ThriftBinaryCLIService(CLIService cliService, Runnable oomHook) {
+    </span><span style="color: rgba(0, 0, 255, 1)">super</span>(cliService, ThriftBinaryCLIService.<span style="color: rgba(0, 0, 255, 1)">class</span><span style="color: rgba(0, 0, 0, 1)">.getSimpleName());
+    </span><span style="color: rgba(0, 0, 255, 1)">this</span>.oomHook =<span style="color: rgba(0, 0, 0, 1)"> oomHook;
+  }</span></pre>
+</div>
+<p>ThriftBinaryCLIService是一个核心类，其中会实际启动thrift server，同时包装一个CLIService，请求最后都会调用底层的CLIService处理，下面看CLIService代码：</p>
+<p>org.apache.hive.service.cli.CLIService</p>
+<div class="cnblogs_code">
+<pre><span style="color: rgba(0, 0, 0, 1)">  @Override
+  </span><span style="color: rgba(0, 0, 255, 1)">public</span><span style="color: rgba(0, 0, 0, 1)"> OperationHandle executeStatement(SessionHandle sessionHandle, String statement,
+      Map</span>&lt;String, String&gt; confOverlay) <span style="color: rgba(0, 0, 255, 1)">throws</span><span style="color: rgba(0, 0, 0, 1)"> HiveSQLException {
+    OperationHandle opHandle </span>=<span style="color: rgba(0, 0, 0, 1)">
+        sessionManager.getSession(sessionHandle).executeStatement(statement, confOverlay);
+    LOG.debug(sessionHandle </span>+ ": executeStatement()"<span style="color: rgba(0, 0, 0, 1)">);
+    </span><span style="color: rgba(0, 0, 255, 1)">return</span><span style="color: rgba(0, 0, 0, 1)"> opHandle;
+  }
+  
+  @Override
+  </span><span style="color: rgba(0, 0, 255, 1)">public</span><span style="color: rgba(0, 0, 0, 1)"> RowSet fetchResults(OperationHandle opHandle, FetchOrientation orientation,
+                             </span><span style="color: rgba(0, 0, 255, 1)">long</span> maxRows, FetchType fetchType) <span style="color: rgba(0, 0, 255, 1)">throws</span><span style="color: rgba(0, 0, 0, 1)"> HiveSQLException {
+    RowSet rowSet </span>=<span style="color: rgba(0, 0, 0, 1)"> sessionManager.getOperationManager().getOperation(opHandle)
+        .getParentSession().fetchResults(opHandle, orientation, maxRows, fetchType);
+    LOG.debug(opHandle </span>+ ": fetchResults()"<span style="color: rgba(0, 0, 0, 1)">);
+    </span><span style="color: rgba(0, 0, 255, 1)">return</span><span style="color: rgba(0, 0, 0, 1)"> rowSet;
+  }</span></pre>
+</div>
+<p>CLIService最重要的两个接口，一个是executeStatement，一个是fetchResults，两个接口都会转发给HiveSession处理，下面看HiveSession实现类代码：</p>
+<p>org.apache.hive.service.cli.session.HiveSessionImpl</p>
+<div class="cnblogs_code">
+<pre><span style="color: rgba(0, 0, 0, 1)">  @Override
+  </span><span style="color: rgba(0, 0, 255, 1)">public</span> OperationHandle executeStatement(String statement, Map&lt;String, String&gt; confOverlay) <span style="color: rgba(0, 0, 255, 1)">throws</span><span style="color: rgba(0, 0, 0, 1)"> HiveSQLException {
+    </span><span style="color: rgba(0, 0, 255, 1)">return</span> executeStatementInternal(statement, confOverlay, <span style="color: rgba(0, 0, 255, 1)">false</span>, 0<span style="color: rgba(0, 0, 0, 1)">);
+  }
+
+  </span><span style="color: rgba(0, 0, 255, 1)">private</span><span style="color: rgba(0, 0, 0, 1)"> OperationHandle executeStatementInternal(String statement,
+      Map</span>&lt;String, String&gt; confOverlay, <span style="color: rgba(0, 0, 255, 1)">boolean</span> runAsync, <span style="color: rgba(0, 0, 255, 1)">long</span> queryTimeout) <span style="color: rgba(0, 0, 255, 1)">throws</span><span style="color: rgba(0, 0, 0, 1)"> HiveSQLException {
+    acquire(</span><span style="color: rgba(0, 0, 255, 1)">true</span>, <span style="color: rgba(0, 0, 255, 1)">true</span><span style="color: rgba(0, 0, 0, 1)">);
+
+    ExecuteStatementOperation operation </span>= <span style="color: rgba(0, 0, 255, 1)">null</span><span style="color: rgba(0, 0, 0, 1)">;
+    OperationHandle opHandle </span>= <span style="color: rgba(0, 0, 255, 1)">null</span><span style="color: rgba(0, 0, 0, 1)">;
+    </span><span style="color: rgba(0, 0, 255, 1)">try</span><span style="color: rgba(0, 0, 0, 1)"> {
+      operation </span>=<span style="color: rgba(0, 0, 0, 1)"> getOperationManager().newExecuteStatementOperation(getSession(), statement,
+          confOverlay, runAsync, queryTimeout);
+      opHandle </span>=<span style="color: rgba(0, 0, 0, 1)"> operation.getHandle();
+      operation.run();
+...
+  @Override
+  </span><span style="color: rgba(0, 0, 255, 1)">public</span><span style="color: rgba(0, 0, 0, 1)"> RowSet fetchResults(OperationHandle opHandle, FetchOrientation orientation,
+      </span><span style="color: rgba(0, 0, 255, 1)">long</span> maxRows, FetchType fetchType) <span style="color: rgba(0, 0, 255, 1)">throws</span><span style="color: rgba(0, 0, 0, 1)"> HiveSQLException {
+    acquire(</span><span style="color: rgba(0, 0, 255, 1)">true</span>, <span style="color: rgba(0, 0, 255, 1)">false</span><span style="color: rgba(0, 0, 0, 1)">);
+    </span><span style="color: rgba(0, 0, 255, 1)">try</span><span style="color: rgba(0, 0, 0, 1)"> {
+      </span><span style="color: rgba(0, 0, 255, 1)">if</span> (fetchType ==<span style="color: rgba(0, 0, 0, 1)"> FetchType.QUERY_OUTPUT) {
+        </span><span style="color: rgba(0, 0, 255, 1)">return</span><span style="color: rgba(0, 0, 0, 1)"> operationManager.getOperationNextRowSet(opHandle, orientation, maxRows);
+      }
+      </span><span style="color: rgba(0, 0, 255, 1)">return</span><span style="color: rgba(0, 0, 0, 1)"> operationManager.getOperationLogRowSet(opHandle, orientation, maxRows, sessionConf);
+    } </span><span style="color: rgba(0, 0, 255, 1)">finally</span><span style="color: rgba(0, 0, 0, 1)"> {
+      release(</span><span style="color: rgba(0, 0, 255, 1)">true</span>, <span style="color: rgba(0, 0, 255, 1)">false</span><span style="color: rgba(0, 0, 0, 1)">);
+    }
+  }</span></pre>
+</div>
+<p>可见</p>
+<ul>
+<li>HiveSessionImpl.executeStatement是调用ExecuteStatementOperation.run（ExecuteStatementOperation是Operation的一种）</li>
+<li>HiveSessionImpl.fetchResults是调用OperationManager.getOperationNextRowSet，然后会调用到Operation.getNextRowSet</li>
+</ul>
+<p>org.apache.hive.service.cli.operation.OperationManager</p>
+<div class="cnblogs_code">
+<pre>  <span style="color: rgba(0, 0, 255, 1)">public</span><span style="color: rgba(0, 0, 0, 1)"> RowSet getOperationNextRowSet(OperationHandle opHandle,
+      FetchOrientation orientation, </span><span style="color: rgba(0, 0, 255, 1)">long</span><span style="color: rgba(0, 0, 0, 1)"> maxRows)
+          </span><span style="color: rgba(0, 0, 255, 1)">throws</span><span style="color: rgba(0, 0, 0, 1)"> HiveSQLException {
+    </span><span style="color: rgba(0, 0, 255, 1)">return</span><span style="color: rgba(0, 0, 0, 1)"> getOperation(opHandle).getNextRowSet(orientation, maxRows);
+  }</span></pre>
+</div>
+<p> </p>
+<p>下面写详细看Operation的run和getOperationNextRowSet：</p>
+<p>org.apache.hive.service.cli.operation.Operation</p>
+<div class="cnblogs_code">
+<pre>  <span style="color: rgba(0, 0, 255, 1)">public</span> <span style="color: rgba(0, 0, 255, 1)">void</span> run() <span style="color: rgba(0, 0, 255, 1)">throws</span><span style="color: rgba(0, 0, 0, 1)"> HiveSQLException {
+    beforeRun();
+    </span><span style="color: rgba(0, 0, 255, 1)">try</span><span style="color: rgba(0, 0, 0, 1)"> {
+      Metrics metrics </span>=<span style="color: rgba(0, 0, 0, 1)"> MetricsFactory.getInstance();
+      </span><span style="color: rgba(0, 0, 255, 1)">if</span> (metrics != <span style="color: rgba(0, 0, 255, 1)">null</span><span style="color: rgba(0, 0, 0, 1)">) {
+        </span><span style="color: rgba(0, 0, 255, 1)">try</span><span style="color: rgba(0, 0, 0, 1)"> {
+          metrics.incrementCounter(MetricsConstant.OPEN_OPERATIONS);
+        } </span><span style="color: rgba(0, 0, 255, 1)">catch</span><span style="color: rgba(0, 0, 0, 1)"> (Exception e) {
+          LOG.warn(</span>"Error Reporting open operation to Metrics system"<span style="color: rgba(0, 0, 0, 1)">, e);
+        }
+      }
+      runInternal();
+    } </span><span style="color: rgba(0, 0, 255, 1)">finally</span><span style="color: rgba(0, 0, 0, 1)"> {
+      afterRun();
+    }
+  }
+  
+  </span><span style="color: rgba(0, 0, 255, 1)">public</span> RowSet getNextRowSet() <span style="color: rgba(0, 0, 255, 1)">throws</span><span style="color: rgba(0, 0, 0, 1)"> HiveSQLException {
+    </span><span style="color: rgba(0, 0, 255, 1)">return</span><span style="color: rgba(0, 0, 0, 1)"> getNextRowSet(FetchOrientation.FETCH_NEXT, DEFAULT_FETCH_MAX_ROWS);
+  }</span></pre>
+</div>
+<p>Operation是一个抽象类，</p>
+<ul>
+<li>run会调用抽象方法runInternal</li>
+<li>getNextRowSet会调用抽象方法getNextRowSet</li>
+</ul>
+<p>下面会看到这两个抽象方法在子类中的实现，最终会依赖Driver的run和getResults；</p>
+<p> </p>
+<p>1）先看runInternal在子类HiveCommandOperation中被实现：</p>
+<p>org.apache.hive.service.cli.operation.HiveCommandOperation</p>
+<div class="cnblogs_code">
+<pre><span style="color: rgba(0, 0, 0, 1)">  @Override
+  </span><span style="color: rgba(0, 0, 255, 1)">public</span> <span style="color: rgba(0, 0, 255, 1)">void</span> runInternal() <span style="color: rgba(0, 0, 255, 1)">throws</span><span style="color: rgba(0, 0, 0, 1)"> HiveSQLException {
+    setState(OperationState.RUNNING);
+    </span><span style="color: rgba(0, 0, 255, 1)">try</span><span style="color: rgba(0, 0, 0, 1)"> {
+      String command </span>=<span style="color: rgba(0, 0, 0, 1)"> getStatement().trim();
+      String[] tokens </span>= statement.split("\\s"<span style="color: rgba(0, 0, 0, 1)">);
+      String commandArgs </span>= command.substring(tokens[0<span style="color: rgba(0, 0, 0, 1)">].length()).trim();
+
+      CommandProcessorResponse response </span>=<span style="color: rgba(0, 0, 0, 1)"> commandProcessor.run(commandArgs);
+...</span></pre>
+</div>
+<p>这里会调用CommandProcessor.run，实际会调用Driver.run（Driver是CommandProcessor的实现类）；</p>
+<p> </p>
+<p>2）再看getNextRowSet在子类SQLOperation中被实现：</p>
+<p>org.apache.hive.service.cli.operation.SQLOperation</p>
+<div class="cnblogs_code">
+<pre>  <span style="color: rgba(0, 0, 255, 1)">public</span> RowSet getNextRowSet(FetchOrientation orientation, <span style="color: rgba(0, 0, 255, 1)">long</span><span style="color: rgba(0, 0, 0, 1)"> maxRows)
+    </span><span style="color: rgba(0, 0, 255, 1)">throws</span><span style="color: rgba(0, 0, 0, 1)"> HiveSQLException {
+...
+      driver.setMaxRows((</span><span style="color: rgba(0, 0, 255, 1)">int</span><span style="color: rgba(0, 0, 0, 1)">) maxRows);
+      </span><span style="color: rgba(0, 0, 255, 1)">if</span><span style="color: rgba(0, 0, 0, 1)"> (driver.getResults(convey)) {
+        </span><span style="color: rgba(0, 0, 255, 1)">return</span><span style="color: rgba(0, 0, 0, 1)"> decode(convey, rowSet);
+      }
+...</span></pre>
+</div>
+<p>这里会调用Driver.getResults；</p>
+<h1>3 Driver</h1>
+<p>通过上面的代码分析发现无论是hive命令行执行还是beeline连接thrift server执行，最终都会依赖Driver，</p>
+<p>Driver最核心的两个接口：</p>
+<ul>
+<li>run</li>
+<li>getResults</li>
+</ul>
+<h2>代码解析</h2>
+<p>org.apache.hadoop.hive.ql.Driver</p>
+<div class="cnblogs_code">
+<pre><span style="color: rgba(0, 0, 0, 1)">  @Override
+  </span><span style="color: rgba(0, 0, 255, 1)">public</span><span style="color: rgba(0, 0, 0, 1)"> CommandProcessorResponse run(String command)
+      </span><span style="color: rgba(0, 0, 255, 1)">throws</span><span style="color: rgba(0, 0, 0, 1)"> CommandNeedRetryException {
+    </span><span style="color: rgba(0, 0, 255, 1)">return</span> run(command, <span style="color: rgba(0, 0, 255, 1)">false</span><span style="color: rgba(0, 0, 0, 1)">);
+  }
+  
+  </span><span style="color: rgba(0, 0, 255, 1)">public</span> CommandProcessorResponse run(String command, <span style="color: rgba(0, 0, 255, 1)">boolean</span><span style="color: rgba(0, 0, 0, 1)"> alreadyCompiled)
+        </span><span style="color: rgba(0, 0, 255, 1)">throws</span><span style="color: rgba(0, 0, 0, 1)"> CommandNeedRetryException {
+    CommandProcessorResponse cpr </span>=<span style="color: rgba(0, 0, 0, 1)"> runInternal(command, alreadyCompiled);
+...
+  </span><span style="color: rgba(0, 0, 255, 1)">private</span> CommandProcessorResponse runInternal(String command, <span style="color: rgba(0, 0, 255, 1)">boolean</span><span style="color: rgba(0, 0, 0, 1)"> alreadyCompiled)
+      </span><span style="color: rgba(0, 0, 255, 1)">throws</span><span style="color: rgba(0, 0, 0, 1)"> CommandNeedRetryException {
+...
+        ret </span>= compileInternal(command, <span style="color: rgba(0, 0, 255, 1)">true</span><span style="color: rgba(0, 0, 0, 1)">);
+...
+      ret </span>= execute(<span style="color: rgba(0, 0, 255, 1)">true</span><span style="color: rgba(0, 0, 0, 1)">);
+...
+  </span><span style="color: rgba(0, 0, 255, 1)">private</span> <span style="color: rgba(0, 0, 255, 1)">int</span> compileInternal(String command, <span style="color: rgba(0, 0, 255, 1)">boolean</span><span style="color: rgba(0, 0, 0, 1)"> deferClose) {
+...
+      ret </span>= compile(command, <span style="color: rgba(0, 0, 255, 1)">true</span><span style="color: rgba(0, 0, 0, 1)">, deferClose);
+...
+  </span><span style="color: rgba(0, 0, 255, 1)">public</span> <span style="color: rgba(0, 0, 255, 1)">int</span> compile(String command, <span style="color: rgba(0, 0, 255, 1)">boolean</span> resetTaskIds, <span style="color: rgba(0, 0, 255, 1)">boolean</span><span style="color: rgba(0, 0, 0, 1)"> deferClose) {
+...
+      plan </span>= <span style="color: rgba(0, 0, 255, 1)">new</span><span style="color: rgba(0, 0, 0, 1)"> QueryPlan(queryStr, sem, perfLogger.getStartTime(PerfLogger.DRIVER_RUN), queryId,
+        queryState.getHiveOperation(), schema);
+...
+  </span><span style="color: rgba(0, 0, 255, 1)">public</span> <span style="color: rgba(0, 0, 255, 1)">int</span> execute(<span style="color: rgba(0, 0, 255, 1)">boolean</span> deferClose) <span style="color: rgba(0, 0, 255, 1)">throws</span><span style="color: rgba(0, 0, 0, 1)"> CommandNeedRetryException {
+...
+      </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> Add root Tasks to runnable</span>
+      <span style="color: rgba(0, 0, 255, 1)">for</span> (Task&lt;? <span style="color: rgba(0, 0, 255, 1)">extends</span> Serializable&gt;<span style="color: rgba(0, 0, 0, 1)"> tsk : plan.getRootTasks()) {
+        </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> This should never happen, if it does, it's a bug with the potential to produce
+        </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> incorrect results.</span>
+        <span style="color: rgba(0, 0, 255, 1)">assert</span> tsk.getParentTasks() == <span style="color: rgba(0, 0, 255, 1)">null</span> ||<span style="color: rgba(0, 0, 0, 1)"> tsk.getParentTasks().isEmpty();
+        driverCxt.addToRunnable(tsk);
+      }
+...
+      </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> Loop while you either have tasks running, or tasks queued up</span>
+      <span style="color: rgba(0, 0, 255, 1)">while</span><span style="color: rgba(0, 0, 0, 1)"> (driverCxt.isRunning()) {
+
+        </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> Launch upto maxthreads tasks</span>
+        Task&lt;? <span style="color: rgba(0, 0, 255, 1)">extends</span> Serializable&gt;<span style="color: rgba(0, 0, 0, 1)"> task;
+        </span><span style="color: rgba(0, 0, 255, 1)">while</span> ((task = driverCxt.getRunnable(maxthreads)) != <span style="color: rgba(0, 0, 255, 1)">null</span><span style="color: rgba(0, 0, 0, 1)">) {
+          TaskRunner runner </span>=<span style="color: rgba(0, 0, 0, 1)"> launchTask(task, queryId, noName, jobname, jobs, driverCxt);
+          </span><span style="color: rgba(0, 0, 255, 1)">if</span> (!<span style="color: rgba(0, 0, 0, 1)">runner.isRunning()) {
+            </span><span style="color: rgba(0, 0, 255, 1)">break</span><span style="color: rgba(0, 0, 0, 1)">;
+          }
+        }
+
+        </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> poll the Tasks to see which one completed</span>
+        TaskRunner tskRun =<span style="color: rgba(0, 0, 0, 1)"> driverCxt.pollFinished();
+        </span><span style="color: rgba(0, 0, 255, 1)">if</span> (tskRun == <span style="color: rgba(0, 0, 255, 1)">null</span><span style="color: rgba(0, 0, 0, 1)">) {
+          </span><span style="color: rgba(0, 0, 255, 1)">continue</span><span style="color: rgba(0, 0, 0, 1)">;
+        }
+        hookContext.addCompleteTask(tskRun);
+        queryDisplay.setTaskResult(tskRun.getTask().getId(), tskRun.getTaskResult());
+
+        Task</span>&lt;? <span style="color: rgba(0, 0, 255, 1)">extends</span> Serializable&gt; tsk =<span style="color: rgba(0, 0, 0, 1)"> tskRun.getTask();
+        TaskResult result </span>=<span style="color: rgba(0, 0, 0, 1)"> tskRun.getTaskResult();
+...
+        </span><span style="color: rgba(0, 0, 255, 1)">if</span> (tsk.getChildTasks() != <span style="color: rgba(0, 0, 255, 1)">null</span><span style="color: rgba(0, 0, 0, 1)">) {
+          </span><span style="color: rgba(0, 0, 255, 1)">for</span> (Task&lt;? <span style="color: rgba(0, 0, 255, 1)">extends</span> Serializable&gt;<span style="color: rgba(0, 0, 0, 1)"> child : tsk.getChildTasks()) {
+            </span><span style="color: rgba(0, 0, 255, 1)">if</span><span style="color: rgba(0, 0, 0, 1)"> (DriverContext.isLaunchable(child)) {
+              driverCxt.addToRunnable(child);
+            }
+          }
+        }
+      }
+
+  </span><span style="color: rgba(0, 0, 255, 1)">public</span> <span style="color: rgba(0, 0, 255, 1)">boolean</span> getResults(List res) <span style="color: rgba(0, 0, 255, 1)">throws</span><span style="color: rgba(0, 0, 0, 1)"> IOException, CommandNeedRetryException {
+    </span><span style="color: rgba(0, 0, 255, 1)">if</span> (driverState == DriverState.DESTROYED || driverState ==<span style="color: rgba(0, 0, 0, 1)"> DriverState.CLOSED) {
+      </span><span style="color: rgba(0, 0, 255, 1)">throw</span> <span style="color: rgba(0, 0, 255, 1)">new</span> IOException("FAILED: query has been cancelled, closed, or destroyed."<span style="color: rgba(0, 0, 0, 1)">);
+    }
+
+    </span><span style="color: rgba(0, 0, 255, 1)">if</span><span style="color: rgba(0, 0, 0, 1)"> (isFetchingTable()) {
+      </span><span style="color: rgba(0, 128, 0, 1)">/**</span><span style="color: rgba(0, 128, 0, 1)">
+       * If resultset serialization to thrift object is enabled, and if the destination table is
+       * indeed written using ThriftJDBCBinarySerDe, read one row from the output sequence file,
+       * since it is a blob of row batches.
+       </span><span style="color: rgba(0, 128, 0, 1)">*/</span>
+      <span style="color: rgba(0, 0, 255, 1)">if</span><span style="color: rgba(0, 0, 0, 1)"> (fetchTask.getWork().isUsingThriftJDBCBinarySerDe()) {
+        maxRows </span>= 1<span style="color: rgba(0, 0, 0, 1)">;
+      }
+      fetchTask.setMaxRows(maxRows);
+      </span><span style="color: rgba(0, 0, 255, 1)">return</span><span style="color: rgba(0, 0, 0, 1)"> fetchTask.fetch(res);
+    }
+...</span></pre>
+</div>
+<ul>
+<li>Driver的run会调用runInternal，runInternal中会先compileInternal编译sql并生成QueryPlan，然后调用execute执行QueryPlan中的所有task；</li>
+<li>Driver的getResults会调用FetchTask的fetch来获取结果；</li>
+</ul>
+<p>Hive SQL解析过程详见： <a href="https://www.cnblogs.com/barneywill/p/10186644.html" target="_blank">https://www.cnblogs.com/barneywill/p/10186644.html</a></p>
+<p> </p>
+</div>
+            </div>
+
+            <!-- Post Footer -->
+            <div class="post-footer">
+                <div class="post-navigation">
+                    <a href="../blog_cn.html" class="nav-button">← Back to Home</a>
+                    <a href="0296.html" class="nav-button">Next Post →</a>
+                </div>
+            </div>
+        </article>
+    </div>
+</body>
+</html>

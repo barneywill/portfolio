@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nginx 3 - location和rewrite</title>
+    <link rel="stylesheet" href="../css/style3.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header Navigation -->
+        <div class="header">
+            <h1><a href="../blog_cn.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+        </div>
+
+        <!-- Post Container -->
+        <article class="post">
+            <!-- Post Header -->
+            <div class="post-header">
+                <h1>Nginx 3 - location和rewrite</h1>
+                <div class="post-meta">
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📅</span>
+                        <span>May 07, 2019</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📖</span>
+                        <span>1 min read</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">👁️</span>
+                        <span>361 views</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Post Content -->
+            <div class="post-content">
+                <div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<h1>nginx location</h1>
+<ul>
+<li>=：精确匹配（必须全部相等）</li>
+<li>~：大小写敏感，正则匹配</li>
+<li>~*：忽略大小写，正则匹配</li>
+<li>^~：只需匹配uri部分，精确匹配</li>
+<li>@：内部服务跳转，精确匹配</li>
+</ul>
+<p>优先级：</p>
+<ol>
+<li>Exact match =</li>
+<li>Forward match ^~ /</li>
+<li>Case sensitive regex ~ /</li>
+<li>Case insensitive regex ~*</li>
+<li>Path match /</li>
+</ol>
+<h1>规则</h1>
+<p>精确匹配规则是“最大前缀”.<br/>正则匹配规则是“顺序匹配”，只要匹配到第一个就停止后面的匹配.<br/>通用匹配 “/”最后匹配</p>
+<h1>nginx rewrite</h1>
+<blockquote>
+<p>rewrite ^(.*)$ /other/path/or/server/$1 break;</p>
+</blockquote>
+<p> </p>
+</div>
+            </div>
+
+            <!-- Post Footer -->
+            <div class="post-footer">
+                <div class="post-navigation">
+                    <a href="../blog_cn.html" class="nav-button">← Back to Home</a>
+                    <a href="0142.html" class="nav-button">Next Post →</a>
+                </div>
+            </div>
+        </article>
+    </div>
+</body>
+</html>

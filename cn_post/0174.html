@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flume 2 - 应用之kafka-kudu</title>
+    <link rel="stylesheet" href="../css/style3.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header Navigation -->
+        <div class="header">
+            <h1><a href="../blog_cn.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+        </div>
+
+        <!-- Post Container -->
+        <article class="post">
+            <!-- Post Header -->
+            <div class="post-header">
+                <h1>Flume 2 - 应用之kafka-kudu</h1>
+                <div class="post-meta">
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📅</span>
+                        <span>March 16, 2019</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📖</span>
+                        <span>3 min read</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">👁️</span>
+                        <span>1417 views</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Post Content -->
+            <div class="post-content">
+                <div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<p>应用一：kafka数据同步到kudu</p>
+<p> </p>
+<h1>1 准备kafka topic</h1>
+<div class="cnblogs_code">
+<pre><span style="color: rgba(0, 128, 0, 1)">#</span><span style="color: rgba(0, 128, 0, 1)"> bin/kafka-topics.sh --zookeeper $zk:2181/kafka - create --topic test_sync --partitions 2 --replication-factor 2</span>
+WARNING: Due to limitations <span style="color: rgba(0, 0, 255, 1)">in</span> metric names, topics with a period (<span style="color: rgba(128, 0, 0, 1)">'</span><span style="color: rgba(128, 0, 0, 1)">.</span><span style="color: rgba(128, 0, 0, 1)">'</span>) <span style="color: rgba(0, 0, 255, 1)">or</span> underscore (<span style="color: rgba(128, 0, 0, 1)">'</span><span style="color: rgba(128, 0, 0, 1)">_</span><span style="color: rgba(128, 0, 0, 1)">'</span>) could collide. To avoid issues it <span style="color: rgba(0, 0, 255, 1)">is</span> best to use either, but <span style="color: rgba(0, 0, 255, 1)">not</span><span style="color: rgba(0, 0, 0, 1)"> both.
+Created topic </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">test_sync</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">.
+</span><span style="color: rgba(0, 128, 0, 1)">#</span><span style="color: rgba(0, 128, 0, 1)"> bin/kafka-topics.sh --zookeeper $zk:2181/kafka - describe --topic test_sync</span>
+Topic:test_sync PartitionCount:2        ReplicationFactor:2<span style="color: rgba(0, 0, 0, 1)">     Configs:
+        Topic: test_sync        Partition: 0    Leader: </span>112     Replicas: 112,111       Isr: 112,111<span style="color: rgba(0, 0, 0, 1)">
+        Topic: test_sync        Partition: </span>1    Leader: 110     Replicas: 110,112       Isr: 110,112</pre>
+</div>
+<h1>2 准备kudu表</h1>
+<p>impala-shell</p>
+<div class="cnblogs_code">
+<pre><span style="color: rgba(0, 0, 0, 1)">CREATE TABLE test.test_sync (
+id int,
+name string,
+description string,
+create_time timestamp,
+update_time timestamp,
+primary key (id)
+)
+PARTITION BY HASH (id) PARTITIONS </span>4<span style="color: rgba(0, 0, 0, 1)">
+STORED AS KUDU
+TBLPROPERTIES (</span><span style="color: rgba(128, 0, 0, 1)">'</span><span style="color: rgba(128, 0, 0, 1)">kudu.master_addresses</span><span style="color: rgba(128, 0, 0, 1)">'</span>=<span style="color: rgba(128, 0, 0, 1)">'</span><span style="color: rgba(128, 0, 0, 1)">$kudu_master:7051</span><span style="color: rgba(128, 0, 0, 1)">'</span>);</pre>
+</div>
+<h1>3 准备flume kudu支持</h1>
+<h2>3.1 下载jar</h2>
+<div class="cnblogs_code">
+<pre><span style="color: rgba(0, 128, 0, 1)">#</span><span style="color: rgba(0, 128, 0, 1)"> wget https://repository.cloudera.com/artifactory/cloudera-repos/org/apache/kudu/kudu-flume-sink/1.7.0-cdh5.16.1/kudu-flume-sink-1.7.0-cdh5.16.1.jar</span><span style="color: rgba(0, 128, 0, 1)">
+#</span><span style="color: rgba(0, 128, 0, 1)"> mv kudu-flume-sink-1.7.0-cdh5.16.1.jar $FLUME_HOME/lib/</span>
+
+<span style="color: rgba(0, 128, 0, 1)">#</span><span style="color: rgba(0, 128, 0, 1)"> wget http://central.maven.org/maven2/org/json/json/20160810/json-20160810.jar</span><span style="color: rgba(0, 128, 0, 1)">
+#</span><span style="color: rgba(0, 128, 0, 1)"> mv json-20160810.jar $FLUME_HOME/lib/</span></pre>
+</div>
+<h2>3.2 开发</h2>
+<p>代码库：https://github.com/apache/kudu/tree/master/java/kudu-flume-sink</p>
+<p>kudu-flume-sink默认使用的producer是</p>
+<p>org.apache.kudu.flume.sink.SimpleKuduOperationsProducer</p>
+<div class="cnblogs_code">
+<pre>  <span style="color: rgba(0, 0, 255, 1)">public</span> List&lt;Operation&gt; getOperations(Event event) <span style="color: rgba(0, 0, 255, 1)">throws</span><span style="color: rgba(0, 0, 0, 1)"> FlumeException {
+    </span><span style="color: rgba(0, 0, 255, 1)">try</span><span style="color: rgba(0, 0, 0, 1)"> {
+      Insert insert </span>=<span style="color: rgba(0, 0, 0, 1)"> table.newInsert();
+      PartialRow row </span>=<span style="color: rgba(0, 0, 0, 1)"> insert.getRow();
+      row.addBinary(payloadColumn, event.getBody());
+
+      </span><span style="color: rgba(0, 0, 255, 1)">return</span><span style="color: rgba(0, 0, 0, 1)"> Collections.singletonList((Operation) insert);
+    } </span><span style="color: rgba(0, 0, 255, 1)">catch</span><span style="color: rgba(0, 0, 0, 1)"> (Exception e) {
+      </span><span style="color: rgba(0, 0, 255, 1)">throw</span> <span style="color: rgba(0, 0, 255, 1)">new</span> FlumeException("Failed to create Kudu Insert object"<span style="color: rgba(0, 0, 0, 1)">, e);
+    }
+  }</span></pre>
+</div>
+<p>是将消息直接存放到一个payload列中</p>
+<p> </p>
+<p>如果想要支持json格式数据，需要二次开发</p>
+<div class="cnblogs_code">
+<pre><span style="color: rgba(0, 0, 255, 1)">package</span><span style="color: rgba(0, 0, 0, 1)"> com.cloudera.kudu;
+</span><span style="color: rgba(0, 0, 255, 1)">public</span> <span style="color: rgba(0, 0, 255, 1)">class</span> JsonKuduOperationsProducer <span style="color: rgba(0, 0, 255, 1)">implements</span> KuduOperationsProducer {</pre>
+</div>
+<p> </p>
+<p>代码详见：<a href="https://www.cnblogs.com/barneywill/p/10573221.html" target="_blank">https://www.cnblogs.com/barneywill/p/10573221.html</a></p>
+<p>打包放到$FLUME_HOME/lib下</p>
+<h1>4 准备flume conf</h1>
+<div class="cnblogs_code">
+<pre>a1.sources =<span style="color: rgba(0, 0, 0, 1)"> r1
+a1.sinks </span>=<span style="color: rgba(0, 0, 0, 1)"> k1
+a1.channels </span>=<span style="color: rgba(0, 0, 0, 1)"> c1
+
+</span><span style="color: rgba(0, 128, 0, 1)">#</span><span style="color: rgba(0, 128, 0, 1)"> Describe/configure the source</span>
+<span style="color: rgba(0, 0, 0, 1)">
+a1.sources.r1.type </span>=<span style="color: rgba(0, 0, 0, 1)"> org.apache.flume.source.kafka.KafkaSource
+a1.sources.r1.batchSize </span>= 5000<span style="color: rgba(0, 0, 0, 1)">
+a1.sources.r1.batchDurationMillis </span>= 2000<span style="color: rgba(0, 0, 0, 1)">
+a1.sources.r1.kafka.bootstrap.servers </span>= 192.168.0.1:9092<span style="color: rgba(0, 0, 0, 1)">
+a1.sources.r1.kafka.topics </span>=<span style="color: rgba(0, 0, 0, 1)"> test_sync
+a1.sources.r1.kafka.consumer.group.id </span>= flume-<span style="color: rgba(0, 0, 0, 1)">consumer
+
+</span><span style="color: rgba(0, 128, 0, 1)">#</span><span style="color: rgba(0, 128, 0, 1)"> Describe the sink</span>
+a1.sinks.k1.type =<span style="color: rgba(0, 0, 0, 1)"> logger
+
+</span><span style="color: rgba(0, 128, 0, 1)">#</span><span style="color: rgba(0, 128, 0, 1)"> Use a channel which buffers events in memory</span>
+a1.channels.c1.type =<span style="color: rgba(0, 0, 0, 1)"> memory
+a1.channels.c1.capacity </span>= 10000<span style="color: rgba(0, 0, 0, 1)">
+a1.channels.c1.transactionCapacity </span>= 10000
+
+<span style="color: rgba(0, 128, 0, 1)">#</span><span style="color: rgba(0, 128, 0, 1)"> Bind the source and sink to the channel</span>
+a1.sources.r1.channels =<span style="color: rgba(0, 0, 0, 1)"> c1
+a1.sinks.k1.channel </span>=<span style="color: rgba(0, 0, 0, 1)"> c1
+
+a1.sinks.k1.type </span>=<span style="color: rgba(0, 0, 0, 1)"> org.apache.kudu.flume.sink.KuduSink
+a1.sinks.k1.producer </span>=<span style="color: rgba(0, 0, 0, 1)"> com.cloudera.kudu.JsonKuduOperationsProducer
+a1.sinks.k1.masterAddresses </span>= 192.168.0.1:7051<span style="color: rgba(0, 0, 0, 1)">
+a1.sinks.k1.tableName </span>=<span style="color: rgba(0, 0, 0, 1)"> impala::test.test_sync
+a1.sinks.k1.batchSize </span>= 50</pre>
+</div>
+<h1>5 启动flume</h1>
+<div class="cnblogs_code">
+<pre>bin/flume-ng agent --conf conf --conf-file conf/order.properties --name a1</pre>
+</div>
+<h1>6 kudu确认</h1>
+<p>impala-shell</p>
+<div class="cnblogs_code">
+<pre>select * <span style="color: rgba(0, 0, 255, 1)">from</span> test_sync limit 10;</pre>
+</div>
+<p> </p>
+<p>参考：https://kudu.apache.org/2016/08/31/intro-flume-kudu-sink.html</p>
+</div>
+            </div>
+
+            <!-- Post Footer -->
+            <div class="post-footer">
+                <div class="post-navigation">
+                    <a href="../blog_cn.html" class="nav-button">← Back to Home</a>
+                    <a href="0175.html" class="nav-button">Next Post →</a>
+                </div>
+            </div>
+        </article>
+    </div>
+</body>
+</html>

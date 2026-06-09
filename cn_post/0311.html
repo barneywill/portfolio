@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spark 3 - Spark Thrift实现原理及代码实现</title>
+    <link rel="stylesheet" href="../css/style3.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header Navigation -->
+        <div class="header">
+            <h1><a href="../blog_cn.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+        </div>
+
+        <!-- Post Container -->
+        <article class="post">
+            <!-- Post Header -->
+            <div class="post-header">
+                <h1>Spark 3 - Spark Thrift实现原理及代码实现</h1>
+                <div class="post-meta">
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📅</span>
+                        <span>December 18, 2018</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📖</span>
+                        <span>5 min read</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">👁️</span>
+                        <span>3589 views</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Post Content -->
+            <div class="post-content">
+                <div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<p>spark 2.1.1</p>
+<h1>一 启动命令</h1>
+<p>启动spark thrift命令</p>
+<blockquote>
+<p>$SPARK_HOME/sbin/start-thriftserver.sh</p>
+</blockquote>
+<p>然后会执行</p>
+<blockquote>
+<p>org.apache.spark.deploy.SparkSubmit --class org.apache.spark.sql.hive.thriftserver.HiveThriftServer2</p>
+</blockquote>
+<h1>二 启动过程及代码分析</h1>
+<p>hive thrift代码详见：<a href="https://www.cnblogs.com/barneywill/p/10185168.html" target="_blank">https://www.cnblogs.com/barneywill/p/10185168.html</a></p>
+<p>HiveThriftServer2是spark thrift核心类，继承自Hive的HiveServer2</p>
+<blockquote>
+<p>org.apache.spark.sql.hive.thriftserver.HiveThriftServer2 extends org.apache.hive.service.server.HiveServer2</p>
+</blockquote>
+<p> </p>
+<p>启动过程：</p>
+<blockquote>
+<p>HiveThriftServer2.main</p>
+<p>         SparkSQLEnv.init (sparkConf sparkSession sparkContext sqlContext)</p>
+<p>         HiveThriftServer2.init</p>
+<p>                  addService(ThriftBinaryCLIService)</p>
+<p>         HiveThriftServer2.start</p>
+<p>                  ThriftBinaryCLIService.run</p>
+<p>                          TServer.serve</p>
+</blockquote>
+<p> </p>
+<p>类结构：【接口或父类-&gt;子类】</p>
+<blockquote>
+<p>TServer-&gt;TThreadPoolServer</p>
+<p>         TProcessorFactory-&gt;SQLPlainProcessorFactory</p>
+<p>                  TProcessor-&gt;TSetIpAddressProcessor</p>
+<p>                          ThriftCLIService-&gt;ThriftBinaryCLIService</p>
+<p>                                   CLIService-&gt;SparkSQLCLIService (核心子类)</p>
+</blockquote>
+<p> </p>
+<p>服务初始化过程：</p>
+<blockquote>
+<p>CLIService.init</p>
+<p>         SparkSQLCLIService.init</p>
+<p>                  addService(SparkSQLSessionManager)</p>
+<p>                  initCompositeService</p>
+<p>                          SparkSQLSessionManager.init</p>
+<p>                                   addService(SparkSQLOperationManager)</p>
+<p>                                   initCompositeService</p>
+<p>                                            SparkSQLOperationManager.init</p>
+</blockquote>
+<h1>三 DDL执行过程</h1>
+<p>ddl执行过程需要和hive metastore交互</p>
+<p>从执行计划开始：</p>
+<blockquote>
+<p>spark-sql&gt; explain create table test_table(id string);<br/>== Physical Plan ==<br/>ExecutedCommand<br/>   +- CreateTableCommand CatalogTable(<br/>        Table: `test_table`<br/>        Created: Wed Dec 19 18:04:15 CST 2018<br/>        Last Access: Thu Jan 01 07:59:59 CST 1970<br/>        Type: MANAGED<br/>        Schema: [StructField(id,StringType,true)]<br/>        Provider: hive<br/>        Storage(InputFormat: org.apache.hadoop.mapred.TextInputFormat, OutputFormat: org.apache.hadoop.hive.ql.io.HiveIgnoreKeyTextOutputFormat)), false<br/>Time taken: 0.28 seconds, Fetched 1 row(s)</p>
+</blockquote>
+<p>从执行计划里可以找到具体的Command，这里是CreateTableCommand </p>
+<p> </p>
+<p>org.apache.spark.sql.execution.command.tables</p>
+<div class="cnblogs_code">
+<pre><span style="color: rgba(0, 0, 255, 1)">case</span> <span style="color: rgba(0, 0, 255, 1)">class</span> CreateTableCommand(table: CatalogTable, ifNotExists: Boolean) <span style="color: rgba(0, 0, 255, 1)">extends</span><span style="color: rgba(0, 0, 0, 1)"> RunnableCommand {
+
+  override def run(sparkSession: SparkSession): Seq[Row] </span>=<span style="color: rgba(0, 0, 0, 1)"> {
+    sparkSession.sessionState.catalog.createTable(table, ifNotExists)
+    Seq.empty[Row]
+  }
+}</span></pre>
+</div>
+<p>这里可以看到是直接将请求分发给sparkSession.sessionState.catalog</p>
+<p> </p>
+<p>org.apache.spark.sql.internal.SessionState</p>
+<div class="cnblogs_code">
+<pre>  <span style="color: rgba(0, 128, 0, 1)">/**</span><span style="color: rgba(0, 128, 0, 1)">
+   * Internal catalog for managing table and database states.
+   </span><span style="color: rgba(0, 128, 0, 1)">*/</span><span style="color: rgba(0, 0, 0, 1)">
+  lazy val catalog </span>= <span style="color: rgba(0, 0, 255, 1)">new</span><span style="color: rgba(0, 0, 0, 1)"> SessionCatalog(
+    sparkSession.sharedState.externalCatalog,
+    sparkSession.sharedState.globalTempViewManager,
+    functionResourceLoader,
+    functionRegistry,
+    conf,
+    newHadoopConf())</span></pre>
+</div>
+<p>取的是sparkSession.sharedState.externalCatalog</p>
+<p> </p>
+<p>org.apache.spark.sql.internal.SharedState</p>
+<div class="cnblogs_code">
+<pre>  <span style="color: rgba(0, 128, 0, 1)">/**</span><span style="color: rgba(0, 128, 0, 1)">
+   * A catalog that interacts with external systems.
+   </span><span style="color: rgba(0, 128, 0, 1)">*/</span><span style="color: rgba(0, 0, 0, 1)">
+  val externalCatalog: ExternalCatalog </span>=<span style="color: rgba(0, 0, 0, 1)">
+    SharedState.reflect[ExternalCatalog, SparkConf, Configuration](
+      SharedState.externalCatalogClassName(sparkContext.conf),
+      sparkContext.conf,
+      sparkContext.hadoopConfiguration)
+...
+  </span><span style="color: rgba(0, 0, 255, 1)">private</span> val HIVE_EXTERNAL_CATALOG_CLASS_NAME = "org.apache.spark.sql.hive.HiveExternalCatalog"
+
+  <span style="color: rgba(0, 0, 255, 1)">private</span> def externalCatalogClassName(conf: SparkConf): String =<span style="color: rgba(0, 0, 0, 1)"> {
+    conf.get(CATALOG_IMPLEMENTATION) match {
+      </span><span style="color: rgba(0, 0, 255, 1)">case</span> "hive" =&gt;<span style="color: rgba(0, 0, 0, 1)"> HIVE_EXTERNAL_CATALOG_CLASS_NAME
+      </span><span style="color: rgba(0, 0, 255, 1)">case</span> "in-memory" =&gt;<span style="color: rgba(0, 0, 0, 1)"> classOf[InMemoryCatalog].getCanonicalName
+    }
+  }</span></pre>
+</div>
+<p>这里可以看到是通过externalCatalogClassName反射实例化的，代码里硬编码使用的是org.apache.spark.sql.hive.HiveExternalCatalog</p>
+<p> </p>
+<p>org.apache.spark.sql.hive.HiveExternalCatalog</p>
+<div class="cnblogs_code">
+<pre>  <span style="color: rgba(0, 128, 0, 1)">/**</span><span style="color: rgba(0, 128, 0, 1)">
+   * A Hive client used to interact with the metastore.
+   </span><span style="color: rgba(0, 128, 0, 1)">*/</span><span style="color: rgba(0, 0, 0, 1)">
+  val client: HiveClient </span>=<span style="color: rgba(0, 0, 0, 1)"> {
+    HiveUtils.newClientForMetadata(conf, hadoopConf)
+  }
+
+  </span><span style="color: rgba(0, 0, 255, 1)">private</span> def withClient[T](body: =&gt; T): T = <span style="color: rgba(0, 0, 255, 1)">synchronized</span><span style="color: rgba(0, 0, 0, 1)"> {
+    </span><span style="color: rgba(0, 0, 255, 1)">try</span><span style="color: rgba(0, 0, 0, 1)"> {
+      body
+    } </span><span style="color: rgba(0, 0, 255, 1)">catch</span><span style="color: rgba(0, 0, 0, 1)"> {
+      </span><span style="color: rgba(0, 0, 255, 1)">case</span> NonFatal(exception) <span style="color: rgba(0, 0, 255, 1)">if</span> isClientException(exception) =&gt;<span style="color: rgba(0, 0, 0, 1)">
+        val e </span>=<span style="color: rgba(0, 0, 0, 1)"> exception match {
+          </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> Since we are using shim, the exceptions thrown by the underlying method of
+          </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> Method.invoke() are wrapped by InvocationTargetException</span>
+          <span style="color: rgba(0, 0, 255, 1)">case</span> i: InvocationTargetException =&gt;<span style="color: rgba(0, 0, 0, 1)"> i.getCause
+          </span><span style="color: rgba(0, 0, 255, 1)">case</span> o =&gt;<span style="color: rgba(0, 0, 0, 1)"> o
+        }
+        </span><span style="color: rgba(0, 0, 255, 1)">throw</span> <span style="color: rgba(0, 0, 255, 1)">new</span><span style="color: rgba(0, 0, 0, 1)"> AnalysisException(
+          e.getClass.getCanonicalName </span>+ ": " + e.getMessage, cause =<span style="color: rgba(0, 0, 0, 1)"> Some(e))
+    }
+  }
+
+  override def createDatabase(
+      dbDefinition: CatalogDatabase,
+      ignoreIfExists: Boolean): Unit </span>=<span style="color: rgba(0, 0, 0, 1)"> withClient {
+    client.createDatabase(dbDefinition, ignoreIfExists)
+  }</span></pre>
+</div>
+<p>这个类里执行任何ddl方法都会执行withClient，而withClient有synchronized，执行过程是直接把请求分发给client，下面看client是什么</p>
+<p> </p>
+<p>org.apache.spark.sql.hive.client.IsolatedClientLoader</p>
+<div class="cnblogs_code">
+<pre>  <span style="color: rgba(0, 128, 0, 1)">/**</span><span style="color: rgba(0, 128, 0, 1)"> The isolated client interface to Hive. </span><span style="color: rgba(0, 128, 0, 1)">*/</span>
+  <span style="color: rgba(0, 0, 255, 1)">private</span>[hive] def createClient(): HiveClient =<span style="color: rgba(0, 0, 0, 1)"> {
+    </span><span style="color: rgba(0, 0, 255, 1)">if</span> (!<span style="color: rgba(0, 0, 0, 1)">isolationOn) {
+      </span><span style="color: rgba(0, 0, 255, 1)">return</span> <span style="color: rgba(0, 0, 255, 1)">new</span> HiveClientImpl(version, sparkConf, hadoopConf, config, baseClassLoader, <span style="color: rgba(0, 0, 255, 1)">this</span><span style="color: rgba(0, 0, 0, 1)">)
+    }
+    </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> Pre-reflective instantiation setup.</span>
+    logDebug("Initializing the logger to avoid disaster..."<span style="color: rgba(0, 0, 0, 1)">)
+    val origLoader </span>=<span style="color: rgba(0, 0, 0, 1)"> Thread.currentThread().getContextClassLoader
+    Thread.currentThread.setContextClassLoader(classLoader)
+
+    </span><span style="color: rgba(0, 0, 255, 1)">try</span><span style="color: rgba(0, 0, 0, 1)"> {
+      classLoader
+        .loadClass(classOf[HiveClientImpl].getName)
+        .getConstructors.head
+        .newInstance(version, sparkConf, hadoopConf, config, classLoader, </span><span style="color: rgba(0, 0, 255, 1)">this</span><span style="color: rgba(0, 0, 0, 1)">)
+        .asInstanceOf[HiveClient]
+    } </span><span style="color: rgba(0, 0, 255, 1)">catch</span> {</pre>
+</div>
+<p>可见client直接用的是org.apache.spark.sql.hive.client.HiveClientImpl</p>
+<p> </p>
+<p>org.apache.spark.sql.hive.client.HiveClientImpl</p>
+<div class="cnblogs_code">
+<pre>  def withHiveState[A](f: =&gt; A): A =<span style="color: rgba(0, 0, 0, 1)"> retryLocked {
+    val original </span>=<span style="color: rgba(0, 0, 0, 1)"> Thread.currentThread().getContextClassLoader
+    </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> Set the thread local metastore client to the client associated with this HiveClientImpl.</span>
+<span style="color: rgba(0, 0, 0, 1)">    Hive.set(client)
+    </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> The classloader in clientLoader could be changed after addJar, always use the latest
+    </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> classloader</span>
+<span style="color: rgba(0, 0, 0, 1)">    state.getConf.setClassLoader(clientLoader.classLoader)
+    </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> setCurrentSessionState will use the classLoader associated
+    </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> with the HiveConf in `state` to override the context class loader of the current
+    </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> thread.</span>
+<span style="color: rgba(0, 0, 0, 1)">    shim.setCurrentSessionState(state)
+    val ret </span>= <span style="color: rgba(0, 0, 255, 1)">try</span> f <span style="color: rgba(0, 0, 255, 1)">finally</span><span style="color: rgba(0, 0, 0, 1)"> {
+      Thread.currentThread().setContextClassLoader(original)
+      HiveCatalogMetrics.incrementHiveClientCalls(</span>1<span style="color: rgba(0, 0, 0, 1)">)
+    }
+    ret
+  }
+  </span><span style="color: rgba(0, 0, 255, 1)">private</span> def retryLocked[A](f: =&gt; A): A = clientLoader.<span style="color: rgba(0, 0, 255, 1)">synchronized</span><span style="color: rgba(0, 0, 0, 1)"> {
+...
+
+  override def createDatabase(
+      database: CatalogDatabase,
+      ignoreIfExists: Boolean): Unit </span>=<span style="color: rgba(0, 0, 0, 1)"> withHiveState {
+    client.createDatabase(
+      </span><span style="color: rgba(0, 0, 255, 1)">new</span><span style="color: rgba(0, 0, 0, 1)"> HiveDatabase(
+        database.name,
+        database.description,
+        database.locationUri,
+        Option(database.properties).map(_.asJava).orNull),
+        ignoreIfExists)
+  }</span></pre>
+</div>
+<p>这个类执行任何ddl方法都会执行withHiveState，withHiveState会执行retryLocked，retryLocked上有synchronized；而且这里也是直接将请求分发给client，这里的client是hive的类org.apache.hadoop.hive.ql.metadata.Hive</p>
+<p> </p>
+<h1>四 DML执行过程</h1>
+<p>dml执行过程最后会执行到spark.sql</p>
+<p>sql执行过程：</p>
+<blockquote>
+<p>CLIService.executeStatement （返回OperationHandle）</p>
+<p>         SessionManager.getSession</p>
+<p>         SessionManager.openSession</p>
+<p>                  SparkSQLSessionManager.openSession</p>
+<p>                          SparkSQLOperationManager.sessionToContexts.set （openSession时：session和sqlContext建立映射）</p>
+<p>         HiveSession.executeStatement</p>
+<p>                  HiveSessionImpl.executeStatementInternal</p>
+<p>                          OperationManager.newExecuteStatementOperation</p>
+<p>                                   SparkSQLOperationManager.newExecuteStatementOperation</p>
+<p>                                            SparkSQLOperationManager.sessionToContexts.get （通过session取到sqlContext）</p>
+<p>                          ExecuteStatementOperation.run</p>
+<p>                                   SparkExecuteStatementOperation.run</p>
+<p>                                            SparkExecuteStatementOperation.execute</p>
+<p>                                                     SQLContext.sql （熟悉的spark sql）</p>
+</blockquote>
+<p>可见从SparkSQLCLIService初始化开始，逐个将各个类的实现类改为spark的子类比如：</p>
+<blockquote>
+<p>org.apache.spark.sql.hive.thriftserver.SparkSQLSessionManager extends org.apache.hive.service.cli.session.SessionManager<br/>org.apache.spark.sql.hive.thriftserver.server.SparkSQLOperationManager extends org.apache.hive.service.cli.operation.OperationManager<br/>org.apache.spark.sql.hive.thriftserver.SparkExecuteStatementOperation extends org.apache.hive.service.cli.operation.ExecuteStatementOperation</p>
+</blockquote>
+<p>从而实现底层实现的替换；</p>
+<p> </p>
+<p>hive的HiveServer2为什么这么容易的被扩展，详见spark代码的sql/hive-thriftserver，这里应该是将hive1.2代码做了很多修改，以后升级就不那么容易了；<br/>至于spark为什么要花这么大力气扩展HiveServer2而不是重新实现，可能是为了保持接口一致，这样有利于原来使用hive thrift的用户平滑的迁移到spark thrift，因为唯一的改动就是切换url，实际上，相同sql下的spark thrift和hive thrift表现还是有很多不同的。</p>
+<p> </p>
+</div>
+            </div>
+
+            <!-- Post Footer -->
+            <div class="post-footer">
+                <div class="post-navigation">
+                    <a href="../blog_cn.html" class="nav-button">← Back to Home</a>
+                    <a href="0312.html" class="nav-button">Next Post →</a>
+                </div>
+            </div>
+        </article>
+    </div>
+</body>
+</html>

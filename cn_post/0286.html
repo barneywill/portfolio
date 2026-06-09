@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>定位分析--见证scala的强大</title>
+    <link rel="stylesheet" href="../css/style3.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header Navigation -->
+        <div class="header">
+            <h1><a href="../blog_cn.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+        </div>
+
+        <!-- Post Container -->
+        <article class="post">
+            <!-- Post Header -->
+            <div class="post-header">
+                <h1>定位分析--见证scala的强大</h1>
+                <div class="post-meta">
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📅</span>
+                        <span>December 29, 2018</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📖</span>
+                        <span>2 min read</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">👁️</span>
+                        <span>588 views</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Post Content -->
+            <div class="post-content">
+                <div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<h1>一 场景分析</h1>
+<p>定位分析广泛应用，比如室外基站定位，室内蓝牙beacon定位，室内wifi探针定位等，实现方式是三点定位 Trilateration</p>
+<h2>理想情况</h2>
+<p> <img alt="" src="https://img2018.cnblogs.com/blog/1509647/201812/1509647-20181229124718575-233102178.png"/></p>
+<p>这种理想情况要求3个基站‘同时’采集‘准确’的距离信息，</p>
+<h2>实际情况</h2>
+<ul>
+<li>3个基站采集数据的时间是分开的；</li>
+<li>采集数据的距离不准确；</li>
+</ul>
+<p>解决方法是：</p>
+<ul>
+<li>增加基站数量，即增加采集数据的密度和数量；</li>
+<li>不采用一个时间点的数据，而采用一个时间段的数据计算，比如5s内可能只有1个基站的数据，但是30s内可能会有超过3个基站的数据；</li>
+<li>在误差范围内，采用数学方法迭代收敛，找出概率上最有可能的未知点的坐标；</li>
+</ul>
+<p>得到未知点坐标之后再结合时间可以做更多应用：轨迹图，热力图等，比如</p>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201812/1509647-20181229131334384-2097307750.png"/></p>
+<h1>二 问题抽象</h1>
+<h2>已知条件</h2>
+<ul>
+<li>n个点位置坐标：(x1, y1), (x2, y2), (x3, y3), ..., (xn, yn)</li>
+<li>未知点到n个点距离：d1, d2, d3, ..., dn</li>
+</ul>
+<h2>求解</h2>
+<ul>
+<li>未知点位置坐标(x, y)</li>
+</ul>
+<h2>方程</h2>
+<p> <img alt="" src="https://img2018.cnblogs.com/blog/1509647/201812/1509647-20181229131800936-137508785.png"/></p>
+<h2>解法</h2>
+<p>上面的方程是n个2次方程，</p>
+<p>1）首先尝试将次数降低，逐个用方程组中第i-1个方程减去第i个方程得到新方程，这样n个2次方程转换为n-1个1次方程，</p>
+<p>2）得到n-1个1次方程（线性方程）之后，问题转换为一元线性回归问题：</p>
+<p>即平面中有n个观察点(x1, y1), (x2, y2), ..., (xn, yn)，需要找到一条直线Y=aX+b，计算常数a和常数b使得n个观察点到直线的距离（误差）平方和最小（注意原始问题中的未知点坐标就是这里的常数a和常数b）；</p>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201901/1509647-20190103223432010-1831955943.png"/></p>
+<p> </p>
+<p>一元线性回归模型可以利用最小二乘法（最小平方法）求得最优解，即最小二乘解；最小二乘法详见：<a href="https://www.cnblogs.com/barneywill/p/10217349.html" target="_blank">https://www.cnblogs.com/barneywill/p/10217349.html</a></p>
+<p> </p>
+<h2>问题模型简化</h2>
+<blockquote>
+<p>(x1, y1, d1)<br/>(x2, y2, d2)<br/>...<br/>(xn, yn, dn)<br/>-&gt;<br/>(x, y)</p>
+</blockquote>
+<h1>三 统计示例</h1>
+<p>输入<br/>(1.0, 1.0, 1.0)<br/>(2.0, 0.0, 1.0)<br/>(2.0, 2.0, 1.0)</p>
+<p>输出<br/>(2.0,1.0)</p>
+<h1>四 代码实现</h1>
+<h2>scala核心代码</h2>
+<p>scala</p>
+<p> </p>
+<div class="cnblogs_code">
+<pre>  <span style="color: rgba(0, 128, 0, 1)">/**</span><span style="color: rgba(0, 128, 0, 1)">
+    * </span><span style="color: rgba(128, 128, 128, 1)">@param</span><span style="color: rgba(0, 128, 0, 1)"> datas Array(x_coordinates, y_coordinates, distance)
+    * </span><span style="color: rgba(128, 128, 128, 1)">@return</span><span style="color: rgba(0, 128, 0, 1)"> (x_coordinates, y_coordinates)
+    </span><span style="color: rgba(0, 128, 0, 1)">*/</span><span style="color: rgba(0, 0, 0, 1)">
+  def detect(datas : Array[(Double, Double, Double)]) : (Double, Double) </span>=<span style="color: rgba(0, 0, 0, 1)"> {
+    </span><span style="color: rgba(0, 0, 255, 1)">if</span> (datas == <span style="color: rgba(0, 0, 255, 1)">null</span> || datas.isEmpty) (0, 0<span style="color: rgba(0, 0, 0, 1)">)
+    </span><span style="color: rgba(0, 0, 255, 1)">else</span> <span style="color: rgba(0, 0, 255, 1)">if</span> (datas.length == 1) <span style="color: rgba(0, 0, 255, 1)">return</span><span style="color: rgba(0, 0, 0, 1)"> (datas.head._1, datas.head._2)
+    </span><span style="color: rgba(0, 0, 255, 1)">else</span> <span style="color: rgba(0, 0, 255, 1)">if</span> (datas.length == 2) <span style="color: rgba(0, 0, 255, 1)">return</span> ((datas.head._1 + datas.last._1) / 2, (datas.head._2 + datas.last._2) / 2<span style="color: rgba(0, 0, 0, 1)">)
+    </span><span style="color: rgba(0, 0, 255, 1)">else</span><span style="color: rgba(0, 0, 0, 1)"> {
+      var data </span>=<span style="color: rgba(0, 0, 0, 1)"> Array[Array[Double]]()
+      </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)">X + (y_1 - y_i)/(x_1 - x_i)Y = (sq(d_i) - sq(d_1) + sq(x_1) + sq(y_1) - sq(x_i) - sq(y_i))/2(x_1 - x_i)</span>
+      <span style="color: rgba(0, 0, 255, 1)">for</span> (i &lt;- 1 to (datas.length - 1)) data = data :+ Array((datas.head._2 - datas.apply(i)._2) / (datas.head._1 - datas.apply(i)._1), (Math.pow(datas.apply(i)._3, 2) - Math.pow(datas.head._3, 2) + Math.pow(datas.head._1, 2) + Math.pow(datas.head._2, 2) - Math.pow(datas.apply(i)._1, 2) - Math.pow(datas.apply(i)._2, 2))  / 2 / (datas.head._1 -<span style="color: rgba(0, 0, 0, 1)"> datas.apply(i)._1))
+      val regression </span>= <span style="color: rgba(0, 0, 255, 1)">new</span><span style="color: rgba(0, 0, 0, 1)"> SimpleRegression
+      regression.addData(data)
+      (regression.getIntercept, regression.getSlope)
+    }
+  }</span></pre>
+</div>
+<p>测试运行</p>
+<div class="cnblogs_code">
+<pre>      println(detect(Array((1.0, 1.0, 1.0<span style="color: rgba(0, 0, 0, 1)">))))
+      println(detect(Array((</span>1.0, 1.0, 1.0), (2.0, 2.0, 1.0<span style="color: rgba(0, 0, 0, 1)">))))
+      println(detect(Array((</span>1.0, 1.0, 1.0), (2.0, 0.0, 1.0), (2.0, 2.0, 1.0<span style="color: rgba(0, 0, 0, 1)">))))
+      println(detect(Array((</span>1.0, 1.0, 1.0), (2.0, 0.0, 1.0), (2.0, 3.0, 1.0<span style="color: rgba(0, 0, 0, 1)">))))
+      println(detect(Array((</span>1.0, 1.0, 1.0), (2.0, 0.0, 1.0), (2.0, 3.0, 1.0), (2.0, 3.0, 1.0), (20.0, 30.0, 1.0))))</pre>
+</div>
+<p>输出</p>
+<p>(1.0,1.0)<br/>(1.5,1.5)<br/>(2.0,1.0)<br/>(2.5,1.5)<br/>(7.728915662650602,3.3674698795180724)</p>
+<h1>五 半径图效果</h1>
+<p>实际数据的半径图示例：</p>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201812/1509647-20181229124035699-240469144.png"/></p>
+<p>半径图中黑色点表示基站位置，每个基站都有一个或两个圆圈，其中两个圆圈使用数据里的最大距离和最小距离绘制的；红色点表示根据算法定位出来的设备位置；</p>
+<p> </p>
+</div>
+            </div>
+
+            <!-- Post Footer -->
+            <div class="post-footer">
+                <div class="post-navigation">
+                    <a href="../blog_cn.html" class="nav-button">← Back to Home</a>
+                    <a href="0287.html" class="nav-button">Next Post →</a>
+                </div>
+            </div>
+        </article>
+    </div>
+</body>
+</html>

@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>处理大批量数据时如何实现“高效”同时实现“断点续传”功能</title>
+    <link rel="stylesheet" href="../css/style3.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header Navigation -->
+        <div class="header">
+            <h1><a href="../blog_cn.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+        </div>
+
+        <!-- Post Container -->
+        <article class="post">
+            <!-- Post Header -->
+            <div class="post-header">
+                <h1>处理大批量数据时如何实现“高效”同时实现“断点续传”功能</h1>
+                <div class="post-meta">
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📅</span>
+                        <span>October 20, 2018</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📖</span>
+                        <span>1 min read</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">👁️</span>
+                        <span>1443 views</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Post Content -->
+            <div class="post-content">
+                <div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<h1 id="id-处理大批量数据时如何实现“高效”同时实现“断点续传”功能-问题">问题</h1>
+<p><strong>有一个发送100w短信的任务，如何尽量缩短发送时间，同时在中途因为各种原因任务挂掉时，比如发送完50w时任务挂掉，重启任务之后只发送剩余50w短信？</strong></p>
+<p> </p>
+<p>这是一个比较通用的问题，容易想到的办法是：</p>
+<h1 id="id-处理大批量数据时如何实现“高效”同时实现“断点续传”功能-方案一">方案一</h1>
+<h2>步骤</h2>
+<ol>
+<li>使用数据库来存放所有数据（比如100w条待发送短信），同时设置status，未处理是0，已处理是1；</li>
+<li>任务执行时查询所有status=0的数据，即待处理数据；<ol>
+<li>　　逐条处理，并且在处理之后设置status=1，避免重复处理；</li>
+</ol></li>
+</ol>
+<h2>分析</h2>
+<p>这样可以解决问题，但是有一些<strong>缺点</strong>：</p>
+<ul>
+<li><strong>a 串行处理数据效率很低；</strong></li>
+</ul>
+<ul>
+<li><strong>b 数据必须存放在可update的存储，比如数据库，不支持hive、文件这种不可update的存储；</strong></li>
+</ul>
+<ul>
+<li><strong>c 传统RDBMS对数据量的支持有限；</strong></li>
+</ul>
+<ul>
+<li><strong>d 即使串行，极端情况下仍有可能有1条数据被重复处理（重复发送短信）；</strong></li>
+</ul>
+<p>缺点d是因为发送操作和更新数据库状态是分开的，而且发送操作无法回滚，所以无法通过分布式事务来根本解决，这个问题基本<strong>无解</strong>，即总是有可能重复处理，<strong>只能尽量让重复发送的概率降低</strong>。</p>
+<p> </p>
+<p>既然缺点d无法避免，可以通过多线程+批量提交事务来解决缺点a：</p>
+<h1 id="id-处理大批量数据时如何实现“高效”同时实现“断点续传”功能-方案二">方案二</h1>
+<h2>步骤</h2>
+<ol>
+<li>同上</li>
+<li>同上<ol>
+<li>　　每次读取B条数据，将数据平均分发给C个线程来同时处理，每个线程处理完D条数据后批量设置这D条数据的status=1；</li>
+</ol></li>
+</ol>
+<p>（比如每次读取1000条status=0的短信，同时分给10个线程发送，每个线程发送100条短信，并且每个线程每成功发送20条后批量更新这20条短信的status=1）</p>
+<h2>分析</h2>
+<p id="id-处理大批量数据时如何实现“高效”同时实现“断点续传”功能-方案二相对方案一">方案二相对方案一</p>
+<p>理论上可以将时间缩短为1/C（上例中1/10）以下，同时最悲观的情况下有可能会有C*D个数据（上例中10*20=200）被重复处理，即解决缺点a时放大缺点d，同时缺点b和c依然存在；</p>
+<p> </p>
+<p>有没有可能同时解决缺点a、b、c？</p>
+<h1 id="id-处理大批量数据时如何实现“高效”同时实现“断点续传”功能-方案三">方案三</h1>
+<h2>步骤</h2>
+<ol>
+<li>待处理数据存放在数据库、或者hive、或者文件；</li>
+<li>处理前首先查询当前任务上次处理处理的offset（如果是数据库或者hive，offset就是自增id或者uuid；如果是文件，offset就是行数），如果不存在，则设置offset=0，offset可以存放在数据库中；</li>
+<li>从上次处理的offset开始继续查询待处理数据；（数据库或者hive即排序查询跳过前边的行，文件则直接按照行数跳过前边的行）<ol>
+<li>　　每次查询B个数据，分发给C个线程处理，B个数据全部处理完时设置offset+=B；</li>
+</ol></li>
+</ol>
+<p> </p>
+<h2 id="id-处理大批量数据时如何实现“高效”同时实现“断点续传”功能-方案三相比方案二">分析</h2>
+<p>方案三相比方案二</p>
+<p><strong>缺点a方面，节省了99%以上的数据库操作，效率提升N倍；</strong><br/><strong>缺点b和缺点c方面，完美解决；</strong><br/><strong>缺点d方面，方案三最多有B个数据重复处理（上例中的1000），方案二最多有C*D个数据重复处理（上例中的10*20=200），即方案三相对方案二放大了缺点d；</strong></p>
+<p> </p>
+<p>有没有可能在缺点d上进一步优化？</p>
+<h1 id="id-处理大批量数据时如何实现“高效”同时实现“断点续传”功能-方案四">方案四</h1>
+<h2>步骤</h2>
+<ol>
+<li>同上</li>
+<li>同上</li>
+<li>同上<ol>
+<li>　　每次查询B个数据，分发给C个线程处理，每个线程都在cache（memcache或redis，放数据库也可以）里维护一个当前处理的relative_offset，如果relative_offset!=0，则跳过前relative_offset个数据；所有线程处理完后，设置所有线程的relative_offset=0，同时设置offset+=B；</li>
+</ol></li>
+</ol>
+<p>（比如每次查询1000个未发送短信，分发给10个线程处理，每个线程都在cache里维护一个relative_offset，初始值是0，每发送一条消息都将该线程cache里的relative_offset+=1，10个线程处理完，设置所有线程的relative_offset=0，同时设置offset+=1000）</p>
+<h2 id="id-处理大批量数据时如何实现“高效”同时实现“断点续传”功能-问题回放">问题回放</h2>
+<p>发送8000条短信后取出下1000条待发送短信，即8001-9000，这时分给10个线程，第1个线程分发短信为8001-8100，第2个线程分发短信为8101-8200，...，第10个线程分发短信为8901-9000，发送一段时间后，第1个线程的relative_offset是49，第2个线程的relative_offset是31，其他线程任意，这时进程挂掉，任务重启后，拿到offset=8000，这次取出下1000条待发送短信，依旧分给10个线程，第1个线程分发短信为8001-8100，第2个线程分发短信为8101-8200，...，第10个线程分发短信为8901-9000，第1个线程发现relative_offset=49，则继续发送8050-8100的短信，第2个线程发现relative_offset=31，则继续发送8132-8200的短信，其他线程以此类推。</p>
+<h2>分析</h2>
+<p id="id-处理大批量数据时如何实现“高效”同时实现“断点续传”功能-方案四相比方案三">方案四相比方案三</p>
+<p>缺点d方面，最悲观的情况下，方案三和方案四都会有B条数据重复发送，但方案四发生的概率极低（只有在设置所有线程的relative_offset=0和设置offset+=1000之间挂掉才会发生），并且在极大的概率上最多只有C条数据重复发送，这个比方案二的C*D的效果要好很多；</p>
+<p> </p>
+<p>综上，方案四可以同时实现“高效”+“断点续传”，并且这是一个比较通用的方案，可以实现一套基类，将读取待处理数据以及处理单条数据作为template method由子类实现，快速应用到所有问题场景中。</p>
+<p> </p>
+</div>
+            </div>
+
+            <!-- Post Footer -->
+            <div class="post-footer">
+                <div class="post-navigation">
+                    <a href="../blog_cn.html" class="nav-button">← Back to Home</a>
+                    <a href="0364.html" class="nav-button">Next Post →</a>
+                </div>
+            </div>
+        </article>
+    </div>
+</body>
+</html>

@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>redhat6升级glibc-2.12到2.14</title>
+    <link rel="stylesheet" href="../css/style3.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header Navigation -->
+        <div class="header">
+            <h1><a href="../blog_cn.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+        </div>
+
+        <!-- Post Container -->
+        <article class="post">
+            <!-- Post Header -->
+            <div class="post-header">
+                <h1>redhat6升级glibc-2.12到2.14</h1>
+                <div class="post-meta">
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📅</span>
+                        <span>January 24, 2019</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📖</span>
+                        <span>1 min read</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">👁️</span>
+                        <span>4399 views</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Post Content -->
+            <div class="post-content">
+                <div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<p>redhat6自带glibc-2.12，升级到glibc-2.14过程</p>
+<blockquote>
+<p># strings /lib64/libc.so.6 |grep GLIBC_<br/>GLIBC_2.2.5<br/>GLIBC_2.2.6<br/>GLIBC_2.3<br/>GLIBC_2.3.2<br/>GLIBC_2.3.3<br/>GLIBC_2.3.4<br/>GLIBC_2.4<br/>GLIBC_2.5<br/>GLIBC_2.6<br/>GLIBC_2.7<br/>GLIBC_2.8<br/>GLIBC_2.9<br/>GLIBC_2.10<br/>GLIBC_2.11<br/>GLIBC_2.12<br/>GLIBC_2.13<br/>GLIBC_PRIVATE<br/># ls - l /lib64|grep libc.so<br/>lrwxrwxrwx  1 root root      12 Jan 24 17:26 libc.so.6 - &gt; libc-2.12.so</p>
+<p># wget http://ftp.gnu.org/gnu/glibc/glibc-2.14.tar.gz<br/># tar xvf glibc-2.14.tar.gz<br/># cd glibc-2.14<br/># mkdir build<br/># cd build<br/># /path/to/glibc-2.14/configure --prefix=/opt/glibc-2.14<br/># make<br/># make install</p>
+<p># export LD_LIBRARY_PATH=/opt/glibc-2.14/lib:$LD_LIBRARY_PATH</p>
+<p># cp /opt/glibc-2.14/libc-2.14.so /lib64/<br/># cd /lib64<br/># ln - snf libc-2.14.so libc.so.6</p>
+<p># strings /lib64/libc.so.6 |grep GLIBC_</p>
+</blockquote>
+<p><br/>configure时一定不要用</p>
+<blockquote>
+<p># /path/to/glibc-2.14/configure --prefix=/usr --disable-profile --enable-add-ons --with-headers=/usr/include --with-binutils=/usr/bin</p>
+</blockquote>
+<p>否则一旦make install报错，后果可能很严重，详见：<a href="https://www.cnblogs.com/barneywill/p/10315603.html" target="_blank">https://www.cnblogs.com/barneywill/p/10315603.html</a></p>
+</div>
+            </div>
+
+            <!-- Post Footer -->
+            <div class="post-footer">
+                <div class="post-navigation">
+                    <a href="../blog_cn.html" class="nav-button">← Back to Home</a>
+                    <a href="0250.html" class="nav-button">Next Post →</a>
+                </div>
+            </div>
+        </article>
+    </div>
+</body>
+</html>

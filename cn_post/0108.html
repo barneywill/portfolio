@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sqlite</title>
+    <link rel="stylesheet" href="../css/style3.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header Navigation -->
+        <div class="header">
+            <h1><a href="../blog_cn.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+        </div>
+
+        <!-- Post Container -->
+        <article class="post">
+            <!-- Post Header -->
+            <div class="post-header">
+                <h1>Sqlite</h1>
+                <div class="post-meta">
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📅</span>
+                        <span>June 20, 2019</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📖</span>
+                        <span>2 min read</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">👁️</span>
+                        <span>288 views</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Post Content -->
+            <div class="post-content">
+                <div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<p><picture>
+  <source srcset="../img/1509647-20190620144118709-1664882316.webp" type="image/webp">
+  <img alt="" src="../img/1509647-20190620144118709-1664882316.png">
+</picture></p>
+<p>官方：https://www.sqlite.org/index.html</p>
+<h1>简介</h1>
+<p>SQLite is a C-language library that implements a small, fast, self-contained, high-reliability, full-featured, SQL database engine. SQLite is the most used database engine in the world. SQLite is built into all mobile phones and most computers and comes bundled inside countless other applications that people use every day.</p>
+<p>The SQLite file format is stable, cross-platform, and backwards compatible and the developers pledge to keep it that way through at least the year 2050. SQLite database files are commonly used as containers to transfer rich content between systems and as a long-term archival format for data. There are over 1 trillion (1e12) SQLite databases in active use.</p>
+<h1>安装</h1>
+<blockquote>
+<p># yum install sqlite-devel</p>
+</blockquote>
+<h1>使用</h1>
+<div class="cnblogs_code">
+<pre><span style="color: rgba(0, 128, 0, 1)">#</span><span style="color: rgba(0, 128, 0, 1)"> sqlite3 - version</span>
+
+<span style="color: rgba(0, 128, 0, 1)">#</span><span style="color: rgba(0, 128, 0, 1)"> sqlite3 /path/to/db</span>
+<span style="color: rgba(0, 0, 0, 1)">
+sqlite</span>&gt;<span style="color: rgba(0, 0, 0, 1)">.database
+
+sqlite</span>&gt;<span style="color: rgba(0, 0, 0, 1)">.schema
+
+sqlite</span>&gt;<span style="color: rgba(0, 0, 0, 1)">.schema table_name
+
+sqlite</span>&gt;insert/delete/select/update<br/><br/>sqlite&gt;.exit<br/><br/>sqlite&gt;.quit<br/><br/></pre>
+<p>sqlite&gt; .help<br/>.backup ?DB? FILE      Backup DB (default "main") to FILE<br/>.bail ON|OFF           Stop after hitting an error.  Default OFF<br/>.databases             List names and files of attached databases<br/>.dump ?TABLE? ...      Dump the database in an SQL text format<br/>                         If TABLE specified, only dump tables matching<br/>                         LIKE pattern TABLE.<br/>.echo ON|OFF           Turn command echo on or off<br/>.exit                  Exit this program<br/>.explain ?ON|OFF?      Turn output mode suitable for EXPLAIN on or off.<br/>                         With no args, it turns EXPLAIN on.<br/>.header(s) ON|OFF      Turn display of headers on or off<br/>.help                  Show this message<br/>.import FILE TABLE     Import data from FILE into TABLE<br/>.indices ?TABLE?       Show names of all indices<br/>                         If TABLE specified, only show indices for tables<br/>                         matching LIKE pattern TABLE.<br/>.load FILE ?ENTRY?     Load an extension library<br/>.log FILE|off          Turn logging on or off.  FILE can be stderr/stdout<br/>.mode MODE ?TABLE?     Set output mode where MODE is one of:<br/>                         csv      Comma-separated values<br/>                         column   Left-aligned columns.  (See .width)<br/>                         html     HTML &lt;table&gt; code<br/>                         insert   SQL insert statements for TABLE<br/>                         line     One value per line<br/>                         list     Values delimited by .separator string<br/>                         tabs     Tab-separated values<br/>                         tcl      TCL list elements<br/>.nullvalue STRING      Use STRING in place of NULL values<br/>.output FILENAME       Send output to FILENAME<br/>.output stdout         Send output to the screen<br/>.print STRING...       Print literal STRING<br/>.prompt MAIN CONTINUE  Replace the standard prompts<br/>.quit                  Exit this program<br/>.read FILENAME         Execute SQL in FILENAME<br/>.restore ?DB? FILE     Restore content of DB (default "main") from FILE<br/>.schema ?TABLE?        Show the CREATE statements<br/>                         If TABLE specified, only show tables matching<br/>                         LIKE pattern TABLE.<br/>.separator STRING      Change separator used by output mode and .import<br/>.show                  Show the current values for various settings<br/>.stats ON|OFF          Turn stats on or off<br/>.tables ?TABLE?        List names of tables<br/>                         If TABLE specified, only list tables matching<br/>                         LIKE pattern TABLE.<br/>.timeout MS            Try opening locked tables for MS milliseconds<br/>.trace FILE|off        Output each SQL statement as it is run<br/>.vfsname ?AUX?         Print the name of the VFS stack<br/>.width NUM1 NUM2 ...   Set column widths for "column" mode<br/>.timer ON|OFF          Turn the CPU timer measurement on or off</p>
+</div>
+<p> </p>
+</div>
+            </div>
+
+            <!-- Post Footer -->
+            <div class="post-footer">
+                <div class="post-navigation">
+                    <a href="../blog_cn.html" class="nav-button">← Back to Home</a>
+                    <a href="0109.html" class="nav-button">Next Post →</a>
+                </div>
+            </div>
+        </article>
+    </div>
+</body>
+</html>

@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>mysql故障恢复</title>
+    <link rel="stylesheet" href="../css/style3.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header Navigation -->
+        <div class="header">
+            <h1><a href="../blog_cn.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+        </div>
+
+        <!-- Post Container -->
+        <article class="post">
+            <!-- Post Header -->
+            <div class="post-header">
+                <h1>mysql故障恢复</h1>
+                <div class="post-meta">
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📅</span>
+                        <span>March 14, 2019</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📖</span>
+                        <span>2 min read</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">👁️</span>
+                        <span>2676 views</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Post Content -->
+            <div class="post-content">
+                <div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<p>mysql启动失败，一直crash，报错如下：</p>
+<blockquote>
+<p>2019-03-14T11:15:12.937923Z 0 [Note] InnoDB: Uncompressed page, stored checksum in field1 1118110825, calculated checksums for field1: crc32 2889511119/2044155182, innodb 4005355497, none 3735928559, stored checksum in field2 1244127832, calculated checksums for field2: crc32 2889511119/2044155182, innodb 952099433, none 3735928559, page LSN 4 2819295388, low 4 bytes of LSN at page end 2486405135, page number (if stored to page already) 3971, space id (if created with &gt;= MySQL-4.1.1 and stored already) 1840<br/>InnoDB: Page may be an index page where index id is 6640<br/>2019-03-14T11:15:12.937950Z 0 [Note] InnoDB: Index 6640 is `GEN_CLUST_INDEX` in table `zabbix`.`history_uint`<br/>2019-03-14T11:15:12.937955Z 0 [Note] InnoDB: It is also possible that your operating system has corrupted its own file cache and rebooting your computer removes the error. If the corrupt page is an index page. You can also try to fix the corruption by dumping, dropping, and reimporting the corrupt table. You can use CHECK TABLE to scan your table for corruption. Please refer to http://dev.mysql.com/doc/refman/5.7/en/forcing-innodb-recovery.html for information about forcing recovery.</p>
+</blockquote>
+<p>看起来是文件损坏了，我有备库，所以希望主库尽快恢复，然后再恢复数据，直接移走有问题的frm和ibd，再启动，报错：</p>
+<blockquote>
+<p>2019-03-14T11:23:37.246589Z 0 [ERROR] InnoDB: Tablespace 1840 was not found at ./zabbix/history_uint.ibd.<br/>2019-03-14T11:23:37.246594Z 0 [ERROR] InnoDB: Set innodb_force_recovery=1 to ignore this and to permanently lose all changes to the tablespace.<br/>2019-03-14T11:23:37.247018Z 0 [ERROR] InnoDB: Cannot continue operation.</p>
+</blockquote>
+<p>修改my.cnf</p>
+<blockquote>
+<p>innodb_force_recovery=1</p>
+</blockquote>
+<p>再重启正常，尝试重新新建表，但是各种报错：</p>
+<div class="cnblogs_code">
+<pre>mysql&gt;<span style="color: rgba(0, 0, 0, 1)"> CREATE TABLE `history` (
+    </span>-&gt;   `itemid` bigint(20<span style="color: rgba(0, 0, 0, 1)">) unsigned NOT NULL,
+    </span>-&gt;   `clock` int(11) NOT NULL DEFAULT <span style="color: rgba(128, 0, 0, 1)">'</span><span style="color: rgba(128, 0, 0, 1)">0</span><span style="color: rgba(128, 0, 0, 1)">'</span><span style="color: rgba(0, 0, 0, 1)">,
+    </span>-&gt;   `value` double(16,4) NOT NULL DEFAULT <span style="color: rgba(128, 0, 0, 1)">'</span><span style="color: rgba(128, 0, 0, 1)">0.0000</span><span style="color: rgba(128, 0, 0, 1)">'</span><span style="color: rgba(0, 0, 0, 1)">,
+    </span>-&gt;   `ns` int(11) NOT NULL DEFAULT <span style="color: rgba(128, 0, 0, 1)">'</span><span style="color: rgba(128, 0, 0, 1)">0</span><span style="color: rgba(128, 0, 0, 1)">'</span><span style="color: rgba(0, 0, 0, 1)">,
+    </span>-&gt;<span style="color: rgba(0, 0, 0, 1)">   KEY `history_1` (`itemid`,`clock`)
+    </span>-&gt; ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=<span style="color: rgba(0, 0, 0, 1)">utf8_bin;
+ERROR </span>1813 (HY000): Tablespace <span style="color: rgba(128, 0, 0, 1)">'</span><span style="color: rgba(128, 0, 0, 1)">`zabbix`.`history`</span><span style="color: rgba(128, 0, 0, 1)">'</span><span style="color: rgba(0, 0, 0, 1)"> exists.
+mysql</span>&gt;<span style="color: rgba(0, 0, 0, 1)"> alter table history discard tablespace;
+ERROR </span>1146 (42S02): Table <span style="color: rgba(128, 0, 0, 1)">'</span><span style="color: rgba(128, 0, 0, 1)">zabbix.history</span><span style="color: rgba(128, 0, 0, 1)">'</span> doesn<span style="color: rgba(128, 0, 0, 1)">'</span><span style="color: rgba(128, 0, 0, 1)">t exist</span>
+mysql&gt;<span style="color: rgba(0, 0, 0, 1)"> drop tablespace history;
+ERROR </span>1529<span style="color: rgba(0, 0, 0, 1)"> (HY000): Failed to drop TABLESPACE history
+mysql</span>&gt;<span style="color: rgba(0, 0, 0, 1)"> drop table history;
+ERROR </span>1051 (42S02): Unknown table <span style="color: rgba(128, 0, 0, 1)">'</span><span style="color: rgba(128, 0, 0, 1)">zabbix.history</span><span style="color: rgba(128, 0, 0, 1)">'</span></pre>
+</div>
+<p>完全没有办法操作，这时的解决方法是：</p>
+<ul>
+<li>CREATE TABLE bad_table ENGINE=MyISAM ...</li>
+<li>rm bad_table.ibd</li>
+<li>DROP TABLE bad_table</li>
+<li>CREATE TABLE bad_table ENGINE=INNODB ...</li>
+</ul>
+<p>然后再恢复数据</p>
+<p> </p>
+<p>也有可能报错时并没有指出具体出错的文件或者表，类似</p>
+<blockquote>
+<p>2019-11-25T12:54:59.258844Z 0 [ERROR] InnoDB: Database page <strong>corrupt</strong>ion on disk or a failed file read of page [page id: space=0, page number=593]. You may have to recover from a backup.</p>
+</blockquote>
+<p>这时需要使用mysqlcheck命令来检查某个数据库</p>
+<blockquote>
+<p># mysqlcheck - uroot - proot $dbname</p>
+</blockquote>
+<p>也可以检查所有的数据库</p>
+<blockquote>
+<p># echo 'show databases'|mysql - uroot - proot|xargs - i mysqlcheck - uroot - proot {}</p>
+</blockquote>
+<p>输出结果为两列，第二列是status，正常为OK，其他值为异常，找到异常的表，删除或者将数据导出后再导入，则问题修复；</p>
+<p> </p>
+<p>参考：<br/>https://stackoverflow.com/questions/15694168/error-tablespace-for-table-xxx-exists-please-discard-the-tablespace-before-imp</p>
+</div>
+            </div>
+
+            <!-- Post Footer -->
+            <div class="post-footer">
+                <div class="post-navigation">
+                    <a href="../blog_cn.html" class="nav-button">← Back to Home</a>
+                    <a href="0179.html" class="nav-button">Next Post →</a>
+                </div>
+            </div>
+        </article>
+    </div>
+</body>
+</html>

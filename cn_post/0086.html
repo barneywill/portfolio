@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>marathon重启应用过程服务不可用</title>
+    <link rel="stylesheet" href="../css/style3.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header Navigation -->
+        <div class="header">
+            <h1><a href="../blog_cn.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+        </div>
+
+        <!-- Post Container -->
+        <article class="post">
+            <!-- Post Header -->
+            <div class="post-header">
+                <h1>marathon重启应用过程服务不可用</h1>
+                <div class="post-meta">
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📅</span>
+                        <span>October 16, 2019</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📖</span>
+                        <span>1 min read</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">👁️</span>
+                        <span>320 views</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Post Content -->
+            <div class="post-content">
+                <div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<p>marathon提供多种健康检查方式</p>
+<p><picture>
+  <source srcset="../img/1509647-20191016220310602-1819992976.webp" type="image/webp">
+  <img alt="" src="../img/1509647-20191016220310602-1819992976.png">
+</picture></p>
+<p> </p>
+<p>常用的有TCP和HTTP，</p>
+<p>TCP检查端口是否存在，存在则认为实例健康；</p>
+<p>HTTP检查指定URL的HTTP返回码，返回码正常（2xx、3xx）则认为实例健康；</p>
+<p> </p>
+<p>这两种方式在重启过程中会有差别：</p>
+<p>1）TCP：由于端口存在到服务可用之间有一段时间，这段时间新的实例被认为‘健康’，但是无法响应服务，同时旧的实例被停止，导致有一段时间服务不可用；</p>
+<p> 2）HTTP：返回码正常的前提是服务可用；</p>
+<p>如果希望重启过程服务一直可用，需要使用HTTP方式做健康检查；</p>
+<p> </p>
+</div>
+            </div>
+
+            <!-- Post Footer -->
+            <div class="post-footer">
+                <div class="post-navigation">
+                    <a href="../blog_cn.html" class="nav-button">← Back to Home</a>
+                    <a href="0087.html" class="nav-button">Next Post →</a>
+                </div>
+            </div>
+        </article>
+    </div>
+</body>
+</html>

@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kafka 1 - 简介、安装及使用</title>
+    <link rel="stylesheet" href="../css/style3.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header Navigation -->
+        <div class="header">
+            <h1><a href="../blog_cn.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+        </div>
+
+        <!-- Post Container -->
+        <article class="post">
+            <!-- Post Header -->
+            <div class="post-header">
+                <h1>Kafka 1 - 简介、安装及使用</h1>
+                <div class="post-meta">
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📅</span>
+                        <span>November 06, 2018</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📖</span>
+                        <span>10 min read</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">👁️</span>
+                        <span>725 views</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Post Content -->
+            <div class="post-content">
+                <div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<p>kafka2.0</p>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201811/1509647-20181107112126875-840401567.png"/></p>
+<p> </p>
+<p><a href="http://kafka.apache.org" rel="noopener nofollow">http://kafka.apache.org</a></p>
+<p> </p>
+<h1><span>一 简介</span></h1>
+<p>Kafka® is used for building <strong>real-time data pipelines and streaming apps</strong>. It is <strong>horizontally scalable</strong>, <strong>fault-tolerant</strong>, <strong>wicked fast</strong>, and <strong>runs in production in thousands of companies</strong>.</p>
+<blockquote>
+<p>Kafka常用来构建实时数据管道或者流式应用。它支持水平扩展，容错，并且异常的快，已经在数千家公司的生产环境中使用。written in <strong>Scala</strong> by <strong>LinkedIn</strong></p>
+</blockquote>
+<p>A streaming platform has <strong>three key capabilities</strong>:</p>
+<ul>
+<li><strong>Publish and subscribe</strong> to streams of records, similar to a <strong>message queue</strong> or enterprise messaging system.</li>
+<li><strong>Store</strong> streams of records in a fault-tolerant durable way.</li>
+<li><strong>Process</strong> streams of records as they occur.</li>
+</ul>
+<blockquote>
+<p>关键能力：发布订阅、消息存储、实时处理</p>
+</blockquote>
+<p>First a few concepts:</p>
+<ul>
+<li>Kafka is run as a <strong>cluster</strong> on one or more servers that can span multiple datacenters.</li>
+<li>The Kafka cluster stores streams of <em>records</em> in categories called <strong><em>topics</em></strong>.</li>
+<li>Each record consists of <strong>a key, a value, and a timestamp</strong>.</li>
+</ul>
+<blockquote>
+<p>Kafka以集群方式运行在一台或台个服务器上，Kafka中存储消息记录的分类叫做topics，每一个消息记录都包含key、value和timestamp。</p>
+</blockquote>
+<p> </p>
+<h2>1 传统MQ局限</h2>
+<p>Messaging traditionally has two models: <a href="http://en.wikipedia.org/wiki/Message_queue" rel="noopener nofollow">queuing</a> and <a href="http://en.wikipedia.org/wiki/Publish%E2%80%93subscribe_pattern" rel="noopener nofollow">publish-subscribe</a>. In a queue, a pool of consumers may read from a server and each record goes to one of them; in publish-subscribe the record is broadcast to all consumers. Each of these two models has a strength and a weakness. The strength of queuing is that it allows you to divide up the processing of data over multiple consumer instances, which lets you scale your processing. Unfortunately, queues aren't multi-subscriber—once one process reads the data it's gone. Publish-subscribe allows you broadcast data to multiple processes, but has no way of scaling processing since every message goes to every subscriber.</p>
+<blockquote>
+<p>传统消息队列有两种模型：队列 和 发布订阅；</p>
+<p>在队列模型中，有很多消费者可以从一台服务器上读消息，并且每条消息只会被一个消费者处理；</p>
+<p>在发布订阅模型中，每条消息都会被广播到所有的消费者；</p>
+<p>两者各有利弊，队列模型的优点是允许你把消息处理并行分布到多个消费者中，可以提升消息处理速度；缺点是一旦有消费者读到一条消息，这条消息就消失了；发布订阅模型优点是允许你广播一条消息给多个消费者；缺点是无法并行处理消息；</p>
+<p>后边可以看到，Kafka兼具这两种模型的优点；</p>
+</blockquote>
+<p>A traditional queue retains records in-order on the server, and if multiple consumers consume from the queue then the server hands out records in the order they are stored. However, although the server hands out records in order, the records are delivered asynchronously to consumers, so they may arrive out of order on different consumers. This effectively means the ordering of the records is lost in the presence of parallel consumption. Messaging systems often work around this by having a notion of "exclusive consumer" that allows only one process to consume from a queue, but of course this means that there is no parallelism in processing.</p>
+<blockquote>
+<p>传统消息队列在服务器端保持消息的顺序，如果有多个消费者同时从队列中消费消息，服务器会按照消息的顺序派发消息；尽管如此，由于消费者消费消息时是异步的，所以在消费的时候极有可能是乱序的；这表明消息的顺序在并行消息处理中丢失了；此时，通常的做法是只允许一个消费者来消费消息来保证消息被处理时的顺序性；</p>
+</blockquote>
+<p> </p>
+<h2>2 Role &amp; API</h2>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201811/1509647-20181107112141546-825668721.png"/></p>
+<p> </p>
+<p>Kafka has five core APIs:</p>
+<div>
+<ul>
+<li><strong>The <a href="http://kafka.apache.org/documentation.html#producerapi" rel="noopener nofollow">Producer API</a> allows an application to publish a stream of records to one or more Kafka topics.</strong></li>
+<li><strong>The <a href="http://kafka.apache.org/documentation.html#consumerapi" rel="noopener nofollow">Consumer API</a> allows an application to subscribe to one or more topics and process the stream of records produced to them.</strong></li>
+<li>The <a href="http://kafka.apache.org/documentation/streams" rel="noopener nofollow">Streams API</a> allows an application to act as a <em>stream processor</em>, consuming an input stream from one or more topics and producing an output stream to one or more output topics, effectively transforming the input streams to output streams.</li>
+<li>The <a href="http://kafka.apache.org/documentation.html#connect" rel="noopener nofollow">Connector API</a> allows building and running reusable producers or consumers that connect Kafka topics to existing applications or data systems. For example, a connector to a relational database might capture every change to a table.</li>
+<li>The <a href="http://kafka.apache.org/documentation/#adminapi" rel="noopener nofollow">AdminClient</a> API allows managing and inspecting topics, brokers, and other Kafka objects.</li>
+</ul>
+</div>
+<blockquote>
+<p>Kafka中最常用的是Producer API（发送消息）和Consumer API（消费消息），另外还有Streams API、Connector API、AdminClient API；</p>
+</blockquote>
+<p>In Kafka the communication between the clients and the servers is done with a simple, high-performance, language agnostic <a href="https://kafka.apache.org/protocol.html" rel="noopener nofollow">TCP protocol</a>. This protocol is versioned and maintains backwards compatibility with older version. We provide a Java client for Kafka, but clients are available in <a href="https://cwiki.apache.org/confluence/display/KAFKA/Clients" rel="noopener nofollow">many languages</a>.</p>
+<p> </p>
+<h2>3 Topic &amp; Partition</h2>
+<p>A <strong>topic</strong> is a category or feed name to which records are published. Topics in Kafka are always multi-subscriber; that is, a topic can have zero, one, or many <strong>consumers</strong> that subscribe to the data written to it.</p>
+<blockquote>
+<p>topic是指消息记录的类别，发送的消息需要指定一个topic，同时一个topic可以被多个消费者消费；</p>
+</blockquote>
+<p>For each topic, the Kafka cluster maintains a partitioned log that looks like this:</p>
+<blockquote>
+<p>每一个topic都有一个或多个partition，每个partition对应一个log文件</p>
+</blockquote>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201811/1509647-20181107112158126-1769207494.png"/></p>
+<p> </p>
+<p>Each <strong>partition</strong> is an ordered, immutable sequence of records that is continually appended to—a structured commit log. The records in the partitions are each assigned a sequential id number called the <strong><em>offset</em></strong><strong> </strong>that uniquely identifies each record within the partition.</p>
+<blockquote>
+<p>每个partition由顺序的消息组成，这些消息会顺序追加到一个log文件中；partition中的每条消息都有一个顺序id称为offset，来唯一定义一个partition中的一条消息；</p>
+</blockquote>
+<p>The Kafka cluster durably <strong>persists</strong> all published records—whether or not they have been consumed—using a configurable <strong>retention</strong> period. For example, if the retention policy is set to two days, then for the two days after a record is published, it is available for consumption, after which it will be discarded to free up space. Kafka's <strong>performance</strong> is effectively constant with respect to data size so storing data for a long time is not a problem.</p>
+<blockquote>
+<p>Kafka集群会持久化所有的消息（无论它们是否被消费过），另外有一个保留时间配置，当保留时间设置为2天，这时一个消息发布后2天内都可以被消费到，超过2天它会被丢弃来释放空间；所以Kafka的性能与数据大小无关，即使存储很长时间的数据也没问题；</p>
+</blockquote>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201811/1509647-20181107112211068-1579651601.png"/></p>
+<p> </p>
+<p>In fact, the only metadata retained on a per-consumer basis is the <strong>offset</strong> or position of that consumer in the log. This <strong>offset</strong> is controlled by the consumer: normally a consumer will advance its offset linearly as it reads records, but, in fact, since the position is controlled by the consumer it can consume records in any order it likes. For example a consumer can reset to an older offset to reprocess data from the past or skip ahead to the most recent record and start consuming from "now".</p>
+<blockquote>
+<p>消费者端唯一的元数据就是目前消费到的每个partition的offset；offset是由消费者控制的，通常情况下一个消费者在它不断读消息的同时不断增加offset，一个消费者也可以通过修改offset来重新消费部分消息或者跳过部分消息；</p>
+</blockquote>
+<p>The <strong>partitions</strong> in the log serve several purposes. First, they allow the log to <strong>scale</strong> beyond a size that will fit on a single server. Each individual partition must fit on the servers that host it, but a topic may have many partitions so it can handle an arbitrary amount of data. Second they act as the unit of <strong>parallelism</strong>—more on that in a bit.</p>
+<blockquote>
+<p>一个topic可以有多个partitions，这样有两个好处，一个是允许topic的数据量超过单机容量限制，一个是支持并发（包括发送和消费）；</p>
+</blockquote>
+<p> </p>
+<p>The <strong>partitions</strong> of the log are distributed over the servers in the Kafka cluster with each server handling data and requests for a share of the partitions. Each partition is replicated across a configurable number of servers for fault tolerance.</p>
+<blockquote>
+<p>partition分布在Kafka集群的所有服务器中的，每一台服务器都会处理一个或多个partition的请求，每个partition都会通过配置的数量进行服务器间备份来实现容错；</p>
+</blockquote>
+<p>Each <strong>partition</strong> has one server which acts as the "<strong>leader</strong>" and zero or more servers which act as "<strong>followers</strong>". The leader handles all read and write requests for the partition while the followers passively replicate the leader. If the leader fails, one of the followers will automatically become the new leader. Each server acts as a leader for some of its partitions and a follower for others so load is <strong>well balanced</strong> within the cluster.</p>
+<blockquote>
+<p>每个partition都有一个服务器称为leader，另外还有0个或多个服务器称为follower，这里的数量由副本数决定；leader会处理该partition所有的读写请求，follower只是被动的同步leader的数据，如果leader挂了，其中一个follower会自动成为新的leader；每个服务器都会作为一些partition的leader，同时也会作为另外一些partition的follower；</p>
+</blockquote>
+<p> </p>
+<h2>4 Producer &amp; Consumer</h2>
+<p><strong>Producers</strong> publish data to the topics of their choice. The producer is responsible for choosing which record to assign to which partition within the topic. This can be done in a round-robin fashion simply to balance load or it can be done according to some semantic partition function (say based on some key in the record). </p>
+<p><strong>Consumers</strong> label themselves with a <em>consumer <strong>group</strong></em><strong> </strong>name, and each record published to a topic is delivered to one consumer instance within each subscribing consumer group. Consumer instances can be in separate processes or on separate machines.</p>
+<blockquote>
+<p>producer用来发送消息到topic，producer可以决定将消息发送到哪个partition，这里常用的是随机策略，另外也可以根据key来分区，即相同key的消息会被发送到一个partition；</p>
+<p>consumer通过group来分组，topic里的每条消息只会被一个group中的一个consumer消费到；</p>
+</blockquote>
+<p><strong>If all the consumer instances have the same consumer group, then the records will effectively be load balanced over the consumer instances.</strong></p>
+<blockquote>
+<p>如果所有的consuemr都在一个group里，它们之间会自动做负载均衡；</p>
+</blockquote>
+<p><strong>If all the consumer instances have different consumer groups, then each record will be broadcast to all the consumer processes.</strong></p>
+<blockquote>
+<p>如果所有consumer都在不同的group里，每条消息都会被广播到所有的consumer；</p>
+</blockquote>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201811/1509647-20181107112224538-609622010.png"/></p>
+<p> </p>
+<p>A two server Kafka cluster hosting four partitions (P0-P3) with two consumer groups. Consumer group A has two consumer instances and group B has four.</p>
+<p>The way consumption is implemented in Kafka is by dividing up the partitions in the log over the consumer instances so that each instance is the exclusive consumer of a "fair share" of partitions at any point in time. This process of maintaining membership in the group is handled by the Kafka protocol dynamically. If new instances join the group they will take over some partitions from other members of the group; if an instance dies, its partitions will be distributed to the remaining instances.</p>
+<blockquote>
+<p>Kafka上的消息消费是通过在所有的consumer之间平均分配partition实现；</p>
+</blockquote>
+<p>Kafka only provides a total <strong>order</strong> over records <em>within</em> a partition, not between different partitions in a topic. Per-partition ordering combined with the ability to partition data by key is sufficient for most applications. However, if you require a total order over records this can be achieved with a topic that has only one partition, though this will mean only one consumer process per consumer group.</p>
+<blockquote>
+<p>Kafka只支持partition内部的消息顺序，这个特点加上可以通过key来控制消息分区，可以满足绝大多数应用对消息消费有序性的需求；如果你想严格要求topic内消息消费的有序性，只能通过topic内只有一个partition+消费者group内只有一个consumer来实现；</p>
+</blockquote>
+<p> </p>
+<h2>5 Guarantee</h2>
+<p>At a high-level Kafka gives the following guarantees:</p>
+<ul>
+<li>Messages sent by a producer to a particular topic partition will be appended in the order they are sent. That is, if a record M1 is sent by the same producer as a record M2, and M1 is sent first, then M1 will have a lower offset than M2 and appear earlier in the log.</li>
+<li>A consumer instance sees records in the order they are stored in the log.</li>
+<li>For a topic with replication factor N, we will tolerate up to N-1 server failures without losing any records committed to the log.</li>
+</ul>
+<blockquote>
+<p>一个producer发送到一个topic一个partition上的消息是按照它们发送的顺序追加的，即发送顺序决定存储顺序；一个consumer消费一个topic一个partition的消息是按照它们存储的顺序，即存储顺序决定消费顺序；N个副本可以容许N-1个server挂掉；</p>
+</blockquote>
+<p> </p>
+<h1>二 安装使用</h1>
+<blockquote>
+<div class="line number1 index0 alt2"><code class="bash plain">&gt; </code><code class="bash functions">tar</code> <code class="bash plain">-xzf kafka_2.11-2.0.0.tgz</code></div>
+<div class="line number2 index1 alt1"><code class="bash plain">&gt; </code><code class="bash functions">cd</code> <code class="bash plain">kafka_2.11-2.0.0</code></div>
+</blockquote>
+<h2>1 单机启动</h2>
+<blockquote>
+<div class="line number2 index1 alt1"><code class="bash plain">&gt; bin</code><code class="bash plain">/zookeeper-server-start</code><code class="bash plain">.sh config</code><code class="bash plain">/zookeeper</code><code class="bash plain">.properties</code></div>
+<div class="line number2 index1 alt1"><code class="bash plain">&gt; bin</code><code class="bash plain">/kafka-server-start</code><code class="bash plain">.sh config</code><code class="bash plain">/server</code><code class="bash plain">.properties</code></div>
+</blockquote>
+<h2 class="line number2 index1 alt1">2 命令行客户端</h2>
+<h3 class="line number2 index1 alt1">2.1 创建和查看topic</h3>
+<blockquote>
+<div class="line number2 index1 alt1"><code class="bash plain">&gt; bin</code><code class="bash plain">/kafka-topics</code><code class="bash plain">.sh --create --zookeeper localhost:2181 --replication-factor 1 --partitions 1 --topic </code><code class="bash functions">test</code></div>
+<div class="line number2 index1 alt1"><code class="bash plain">&gt; bin</code><code class="bash plain">/kafka-topics</code><code class="bash plain">.sh --list --zookeeper localhost:2181</code></div>
+</blockquote>
+<div class="line number2 index1 alt1">
+<blockquote>
+<div class="line number1 index0 alt2"><code class="bash plain">&gt; bin</code><code class="bash plain">/kafka-topics</code><code class="bash plain">.sh --describe --zookeeper localhost:2181 --topic my-replicated-topic</code></div>
+<div class="line number2 index1 alt1"><code class="bash plain">Topic:my-replicated-topic   PartitionCount:1    ReplicationFactor:3 Configs:</code></div>
+<div class="line number3 index2 alt2"><code class="bash spaces">    </code><code class="bash plain">Topic: my-replicated-topic  Partition: 0    Leader: 1   Replicas: 1,2,0 Isr: 1,2,0</code></div>
+</blockquote>
+</div>
+<div class="line number3 index2 alt2">
+<ul>
+<li>"<strong>leader</strong>" is the node responsible for all reads and writes for the given partition. Each node will be the leader for a randomly selected portion of the partitions.</li>
+<li>"<strong>replicas</strong>" is the list of nodes that replicate the log for this partition regardless of whether they are the leader or even if they are currently alive.</li>
+<li>"<strong>isr</strong>" is the set of "in-sync" replicas. This is the subset of the replicas list that is currently alive and caught-up to the leader.</li>
+</ul>
+</div>
+<h3 class="line number2 index1 alt1">2.2 生产和消费消息</h3>
+<blockquote>
+<div class="line number2 index1 alt1"><code class="bash plain">&gt; bin</code><code class="bash plain">/kafka-console-producer</code><code class="bash plain">.sh --broker-list localhost:9092 --topic </code><code class="bash functions">test</code></div>
+<div class="line number2 index1 alt1"><code class="bash plain">&gt; bin</code><code class="bash plain">/kafka-console-consumer</code><code class="bash plain">.sh --bootstrap-server localhost:9092 --topic </code><code class="bash functions">test</code> <code class="bash plain">--from-beginning</code></div>
+</blockquote>
+<h3 class="line number2 index1 alt1">2.3 修改和查看broker配置</h3>
+<blockquote>
+<div class="line number2 index1 alt1"><code class="bash plain">&gt; bin</code><code class="bash plain">/kafka-configs</code><code class="bash plain">.sh --bootstrap-server localhost:9092 --entity-</code><code class="bash functions">type</code> <code class="bash plain">brokers --entity-name 0 --alter --add-config log.cleaner.threads=2</code></div>
+<div class="line number2 index1 alt1"><code class="bash plain">&gt; bin</code><code class="bash plain">/kafka-configs</code><code class="bash plain">.sh --bootstrap-server localhost:9092 --entity-</code><code class="bash functions">type</code> <code class="bash plain">brokers --entity-name 0 --describe</code></div>
+</blockquote>
+<div class="line number2 index1 alt1">
+<blockquote>
+<div class="line number1 index0 alt2"><code class="bash plain">&gt; bin</code><code class="bash plain">/kafka-configs</code><code class="bash plain">.sh --bootstrap-server localhost:9092 --entity-</code><code class="bash functions">type</code> <code class="bash plain">brokers --entity-name 0 --alter --delete-config log.cleaner.threads</code></div>
+</blockquote>
+</div>
+<div class="line number1 index0 alt2">From Kafka version 1.1 onwards, some of the broker configs can be updated without restarting the broker. See the <code>Dynamic Update Mode</code>column in <a href="http://kafka.apache.org/documentation/#brokerconfigs" rel="noopener nofollow">Broker Configs</a> for the update mode of each broker config.
+<ul>
+<li><code>read-only</code>: Requires a broker restart for update</li>
+<li><code>per-broker</code>: May be updated dynamically for each broker</li>
+<li><code>cluster-wide</code>: May be updated dynamically as a cluster-wide default. May also be updated as a per-broker value for testing.</li>
+</ul>
+</div>
+<h2>3 集群启动</h2>
+<h3>3.1 配置</h3>
+<blockquote>
+<div class="line number2 index1 alt1">
+<pre>broker.id=1<br/>listeners=PLAINTEXT://:9093<br/>log.dirs=/tmp/kafka-logs-1<br/>zookeeper.connect=$zookeeper_server1:port1</pre>
+</div>
+</blockquote>
+<p>The <code><a href="http://broker.id" rel="noopener nofollow">broker.id</a></code> property is the unique and permanent name of each node in the cluster. </p>
+<p>其他重要配置：</p>
+<p>auto.create.topics.enable 发送消息时如果topic不存在是否自动创建</p>
+<p>delete.topic.enable 是否允许删除topic</p>
+<p>num.partitions 自动创建topic时的默认分区数量</p>
+<p>default.replication.factor 自动创建topic时的默认副本数量</p>
+<p><span><span><a href="http://broker.id/" rel="noopener nofollow">broker.id</a><span>.generation.enable broker的id是否自增</span></span></span></p>
+<p><span><span><a href="http://host.name" rel="noopener nofollow">host.name</a></span></span></p>
+<p>log.dirs 数据存放目录，默认在/tmp，必须修改</p>
+<p><span>log.cleanup.policy 数据清理策略</span></p>
+<p>log.retention.bytes</p>
+<p><span><span><a href="http://log.retention.ms" rel="noopener nofollow">log.retention.ms</a></span></span></p>
+<p><span><span><span><a href="http://log.roll.ms" rel="noopener nofollow">log.roll.ms</a></span></span></span></p>
+<p>log.segment.bytes</p>
+<p><span><span><span><a href="http://replica.lag.time.max.ms" rel="noopener nofollow">replica.lag.time.max.ms</a></span></span></span></p>
+<p>log.message.timestamp.type</p>
+<p>num.network.threads</p>
+<p><a href="http://num.io" rel="noopener nofollow">num.io</a>.threads</p>
+<p>compression.type</p>
+<p> </p>
+</div>
+            </div>
+
+            <!-- Post Footer -->
+            <div class="post-footer">
+                <div class="post-navigation">
+                    <a href="../blog_cn.html" class="nav-button">← Back to Home</a>
+                    <a href="0353.html" class="nav-button">Next Post →</a>
+                </div>
+            </div>
+        </article>
+    </div>
+</body>
+</html>

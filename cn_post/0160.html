@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Docker 7 - 关于docker latest tag</title>
+    <link rel="stylesheet" href="../css/style3.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header Navigation -->
+        <div class="header">
+            <h1><a href="../blog_cn.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+        </div>
+
+        <!-- Post Container -->
+        <article class="post">
+            <!-- Post Header -->
+            <div class="post-header">
+                <h1>Docker 7 - 关于docker latest tag</h1>
+                <div class="post-meta">
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📅</span>
+                        <span>March 26, 2019</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📖</span>
+                        <span>1 min read</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">👁️</span>
+                        <span>3523 views</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Post Content -->
+            <div class="post-content">
+                <div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<p>Docker images have a tag named latest which doesn’t work as you expect.<br/>Latest is just a tag with a special name.<br/>“Latest” simply means “the last build/tag that ran without a specific tag/version specified”.<br/>Just version your tags. Every time.</p>
+<p>docker image有一个tag叫做latest，latest通过最近一次没有指定版本的build或tag来生成</p>
+<p>下面实验来看：</p>
+<blockquote>
+<p>$ docker tag imagename localhost:5000/imagename<br/>$ docker push localhost:5000/imagename</p>
+</blockquote>
+<p>这样可以在repository上创建一个版本为latest的imagename，下一次更新操作如下：</p>
+<p>1）先停止使用旧的image的container并删除，然后删除旧的image</p>
+<blockquote>
+<p>$ docker stop $container_id<br/>$ docker rm $container_id<br/>$ docker rmi localhost:5000/imagename</p>
+</blockquote>
+<p>2）同上</p>
+<blockquote>
+<p>$ docker tag imagename localhost:5000/imagename<br/>$ docker push localhost:5000/imagename</p>
+</blockquote>
+<p>这种方式不会保留历史版本；</p>
+<p>更好的做法是：</p>
+<p>1）版本1</p>
+<blockquote>
+<p>$ docker tag imagename localhost:5000/imagename:1<br/>$ docker push localhost:5000/imagename:1<br/>$ docker tag imagename localhost:5000/imagename<br/>$ docker push localhost:5000/imagename</p>
+</blockquote>
+<p>这时latest=1</p>
+<p>2）版本2</p>
+<blockquote>
+<p>$ docker tag imagename localhost:5000/imagename:2<br/>$ docker push localhost:5000/imagename:2</p>
+<p>$ docker stop $container_id<br/>$ docker rm $container_id<br/>$ docker rmi localhost:5000/imagename<br/>$ docker tag imagename localhost:5000/imagename<br/>$ docker push localhost:5000/imagename</p>
+</blockquote>
+<p>这时latest=2</p>
+<p><br/>参考：<br/>https://medium.com/@mccode/the-misunderstood-docker-tag-latest-af3babfd6375<br/>https://stackoverflow.com/questions/39352186/update-a-docker-image-in-registry</p>
+<p> </p>
+</div>
+            </div>
+
+            <!-- Post Footer -->
+            <div class="post-footer">
+                <div class="post-navigation">
+                    <a href="../blog_cn.html" class="nav-button">← Back to Home</a>
+                    <a href="0161.html" class="nav-button">Next Post →</a>
+                </div>
+            </div>
+        </article>
+    </div>
+</body>
+</html>

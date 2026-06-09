@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>hive中文注释乱码</title>
+    <link rel="stylesheet" href="../css/style3.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header Navigation -->
+        <div class="header">
+            <h1><a href="../blog_cn.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+        </div>
+
+        <!-- Post Container -->
+        <article class="post">
+            <!-- Post Header -->
+            <div class="post-header">
+                <h1>hive中文注释乱码</h1>
+                <div class="post-meta">
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📅</span>
+                        <span>February 26, 2019</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📖</span>
+                        <span>1 min read</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">👁️</span>
+                        <span>819 views</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Post Content -->
+            <div class="post-content">
+                <div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<p>在hive中查看表结构时中文注释乱码，分为两种情况，一种是desc $table，一种是show create table $table</p>
+<h1>1 数据库字符集</h1>
+<p>检查</p>
+<blockquote>
+<p>mysql&gt; show variables like '%char%';<br/>mysql&gt; show create table COLUMNS_V2;<br/>mysql&gt; show create table TABLE_PARAMS;</p>
+</blockquote>
+<p>修改</p>
+<blockquote>
+<p>mysql&gt; alter database hive character set latin1; <br/>mysql&gt; alter table COLUMNS_V2 modify column COMMENT varchar(256) character set utf8;<br/>mysql&gt; alter table TABLE_PARAMS modify column PARAM_VALUE varchar(4000) character set utf8;</p>
+</blockquote>
+<p>这时desc $table应该可以正常显示中文了，但是show create table $table还是乱码，这时有两种选择：</p>
+<h2>2.1 继续使用hive</h2>
+<p>修改 org.apache.hadoop.hive.ql.exec.DDLTask，</p>
+<blockquote>
+<p>outStream.writeBytes(createTab_stmt.toString());<br/>-&gt;<br/>outStream.write(createTab_stmt.toString().getBytes(“UTF-8”));</p>
+<p>outStream.writeBytes(createTab_stmt.render());<br/>-&gt;<br/>outStream.write(createTab_stmt.render().getBytes(“UTF-8”));</p>
+</blockquote>
+<p>并重新打包替换hive-exec.jar，改动太大不建议</p>
+<h2>2.2 使用spark-sql或者beeline连接spark thrift server</h2>
+<p> </p>
+</div>
+            </div>
+
+            <!-- Post Footer -->
+            <div class="post-footer">
+                <div class="post-navigation">
+                    <a href="../blog_cn.html" class="nav-button">← Back to Home</a>
+                    <a href="0203.html" class="nav-button">Next Post →</a>
+                </div>
+            </div>
+        </article>
+    </div>
+</body>
+</html>

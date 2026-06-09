@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>hue访问mysql（librdbms）</title>
+    <link rel="stylesheet" href="../css/style3.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header Navigation -->
+        <div class="header">
+            <h1><a href="../blog_cn.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+        </div>
+
+        <!-- Post Container -->
+        <article class="post">
+            <!-- Post Header -->
+            <div class="post-header">
+                <h1>hue访问mysql（librdbms）</h1>
+                <div class="post-meta">
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📅</span>
+                        <span>April 02, 2019</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📖</span>
+                        <span>3 min read</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">👁️</span>
+                        <span>1098 views</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Post Content -->
+            <div class="post-content">
+                <div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<p> cloudera manager安装hue后想开启访问mysql（librdbms）需要在这里配置（hue_safety_valve.ini）</p>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201904/1509647-20190402111727096-1333045030.png"/></p>
+<p>添加配置如下</p>
+<div class="cnblogs_code">
+<pre><span style="color: rgba(0, 0, 0, 1)">[librdbms]
+  </span><span style="color: rgba(0, 128, 0, 1)">#</span><span style="color: rgba(0, 128, 0, 1)"> The RDBMS app can have any number of databases configured in the databases</span>
+  <span style="color: rgba(0, 128, 0, 1)">#</span><span style="color: rgba(0, 128, 0, 1)"> section. A database is known by its section name</span>
+  <span style="color: rgba(0, 128, 0, 1)">#</span><span style="color: rgba(0, 128, 0, 1)"> (IE sqlite, mysql, psql, and oracle in the list below).</span>
+<span style="color: rgba(0, 0, 0, 1)">  [[databases]]
+    </span><span style="color: rgba(0, 128, 0, 1)">#</span><span style="color: rgba(0, 128, 0, 1)"> mysql, oracle, or postgresql configuration.</span>
+<span style="color: rgba(0, 0, 0, 1)">    [[[mysql]]]
+      </span><span style="color: rgba(0, 128, 0, 1)">#</span><span style="color: rgba(0, 128, 0, 1)"> Name to show in the UI.</span>
+      nice_name=<span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">db_dataone</span><span style="color: rgba(128, 0, 0, 1)">"</span>
+
+      <span style="color: rgba(0, 128, 0, 1)">#</span><span style="color: rgba(0, 128, 0, 1)"> For MySQL and PostgreSQL, name is the name of the database.</span>
+      <span style="color: rgba(0, 128, 0, 1)">#</span><span style="color: rgba(0, 128, 0, 1)"> For Oracle, Name is instance of the Oracle server. For express edition</span>
+      <span style="color: rgba(0, 128, 0, 1)">#</span><span style="color: rgba(0, 128, 0, 1)"> this is 'xe' by default.</span>
+      name=<span style="color: rgba(0, 0, 0, 1)">db_dataone
+
+      </span><span style="color: rgba(0, 128, 0, 1)">#</span><span style="color: rgba(0, 128, 0, 1)"> Database backend to use. This can be:</span>
+      <span style="color: rgba(0, 128, 0, 1)">#</span><span style="color: rgba(0, 128, 0, 1)"> 1. mysql</span>
+      <span style="color: rgba(0, 128, 0, 1)">#</span><span style="color: rgba(0, 128, 0, 1)"> 2. postgresql</span>
+      <span style="color: rgba(0, 128, 0, 1)">#</span><span style="color: rgba(0, 128, 0, 1)"> 3. oracle</span>
+      engine=<span style="color: rgba(0, 0, 0, 1)">mysql
+
+      </span><span style="color: rgba(0, 128, 0, 1)">#</span><span style="color: rgba(0, 128, 0, 1)"> IP or hostname of the database to connect to.</span>
+      host=192.168.0.1
+
+      <span style="color: rgba(0, 128, 0, 1)">#</span><span style="color: rgba(0, 128, 0, 1)"> Port the database server is listening to. Defaults are:</span>
+      <span style="color: rgba(0, 128, 0, 1)">#</span><span style="color: rgba(0, 128, 0, 1)"> 1. MySQL: 3306</span>
+      <span style="color: rgba(0, 128, 0, 1)">#</span><span style="color: rgba(0, 128, 0, 1)"> 2. PostgreSQL: 5432</span>
+      <span style="color: rgba(0, 128, 0, 1)">#</span><span style="color: rgba(0, 128, 0, 1)"> 3. Oracle Express Edition: 1521</span>
+      port=3306
+
+      <span style="color: rgba(0, 128, 0, 1)">#</span><span style="color: rgba(0, 128, 0, 1)"> Username to authenticate with when connecting to the database.</span>
+      user=<span style="color: rgba(0, 0, 0, 1)">root
+
+      </span><span style="color: rgba(0, 128, 0, 1)">#</span><span style="color: rgba(0, 128, 0, 1)"> Password matching the username to authenticate with when</span>
+      <span style="color: rgba(0, 128, 0, 1)">#</span><span style="color: rgba(0, 128, 0, 1)"> connecting to the database.</span>
+      password=123456
+
+      <span style="color: rgba(0, 128, 0, 1)">#</span><span style="color: rgba(0, 128, 0, 1)"> Database options to send to the server when connecting.</span>
+      <span style="color: rgba(0, 128, 0, 1)">#</span><span style="color: rgba(0, 128, 0, 1)"> https://docs.djangoproject.com/en/1.4/ref/databases/</span>
+      <span style="color: rgba(0, 128, 0, 1)">#</span><span style="color: rgba(0, 128, 0, 1)"># options={}</span></pre>
+</div>
+<p>注意：[[databases]]下可添加多个[[[mysql]]]或其他数据库，如果有多个mysql，分别命名为[[[mysql1]]],[[[mysql2]]]或其他名字区分</p>
+<p> </p>
+<p>除此之外，还要添加notebook</p>
+<div class="cnblogs_code">
+<pre><span style="color: rgba(0, 0, 0, 1)">[notebook]
+[[interpreters]]
+[[[impala]]]
+name</span>=<span style="color: rgba(0, 0, 0, 1)">Impala
+[[[hive]]]
+name</span>=<span style="color: rgba(0, 0, 0, 1)">Hive
+[[[mysql]]]
+name</span>=<span style="color: rgba(0, 0, 0, 1)">Mysql
+interface</span>=<span style="color: rgba(0, 0, 0, 1)">rdbms
+[[[java]]]
+name</span>=<span style="color: rgba(0, 0, 0, 1)">Java
+interface</span>=<span style="color: rgba(0, 0, 0, 1)">oozie
+[[[spark2]]]
+name</span>=<span style="color: rgba(0, 0, 0, 1)">Spark
+interface</span>=<span style="color: rgba(0, 0, 0, 1)">oozie
+[[[shell]]]
+name</span>=<span style="color: rgba(0, 0, 0, 1)">Shell
+interface</span>=<span style="color: rgba(0, 0, 0, 1)">oozie
+[[[sqoop1]]]
+name</span>=<span style="color: rgba(0, 0, 0, 1)">Sqoop1
+interface</span>=<span style="color: rgba(0, 0, 0, 1)">oozie
+[[[distcp]]]
+name</span>=<span style="color: rgba(0, 0, 0, 1)">Distcp
+interface</span>=oozie</pre>
+</div>
+<p>此处略去了不需要的Pig和MapReduce等；</p>
+<p> </p>
+<p>然后重启hue</p>
+<p> </p>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201910/1509647-20191003230431572-2063011036.png"/> </p>
+<p> </p>
+<p>如果要添加多个mysql，如下配置：</p>
+<div class="cnblogs_code">
+<pre><span style="color: rgba(0, 0, 0, 1)">[librdbms]
+[[databases]]
+[[[mysql1]]]
+...
+[[[mysql2]]]
+...
+[notebook]
+[[interpreters]]
+[[[mysql1]]]
+...
+[[[mysql2]]]
+...</span></pre>
+</div>
+<p> </p>
+<p>参考：<br/>https://community.cloudera.com/t5/Web-UI-Hue-Beeswax/Hue-db-editor-permissions/td-p/78298<br/>http://cloudera.github.io/hue/docs-4.4.0/user/editor/<br/>http://cloudera.github.io/hue/latest/administrator/configuration/editor/</p>
+<p> </p>
+</div>
+            </div>
+
+            <!-- Post Footer -->
+            <div class="post-footer">
+                <div class="post-navigation">
+                    <a href="../blog_cn.html" class="nav-button">← Back to Home</a>
+                    <a href="0152.html" class="nav-button">Next Post →</a>
+                </div>
+            </div>
+        </article>
+    </div>
+</body>
+</html>

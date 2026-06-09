@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Docker 1 - 简介、安装、使用</title>
+    <link rel="stylesheet" href="../css/style3.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header Navigation -->
+        <div class="header">
+            <h1><a href="../blog_cn.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+        </div>
+
+        <!-- Post Container -->
+        <article class="post">
+            <!-- Post Header -->
+            <div class="post-header">
+                <h1>Docker 1 - 简介、安装、使用</h1>
+                <div class="post-meta">
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📅</span>
+                        <span>February 01, 2019</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📖</span>
+                        <span>7 min read</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">👁️</span>
+                        <span>1254 views</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Post Content -->
+            <div class="post-content">
+                <div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<p>docker 18.09</p>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201902/1509647-20190201150439064-1682796473.png"/></p>
+<p>官方：https://docs.docker.com/</p>
+<p> </p>
+<h1>一 简介</h1>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201902/1509647-20190201150928992-1313717430.png"/></p>
+<p> </p>
+<p>Docker is a platform for developers and sysadmins to develop, deploy, and run applications with containers. The use of Linux containers to deploy applications is called containerization. Containers are not new, but their use for easily deploying applications is.</p>
+<p><em>docker是一个开发人员和系统管理人员通过容器来开发、部署和运行应用的平台；通过容器来部署应用也被成为容器化；</em></p>
+<p> </p>
+<p>Containerization is increasingly popular because containers are:</p>
+<ul>
+<li>Flexible: Even the most complex applications can be containerized.</li>
+<li>Lightweight: Containers leverage and share the host kernel.</li>
+<li>Interchangeable: You can deploy updates and upgrades on-the-fly.</li>
+<li>Portable: You can build locally, deploy to the cloud, and run anywhere.</li>
+<li>Scalable: You can increase and automatically distribute container replicas.</li>
+<li>Stackable: You can stack services vertically and on-the-fly.</li>
+</ul>
+<p><em>容器化：灵活、轻量级、可替换、可移植、可扩展、可叠加；</em></p>
+<p> </p>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201902/1509647-20190201153507300-146719246.png"/></p>
+<p>一个image是一个包含所有依赖的可执行包，一个image运行起来的一个instance称为一个container，一个（或多个）机器上运行同一个image的一个或多个container称为service；在多个机器上进行容器化部署称为swarm；</p>
+<h2>1 Container、Image</h2>
+<p>A container is launched by running an image. An image is an executable package that includes everything needed to run an application--the code, a runtime, libraries, environment variables, and configuration files.</p>
+<p><em>运行一个image时会启动一个container，一个image是包含运行所需所有信息（包括代码、库、环境变量、配置文件等）的可执行包；</em></p>
+<p>A container is a runtime instance of an image--what the image becomes in memory when executed (that is, an image with state, or a user process). You can see a list of your running containers with the command, docker ps, just as you would in Linux.</p>
+<p><em>一个container是一个image的运行时实例，可以通过docker ps命令查看所有正在运行的container；</em></p>
+<p>A container runs natively on Linux and shares the kernel of the host machine with other containers. It runs a discrete process, taking no more memory than any other executable, making it lightweight.</p>
+<p><em>一个container在linux上以原生进程的方式运行，不会占用其他内存，所以非常轻量级；</em></p>
+<h2>2 Dockerfile</h2>
+<p>Dockerfile defines what goes on in the environment inside your container. Access to resources like networking interfaces and disk drives is virtualized inside this environment, which is isolated from the rest of your system, so you need to map ports to the outside world, and be specific about what files you want to “copy in” to that environment. However, after doing that, you can expect that the build of your app defined in this Dockerfile behaves exactly the same wherever it runs.</p>
+<p><em>dockerfile定义一个容器内部的运行环境，在这个环境中，对外部资源的访问（比如网络、接口和磁盘）都被虚拟化，从而实现与外部系统的隔离，所以你需要做端口映射、指定哪些文件需要在环境中可以访问等；</em></p>
+<h2>3 Registry</h2>
+<p>A registry is a collection of repositories, and a repository is a collection of images—sort of like a GitHub repository, except the code is already built. An account on a registry can create many repositories. The docker CLI uses Docker’s public registry by default.</p>
+<p><em>一个registry是多个仓库的集合，一个仓库是多个image的集合；docker命令行默认使用的是docker公共registry；</em></p>
+<h2>4 Service</h2>
+<p>Services are really just “containers in production.” A service only runs one image, but it codifies the way that image runs—what ports it should use, how many replicas of the container should run so the service has the capacity it needs, and so on. Scaling a service changes the number of container instances running that piece of software, assigning more computing resources to the service in the process.</p>
+<p>Luckily it’s very easy to define, run, and scale services with the Docker platform -- just write a docker-compose.yml file.</p>
+<p><em>service只运行一个image，service是运行同一个image的多个container的集合，service可以配置端口、资源、container数量等，通过docker-compose.yml来定义service；</em></p>
+<p>A single container running in a service is called a task. Tasks are given unique IDs that numerically increment, up to the number of replicas you defined in docker-compose.yml.</p>
+<p><em>service中的一个continer也被称为一个task，每个task都有一个唯一自增id；</em></p>
+<h2>5 Swarm</h2>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201902/1509647-20190201170708682-220977691.png"/></p>
+<p>A swarm is a group of machines that are running Docker and joined into a cluster. After that has happened, you continue to run the Docker commands you’re used to, but now they are executed on a cluster by a swarm manager. The machines in a swarm can be physical or virtual. After joining a swarm, they are referred to as nodes.</p>
+<p>Swarm managers are the only machines in a swarm that can execute your commands, or authorize other machines to join the swarm as workers. Workers are just there to provide capacity and do not have the authority to tell any other machine what it can and cannot do.</p>
+<p><em>一个swarm是一组运行docker的机器；swarm集群中分为swarm manager和worker；</em></p>
+<p> </p>
+<h1>二 安装</h1>
+<p>支持平台</p>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201902/1509647-20190201150647311-518321740.png"/></p>
+<h2>windows安装</h2>
+<p>https://hub.docker.com/editions/community/docker-ce-desktop-windows</p>
+<p>win10之前的版本直接下载：</p>
+<p>https://download.docker.com/win/stable/DockerToolbox.exe</p>
+<h2>linux安装</h2>
+<h3>1 安装docker</h3>
+<h4>yum安装</h4>
+<p>添加repo</p>
+<blockquote>
+<p># yum install - y yum-utils device-mapper-persistent-data lvm2<br/># yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo</p>
+</blockquote>
+<p>安装</p>
+<blockquote>
+<p># yum install docker-ce docker-ce-cli containerd.io</p>
+</blockquote>
+<h4>手动安装</h4>
+<p>下载</p>
+<blockquote>
+<p>http://mirror.centos.org/centos/7/os/x86_64/Packages/<br/>libtool-ltdl-2.4.2-22.el7_3.x86_64.rpm</p>
+<p>http://mirror.centos.org/centos/7/extras/x86_64/Packages/<br/>container-selinux-2.74-1.el7.noarch.rpm</p>
+<p>https://download.docker.com/linux/centos/7/x86_64/stable/Packages/<br/>containerd.io-1.2.2-3.el7.x86_64.rpm<br/>docker-ce-cli-18.09.1-3.el7.x86_64.rpm<br/>docker-ce-18.09.1-3.el7.x86_64.rpm</p>
+</blockquote>
+<p>根据需要安装</p>
+<blockquote>
+<p># yum install libcgroup selinux-policy policycoreutils-python</p>
+</blockquote>
+<h3>2 安装docker machine</h3>
+<blockquote>
+<p>$ base=https://github.com/docker/machine/releases/download/v0.16.0 &amp;&amp;<br/>  curl - L $base/docker-machine-$(uname - s)-$(uname - m) &gt;/tmp/docker-machine &amp;&amp;<br/>  sudo install /tmp/docker-machine /usr/local/bin/docker-machine</p>
+</blockquote>
+<p>Get Docker Machine, which is pre-installed with Docker Desktop for Mac and Docker Desktop for Windows, but on Linux systems you need to install it directly. On pre Windows 10 systems without Hyper-V, as well as Windows 10 Home, use Docker Toolbox.</p>
+<h3>3 启动</h3>
+<blockquote>
+<p># service docker start</p>
+<p>or</p>
+<p># systemctl start docker</p>
+</blockquote>
+<h3>4 开机启动</h3>
+<blockquote>
+<p># systemctl enable docker</p>
+</blockquote>
+<h1>三 使用</h1>
+<h2>1 命令</h2>
+<p>查看版本和系统信息</p>
+<blockquote>
+<p># docker --version<br/>Docker version 18.09.1, build 4c52b90</p>
+<p># docker info</p>
+</blockquote>
+<p>常用命令</p>
+<blockquote>
+<p>## List Docker CLI commands<br/>docker<br/>docker container --help</p>
+<p>## Display Docker version and info<br/>docker --version<br/>docker version<br/>docker info</p>
+<p>## Execute Docker image<br/>docker run hello-world</p>
+<p>## List Docker images<br/>docker image ls</p>
+<p>## List Docker containers (running, all, all in quiet mode)<br/>docker container ls<br/>docker container ls --all<br/>docker container ls - aq</p>
+</blockquote>
+<p>注意：docker ps = docker container ls </p>
+<h2>2 运行image示例</h2>
+<p>1）根据名字搜索image（以nginx为例）</p>
+<blockquote>
+<p>$ docker search nginx</p>
+</blockquote>
+<p>2）查看一个image的所有版本（以nginx为例）</p>
+<blockquote>
+<p>$ curl https://hub.docker.com/_/nginx</p>
+</blockquote>
+<p>3）查看一个image或container的详细信息，包括配置（以nginx为例）</p>
+<blockquote>
+<p>$ docker inspect nginx</p>
+</blockquote>
+<p>4）启动ubuntu，启动前会自动pull image</p>
+<blockquote>
+<p>$ docker run --interactive --tty ubuntu bash</p>
+</blockquote>
+<p>5）启动nginx，启动前会自动pull image</p>
+<blockquote>
+<p># docker run --detach --publish 80:80 --name webserver nginx<br/># curl http://localhost:80<br/>&lt;!DOCTYPE html&gt;<br/>&lt;html&gt;<br/>&lt;head&gt;<br/>&lt;title&gt;Welcome to nginx!&lt;/title&gt;<br/>&lt;style&gt;<br/>    body {<br/>        width: 35em;<br/>        margin: 0 auto;<br/>        font-family: Tahoma, Verdana, Arial, sans-serif;<br/>    }<br/>&lt;/style&gt;<br/>&lt;/head&gt;<br/>&lt;body&gt;<br/>&lt;h1&gt;Welcome to nginx!&lt;/h1&gt;<br/>&lt;p&gt;If you see this page, the nginx web server is successfully installed and<br/>working. Further configuration is required.&lt;/p&gt;</p>
+<p>&lt;p&gt;For online documentation and support please refer to<br/>&lt;a href="http://nginx.org/"&gt;nginx.org&lt;/a&gt;.&lt;br/&gt;<br/>Commercial support is available at<br/>&lt;a href="http://nginx.com/"&gt;nginx.com&lt;/a&gt;.&lt;/p&gt;</p>
+<p>&lt;p&gt;&lt;em&gt;Thank you for using nginx.&lt;/em&gt;&lt;/p&gt;<br/>&lt;/body&gt;<br/>&lt;/html&gt;</p>
+<p># docker container ls<br/>CONTAINER ID        IMAGE               COMMAND                  CREATED             STATUS              PORTS                NAMES<br/>e8ce03aa7ebc        nginx               "nginx - g 'daemon of鈥   12 minutes ago      Up 12 minutes       0.0.0.0:80-&gt;80/tcp   webserver</p>
+</blockquote>
+<p>其中：-p = --publish （端口映射），-d = --detach （后台运行）</p>
+<p>Run the app, mapping your machine’s port 80 to the container’s published port 80 using - p (--publish)</p>
+<p>注意：端口映射之后，在linux上可以直接通过 localhost:port 来访问对应的端口，但是windows不行，因为docker在不同平台上的实现方式不同，在windows上需要先通过</p>
+<blockquote>
+<p>$ docker-machine ip default</p>
+</blockquote>
+<p>找到virtualbox的虚拟机ip，通常为192.168.99.100，然后再访问 192.168.99.100:port</p>
+<p><em>The reason you’re having this, is because on Linux, the docker daemon (and your containers) run on the Linux machine itself, so “localhost” is also the host that the container is running on, and the ports are mapped to.</em><br/><em>On Windows (and OS X), the docker daemon, and your containers cannot run natively, so only the docker client is running on your Windows machine, but the daemon (and your containers) run in a VirtualBox Virtual Machine, that runs Linux.</em></p>
+<p>6）在容器内执行命令，比如reload nginx</p>
+<blockquote>
+<p># docker exec d727449d221f service nginx reload</p>
+</blockquote>
+<p>7）登陆到正在运行的容器中（其中$container_id可以从docker container ls中看到），登陆之后可以执行reload等操作</p>
+<blockquote>
+<p>$ docker exec - it $container_id bash</p>
+</blockquote>
+<p>8）停止正在运行的容器</p>
+<blockquote>
+<p>$ docker container stop &lt;Container NAME or ID&gt;<br/>$ docker stop &lt;Container NAME or ID&gt;</p>
+</blockquote>
+<p>9）启动容器</p>
+<blockquote>
+<p>$ docker start &lt;Container NAME or ID&gt;</p>
+</blockquote>
+<p>10）查看容器日志</p>
+<blockquote>
+<p>$ docker logs &lt;Container NAME or ID&gt;</p>
+</blockquote>
+<p>前提是容器还在running，如果容器启动失败，有两种方式看日志：1）挂载日志目录；2）使用export如下：</p>
+<p>11）导出容器文件系统</p>
+<blockquote>
+<p>$ docker export $container_id - o save.zip</p>
+</blockquote>
+<p>12）删除容器</p>
+<blockquote>
+<p>$ docker rm &lt;Container NAME or ID&gt;</p>
+</blockquote>
+<p>13）查看当前所有的image</p>
+<blockquote>
+<p>$ docker images</p>
+</blockquote>
+<p>14）删除image</p>
+<blockquote>
+<p>$ docker rmi $image_id</p>
+</blockquote>
+<p>15）容器和宿主机之间拷贝文件</p>
+<blockquote>
+<p>$ docker cp $container_id:/container/path/to/file.txt /host/path/dir/</p>
+</blockquote>
+<p>16）限制容器使用内存</p>
+<blockquote>
+<p>$ docker run --memory 300M --memory-swap=1G nginx</p>
+</blockquote>
+<p>--memory=-m 限制容器使用的最大物理内存，--memory-swap 限制容器使用的最大物理内存+swap</p>
+<p>17）查看container ip</p>
+<blockquote>
+<p>$ docker inspect - f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' $container_id_or_name</p>
+</blockquote>
+<h2>3 导出导入image</h2>
+<p>1）从官方仓库（https://hub.docker.com/）拉取镜像，可以指定版本</p>
+<blockquote>
+<p>$ docker pull nginx</p>
+</blockquote>
+<p>2）将image保存为文件</p>
+<blockquote>
+<p>$ docker save - o nginx.zip nginx</p>
+</blockquote>
+<p>3）从文件加载image</p>
+<blockquote>
+<p>$ docker load &lt; nginx.zip<br/>$ docker load --input nginx.zip</p>
+</blockquote>
+<p>还有一种方式是搭建docker私有仓库</p>
+<h2>4 制作并运行image</h2>
+<p>1）登录registry<br/>docker login</p>
+<p>2）制作local image<br/>docker build --tag=</p>
+<p>3）tag image<br/>docker tag image username/repository:tag<br/>The notation for associating a local image with a repository on a registry is username/repository:tag</p>
+<p>4）上传image<br/>docker push username/repository:tag</p>
+<p>5）运行image<br/>docker run - p 4000:80 username/repository:tag</p>
+<h2>5 Service命令</h2>
+<blockquote>
+<p>$ docker stack deploy - c docker-compose.yml getstartedlab<br/>$ docker service ls<br/>$ docker service ps getstartedlab_web<br/>$ docker container ls - q</p>
+</blockquote>
+<h2>6 Swarm命令</h2>
+<h3>swarm集群</h3>
+<p>1）swarm manager 启动和停止</p>
+<blockquote>
+<p>$ docker swarm init<br/>$ docker swarm leave --force</p>
+</blockquote>
+<p>2）worker 启动和停止</p>
+<blockquote>
+<p>$ docker swarm join<br/>$ docker swarm leave</p>
+</blockquote>
+<p>run docker swarm init to enable swarm mode and make your current machine a swarm manager, then run docker swarm join on other machines to have them join the swarm as workers. </p>
+<h3>在vm上安装swarm集群</h3>
+<p>1）创建vm</p>
+<blockquote>
+<p>$ docker-machine create --driver virtualbox myvm1<br/>$ docker-machine create --driver virtualbox myvm2<br/>$ docker-machine ls<br/>$ docker-machine start &lt;machine-name&gt;<br/>$ docker-machine ssh myvm1<br/>$ docker-machine env myvm1</p>
+</blockquote>
+<p>要先安装VirtualBox</p>
+<blockquote>
+<p># yum install opus<br/># yum install libvpx<br/># wget http://download.virtualbox.org/virtualbox/rpm/rhel/7/x86_64/VirtualBox-5.2-5.2.8_121009_el7-1.x86_64.rpm<br/># rpm - ivh VirtualBox-5.2-5.2.8_121009_el7-1.x86_64.rpm<br/># usermod - G vboxusers $user</p>
+</blockquote>
+<p>注意一定要安装版本5（最新的是6），否则会报错：</p>
+<blockquote>
+<p>Error with pre-create check: "We support Virtualbox starting with version 5. Your VirtualBox install is \"WARNING: The vboxdrv kernel module is not loaded. Either there is no module\\n available for the current kernel (3.10.0-693.el7.x86_64) or it failed to\\n load. Please recompile the kernel module and install it by\\n\\n sudo /sbin/vboxconfig\\n\\n You will not be able to start VMs until this problem is fixed.\\n6.0.4r128413\". Please upgrade at https://www.virtualbox.org"</p>
+</blockquote>
+<p>2）在vm上启动swarm集群</p>
+<blockquote>
+<p>$ docker-machine ssh myvm1 "docker swarm init --advertise-addr &lt;myvm1 ip&gt;"<br/>$ docker-machine ssh myvm2 "docker swarm join --token &lt;token&gt; &lt;ip&gt;:2377"</p>
+</blockquote>
+<p>3）在vm上的swarm集群部署应用</p>
+<blockquote>
+<p>$ docker stack deploy - c docker-compose.yml getstartedlab<br/>$ docker stack ps getstartedlab<br/>$ docker stack rm getstartedlab</p>
+</blockquote>
+<p>4）在vm上停止swarm集群</p>
+<blockquote>
+<p>$ docker-machine ssh myvm2 "docker swarm leave"<br/>$ docker-machine ssh myvm1 "docker swarm leave --force"</p>
+</blockquote>
+<p> </p>
+<p>参考：https://docs.docker.com/get-started/</p>
+<p> </p>
+</div>
+            </div>
+
+            <!-- Post Footer -->
+            <div class="post-footer">
+                <div class="post-navigation">
+                    <a href="../blog_cn.html" class="nav-button">← Back to Home</a>
+                    <a href="0237.html" class="nav-button">Next Post →</a>
+                </div>
+            </div>
+        </article>
+    </div>
+</body>
+</html>

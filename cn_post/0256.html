@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>hive metastore的几种部署方式</title>
+    <link rel="stylesheet" href="../css/style3.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header Navigation -->
+        <div class="header">
+            <h1><a href="../blog_cn.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+        </div>
+
+        <!-- Post Container -->
+        <article class="post">
+            <!-- Post Header -->
+            <div class="post-header">
+                <h1>hive metastore的几种部署方式</h1>
+                <div class="post-meta">
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📅</span>
+                        <span>January 21, 2019</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📖</span>
+                        <span>1 min read</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">👁️</span>
+                        <span>1288 views</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Post Content -->
+            <div class="post-content">
+                <div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<p>hive及其他组件（比如spark、impala等）都会依赖hive metastore，依赖的配置文件位于hive-site.xml</p>
+<h1>hive metastore重要配置</h1>
+<blockquote>
+<p>hive.metastore.warehouse.dir<br/>hive2及之前版本默认为/user/hive/warehouse/，创建数据库或表时会在该目录下创建对应的目录</p>
+<p>javax.jdo.option.ConnectionURL<br/>javax.jdo.option.ConnectionDriverName<br/>javax.jdo.option.ConnectionUserName<br/>javax.jdo.option.ConnectionPassword<br/>默认为derby</p>
+<p>hive.metastore.uris<br/>默认为空</p>
+</blockquote>
+<h1>hive metastore部署方式</h1>
+<h2>1 全部默认配置</h2>
+<p>使用的是内置的derby库，hdfs目录为/user/hive/warehouse/</p>
+<h2>2 只配置javax.jdo.option.*相关配置</h2>
+<p>使用配置的数据库（比如mysql），hdfs目录为/user/hive/warehouse/</p>
+<h2>3 只配置hive.metastore.uris</h2>
+<p>所有元数据操作都通过远程metastore交互（注意此时需要启动一个独立的hive metastore进程），hdfs目录为/user/hive/warehouse/</p>
+<p>ps：注意1和2不需要任何的hive进程，但3种方式都需要依赖hdfs</p>
+<h1>总结</h1>
+<p>综上，在只需要使用impala或spark而不需要hive的时候，其实只需要一个远程数据库（比如mysql）即可，不需要单独启动hive metastore进程；</p>
+<p>如何初始化一个hive元数据库？</p>
+<blockquote>
+<p>$ ls $HIVE_HOME/scripts/metastore/upgrade<br/>derby  mssql  mysql  oracle  postgres</p>
+</blockquote>
+<p>在hive目录下有各种数据库各个版本的初始化脚本，比如impala依赖hive1.2，只需要安装hive1.2的元数据库即可，对应的sql文件为：</p>
+<blockquote>
+<p>$HIVE_HOME/scripts/metastore/upgrade/mysql/hive-schema-1.2.0.mysql.sql</p>
+</blockquote>
+<p>其中会依赖</p>
+<blockquote>
+<p>$HIVE_HOME/scripts/metastore/upgrade/mysql/hive-txn-schema-0.13.0.mysql.sql</p>
+</blockquote>
+<p>初始化完成之后直接在/etc/impala/conf/hive-site.xml中配置javax.jdo.option.*指向mysql库即可；</p>
+<p> </p>
+<p>impala的最小安装为：hdfs + mysql（hive元数据库） + impala</p>
+<p>spark的最小安装为：hdfs + mysql（hive元数据库） + spark</p>
+<p> </p>
+<p>参考：https://cwiki.apache.org/confluence/display/Hive/AdminManual+Metastore+Administration</p>
+<p> </p>
+</div>
+            </div>
+
+            <!-- Post Footer -->
+            <div class="post-footer">
+                <div class="post-navigation">
+                    <a href="../blog_cn.html" class="nav-button">← Back to Home</a>
+                    <a href="0257.html" class="nav-button">Next Post →</a>
+                </div>
+            </div>
+        </article>
+    </div>
+</body>
+</html>

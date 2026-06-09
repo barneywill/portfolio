@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Zookeeper 1 - 介绍、安装及使用</title>
+    <link rel="stylesheet" href="../css/style3.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header Navigation -->
+        <div class="header">
+            <h1><a href="../blog_cn.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+        </div>
+
+        <!-- Post Container -->
+        <article class="post">
+            <!-- Post Header -->
+            <div class="post-header">
+                <h1>Zookeeper 1 - 介绍、安装及使用</h1>
+                <div class="post-meta">
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📅</span>
+                        <span>October 31, 2018</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📖</span>
+                        <span>14 min read</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">👁️</span>
+                        <span>1264 views</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Post Content -->
+            <div class="post-content">
+                <div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<p>zookeeper3.4.11</p>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201811/1509647-20181107110807388-130870414.png"/></p>
+<p><a class="external-link" href="http://zookeeper.apache.org/" rel="noopener nofollow">http://zookeeper.apache.org/</a></p>
+<p> </p>
+<h1 id="Zookeeper-一简介">一 简介</h1>
+<p><strong>ZooKeeper is a centralized service for maintaining configuration information, naming, providing distributed synchronization, and providing group services.</strong> All of these kinds of services are used in some form or another by distributed applications. Each time they are implemented there is a lot of work that goes into fixing the bugs and race conditions that are inevitable. Because of the difficulty of implementing these kinds of services, applications initially usually skimp on them ,which make them brittle in the presence of change and difficult to manage. Even when done correctly, different implementations of these services lead to management complexity when the applications are deployed.</p>
+<blockquote>
+<p>zookeeper是一个中心化的服务，可以用来：1 维护配置信息；2 命名服务；3 提供分布式同步；4 提供分组服务；</p>
+</blockquote>
+<p>ZooKeeper allows distributed processes to coordinate with each other through a shared hierarchal namespace which is organized similarly to a standard file system.The name space consists of data registers - called znodes, in ZooKeeper parlance - and these are similar to files and directories. Unlike a typical file system, which is designed for storage, ZooKeeper data is kept in-memory, which means ZooKeeper can acheive high throughput and low latency numbers.</p>
+<blockquote>
+<p>zookeeper提供一个共享的命名空间，这个命名空间非常像一个文件系统（由文件和目录组成），命名空间由znode组成；与文件系统不同的是，zookeeper的数据是放在内存的，而且zookeeper的“目录”（znode）也可以写数据；</p>
+</blockquote>
+<h2 id="Zookeeper-1部署视图">1 部署视图</h2>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201811/1509647-20181107110834629-1190843009.png"/></p>
+<p> </p>
+<ul>
+<li>The servers that make up the ZooKeeper service must all <strong>know about each other</strong>. They maintain <strong>an in-memory image of state</strong>, along with <strong>a transaction logs</strong> and <strong>snapshots</strong> in a persistent store. As long as a majority of the servers are available, the ZooKeeper service will be available.</li>
+<li>Clients connect to a single ZooKeeper server. The client maintains a <strong>TCP connection</strong> through which it <strong>sends requests, gets responses, gets watch events, and sends heart beats</strong>. If the TCP connection to the server breaks, the client will connect to a different server.</li>
+</ul>
+<blockquote>
+<p>zookeeper服务中的每台服务器都知道其他服务器的地址，并且任意两台服务器之间都互相连接；zookeeper服务器除了内存数据之外，还会在外部存储存放transaction logs和sampshots；只要zookeeper集群中的大多数服务器存活，即  (n+1)/2，zookeeper集群就可以提供服务；</p>
+<p>zookeeper客户端只连接到其中一台zookeeper服务器，客户端会维护一个到服务器端的TCP长连接，通过这个连接来发送请求，接收响应，获取watch事件，发送心跳等；如果当前连接断掉，客户端会尝试连接到另外一台zookeeper服务器；</p>
+</blockquote>
+<h2 id="Zookeeper-2数据视图">2 数据视图</h2>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201811/1509647-20181107110900190-207028004.png"/></p>
+<p> </p>
+<ul>
+<li>The name space provided by ZooKeeper is <strong>much like that of a standard file system</strong>. A name is a sequence of path elements separated by a slash (/). Every node in ZooKeeper's name space is identified by a path.</li>
+<li>Unlike is standard file systems, each node in a ZooKeeper namespace can <strong>have data</strong> associated with it as well as children. It is like having a file-system that allows a file to also be a directory. </li>
+<li>ZooKeeper also has the notion of <strong>ephemeral nodes</strong>. These znodes exists as long as the session that created the znode is active. When the session ends the znode is deleted. </li>
+<li>ZooKeeper supports the concept of <strong><em>watches</em></strong>. Clients can set a watch on a znodes. <strong>A watch will be triggered and removed when the znode changes</strong>. When a watch is triggered the client receives a packet saying that the znode has changed. And if the connection between the client and one of the Zoo Keeper servers is broken, the client will receive a local notification.</li>
+</ul>
+<blockquote>
+<p>zookeeper提供的命名空间非常像文件系统，有几点区别：1 “目录”也可以存放数据（zookeeper中没有目录和文件的概念，所有的节点都是znode，即可以存放数据又可以有子节点）；2 支持Ephemeral节点即临时节点 ，临时节点的生命周期与客户端的session保持一致；3 支持watch，即订阅，当znode变化时对应的watch事件会被触发；</p>
+</blockquote>
+<h2 id="Zookeeper-3数据更新过程">3 数据更新过程</h2>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201811/1509647-20181107110915122-1435972400.png"/></p>
+<p> </p>
+<ul>
+<li>Every ZooKeeper server services clients. Clients connect to exactly one server to submit irequests. <strong>Read requests</strong> are serviced from the local replica of each server database. Requests that change the state of the service, write requests, are processed by an agreement protocol.</li>
+<li>As part of the agreement protocol <strong>all write requests</strong> from clients are forwarded to a single server, called the <strong><em>leader</em></strong>. The rest of the ZooKeeper servers, called <strong><em>followers</em></strong>, receive message proposals from the leader and agree upon message delivery. <strong>The messaging layer takes care of replacing leaders on failures and syncing followers with leaders.</strong></li>
+</ul>
+<blockquote>
+<p>每一个zookeeper服务器都会响应客户端连接，每个客户端只连接到一台服务器，客户端的读请求直接由当前连接的服务器查询本地数据来响应，客户端的写请求都会被重定向到作为leader的服务器处理，除了leader之外的服务器称为follower（另外还有一种observer后边会讲到）；</p>
+</blockquote>
+<h2 id="Zookeeper-4Session状态机">4 Session状态机</h2>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201811/1509647-20181107110935283-2035252043.png"/></p>
+<p> </p>
+<ul>
+<li>A ZooKeeper client establishes a session with the ZooKeeper service by creating a handle to the service using a language binding. Once created, the handle starts of in the CONNECTING state and the client library tries to connect to one of the servers that make up the ZooKeeper service at which point it switches to the CONNECTED state. During normal operation will be in one of these two states. If an unrecoverable error occurs, such as session expiration or authentication failure, or if the application explicitly closes the handle, the handle will move to the CLOSED state. </li>
+</ul>
+<blockquote>
+<p>客户端建立连接时首先会进入CONNECTING 状态，连接成功之后进入CONNECTED状态，当连接关闭之后会进入CLOSED状态；</p>
+</blockquote>
+<h2 id="Zookeeper-5Guarantees">5 Guarantees</h2>
+<ul>
+<li>
+<p><strong>Sequential Consistency</strong> - Updates from a client will be applied in the order that they were sent.</p>
+</li>
+<li>
+<p><strong>Atomicity</strong> - Updates either succeed or fail. No partial results.</p>
+</li>
+<li>
+<p><strong>Single System Image</strong> - A client will see the same view of the service regardless of the server that it connects to.</p>
+</li>
+</ul>
+<ul>
+<li>
+<p><strong>Reliability</strong> - Once an update has been applied, it will persist from that time forward until a client overwrites the update.</p>
+</li>
+</ul>
+<ul>
+<li>
+<p><strong>Timeliness</strong> - The clients view of the system is guaranteed to be up-to-date within a certain time bound.</p>
+</li>
+</ul>
+<blockquote>
+<p> 保证：串行一致性；原子性；持久性；实时性；</p>
+</blockquote>
+<h1 id="Zookeeper-二安装">二 安装</h1>
+<h2 id="Zookeeper-1配置">1 配置</h2>
+<p>$ZOOKEEPER_HOME/conf/zoo.cfg</p>
+<blockquote>
+<pre class="code">tickTime=2000
+dataDir=/var/lib/zookeeper
+clientPort=2181
+initLimit=5
+syncLimit=2
+server.1=zoo1:2888:3888
+server.2=zoo2:2888:3888
+server.3=zoo3:2888:3888</pre>
+</blockquote>
+<p>tickTime the basic time unit in milliseconds used by ZooKeeper. It is used to do heartbeats and the minimum session timeout will be twice the tickTime.</p>
+<p>dataDir the location to store the in-memory database snapshots and, unless specified otherwise, the transaction log of updates to the database.</p>
+<p>clientPort the port to listen for client connections</p>
+<p><strong>initLimit</strong> is timeouts ZooKeeper uses to limit the length of time the ZooKeeper servers in quorum have to connect to a leader. </p>
+<p><strong>syncLimit</strong> limits how far out of date a server can be from a leader.</p>
+<blockquote>
+<p>zookeeper核心的几个配置就是以上5个；</p>
+</blockquote>
+<p> </p>
+<p>The entries of the form <em>server.X</em> list the servers that make up the ZooKeeper service. When the server starts up, it knows which server it is by looking for the file <em>myid</em> in the data directory. That file has the contains the server number, in ASCII.</p>
+<p>Peers use the former port to connect to other peers. Such a connection is necessary so that peers can <strong>communicate</strong>, for example, to agree upon the order of updates. More specifically, a ZooKeeper server uses this port to connect followers to the leader. When a new leader arises, a follower opens a TCP connection to the leader using this port. Because the default leader election also uses TCP, we currently require another port for <strong>leader election</strong>. This is the second port in the server entry.</p>
+<blockquote>
+<p> zookeeper集群中所有服务器都配置在server.X中，当一台服务器启动时，他首先会到数据目录中找到myid文件，找到自己的id，然后会同集群中的其他服务器建立连接，这里的连接有两个，一个用于选举，一个用于通讯；</p>
+</blockquote>
+<p> </p>
+<p>文件细节：</p>
+<p>The <strong><span class="codefrag filename">snapshot</span></strong><strong> files</strong> stored in the data directory are fuzzy snapshots in the sense that during the time the ZooKeeper server is taking the snapshot, updates are occurring to the data tree. <strong>The suffix of the </strong><strong><span class="codefrag filename">snapshot file names is the <em>zxid</em></span></strong><strong>, the ZooKeeper transaction id, of the last committed transaction at the start of the snapshot</strong>. Thus, the snapshot includes a subset of the updates to the data tree that occurred while the snapshot was in process. The snapshot, then, may not correspond to any data tree that actually existed, and for this reason we refer to it as a fuzzy snapshot. Still, ZooKeeper can recover using this snapshot because it takes advantage of the idempotent nature of its updates. By replaying the transaction log against fuzzy snapshots ZooKeeper gets the state of the system at the end of the log.</p>
+<p>The <strong>Log Directory</strong> contains the ZooKeeper transaction logs. Before any update takes place, ZooKeeper ensures that the transaction that represents the update is written to non-volatile storage. A new log file is started when the number of transactions written to the current log file reaches a (variable) threshold. The threshold is computed using the same parameter which influences the frequency of snapshotting (see snapCount above). <strong>The log file's suffix is the first zxid written to that log</strong>.</p>
+<blockquote>
+<p>zookeeper数据目录中有两个文件，一个是snapshot，即快照文件，一个是transaction log，即日志文件，zookeeper会将所有的写操作全部记录到日志文件中，同时会定期将内存中的数据写到快照文件中，通过这两个文件，zookeeper可以保证数据不丢失同时重启后可以快速恢复数据；</p>
+<p>snapshot文件命名为snapshot.$last_zxid，后缀为快照文件中最后一条日志的id，比如snapshot.3e0d57d547</p>
+<p>transaction log文件命名为：log.$first_zxid，后缀为日志文件中第一条日志的id，比如log.3e0d4bffd7</p>
+</blockquote>
+<p> </p>
+<h2 id="Zookeeper-2启动">2 启动</h2>
+<blockquote>
+<pre class="code">bin/zkServer.sh start</pre>
+</blockquote>
+<p>进程</p>
+<blockquote>
+<p>hadoop   150952  4.9  1.6 22934232 1103420 ?    Sl   Mar14 11954:12 /$JAVA_HOME/bin/java -Dzookeeper.log.dir=/$ZOOKEEPER_HOME -Dzookeeper.root.logger=INFO,CONSOLE -cp /$ZOOKEEPER_HOME/bin/../build/<a class="external-link" href="http://classes/export/App/zookeeper-3.4.6/build/lib/*.jar:/export/App/zookeeper-3.4.6/lib/slf4j-log4j12-1.6.1.jar:/export/App/zookeeper-3.4.6/lib/slf4j-api-1.6.1.jar:/export/App/zookeeper-3.4.6/lib/netty-3.7.0.Final.jar:/export/App/zookeeper-3.4.6/lib/log4j-1.2.16.jar:/export/App/zookeeper-3.4.6/lib/jline-0.9.94.jar:/export/App/zookeeper-3.4.6/zookeeper-3.4.6.jar:/export/App/zookeeper-3.4.6/src/java/lib/*.jar:/export/App/zookeeper-3.4.6/conf" rel="noopener nofollow">classes:/$ZOOKEEPER_HOME/bin/../build/lib/*.jar:/$ZOOKEEPER_HOME/bin/../lib/slf4j-log4j12-1.6.1.jar:/$ZOOKEEPER_HOME/bin/../lib/slf4j-api-1.6.1.jar:/$ZOOKEEPER_HOME/bin/../lib/netty-3.7.0.Final.jar:/$ZOOKEEPER_HOME/bin/../lib/log4j-1.2.16.jar:/$ZOOKEEPER_HOME/bin/../lib/jline-0.9.94.jar:/$ZOOKEEPER_HOME/bin/../zookeeper-3.4.6.jar:/$ZOOKEEPER_HOME/bin/../src/java/lib/*.jar:/$ZOOKEEPER_HOME/bin/../conf</a>: -Dcom.sun.management.jmxremote -Dcom.sun.management.jmxremote.local.only=false org.apache.zookeeper.server.quorum.QuorumPeerMain /$ZOOKEEPER_HOME/bin/../conf/zoo.cfg</p>
+</blockquote>
+<p> </p>
+<p>数据目录结构</p>
+<blockquote>
+<p>[user@zk_server_1 version-2]$ ls /$ZOOKEEPER_DATA_DIR/<br/>myid version-2 zookeeper_server.pid<br/>[user@zk_server_1 version-2]$ ls /$ZOOKEEPER_DATA_DIR/version-2/<br/>acceptedEpoch log.3e0d4bffd7 log.3e0d57d549 log.3e0d6255f7 log.3e0d6df7e9 log.3e0d790349 snapshot.3e0d4bffd5 snapshot.3e0d57d547 snapshot.3e0d6255f2 snapshot.3e0d6df7e7 snapshot.3e0d790347<br/>currentEpoch log.3e0d4d1a04 log.3e0d58a803 log.3e0d63629b log.3e0d6f0d5c log.3e0d7a4523 snapshot.3e0d4d1a02 snapshot.3e0d58a801 snapshot.3e0d636299 snapshot.3e0d6f0d5a snapshot.3e0d7a4521<br/>log.3e0d430aed log.3e0d4e724a log.3e0d59a04c log.3e0d64cc1f log.3e0d6ff7ba log.3e0d7bc17d snapshot.3e0d4e7248 snapshot.3e0d59a04a snapshot.3e0d64cc1d snapshot.3e0d6ff7b8 snapshot.3e0d7bc17b<br/>log.3e0d43dadd log.3e0d4ff8ce log.3e0d5ad0a0 log.3e0d65fd11 log.3e0d714d93 snapshot.3e0d43dadb snapshot.3e0d4ff8cc snapshot.3e0d5ad09d snapshot.3e0d65fd0f snapshot.3e0d714d91<br/>log.3e0d454827 log.3e0d5150a7 log.3e0d5bb95f log.3e0d67015a log.3e0d724f8d snapshot.3e0d454825 snapshot.3e0d5150a5 snapshot.3e0d5bb95b snapshot.3e0d670158 snapshot.3e0d724f8b<br/>log.3e0d465a2e log.3e0d52156c log.3e0d5ce712 log.3e0d67fa44 log.3e0d731ca5 snapshot.3e0d465a2c snapshot.3e0d52156a snapshot.3e0d5ce710 snapshot.3e0d67fa42 snapshot.3e0d731ca3<br/>log.3e0d47ac00 log.3e0d531018 log.3e0d5dae9f log.3e0d6932ab log.3e0d748b2d snapshot.3e0d47abfe snapshot.3e0d531016 snapshot.3e0d5dae9d snapshot.3e0d6932ad snapshot.3e0d748b2b<br/>log.3e0d48746a log.3e0d548417 log.3e0d5f18d5 log.3e0d6a0150 log.3e0d75de64 snapshot.3e0d487468 snapshot.3e0d548415 snapshot.3e0d5f18d8 snapshot.3e0d6a014e snapshot.3e0d75de62<br/>log.3e0d49eff7 log.3e0d55620a log.3e0d5fdcc3 log.3e0d6b5212 log.3e0d76e90e snapshot.3e0d49eff5 snapshot.3e0d556208 snapshot.3e0d5fdcc1 snapshot.3e0d6b5210 snapshot.3e0d76e90c<br/>log.3e0d4af170 log.3e0d56bd2c log.3e0d60d48a log.3e0d6cc57c log.3e0d780e44 snapshot.3e0d4af16e snapshot.3e0d56bd2a snapshot.3e0d60d485 snapshot.3e0d6cc57a snapshot.3e0d780e42</p>
+</blockquote>
+<h1 id="Zookeeper-三使用">三 使用</h1>
+<h2 id="Zookeeper-1ZooKeeperCommands:TheFourLetterWords">1 ZooKeeper Commands: The Four Letter Words</h2>
+<blockquote>
+<pre class="code">$ echo mntr | nc localhost 2185</pre>
+</blockquote>
+<ul>
+<li>conf
+<ul>
+<li>Print details about serving configuration.</li>
+</ul>
+</li>
+<li>cons
+<ul>
+<li>List full connection/session details for all clients connected to this server. Includes information on numbers of packets received/sent, session id, operation latencies, last operation performed, etc...</li>
+</ul>
+</li>
+<li>crst
+<ul>
+<li>Reset connection/session statistics for all connections.</li>
+</ul>
+</li>
+<li>dump
+<ul>
+<li>Lists the outstanding sessions and ephemeral nodes. This only works on the leader.</li>
+</ul>
+</li>
+<li>envi
+<ul>
+<li>Print details about serving environment</li>
+</ul>
+</li>
+<li>ruok
+<ul>
+<li>Tests if server is running in a non-error state. The server will respond with imok if it is running. Otherwise it will not respond at all.</li>
+</ul>
+</li>
+<li>srst
+<ul>
+<li>Reset server statistics.</li>
+</ul>
+</li>
+<li>srvr
+<ul>
+<li>Lists full details for the server.</li>
+</ul>
+</li>
+<li>stat
+<ul>
+<li>Lists brief details for the server and connected clients.</li>
+</ul>
+</li>
+<li>wchs
+<ul>
+<li>Lists brief information on watches for the server.</li>
+</ul>
+</li>
+<li>wchc
+<ul>
+<li>Lists detailed information on watches for the server, by session. This outputs a list of sessions(connections) with associated watches (paths). Note, depending on the number of watches this operation may be expensive (ie impact server performance), use it carefully.</li>
+</ul>
+</li>
+<li>wchp
+<ul>
+<li>Lists detailed information on watches for the server, by path. This outputs a list of paths (znodes) with associated sessions. Note, depending on the number of watches this operation may be expensive (ie impact server performance), use it carefully.</li>
+</ul>
+</li>
+<li>mntr
+<ul>
+<li>Outputs a list of variables that could be used for monitoring the health of the cluster.</li>
+</ul>
+</li>
+</ul>
+<p> </p>
+<p>示例：</p>
+<blockquote>
+<p>-bash-4.1$ echo stat|nc $zk_server_1 2181 <br/>Zookeeper version: 3.4.6-1569965, built on 02/20/2014 09:09 GMT<br/>Clients:<br/>/zk_client_1:59407[1](queued=0,recved=55,sent=55)<br/>/zk_client_2:40094[0](queued=0,recved=1,sent=0)<br/>/zk_client_3:60926[1](queued=0,recved=115,sent=115)<br/>/zk_client_4:59288[1](queued=0,recved=56,sent=56)<br/>/zk_client_5:14155[1](queued=0,recved=115,sent=115)<br/>/zk_client_6:18602[1](queued=0,recved=115,sent=115)</p>
+<p>Latency min/avg/max: 0/0/146<br/>Received: 6294<br/>Sent: 6376<br/>Connections: 6<br/>Outstanding: 0<br/>Zxid: 0x3e0d1cccd4<br/>Mode: follower<br/>Node count: 26394</p>
+</blockquote>
+<p> </p>
+<p><strong>Zxid </strong>Every change to the ZooKeeper state receives a stamp in the form of a <em>zxid</em> (ZooKeeper Transaction Id). This exposes the total ordering of all changes to ZooKeeper. Each change will have a unique zxid and if zxid1 is smaller than zxid2 then zxid1 happened before zxid2.</p>
+<p>The ZooKeeper service can be monitored in one of two primary ways; 1) the command port through the use of <a class="external-link" href="http://zookeeper.apache.org/doc/current/zookeeperAdmin.html#sc_zkCommands" rel="noopener nofollow">4 letter words</a> and 2) <a class="external-link" href="http://zookeeper.apache.org/doc/current/zookeeperJMX.html" rel="noopener nofollow">JMX</a>. </p>
+<blockquote>
+<p>zookeeper中数据的任何变化都有一个唯一的zxid，并且是有序的，即先发生的变化的zxid一定小于后发生的变化的zxid；</p>
+<p>zookeeper可以通过两种方式监控：4字命令 和 jmx；</p>
+</blockquote>
+<h2 id="Zookeeper-2命令行客户端">2 命令行客户端</h2>
+<blockquote>
+<pre class="code">$ bin/zkCli.sh -server 127.0.0.1:2181</pre>
+<pre class="code">[zkshell: 0] help
+ZooKeeper host:port cmd args
+        get path [watch]
+        ls path [watch]
+        set path data [version]
+        delquota [-n|-b] path
+        quit
+        printwatches on|off
+        createpath data acl
+        stat path [watch]
+        listquota path
+        history
+        setAcl path acl
+        getAcl path
+        sync path
+        redo cmdno
+        addauth scheme auth
+        delete path [version]
+        setquota -n|-b val path</pre>
+</blockquote>
+<p> </p>
+<p>示例：</p>
+<blockquote>
+<pre class="code">[zkshell: 12] get /zk_test
+my_data
+cZxid = 5
+ctime = Fri Jun 05 13:57:06 PDT 2009
+mZxid = 5
+mtime = Fri Jun 05 13:57:06 PDT 2009
+pZxid = 5
+cversion = 0
+dataVersion = 0
+aclVersion = 0
+ephemeralOwner = 0
+dataLength = 7
+numChildren = 0</pre>
+</blockquote>
+<ul>
+<li>
+<p><strong>czxid</strong></p>
+<p>The zxid of the change that caused this znode to be created.</p>
+</li>
+<li>
+<p><strong>mzxid</strong></p>
+<p>The zxid of the change that last modified this znode.</p>
+</li>
+<li>
+<p><strong>pzxid</strong></p>
+<p>The zxid of the change that last modified children of this znode.</p>
+</li>
+<li>
+<p><strong>ctime</strong></p>
+<p>The time in milliseconds from epoch when this znode was created.</p>
+</li>
+<li>
+<p><strong>mtime</strong></p>
+<p>The time in milliseconds from epoch when this znode was last modified.</p>
+</li>
+<li>
+<p><strong>version</strong></p>
+<p>The number of changes to the data of this znode.</p>
+</li>
+<li>
+<p><strong>cversion</strong></p>
+<p>The number of changes to the children of this znode.</p>
+</li>
+<li>
+<p><strong>aversion</strong></p>
+<p>The number of changes to the ACL of this znode.</p>
+</li>
+<li>
+<p><strong>ephemeralOwner</strong></p>
+<p>The session id of the owner of this znode if the znode is an ephemeral node. If it is not an ephemeral node, it will be zero.</p>
+</li>
+<li>
+<p><strong>dataLength</strong></p>
+<p>The length of the data field of this znode.</p>
+</li>
+<li>
+<p><strong>numChildren</strong></p>
+<p>The number of children of this znode.</p>
+</li>
+</ul>
+<blockquote>
+<p>znode节点的各个属性如上； </p>
+</blockquote>
+<h2 id="Zookeeper-3java客户端">3 java客户端</h2>
+<p>org.apache.zookeeper.ZooKeeper</p>
+<ul>
+<li>This is the main class of ZooKeeper client library. To use a ZooKeeper service, an application must first instantiate an object of ZooKeeper class. All the iterations will be done by calling the methods of ZooKeeper class. The methods of this class are thread-safe unless otherwise noted.</li>
+<li>Once a connection to a server is established, a <strong>session ID</strong> is assigned to the client. The client will send <strong>heart beats</strong> to the server periodically to keep the session valid.</li>
+<li>The application can call ZooKeeper APIs through a client as long as the session ID of the client remains valid.</li>
+<li>If for some reason, the client fails to send heart beats to the server for a prolonged period of time (exceeding the sessionTimeout value, for instance), the server will <strong>expire the session</strong>, and the session ID will become invalid. The client object will no longer be usable. To make ZooKeeper API calls, the application must create a new client object.</li>
+<li>If the ZooKeeper server the client currently connects to fails or otherwise does not respond, the client will automatically try to connect to another server before its session ID expires. If successful, the application can continue to use the client.</li>
+<li>The ZooKeeper API methods are either synchronous or asynchronous. Synchronous methods blocks until the server has responded. Asynchronous methods just queue the request for sending and return immediately. They take a callback object that will be executed either on successful execution of the request or on error with an appropriate return code (rc) indicating the error.</li>
+<li>Some successful ZooKeeper API calls can <strong>leave watches</strong> on the "data nodes" in the ZooKeeper server. Other successful ZooKeeper API calls can trigger those watches. Once a watch is triggered, an event will be delivered to the client which left the watch at the first place. Each watch can be triggered only once. Thus, up to one event will be delivered to a client for every watch it leaves.</li>
+<li>A client needs an object of a class implementing <strong>Watcher interface</strong> for processing the events delivered to the client. When a client drops the current connection and re-connects to a server, all the existing watches are considered as being triggered but the undelivered events are lost. To emulate this, the client will generate a special event to tell the event handler a connection has been dropped. This special event has EventType None and KeeperState <strong>Disconnected</strong>.</li>
+</ul>
+<h1 id="Zookeeper-七其他">四 其他</h1>
+<p>The format of snapshot and log files does not change between standalone ZooKeeper servers and different configurations of replicated ZooKeeper servers. Therefore, you can pull these files from a running replicated ZooKeeper server to a development machine with a stand-alone ZooKeeper server for trouble shooting.</p>
+<p>Using older log and snapshot files, you can look at the previous state of ZooKeeper servers and even restore that state. The LogFormatter class allows an administrator to look at the transactions in a log.</p>
+<blockquote>
+<p>snapshot和log文件的格式是一致的，所以可以很容易的将线上集群的数据文件拷贝到本地来查找问题或重现错误；</p>
+</blockquote>
+<p> </p>
+<p>A server might not be able to read its database and fail to come up because of some file corruption in the transaction logs of the ZooKeeper server. You will see some IOException on loading ZooKeeper database. In such a case, make sure all the other servers in your ensemble are up and working. Use "stat" command on the command port to see if they are in good health. After you have verified that all the other servers of the ensemble are up, you can go ahead and clean the database of the corrupt server. Delete all the files in datadir/version-2 and datalogdir/version-2/. Restart the server.</p>
+<blockquote>
+<p>一旦zookeeper数据目录中的某些文件有损坏，zookeeper可能由于无法读取数据导致启动失败，这时可以先检查一下其他服务器（集群中的大多数）是否正常，如果正常的话，可以将有文件损坏的数据目录文件清空后重启zookeeper，重启后zookeeper会自动同步最新的数据；</p>
+</blockquote>
+<p> </p>
+<p>Although ZooKeeper performs very well by having clients connect directly to voting members of the ensemble, this architecture makes it hard to scale out to huge numbers of clients. The problem is that as we add more voting members, the write performance drops. This is due to the fact that a write operation requires the agreement of (in general) at least half the nodes in an ensemble and therefore the cost of a vote can increase significantly as more voters are added.</p>
+<p>We have introduced a new type of ZooKeeper node called an <em>Observer</em> which helps address this problem and further improves ZooKeeper's scalability. Observers are non-voting members of an ensemble which only hear the results of votes, not the agreement protocol that leads up to them. Other than this simple distinction, Observers function exactly the same as Followers - clients may connect to them and send read and write requests to them. Observers forward these requests to the Leader like Followers do, but they then simply wait to hear the result of the vote. Because of this, we can increase the number of Observers as much as we like without harming the performance of votes.</p>
+<blockquote>
+<p>由于zookeeper的对写操作的投票机制，所以集群规模持续扩大会伴随着投票成本的上升，这时zookeeper引入了一种新的节点类型即observer，observer不参与投票，只负责同步数据和相应客户端需求；</p>
+</blockquote>
+<h1>五 更多</h1>
+<p>1 为什么zookeeper集群由奇数（2n+1）个节点组成？</p>
+<blockquote>
+<p>这里有两个原因，一个是为了防止脑裂，只有n+1个节点存活集群才能正常工作，即2n+1个节点只能有1个集群正常工作；一个是为了数据可靠性，每一份数据只要有n+1个节点保存成功，则数据不会丢失，这一点可以严格的通过数据方法来证明，最简单的是反证法，假设有一个数据在n+1个节点上保存成功，但是丢失，说明保存成功的n+1个节点目前都不可用，但是如果只有n个节点存活则集群无法正常工作，可以推断假设错误；</p>
+</blockquote>
+</div>
+            </div>
+
+            <!-- Post Footer -->
+            <div class="post-footer">
+                <div class="post-navigation">
+                    <a href="../blog_cn.html" class="nav-button">← Back to Home</a>
+                    <a href="0362.html" class="nav-button">Next Post →</a>
+                </div>
+            </div>
+        </article>
+    </div>
+</body>
+</html>

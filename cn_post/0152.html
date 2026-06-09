@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ElasticSearch优化实践</title>
+    <link rel="stylesheet" href="../css/style3.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header Navigation -->
+        <div class="header">
+            <h1><a href="../blog_cn.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+        </div>
+
+        <!-- Post Container -->
+        <article class="post">
+            <!-- Post Header -->
+            <div class="post-header">
+                <h1>ElasticSearch优化实践</h1>
+                <div class="post-meta">
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📅</span>
+                        <span>May 29, 2022</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📖</span>
+                        <span>1 min read</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">👁️</span>
+                        <span>166 views</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Post Content -->
+            <div class="post-content">
+                <div class="blogpost-body cnblogs-markdown" id="cnblogs_post_body">
+<h1 id="1-冷热分离hotwarmcold">1 冷热分离（Hot/Warm/Cold）</h1>
+<p>Index Lifecircle Management Policy</p>
+<h2 id="索引特点">索引特点</h2>
+<ul>
+<li>Hot: 索引被更新，大量被查询</li>
+<li>Warm: 索引不更新，偶尔被查询</li>
+<li>Cold: 索引不更新，很少被查询</li>
+<li>Delete: 索引不更新，不被查询</li>
+</ul>
+<p>参考：<a href="https://www.elastic.co/guide/en/elasticsearch/reference/7.0/index-lifecycle-management.html" rel="noopener nofollow" target="_blank">https://www.elastic.co/guide/en/elasticsearch/reference/7.0/index-lifecycle-management.html</a></p>
+<p>根据索引特点，可以将es集群划分几个小集群：</p>
+<ul>
+<li>Hot集群：存放Hot索引</li>
+<li>Warm集群：存放Warm索引</li>
+<li>Cold集群：存放Cold索引（非必须）</li>
+</ul>
+<p><a href="https://www.elastic.co/blog/implementing-hot-warm-cold-in-elasticsearch-with-index-lifecycle-management" rel="noopener nofollow" target="_blank">https://www.elastic.co/blog/implementing-hot-warm-cold-in-elasticsearch-with-index-lifecycle-management</a></p>
+<p>最简单的是划分为Hot和Warm来管理，他们的特点是：</p>
+<ul>
+<li>Hot集群：多CPU，大内存，小硬盘，小Shard，同时应对大量的读写请求</li>
+<li>Warm集群：少CPU，小内存，大硬盘，大Shard，应对少量的读写请求</li>
+</ul>
+<p>当一个索引从Hot集群移动到Warm集群时，通常需要将小Shard变为大Shard，这里需要一个shrink操作，即将一个索引的多个shard合并成更少的shard，比如5个10G的shard合并成1个50G的shard，shrink后的索引可以通过alias为原索引被搜索。</p>
+<p><a href="https://www.elastic.co/guide/en/elasticsearch/reference/7.0/indices-shrink-index.html" rel="noopener nofollow" target="_blank">https://www.elastic.co/guide/en/elasticsearch/reference/7.0/indices-shrink-index.html</a></p>
+<h1 id="2-内存分配">2 内存分配</h1>
+<p>elasticsearch的节点内存分为2个部分：</p>
+<ul>
+<li>JVM内存</li>
+<li>Lucene索引内存：主要被磁盘大小、shard大小影响</li>
+</ul>
+<p>可以通过磁盘大小来预估第二个Lucene索引的最大占用内存，剩下的绝大部分可以分配给JVM，比如当前节点有32G内存，磁盘占用50%，Lucene内存使用1G，可以预估磁盘占满时Lucene最多使用2G内存，那剩下的30G可以分配绝大部分比如28G给JVM来使用，这样可以最优化节点的内存占用。</p>
+<h1 id="3-不同节点间磁盘占用不均">3 不同节点间磁盘占用不均</h1>
+<p>ElasticSearch的集群均衡策略是保证不同节点间Shard数量近似相等，如果不同shard大小相差悬殊，就会出现不同节点磁盘占用不均的情况，具体可以分为两种：</p>
+<h2 id="hot节点磁盘占用不均">Hot节点磁盘占用不均</h2>
+<p>调整ILM策略，将Hot节点上的索引滚动策略改为使用大小而不是时间，这样可以减少索引热节点上的shard大小不等的情况，进一步减少磁盘分布不均的可能。</p>
+<h2 id="warm节点磁盘占用不均">Warm节点磁盘占用不均</h2>
+<p>可以定期删除空索引，合并小索引等操作减少shard数量，进一步减少磁盘分布不均的可能。</p>
+<h1 id="4-其他">4 其他</h1>
+<h2 id="磁盘使用百分比">磁盘使用百分比</h2>
+<p>热节点和热节点磁盘使用到90%的时候要及时扩容</p>
+<h2 id="性能瓶颈">性能瓶颈</h2>
+<p>关注集群中的节点有自身的性能瓶颈以及处理能力，比如</p>
+<ul>
+<li>
+<p>max_restore_bytes_per_sec：一定要低于磁盘的极限，否则很容易导致节点假死</p>
+</li>
+<li>
+<p>cluster_concurrent_rebalance和node_concurrent_recoveries：如果Warm节点偶尔出现被master踢掉的情况，有可能是因为shrink或迁移的并发太大超过集群承受能力，这时最好降低这两个并发限制。</p>
+</li>
+</ul>
+</div>
+            </div>
+
+            <!-- Post Footer -->
+            <div class="post-footer">
+                <div class="post-navigation">
+                    <a href="../blog_cn.html" class="nav-button">← Back to Home</a>
+                    <a href="0153.html" class="nav-button">Next Post →</a>
+                </div>
+            </div>
+        </article>
+    </div>
+</body>
+</html>

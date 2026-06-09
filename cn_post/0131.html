@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>kudu rebalance报错</title>
+    <link rel="stylesheet" href="../css/style3.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header Navigation -->
+        <div class="header">
+            <h1><a href="../blog_cn.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+        </div>
+
+        <!-- Post Container -->
+        <article class="post">
+            <!-- Post Header -->
+            <div class="post-header">
+                <h1>kudu rebalance报错</h1>
+                <div class="post-meta">
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📅</span>
+                        <span>May 25, 2019</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📖</span>
+                        <span>1 min read</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">👁️</span>
+                        <span>1307 views</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Post Content -->
+            <div class="post-content">
+                <div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<p>kudu rebalance命令报错</p>
+<div class="cnblogs_code">
+<pre>terminate called after throwing an instance of <span style="color: rgba(128, 0, 0, 1)">'</span><span style="color: rgba(128, 0, 0, 1)">std::regex_error</span><span style="color: rgba(128, 0, 0, 1)">'</span><span style="color: rgba(0, 0, 0, 1)">
+  what():  regex_error
+</span>*** Aborted at 1558779043 (unix time) <span style="color: rgba(0, 0, 255, 1)">try</span> <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">date - d @1558779043</span><span style="color: rgba(128, 0, 0, 1)">"</span> <span style="color: rgba(0, 0, 255, 1)">if</span> you are using GNU date ***<span style="color: rgba(0, 0, 0, 1)">
+PC: @     </span>0x7ff0d6cf9207 <span style="color: rgba(128, 0, 128, 1)">__GI_raise</span>
+*** SIGABRT (@0x3d600005a72) received by PID 23154 (TID 0x7ff0d934ba00) <span style="color: rgba(0, 0, 255, 1)">from</span> PID 23154; stack trace: ***<span style="color: rgba(0, 0, 0, 1)">
+    @     </span>0x7ff0d8d065d0<span style="color: rgba(0, 0, 0, 1)"> (unknown)
+    @     </span>0x7ff0d6cf9207 <span style="color: rgba(128, 0, 128, 1)">__GI_raise</span><span style="color: rgba(0, 0, 0, 1)">
+    @     </span>0x7ff0d6cfa8f8 <span style="color: rgba(128, 0, 128, 1)">__GI_abort</span><span style="color: rgba(0, 0, 0, 1)">
+    @     </span>0x7ff0d76087d5 <span style="color: rgba(128, 0, 128, 1)">__gnu_cxx</span>::<span style="color: rgba(128, 0, 128, 1)">__verbose_terminate_handler</span><span style="color: rgba(0, 0, 0, 1)">()
+    @     </span>0x7ff0d7606746<span style="color: rgba(0, 0, 0, 1)"> (unknown)
+    @     </span>0x7ff0d7606773<span style="color: rgba(0, 0, 0, 1)"> std::terminate()
+    @     </span>0x7ff0d7606993 <span style="color: rgba(128, 0, 128, 1)">__cxa_throw</span><span style="color: rgba(0, 0, 0, 1)">
+    @     </span>0x7ff0d765bdd5 std::<span style="color: rgba(128, 0, 128, 1)">__throw_regex_error</span><span style="color: rgba(0, 0, 0, 1)">()
+    @           </span>0x931c32 std::<span style="color: rgba(128, 0, 128, 1)">__detail</span>::_Compiler&lt;&gt;<span style="color: rgba(0, 0, 0, 1)">::_M_bracket_expression()
+    @           </span>0x931e3a std::<span style="color: rgba(128, 0, 128, 1)">__detail</span>::_Compiler&lt;&gt;<span style="color: rgba(0, 0, 0, 1)">::_M_atom()
+    @           </span>0x932469 std::<span style="color: rgba(128, 0, 128, 1)">__detail</span>::_Compiler&lt;&gt;<span style="color: rgba(0, 0, 0, 1)">::_M_alternative()
+    @           </span>0x9324c4 std::<span style="color: rgba(128, 0, 128, 1)">__detail</span>::_Compiler&lt;&gt;<span style="color: rgba(0, 0, 0, 1)">::_M_alternative()
+    @           </span>0x932649 std::<span style="color: rgba(128, 0, 128, 1)">__detail</span>::_Compiler&lt;&gt;<span style="color: rgba(0, 0, 0, 1)">::_M_disjunction()
+    @           </span>0x93297b std::<span style="color: rgba(128, 0, 128, 1)">__detail</span>::_Compiler&lt;&gt;<span style="color: rgba(0, 0, 0, 1)">::_Compiler()
+    @           </span>0x932cb7 std::<span style="color: rgba(128, 0, 128, 1)">__detail</span>::<span style="color: rgba(128, 0, 128, 1)">__compile</span>&lt;&gt;<span style="color: rgba(0, 0, 0, 1)">()
+    @           </span>0x92bfc6<span style="color: rgba(0, 0, 0, 1)"> (unknown)
+    @           </span>0x92c664 std::_Function_handler&lt;&gt;<span style="color: rgba(0, 0, 0, 1)">::_M_invoke()
+    @           </span>0xde6672<span style="color: rgba(0, 0, 0, 1)"> kudu::tools::Action::Run()
+    @           </span>0x9957d7<span style="color: rgba(0, 0, 0, 1)"> kudu::tools::DispatchCommand()
+    @           </span>0x99619b<span style="color: rgba(0, 0, 0, 1)"> kudu::tools::RunTool()
+    @           </span>0x8dee4d<span style="color: rgba(0, 0, 0, 1)"> main
+    @     </span>0x7ff0d6ce53d5 <span style="color: rgba(128, 0, 128, 1)">__libc_start_main</span><span style="color: rgba(0, 0, 0, 1)">
+    @           </span>0x9284b5<span style="color: rgba(0, 0, 0, 1)"> (unknown)
+Aborted</span></pre>
+</div>
+<p><em>如果你的编译器是GCC-4.9.0或者VS2013以下版本，请升级后，再使用。我之前使用的C++编译器，是GCC 4.8.3，有regex头文件，但是GCC很不厚道的没有实现，语法完全支持，但是库还没跟上，所以编译的时候是没有问题的，但是一运行就会直接抛出异常</em></p>
+<blockquote>
+<p># gcc - v<br/>gcc version 4.8.5 20150623 (Red Hat 4.8.5-36) (GCC)</p>
+</blockquote>
+<p>参考</p>
+<p>https://blog.csdn.net/zdy0_2004/article/details/48914079</p>
+<p> </p>
+</div>
+            </div>
+
+            <!-- Post Footer -->
+            <div class="post-footer">
+                <div class="post-navigation">
+                    <a href="../blog_cn.html" class="nav-button">← Back to Home</a>
+                    <a href="0132.html" class="nav-button">Next Post →</a>
+                </div>
+            </div>
+        </article>
+    </div>
+</body>
+</html>

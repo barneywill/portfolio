@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>最小二乘法</title>
+    <link rel="stylesheet" href="../css/style3.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header Navigation -->
+        <div class="header">
+            <h1><a href="../blog_cn.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+        </div>
+
+        <!-- Post Container -->
+        <article class="post">
+            <!-- Post Header -->
+            <div class="post-header">
+                <h1>最小二乘法</h1>
+                <div class="post-meta">
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📅</span>
+                        <span>January 03, 2019</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📖</span>
+                        <span>1 min read</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">👁️</span>
+                        <span>1217 views</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Post Content -->
+            <div class="post-content">
+                <div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<h1>Ordinary Least Square 最小二乘法</h1>
+<p>提到最小二乘法要先提到拟合，拟合（Fitting）是数值分析（Numerical Analysis）的基础工具之一，拟合中最简单的是一元函数（function of one variable）拟合，一元函数拟合（即二维平面）分为直线拟合（一元一次函数，比如Y=aX+b）和曲线拟合（一元高次函数，比如Y=aX^2+bX+c），一元函数拟合中最简单的是直线拟合，直线拟合是找到一条直线尽可能穿过所有的点，注意这里是尽可能，因为只要超过2个点，就有可能发生直线不能精确穿过所有点的情况，这时确定直线的原则有很多种，最小二乘法就是其中的一种，当直线不能穿过点时产生误差（点和直线的距离），最小二乘法的原则就是让所有点的误差的平方和最小；</p>
+<p>最小二乘法（又称最小平方法）是一种数学优化技术。它通过最小化误差的平方和寻找数据的最佳函数匹配。利用最小二乘法可以简便地求得未知的数据，并使得这些求得的数据与实际数据之间误差的平方和为最小。</p>
+<p>直线拟合（线性回归）过程如下图：</p>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201901/1509647-20190103223432010-1831955943.png"/></p>
+<p>来看标准定义：</p>
+<p>对给定数据点集合  ，在取定的函数类  中，求  ，使误差的平方和  最小，  。从几何意义上讲，就是寻求与给定点集 的距离平方和为最小的曲线y=p(x)。函数p(x)称为拟合函数或最小二乘解，求拟合函数p(x)的方法称为曲线拟合的最小二乘法。</p>
+<p> </p>
+<p>假设直线方程为</p>
+<p><span class="mrow"><span class="mi"><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201901/1509647-20190103233041711-1537559584.png"/></span></span></p>
+<p>则误差为</p>
+<p><span class="mrow"><span class="msubsup"><span class="mi"><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201901/1509647-20190103233052413-985234998.png"/></span></span></span></p>
+<p>其中di表示(xi, yi)点的误差</p>
+<p> </p>
+<p>所有误差的平方和为</p>
+<p><span class="mrow" id="MathJax-Span-69"><span class="mi" id="MathJax-Span-70"><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201901/1509647-20190103233113791-495005842.png"/></span></span></p>
+<p>这是一个2次函数，2次函数曲线如图：</p>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201901/1509647-20190103232113324-1472256261.png"/></p>
+<p>2次函数中D的最小值位于导数等于0的点，所以计算D对a和b的两个偏导数为0即可得到两个关于a和b的方程，</p>
+<p>最终计算得出a和b的计算公式为：</p>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201901/1509647-20190103233316839-1751171459.png"/></p>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201901/1509647-20190103233325938-1906284092.png"/></p>
+<p>公式推导过程详见 https://www.cnblogs.com/paiandlu/p/7843236.html</p>
+<p> </p>
+</div>
+            </div>
+
+            <!-- Post Footer -->
+            <div class="post-footer">
+                <div class="post-navigation">
+                    <a href="../blog_cn.html" class="nav-button">← Back to Home</a>
+                    <a href="0284.html" class="nav-button">Next Post →</a>
+                </div>
+            </div>
+        </article>
+    </div>
+</body>
+</html>

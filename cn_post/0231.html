@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ElasticSearch 3 - 升级</title>
+    <link rel="stylesheet" href="../css/style3.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header Navigation -->
+        <div class="header">
+            <h1><a href="../blog_cn.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+        </div>
+
+        <!-- Post Container -->
+        <article class="post">
+            <!-- Post Header -->
+            <div class="post-header">
+                <h1>ElasticSearch 3 - 升级</h1>
+                <div class="post-meta">
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📅</span>
+                        <span>February 14, 2019</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📖</span>
+                        <span>1 min read</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">👁️</span>
+                        <span>475 views</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Post Content -->
+            <div class="post-content">
+                <div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<p>elasticsearch版本升级方案</p>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201902/1509647-20190213195406320-522072258.png"/></p>
+<p> </p>
+<p>常用的滚动升级过程（Rolling Upgrade）如下：</p>
+<blockquote>
+<p>$ curl - XPUT '$es_server:9200/_cluster/settings?pretty' - H 'Content-Type: application/json' - d '{"transient":{"cluster.routing.allocation.enable":"none"}}'<br/>$ curl - XPOST '$es_server/_flush/synced?pretty'<br/>$ systemctl stop elasticsearch.service</p>
+<p># upgrade elasticsearch</p>
+<p>$ systemctl start elasticsearch.service<br/>$ curl - XGET '$es_server:9200/_cat/nodes?pretty'<br/>$ curl - XPUT '$es_server:9200/_cluster/settings?pretty' - H 'Content-Type: application/json' - d '{"transient":{"cluster.routing.allocation.enable":"all"}}'<br/>$ curl - XGET '$es_server:9200/_cat/health?pretty'</p>
+</blockquote>
+<p>以上为单个节点升级过程，逐个节点操作即可</p>
+<p><br/>参考：<br/>https://www.elastic.co/guide/en/elasticsearch/reference/current/setup-upgrade.html<br/>https://www.elastic.co/guide/en/elasticsearch/reference/current/rolling-upgrades.html</p>
+<p> </p>
+</div>
+            </div>
+
+            <!-- Post Footer -->
+            <div class="post-footer">
+                <div class="post-navigation">
+                    <a href="../blog_cn.html" class="nav-button">← Back to Home</a>
+                    <a href="0232.html" class="nav-button">Next Post →</a>
+                </div>
+            </div>
+        </article>
+    </div>
+</body>
+</html>

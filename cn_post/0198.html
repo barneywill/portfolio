@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CM清理磁盘空间</title>
+    <link rel="stylesheet" href="../css/style3.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header Navigation -->
+        <div class="header">
+            <h1><a href="../blog_cn.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+        </div>
+
+        <!-- Post Container -->
+        <article class="post">
+            <!-- Post Header -->
+            <div class="post-header">
+                <h1>CM清理磁盘空间</h1>
+                <div class="post-meta">
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📅</span>
+                        <span>February 27, 2019</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📖</span>
+                        <span>1 min read</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">👁️</span>
+                        <span>1941 views</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Post Content -->
+            <div class="post-content">
+                <div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<p>定期清理cloudera manager server的磁盘空间</p>
+<h1>1 停止Service Monitor和Host Monitor</h1>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201902/1509647-20190227203117900-527233020.png"/></p>
+<h1>2 删除日志</h1>
+<blockquote>
+<p># /bin/rm /var/lib/cloudera-host-monitor/ts/*/partition*/* - rf<br/># /bin/rm /var/lib/cloudera-service-monitor/ts/*/partition*/* - rf</p>
+</blockquote>
+<h1> 3 重启Service Monitor和Host Monitor</h1>
+<p>确认新的日志和元数据文件是否生成</p>
+<blockquote>
+<p># ls /var/lib/cloudera-service-monitor/ts/stream/partitions<br/># ls /var/lib/cloudera-service-monitor/ts/stream/partition_metadata/</p>
+</blockquote>
+<p>确认页面上的图表是否有数据</p>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201902/1509647-20190227203910960-201157090.png"/></p>
+<p> </p>
+</div>
+            </div>
+
+            <!-- Post Footer -->
+            <div class="post-footer">
+                <div class="post-navigation">
+                    <a href="../blog_cn.html" class="nav-button">← Back to Home</a>
+                    <a href="0199.html" class="nav-button">Next Post →</a>
+                </div>
+            </div>
+        </article>
+    </div>
+</body>
+</html>

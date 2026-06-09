@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SSH隧道/端口转发</title>
+    <link rel="stylesheet" href="../css/style3.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header Navigation -->
+        <div class="header">
+            <h1><a href="../blog_cn.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+        </div>
+
+        <!-- Post Container -->
+        <article class="post">
+            <!-- Post Header -->
+            <div class="post-header">
+                <h1>SSH隧道/端口转发</h1>
+                <div class="post-meta">
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📅</span>
+                        <span>January 28, 2019</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📖</span>
+                        <span>1 min read</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">👁️</span>
+                        <span>1790 views</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Post Content -->
+            <div class="post-content">
+                <div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<p>格式</p>
+<blockquote>
+<p>ssh - L &lt;local port&gt;:&lt;remote host&gt;:&lt;remote port&gt; &lt;SSH servername&gt;</p>
+</blockquote>
+<p>示例</p>
+<blockquote>
+<p># ssh - L 3307:$server2:3306 user@$server1</p>
+</blockquote>
+<p>实现的效果是使用user登录$server1之后建立本地3307端口到远程$server2:3306端口的隧道，通过访问本地3307端口访问远程$server2:3306端口，前提是$server1可以访问$server2:3306端口；</p>
+<p> </p>
+<p>windows xshell这样配置</p>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201901/1509647-20190128183430629-508957827.png"/></p>
+<p> </p>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201901/1509647-20190128183514692-940908997.png"/></p>
+<p> </p>
+<p>putty设置</p>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201906/1509647-20190613222455963-559148942.png"/></p>
+<p> </p>
+<p>如果需要自动重连，使用autossh</p>
+<blockquote>
+<p># yum install autossh</p>
+<p># autossh - M 0 - L 0.0.0.0:$local_port:127.0.0.1:$report_port $remote_user@$remote_ip - o "ServerAliveInterval 60" - o "ServerAliveCountMax 3"</p>
+</blockquote>
+<p> </p>
+</div>
+            </div>
+
+            <!-- Post Footer -->
+            <div class="post-footer">
+                <div class="post-navigation">
+                    <a href="../blog_cn.html" class="nav-button">← Back to Home</a>
+                    <a href="0242.html" class="nav-button">Next Post →</a>
+                </div>
+            </div>
+        </article>
+    </div>
+</body>
+</html>

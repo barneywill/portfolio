@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>oozie提交spark任务如何添加依赖</title>
+    <link rel="stylesheet" href="../css/style3.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header Navigation -->
+        <div class="header">
+            <h1><a href="../blog_cn.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+        </div>
+
+        <!-- Post Container -->
+        <article class="post">
+            <!-- Post Header -->
+            <div class="post-header">
+                <h1>oozie提交spark任务如何添加依赖</h1>
+                <div class="post-meta">
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📅</span>
+                        <span>December 12, 2018</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📖</span>
+                        <span>1 min read</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">👁️</span>
+                        <span>1660 views</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Post Content -->
+            <div class="post-content">
+                <div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<p>spark任务添加依赖的方式：</p>
+<p>1 如果是local方式运行，可以通过--jars来添加依赖；</p>
+<p>2 如果是yarn方式运行，可以通过spark.yarn.jars来添加依赖；</p>
+<p>这两种方式在oozie上都行不通，首先oozie上没办法也不应该通过local运行，其次通过spark.yarn.jars方式配置你会发现根本不会生效，来看为什么</p>
+<p>查看LauncherMapper的日志</p>
+<p> </p>
+<p>Spark Version 2.1.1</p>
+<p>Spark Action Main class        : org.apache.spark.deploy.SparkSubmit</p>
+<p> </p>
+<p>Oozie Spark action configuration</p>
+<p>=================================================================</p>
+<p>...</p>
+<p>                    --conf</p>
+<p>                    spark.yarn.jars=<a rel="nofollow">hdfs://hdfs_name/jarpath/*.jar</a></p>
+<p>                    --conf</p>
+<p>                    spark.yarn.jars=<a rel="nofollow">hdfs://hdfs_name/oozie/share/lib_20180801121138/spark/spark-yarn_2.11-2.1.1.jar</a></p>
+<p> </p>
+<p>可见oozie会自己添加一个新的spark.yarn.jars配置，如果提供两个相同的key，spark会如何处理</p>
+<p> </p>
+<p><strong>org.apache.spark.deploy.SparkSubmit</strong></p>
+<blockquote>
+<p>    val appArgs = new SparkSubmitArguments(args)</p>
+</blockquote>
+<p> </p>
+<p><strong>org.apache.spark.launcher.SparkSubmitOptionParser</strong></p>
+<blockquote>
+<p>        if (!handle(name, value)) {</p>
+</blockquote>
+<p> </p>
+<p><strong>org.apache.spark.deploy.SparkSubmitArguments</strong></p>
+<blockquote>
+<p>  override protected def handle(opt: String, value: String): Boolean = {</p>
+<p>  ...</p>
+<p>      case CONF =&gt;</p>
+<p>        value.split("=", 2).toSeq match {</p>
+<p>          case Seq(k, v) =&gt; sparkProperties(k) = v</p>
+<p>          case _ =&gt; SparkSubmit.printErrorAndExit(s"Spark config without '=': $value")</p>
+<p>        }</p>
+</blockquote>
+<p> </p>
+<p>可见会直接覆盖，使用最后一个配置，即oozie的配置，而不是应用自己提供的配置，这样就需要应用自己将特殊依赖打包到应用jar中，具体使用maven的maven-assembly-plugin，配置其中的&lt;dependencySets&gt;&lt;dependencySet&gt;&lt;includes&gt;&lt;include&gt;，详细配置如下：</p>
+<p> </p>
+<p>&lt;assembly xmlns="<a class="external-link" href="http://maven.apache.org/plugins/maven-assembly-plugin/assembly/1.1.0" rel="noopener nofollow">http://maven.apache.org/plugins/maven-assembly-plugin/assembly/1.1.0</a>"</p>
+<p>          xmlns:xsi="<a class="external-link" href="http://www.w3.org/2001/XMLSchema-instance" rel="noopener nofollow">http://www.w3.org/2001/XMLSchema-instance</a>"</p>
+<p>          xsi:schemaLocation="<a class="external-link" href="http://maven.apache.org/plugins/maven-assembly-plugin/assembly/1.1.0" rel="noopener nofollow">http://maven.apache.org/plugins/maven-assembly-plugin/assembly/1.1.0</a> <a class="external-link" href="http://maven.apache.org/xsd/assembly-1.1.0.xsd" rel="noopener nofollow">http://maven.apache.org/xsd/assembly-1.1.0.xsd</a>"&gt;</p>
+<p>    &lt;!-- TODO: a jarjar format would be better --&gt;</p>
+<p>    &lt;id&gt;jar-with-dependencies&lt;/id&gt;</p>
+<p>    &lt;formats&gt;</p>
+<p>        &lt;format&gt;jar&lt;/format&gt;</p>
+<p>    &lt;/formats&gt;</p>
+<p>    &lt;includeBaseDirectory&gt;false&lt;/includeBaseDirectory&gt;</p>
+<p>    &lt;dependencySets&gt;</p>
+<p>        &lt;dependencySet&gt;</p>
+<p>            &lt;outputDirectory&gt;/&lt;/outputDirectory&gt;</p>
+<p>            &lt;useProjectArtifact&gt;true&lt;/useProjectArtifact&gt;</p>
+<p>            &lt;unpack&gt;true&lt;/unpack&gt;</p>
+<p>            &lt;scope&gt;runtime&lt;/scope&gt;</p>
+<p><strong>            &lt;includes&gt;</strong></p>
+<p><strong>                &lt;include&gt;redis.clients:jedis&lt;/include&gt;</strong></p>
+<p><strong>                &lt;include&gt;org.apache.commons:commons-pool2&lt;/include&gt;</strong></p>
+<p><strong>            &lt;/includes&gt;</strong></p>
+<p>        &lt;/dependencySet&gt;</p>
+<p>    &lt;/dependencySets&gt;</p>
+<p>&lt;/assembly&gt;</p>
+<p> </p>
+<p>这里只是将默认提供的jar-with-dependencies.xml内容拷贝出来添加includes配置；</p>
+</div>
+            </div>
+
+            <!-- Post Footer -->
+            <div class="post-footer">
+                <div class="post-navigation">
+                    <a href="../blog_cn.html" class="nav-button">← Back to Home</a>
+                    <a href="0336.html" class="nav-button">Next Post →</a>
+                </div>
+            </div>
+        </article>
+    </div>
+</body>
+</html>

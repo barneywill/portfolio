@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nginx 1 - 简介、安装、使用</title>
+    <link rel="stylesheet" href="../css/style3.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header Navigation -->
+        <div class="header">
+            <h1><a href="../blog_cn.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+        </div>
+
+        <!-- Post Container -->
+        <article class="post">
+            <!-- Post Header -->
+            <div class="post-header">
+                <h1>Nginx 1 - 简介、安装、使用</h1>
+                <div class="post-meta">
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📅</span>
+                        <span>January 13, 2019</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📖</span>
+                        <span>3 min read</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">👁️</span>
+                        <span>427 views</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Post Content -->
+            <div class="post-content">
+                <div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201901/1509647-20190113184109747-509712412.png"/></p>
+<p>官方：http://nginx.org</p>
+<p>nginx [engine x] is an HTTP and reverse proxy server, a mail proxy server, and a generic TCP/UDP proxy server, originally written by Igor Sysoev. For a long time, it has been running on many heavily loaded Russian sites including Yandex, Mail.Ru, VK, and Rambler. According to Netcraft, nginx served or proxied 25.89% busiest sites in December 2018. Here are some of the success stories: Dropbox, Netflix, Wordpress.com, FastMail.FM.</p>
+<p><em>Nginx是一个Http服务器、反向代理服务器、邮件代理服务器、通用TCP/UDP代理服务器，目前已经占据25%的市场份额。</em></p>
+<p>nginx has one master process and several worker processes. The main purpose of the master process is to read and evaluate configuration, and maintain worker processes. Worker processes do actual processing of requests. nginx employs event-based model and OS-dependent mechanisms to efficiently distribute requests among worker processes. The number of worker processes is defined in the configuration file and may be fixed for a given configuration or automatically adjusted to the number of available CPU cores.</p>
+<p><em>nginx有一个master进程和多个worker进程，maste进程负责读取配置和管理worker进程，worker进程负责实际的请求处理；nginx使用事件模型和操作系统特有的机制来高效在worker进程中转发请求；</em></p>
+<h1>一 安装</h1>
+<p>官方下载页面：http://nginx.org/en/download.html</p>
+<p>下载编译过程如下：</p>
+<blockquote>
+<p># wget http://nginx.org/download/nginx-1.14.2.tar.gz<br/># tar xvf nginx-1.14.2.tar.gz<br/># cd nginx-1.14.2</p>
+<p><br/># ./configure --prefix=/data/nginx-1.14.2 --with-http_ssl_module --with-stream<br/># make<br/># make install</p>
+<p><br/># ls /data/nginx-1.14.2/<br/>conf  html  logs  sbin<br/># ls /data/nginx-1.14.2/sbin<br/>nginx<br/># ls /data/nginx-1.14.2/conf<br/>fastcgi.conf          fastcgi_params          koi-utf  mime.types          nginx.conf          scgi_params          uwsgi_params          win-utf<br/>fastcgi.conf.default  fastcgi_params.default  koi-win  mime.types.default  nginx.conf.default  scgi_params.default  uwsgi_params.default</p>
+</blockquote>
+<p>configure详细参数详见官方文档：http://nginx.org/en/docs/configure.html</p>
+<p>configure过程可能报错：</p>
+<p>1）./configure: error: C compiler cc is not found</p>
+<blockquote>
+<p>yum install gcc</p>
+</blockquote>
+<p>2）./configure: error: the HTTP rewrite module requires the PCRE library.<br/>You can either disable the module by using --without-http_rewrite_module<br/>option, or install the PCRE library into the system, or build the PCRE library<br/>statically from the source with nginx by using --with-pcre=&lt;path&gt; option.</p>
+<blockquote>
+<p>yum install pcre-devel</p>
+</blockquote>
+<p>3）./configure: error: the HTTP gzip module requires the zlib library.<br/>You can either disable the module by using --without-http_gzip_module<br/>option, or install the zlib library into the system, or build the zlib library<br/>statically from the source with nginx by using --with-zlib=&lt;path&gt; option.</p>
+<blockquote>
+<p>yum install zlib-devel</p>
+</blockquote>
+<p>4）./configure: error: SSL modules require the OpenSSL library.<br/>You can either do not enable the modules, or install the OpenSSL library<br/>into the system, or build the OpenSSL library statically from the source<br/>with nginx by using --with-openssl=&lt;path&gt; option.</p>
+<blockquote>
+<p>yum install openssl-devel</p>
+</blockquote>
+<h1>二 使用</h1>
+<h2>1 配置</h2>
+<p> 默认配置：$NGINX_HOME/conf/nginx.conf</p>
+<p>如果改为其他名字，需要在启动时通过-c制定</p>
+<p>nginx可以用作http代理（http module），也可以用作长连接代理（stream module）</p>
+<h3>1）端口</h3>
+<blockquote>
+<p>    server {</p>
+<p>        listen       80;</p>
+<p>        server_name  localhost;</p>
+</blockquote>
+<p>可以修改端口，如果是80端口，必须使用root启动，因为只有root才能使用1024以下端口；</p>
+<h3>2）反向代理--负载均衡</h3>
+<blockquote>
+<pre>　　upstream test_backend {
+　　　　ip_hash;
+　　　　server 192.168.0.54:8080;
+　　　　server 192.168.0.55:8080;
+　　 }<br/><br/></pre>
+<pre>    location / {
+        proxy_pass   http://test_backend; </pre>
+</blockquote>
+<p>可以配置多个upstream，每个upstream指向一组后端服务器，比如一组tomcat，然后在server中制定哪些location的请求转发给哪些upstream，实现负载均衡；</p>
+<h2>2 命令</h2>
+<blockquote>
+<p># sbin/nginx - h</p>
+<p>nginx version: nginx/1.14.2</p>
+<p>Usage: nginx [-?hvVtTq] [-s signal] [-c filename] [-p prefix] [-g directives]</p>
+<p> </p>
+<p>Options:</p>
+<p>  - ?,-h         : this help</p>
+<p>  - v            : show version and exit</p>
+<p>  - V            : show version and configure options then exit</p>
+<p>  - t            : test configuration and exit</p>
+<p>  - T            : test configuration, dump it and exit</p>
+<p>  - q            : suppress non-error messages during configuration testing</p>
+<p>  - s signal     : send signal to a master process: stop, quit, reopen, reload</p>
+<p>  - p prefix     : set prefix path (default: /data/nginx-1.14.2/)</p>
+<p>  - c filename   : set configuration file (default: conf/nginx.conf)</p>
+<p>  - g directives : set global directives out of configuration file</p>
+</blockquote>
+<h3>2.1 启动</h3>
+<blockquote>
+<p># nginx</p>
+<p>or</p>
+<p># nginx - c conf/nginx.conf</p>
+</blockquote>
+<p>启动之后进程如下：</p>
+<blockquote>
+<p># ps aux|grep nginx<br/>root      3072  0.0  0.0  45852  1956 ?        Ss   20:11   0:00 nginx: master process sbin/nginx - c conf/nginx.conf<br/>nobody    3218  0.0  0.0  48396  2552 ?        S    20:14   0:00 nginx: worker process</p>
+</blockquote>
+<h3>2.2 停止</h3>
+<blockquote>
+<p># nginx - c conf/nginx.conf - s stop</p>
+</blockquote>
+<h3>2.3 刷新配置</h3>
+<blockquote>
+<p># nginx - c conf/nginx.conf - s reload</p>
+</blockquote>
+<h1>三 登陆验证</h1>
+<h2>1 安装htpasswd</h2>
+<blockquote>
+<p># yum install httpd-tools</p>
+</blockquote>
+<h2>2 添加用户密码</h2>
+<blockquote>
+<p># htpasswd - c /data/nginx-1.14.2/passwd test<br/>New password: <br/>Re-type new password: <br/>Adding password for user test</p>
+</blockquote>
+<h2>3 添加配置在server下</h2>
+<blockquote>
+<p>        auth_basic "Please input user&amp;password";</p>
+<p>        auth_basic_user_file /data/nginx-1.14.2/passwd;</p>
+</blockquote>
+<h2>4 刷新配置</h2>
+<blockquote>
+<p># nginx - c conf/nginx.conf - s reload</p>
+</blockquote>
+<p>效果如下：</p>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201901/1509647-20190113204013131-27141249.png"/></p>
+<p> </p>
+<p>http代理完整配置如下：</p>
+<blockquote>
+<p>http {</p>
+<p>    include       mime.types;</p>
+<p>    default_type  application/octet-stream;</p>
+<p>    sendfile        on;</p>
+<p>    keepalive_timeout  65;</p>
+<p> </p>
+<p>    upstream test_backend {</p>
+<p>         ip_hash;</p>
+<p>         server 192.168.0.54:8080;</p>
+<p>         server 192.168.0.55:8080;</p>
+<p>    }</p>
+<p> </p>
+<p>    server {</p>
+<p>        listen       80;</p>
+<p>        server_name  localhost;</p>
+<p> </p>
+<p>        auth_basic "Please input user&amp;password";</p>
+<p>        auth_basic_user_file /data/nginx-1.14.2/passwd;</p>
+<p> </p>
+<p>         location / {</p>
+<p>             proxy_pass http://test_backend;</p>
+<p>         }       </p>
+<p>    }</p>
+<p>}</p>
+</blockquote>
+<p>stream代理完整配置如下：</p>
+<blockquote>
+<p>stream {</p>
+<p>    upstream test_backend {</p>
+<p>        server $server1:21000;</p>
+<p>        server $server2:21000;</p>
+<p>    }</p>
+<p>    server {</p>
+<p>        listen 21000;</p>
+<p>        proxy_pass test_backend;</p>
+<p>    }</p>
+<p>}</p>
+</blockquote>
+<h1>四 限制ip访问</h1>
+<blockquote>
+<p>    server {</p>
+<p>        listen       80;</p>
+<p>        server_name  test.com.internal;</p>
+<p>        location / {</p>
+<p>            allow 192.168.0.0/24;</p>
+<p>            deny all;</p>
+<p>            proxy_pass http://test_backend;</p>
+<p>        }</p>
+<p>    }</p>
+</blockquote>
+<p>限制只有192.168.0.*网段可以访问该接口</p>
+<h1>五 以目录形式访问</h1>
+<div class="cnblogs_code">
+<pre>    location ^~ /<span style="color: rgba(0, 0, 0, 1)">dir {
+        root   </span>/<span style="color: rgba(0, 0, 0, 1)">dir;
+        autoindex  on;
+    }</span></pre>
+</div>
+<p>使用module：ngx_http_autoindex_module</p>
+<p> </p>
+</div>
+            </div>
+
+            <!-- Post Footer -->
+            <div class="post-footer">
+                <div class="post-navigation">
+                    <a href="../blog_cn.html" class="nav-button">← Back to Home</a>
+                    <a href="0276.html" class="nav-button">Next Post →</a>
+                </div>
+            </div>
+        </article>
+    </div>
+</body>
+</html>

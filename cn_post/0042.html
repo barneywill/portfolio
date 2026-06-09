@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Doris 1 - 编译安装和启动</title>
+    <link rel="stylesheet" href="../css/style3.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header Navigation -->
+        <div class="header">
+            <h1><a href="../blog_cn.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+        </div>
+
+        <!-- Post Container -->
+        <article class="post">
+            <!-- Post Header -->
+            <div class="post-header">
+                <h1>Doris 1 - 编译安装和启动</h1>
+                <div class="post-meta">
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📅</span>
+                        <span>May 25, 2021</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📖</span>
+                        <span>3 min read</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">👁️</span>
+                        <span>3499 views</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Post Content -->
+            <div class="post-content">
+                <div class="blogpost-body cnblogs-markdown" id="cnblogs_post_body">
+<h1 id="一-编译">一 编译</h1>
+<p>doris编译有两种方式，一种是docker编译，一种是直接裸机编译，推荐使用docker编译，可以避免大量的环境依赖问题</p>
+<h2 id="docker编译">docker编译</h2>
+<h3 id="1-安装docker">1 安装docker</h3>
+<blockquote>
+<p>yum install docker<br/>
+systemctl start docker<br/>
+systemctl enable docker<br/>
+docker pull apachedoris/doris-dev:build-env-1.2</p>
+</blockquote>
+<h3 id="2-下载源码">2 下载源码</h3>
+<blockquote>
+<p>wget <a href="https://mirrors.bfsu.edu.cn/apache/incubator/doris/0.13.0-incubating/apache-doris-0.13.0-incubating-src.tar.gz" rel="noopener nofollow" target="_blank">https://mirrors.bfsu.edu.cn/apache/incubator/doris/0.13.0-incubating/apache-doris-0.13.0-incubating-src.tar.gz</a><br/>
+tar xvf apache-doris-0.13.0-incubating-src.tar.gz</p>
+</blockquote>
+<h3 id="3-启动容器">3 启动容器</h3>
+<blockquote>
+<p>docker run - it - v /root/.m2:/root/.m2 - v /path/to/apache-doris-0.13.0-incubating-src:/root/apache-doris-0.13.0-incubating-src apachedoris/doris-dev:build-env-1.2</p>
+</blockquote>
+<p>需要做两个目录映射，一个是maven的repository目录，一个是doris源码目录，避免容器挂了之后之前下载或编译的内容丢失</p>
+<h3 id="4-编译doris">4 编译doris</h3>
+<blockquote>
+<p>cd /root/apache-doris-0.13.0-incubating-src<br/>
+sh - x build.sh</p>
+</blockquote>
+<p>编译之后输出至output目录，有3个子目录：be、fe、udf，只需要拷贝output目录到其他服务器即可</p>
+<h4 id="编译时报错">编译时报错</h4>
+<p>[ERROR] Plugin net.sourceforge.czt.dev:cup-maven-plugin:1.6-cdh or one of its dependencies could not be resolved: Failed to read artifact descriptor for net.sourceforge.czt.dev:cup-maven-plugin:jar:1.6-cdh: Could not transfer artifact net.sourceforge.czt.dev:cup-maven-plugin:pom:1.6-cdh from/to spring-plugins (<a href="https://repo.spring.io/plugins-release/" rel="noopener nofollow" target="_blank">https://repo.spring.io/plugins-release/</a>): Authentication failed for <a href="https://repo.spring.io/plugins-release/net/sourceforge/czt/dev/cup-maven-plugin/1.6-cdh/cup-maven-plugin-1.6-cdh.pom" rel="noopener nofollow" target="_blank">https://repo.spring.io/plugins-release/net/sourceforge/czt/dev/cup-maven-plugin/1.6-cdh/cup-maven-plugin-1.6-cdh.pom</a> 401 Unauthorized - &gt; [Help 1</p>
+<p>修改如下：</p>
+<pre><code>                 &lt;!-- for java-cup --&gt;
+                 &lt;repository&gt;
+                 &lt;!--
+                     &lt;id&gt;cloudera-thirdparty&lt;/id&gt;
+                     &lt;url&gt;https://repository.cloudera.com/content/repositories/third-party/&lt;/url&gt;
+                     --&gt;
+                     &lt;id&gt;cloudera-public&lt;/id&gt;
+                     &lt;url&gt;https://repository.cloudera.com/artifactory/public/&lt;/url&gt;
+                 &lt;/repository&gt;
+
+
+                 &lt;!-- for cup-maven-plugin --&gt;
+                 &lt;pluginRepository&gt;
+                 &lt;!--
+                     &lt;id&gt;spring-plugins&lt;/id&gt;
+                     &lt;url&gt;https://repo.spring.io/plugins-release/&lt;/url&gt;
+                     --&gt;
+                     &lt;id&gt;cloudera-public&lt;/id&gt;
+                     &lt;url&gt;https://repository.cloudera.com/artifactory/public/&lt;/url&gt;
+                 &lt;/pluginRepository&gt;
+</code></pre>
+<h3 id="5-编译broker">5 编译broker</h3>
+<blockquote>
+<p>cd fs_brokers/apache_hdfs_broker<br/>
+sh - x build.sh</p>
+</blockquote>
+<h3 id="6-编译spark-connector">6 编译spark connector</h3>
+<blockquote>
+<p>cd extension/spark-doris-connector<br/>
+sh - x build.sh</p>
+</blockquote>
+<h2 id="裸机编译">裸机编译</h2>
+<h3 id="1-准备">1 准备</h3>
+<p>jdk8+<br/>
+maven</p>
+<blockquote>
+<p>sudo yum groupinstall 'Development Tools' &amp;&amp; sudo yum install maven cmake byacc flex automake libtool bison binutils-devel zip unzip ncurses-devel curl git wget python2 glibc-static libstdc++-static java-1.8.0-openjdk</p>
+</blockquote>
+<p>其中：centos7上gcc默认4.8.5，cmake默认2.8.12</p>
+<h3 id="2-升级gcc">2 升级GCC</h3>
+<blockquote>
+<p>yum install gcc-c++<br/>
+wget <a href="http://ftp.tsukuba.wide.ad.jp/software/gcc/releases/gcc-7.3.0/gcc-7.3.0.tar.gz" rel="noopener nofollow" target="_blank">http://ftp.tsukuba.wide.ad.jp/software/gcc/releases/gcc-7.3.0/gcc-7.3.0.tar.gz</a><br/>
+tar zxvf tar zxvf gcc-7.3.0.tar.gz<br/>
+cd gcc-7.3.0<br/>
+yum install lbzip2<br/>
+./contrib/download_prerequisites<br/>
+mkdir build<br/>
+cd build/<br/>
+../configure --enable-checking=release --enable-languages=c,c++ --disable-multilib<br/>
+make<br/>
+make install</p>
+</blockquote>
+<h3 id="3-升级cmake">3 升级CMAKE</h3>
+<blockquote>
+<p>wget <a href="https://cmake.org/files/v3.6/cmake-3.6.2.tar.gz" rel="noopener nofollow" target="_blank">https://cmake.org/files/v3.6/cmake-3.6.2.tar.gz</a><br/>
+tar xvf cmake-3.6.2.tar.gz &amp;&amp; cd cmake-3.6.2/<br/>
+./bootstrap<br/>
+gmake<br/>
+gmake install<br/>
+mv /usr/bin/cmake /usr/bin/cmake.bak<br/>
+ln - s /usr/local/bin/cmake /usr/bin/</p>
+</blockquote>
+<h3 id="4-编译">4 编译</h3>
+<blockquote>
+<p>sh - x build.sh</p>
+</blockquote>
+<h4 id="报错处理">报错处理</h4>
+<h5 id="报错1">报错1</h5>
+<blockquote>
+<p>Downloading libevent-20180622-24236aed01798303745470e6c498bf606e88724a.zip from <a href="https://doris-incubating-repo.bj.bcebos.com/thirdparty/libevent-20180622-24236aed01798303745470e6c498bf606e88724a.zip" rel="noopener nofollow" target="_blank">https://doris-incubating-repo.bj.bcebos.com/thirdparty/libevent-20180622-24236aed01798303745470e6c498bf606e88724a.zip</a> to /usr/local/app/doris/thirdparty/src<br/>
+--2021-01-11 09:32:59-- <a href="https://doris-incubating-repo.bj.bcebos.com/thirdparty/libevent-20180622-24236aed01798303745470e6c498bf606e88724a.zip" rel="noopener nofollow" target="_blank">https://doris-incubating-repo.bj.bcebos.com/thirdparty/libevent-20180622-24236aed01798303745470e6c498bf606e88724a.zip</a><br/>
+Resolving doris-incubating-repo.bj.bcebos.com (doris-incubating-repo.bj.bcebos.com)... 2409:8c00:6c21:10ad:0:ff:b00e:67d, 220.181.33.44, 220.181.33.43<br/>
+Connecting to doris-incubating-repo.bj.bcebos.com (doris-incubating-repo.bj.bcebos.com)|2409:8c00:6c21:10ad:0:ff:b00e:67d|:443... connected.<br/>
+HTTP request sent, awaiting response... 404 Not Found<br/>
+2021-01-11 09:32:59 ERROR 404: Not Found.</p>
+</blockquote>
+<p>因为url已经修改，参考git上最新的文件如下：<br/>
+<a href="https://github.com/apache/incubator-doris/blob/master/thirdparty/vars.sh" rel="noopener nofollow" target="_blank">https://github.com/apache/incubator-doris/blob/master/thirdparty/vars.sh</a></p>
+<p>解决方法：将url修改为</p>
+<pre><code>LIBEVENT_DOWNLOAD="https://doris-thirdparty-repo.bj.bcebos.com/thirdparty/libevent-20180622-24236aed01798303745470e6c498bf606e88724a.zip"
+</code></pre>
+<p>参考：<a href="https://github.com/apache/incubator-doris/issues/5519" rel="noopener nofollow" target="_blank">https://github.com/apache/incubator-doris/issues/5519</a></p>
+<h5 id="报错2">报错2</h5>
+<p>下载第三方DataTables报错403，直接访问<br/>
+<a href="https://datatables.net/download/builder?bs-3.3.7/jq-3.3.1/dt-1.10.22" rel="noopener nofollow" target="_blank">https://datatables.net/download/builder?bs-3.3.7/jq-3.3.1/dt-1.10.22</a><br/>
+提示</p>
+<blockquote>
+<p>Error: Only libraries of the current release version can be used by the. package builder. The library DataTables's current release version is 1.10.24. Please reload the download builder page to have it use the latest libraries.</p>
+</blockquote>
+<p>解决方法：修改thirdparty/vars.sh，将版本改为最新的1.10.24，同时修改md5sum</p>
+<pre><code># datatables, bootstrap 3 and jQuery 3
+#DATATABLES_DOWNLOAD="https://datatables.net/download/builder?bs-3.3.7/jq-3.3.1/dt-1.10.22"
+#DATATABLES_NAME="DataTables.zip"
+#DATATABLES_SOURCE="DataTables-1.10.22"
+#DATATABLES_MD5SUM="62558846fc6a6db1428e7816a2a351f7"
+DATATABLES_DOWNLOAD="https://datatables.net/download/builder?bs-3.3.7/jq-3.3.1/dt-1.10.24"
+DATATABLES_NAME="DataTables.zip"
+DATATABLES_SOURCE="DataTables-1.10.24"
+DATATABLES_MD5SUM="22404292d02cf3c5f4cd9f5a02d4b42c"
+</code></pre>
+<h5 id="报错3">报错3</h5>
+<blockquote>
+<p>checking how to run the C preprocessor... /usr/lib64/ccache/../bin/cpp<br/>
+configure: error: in `/data/app/apache-doris-0.13.0-incubating-src/thirdparty/src/unixODBC-2.3.7':<br/>
+configure: error: C preprocessor "/usr/lib64/ccache/../bin/cpp" fails sanity check</p>
+</blockquote>
+<p>解决方法：</p>
+<blockquote>
+<p>ln - s /usr/local/bin/cpp /usr/lib64/bin/cpp</p>
+</blockquote>
+<h5 id="报错4">报错4</h5>
+<blockquote>
+<p>./comp_err: error while loading shared libraries: libatomic.so.1: cannot open shared object file: No such file or directory</p>
+</blockquote>
+<p>解决方法：</p>
+<blockquote>
+<p>yum - y install  libatomic</p>
+</blockquote>
+<h5 id="报错5">报错5</h5>
+<blockquote>
+<p>cp: cannot stat ‘./zstd_ep-install/lib/libzstd.a’: No such file or directory</p>
+</blockquote>
+<p>解决方法：</p>
+<blockquote>
+<p>cd thirdparty/src/zstd-1.3.7/tests<br/>
+make zstd-staticLib<br/>
+mkdir - p /path/to/apache-doris-0.12.0-incubating-src/thirdparty/src/arrow-apache-arrow-0.15.1/cpp/release/zstd_ep-install/lib64<br/>
+cp ../lib/libzstd.a /path/to/apache-doris-0.12.0-incubating-src/thirdparty/src/arrow-apache-arrow-0.15.1/cpp/release/zstd_ep-install/lib64</p>
+</blockquote>
+<h1 id="二-启动">二 启动</h1>
+<h2 id="1-启动fe">1 启动FE</h2>
+<blockquote>
+<p>cd output/fe<br/>
+mkdir doris-meta<br/>
+bin/start_fe.sh --daemon</p>
+</blockquote>
+<p>日志在log目录下</p>
+<p>注意：</p>
+<ul>
+<li>默认8030端口可能与yarn的resourcemanager冲突</li>
+<li>启动之后检查fe绑定端口的ip是否正确，如果绑定ip错误（比如安装docker之后取到docker的ip），会导致be无法连接fe，需要配置fe.conf中的priority_networks，配置为正确的网段</li>
+</ul>
+<blockquote>
+<p>priority_networks=192.168.1.0/24</p>
+</blockquote>
+<h2 id="2-启动be">2 启动BE</h2>
+<blockquote>
+<p>cd output/be<br/>
+mkdir /path/to/storage<br/>
+vim conf/be.conf<br/>
+bin/start_be.sh --daemon</p>
+</blockquote>
+<p>日志在log目录下</p>
+<p>注意：</p>
+<ul>
+<li>默认8040端口可能与yarn的nodemanager冲突</li>
+<li>如果be启动失败，一般可能有两个原因：一个是端口被占用，一个是limit，根据日志排查，比如报错<br/>
+Doris Be http service did not start correctly. exiting.<br/>
+则是因为端口占用导致web启动失败</li>
+</ul>
+<h3 id="修改limit">修改limit</h3>
+<p>临时修改</p>
+<blockquote>
+<p>limit - n 65535</p>
+</blockquote>
+<p>永久修改</p>
+<pre><code>vim /etc/security/limit.conf
+*               hard    nofile             65535
+*               soft    nofile             65535
+</code></pre>
+<h2 id="3-启动broker">3 启动Broker</h2>
+<blockquote>
+<p>cd fs_brokers/apache_hdfs_broker/output/apache_hdfs_broker<br/>
+bin/start_broker.sh --daemon</p>
+</blockquote>
+<h1 id="三-使用">三 使用</h1>
+<h2 id="1-fe-web访问">1 FE web访问</h2>
+<blockquote>
+<p>http://fe_server:8030</p>
+</blockquote>
+<p>注意：</p>
+<ul>
+<li>端口为http_port</li>
+<li>默认账号root，密码空</li>
+</ul>
+<h2 id="2-fe-命令访问">2 FE 命令访问</h2>
+<blockquote>
+<p>mysql - P9030 - uroot<br/>
+show proc '/frontends';</p>
+</blockquote>
+<p>注意：</p>
+<ul>
+<li>端口为query_port</li>
+</ul>
+<h2 id="3-添加或删除fe">3 添加或删除FE</h2>
+<blockquote>
+<p>alter system add follower '$host:$port';<br/>
+show proc '/frontends';</p>
+</blockquote>
+<h2 id="4-添加或删除be">4 添加或删除BE</h2>
+<blockquote>
+<p>alter system add backend '$host:$port';<br/>
+alter system dropp backend '$host:$port';<br/>
+show proc '/backends';</p>
+</blockquote>
+<p>注意：</p>
+<ul>
+<li>port默认为9050，即heartbeat_service_port</li>
+</ul>
+<h2 id="5-添加或删除broker">5 添加或删除Broker</h2>
+<blockquote>
+<p>alter system add broker $broker_name '$host:$port';<br/>
+show proc '/brokers';</p>
+</blockquote>
+<p>注意：</p>
+<ul>
+<li>port默认为8000，即broker ipc_port</li>
+</ul>
+<h1 id="四-数据导入">四 数据导入</h1>
+<h2 id="hive数据导入">hive数据导入</h2>
+<pre><code>create database test;
+CREATE TABLE test.test_user_doris
+(
+  `id` varchar(128) , 
+  `name` varchar(128) , 
+  `country` varchar(128) , 
+  `province` varchar(128) , 
+  `city` varchar(128) ,  
+  `order_count` int SUM
+)
+AGGREGATE KEY(id, name, country, province, city)
+DISTRIBUTED BY HASH(id) BUCKETS 10
+PROPERTIES("replication_num" = "3");
+
+LOAD LABEL load_test_user_doris
+(
+    DATA INFILE("hdfs://nameservice1/user/hive/warehouse/test.db/test_user/*")
+    INTO TABLE `test_user_doris`
+    FORMAT as "parquet"
+)
+WITH BROKER $broker_name 
+(
+    "dfs.nameservices" = "nameservice1",
+    "dfs.ha.namenodes.nameservice1" = "namenode1,namenode2",
+    "dfs.namenode.rpc-address.nameservice1.namenode1" = "nn1:8020",
+    "dfs.namenode.rpc-address.nameservice1.namenode2" = "nn2:8020"
+)
+PROPERTIES
+(
+    "timeout"="36000",
+    "max_filter_ratio"="0.1"
+);
+
+show load;
+</code></pre>
+<h1 id="五-参数配置">五 参数配置</h1>
+<blockquote>
+<p>show variables;</p>
+</blockquote>
+<p>同mysql</p>
+<p>参考：</p>
+<ul>
+<li>编译 <a href="http://doris.apache.org/master/en/installing/compilation.html" rel="noopener nofollow" target="_blank">http://doris.apache.org/master/en/installing/compilation.html</a></li>
+<li>启动 <a href="http://doris.apache.org/master/en/installing/install-deploy.html" rel="noopener nofollow" target="_blank">http://doris.apache.org/master/en/installing/install-deploy.html</a></li>
+</ul>
+</div>
+            </div>
+
+            <!-- Post Footer -->
+            <div class="post-footer">
+                <div class="post-navigation">
+                    <a href="../blog_cn.html" class="nav-button">← Back to Home</a>
+                    <a href="0043.html" class="nav-button">Next Post →</a>
+                </div>
+            </div>
+        </article>
+    </div>
+</body>
+</html>

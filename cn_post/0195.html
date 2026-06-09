@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>chkconfig systemd</title>
+    <link rel="stylesheet" href="../css/style3.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header Navigation -->
+        <div class="header">
+            <h1><a href="../blog_cn.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+        </div>
+
+        <!-- Post Container -->
+        <article class="post">
+            <!-- Post Header -->
+            <div class="post-header">
+                <h1>chkconfig systemd</h1>
+                <div class="post-meta">
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📅</span>
+                        <span>March 02, 2019</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📖</span>
+                        <span>1 min read</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">👁️</span>
+                        <span>610 views</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Post Content -->
+            <div class="post-content">
+                <div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<p>CentOS6服务用chkconfig控制，CentOS7改为systemd控制</p>
+<h1>1 systemd</h1>
+<p>systemd is a suite of basic building blocks for a Linux system. It provides a system and service manager that runs as PID 1 and starts the rest of the system. systemd provides aggressive parallelization capabilities, uses socket and D-Bus activation for starting services, offers on-demand starting of daemons, keeps track of processes using Linux control groups, maintains mount and automount points, and implements an elaborate transactional dependency-based service control logic. systemd supports SysV and LSB init scripts and works as a replacement for sysvinit. Other parts include a logging daemon, utilities to control basic system configuration like the hostname, date, locale, maintain a list of logged-in users and running containers and virtual machines, system accounts, runtime directories and settings, and daemons to manage simple network configuration, network time synchronization, log forwarding, and name resolution.</p>
+<p> </p>
+<p>service位于/usr/lib/systemd/system/</p>
+<p> </p>
+<p>列出所有的unit</p>
+<blockquote>
+<p># systemctl list-unit-files<br/># systemctl list-unit-files --type=service</p>
+</blockquote>
+<p>启动、停止、重启、查询状态</p>
+<blockquote>
+<p># systemctl start docker<br/># systemctl stop docker<br/># systemctl restart docker<br/># systemctl status docker</p>
+</blockquote>
+<p>查看日志</p>
+<blockquote>
+<p># journalctl - u docker<br/># journalctl - u docker - f</p>
+</blockquote>
+<p>开机启动设置、取消</p>
+<blockquote>
+<p># systemctl enable docker<br/># systemctl disable docker</p>
+</blockquote>
+<p>参考：https://www.freedesktop.org/wiki/Software/systemd/</p>
+<p> </p>
+<h1>2 chkconfig</h1>
+<p>chkconfig provides a simple command-line tool for maintaining the /etc/rc[0-6].d directory hierarchy by relieving system administrators of the task of directly manipulating the numerous symbolic links in those directories.</p>
+<p>This implementation of chkconfig was inspired by the chkconfig command present in the IRIX operating system. Rather than maintaining configuration information outside of the /etc/rc[0-6].d hierarchy, however, this version directly manages the symlinks in /etc/rc[0-6].d. This leaves all of the configuration information regarding what services init starts in a single location.</p>
+<p>chkconfig has five distinct functions: adding new services for management, removing services from management, listing the current startup information for services, changing the startup information for services, and checking the startup state of a particular service.</p>
+<p> </p>
+<p>将service放到目录/etc/init.d/</p>
+<p> </p>
+<p>列出服务</p>
+<blockquote>
+<p># chkconfig --list</p>
+</blockquote>
+<p>添加、删除服务</p>
+<blockquote>
+<p># chkconfig --add httpd<br/># chkconfig --del httpd</p>
+</blockquote>
+<p>开机启动设置、取消</p>
+<blockquote>
+<p># chkconfig httpd on<br/># chkconfig httpd off</p>
+</blockquote>
+<p>参考：https://linux.die.net/man/8/chkconfig</p>
+<p> </p>
+</div>
+            </div>
+
+            <!-- Post Footer -->
+            <div class="post-footer">
+                <div class="post-navigation">
+                    <a href="../blog_cn.html" class="nav-button">← Back to Home</a>
+                    <a href="0196.html" class="nav-button">Next Post →</a>
+                </div>
+            </div>
+        </article>
+    </div>
+</body>
+</html>

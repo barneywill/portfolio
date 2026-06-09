@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>kudu vs parquet</title>
+    <link rel="stylesheet" href="../css/style3.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header Navigation -->
+        <div class="header">
+            <h1><a href="../blog_cn.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+        </div>
+
+        <!-- Post Container -->
+        <article class="post">
+            <!-- Post Header -->
+            <div class="post-header">
+                <h1>kudu vs parquet</h1>
+                <div class="post-meta">
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📅</span>
+                        <span>May 27, 2019</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📖</span>
+                        <span>1 min read</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">👁️</span>
+                        <span>1847 views</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Post Content -->
+            <div class="post-content">
+                <div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<h1>一 对比</h1>
+<p>存储空间对比：</p>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201905/1509647-20190527173851357-1924966828.png"/></p>
+<p>查询性能对比：</p>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201905/1509647-20190527174116841-786786839.png"/></p>
+<p> </p>
+<h1>二 设计方案</h1>
+<p>将数据拆分为：历史数据（hdfs+parquet+snappy）+ 近期数据（kudu），可以兼具各种优点：</p>
+<ul>
+<li>1）整体低于10%的磁盘占用；</li>
+<li>2）更少的查询耗时；</li>
+<li>3）近期数据实时更新；</li>
+<li>4）近期数据可修改；</li>
+<li>5）kudu集群重启时间降低90%；</li>
+<li>6）impala并行scan：scan kudu + scan hdfs；</li>
+</ul>
+<p> </p>
+<h1>三 改造方案</h1>
+<p>利用视图</p>
+<blockquote>
+<p>create view v_table as<br/>select * from parquet_table where dt &lt; 'seven days ago'<br/>union all<br/>select * from kudu_table where dt &gt;= 'seven days ago';</p>
+</blockquote>
+<p>client将kudu_table替换为v_table即可；</p>
+<p> </p>
+<h1>四 其他</h1>
+<p>kudu问题：</p>
+<ul>
+<li>flume kudu sink使用kudu client版本过低，有bug，不会自动刷新token，7天之后会因为token失效报错；升级kudu client后可以解决bug，但是kudu client和flume使用的guava库版本有冲突；</li>
+<li>按dt分区后tablet数量过多，磁盘占用空间过大，内存占用过多；</li>
+<li>因为tablet数量多，磁盘空间大，每次kudu集群重启需要10-20分钟做initialize；</li>
+<li>kudu内存占用过多时会拒绝写操作；</li>
+<li>使用kudu作为单一数仓同时支持写入和查询，很容易相互影响，大量写入影响查询，大量查询影响写入，会导致数据丢失或者查询慢；</li>
+<li>kudu支持更新，一个delete或者drop就可以把所有数据全部删掉，作为单一数仓比较危险；</li>
+</ul>
+<p> </p>
+</div>
+            </div>
+
+            <!-- Post Footer -->
+            <div class="post-footer">
+                <div class="post-navigation">
+                    <a href="../blog_cn.html" class="nav-button">← Back to Home</a>
+                    <a href="0129.html" class="nav-button">Next Post →</a>
+                </div>
+            </div>
+        </article>
+    </div>
+</body>
+</html>

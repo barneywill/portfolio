@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>openssh升级到7.4之后ssh跳转异常</title>
+    <link rel="stylesheet" href="../css/style3.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header Navigation -->
+        <div class="header">
+            <h1><a href="../blog_cn.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+        </div>
+
+        <!-- Post Container -->
+        <article class="post">
+            <!-- Post Header -->
+            <div class="post-header">
+                <h1>openssh升级到7.4之后ssh跳转异常</h1>
+                <div class="post-meta">
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📅</span>
+                        <span>February 13, 2019</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📖</span>
+                        <span>3 min read</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">👁️</span>
+                        <span>7512 views</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Post Content -->
+            <div class="post-content">
+                <div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<p>服务器集群之间忽然ssh跳转不通</p>
+<blockquote>
+<p># ssh 192.168.0.1<br/>The authenticity of host '192.168.0.1 (192.168.0.1)' can't be established.<br/>RSA1 key fingerprint is 07:e4:54:79:62:60:22:c2:72:23:21:00:54:a0:90:79.<br/>Are you sure you want to continue connecting (yes/no)?</p>
+</blockquote>
+<p>输入yes之后要求输入密码，但是之前设置的是免密登录，查看 ~/.ssh 目录下文件均正常</p>
+<blockquote>
+<p># ls -l ~/.ssh<br/>total 16<br/>-rw------- 1 root root 2040 Jan 10 11:32 authorized_keys<br/>-rwx------ 1 root root 1679 Jan 10 11:27 id_rsa<br/>-rwx------ 1 root root  408 Jan 10 11:27 id_rsa.pub<br/>-rwx------ 1 root root 2753 Jan 10 11:27 known_hosts</p>
+</blockquote>
+<p>再检查ssh版本</p>
+<blockquote>
+<p># ssh -V<br/>OpenSSH_7.4p1, SSH protocols 1.5/2.0, OpenSSL 0x100020bf</p>
+<p># yum list installed|grep openssh<br/>openssh.x86_64                        7.4p1-16.el7               @base          <br/>openssh-clients.x86_64                7.4p1-16.el7               @base          <br/>openssh-server.x86_64                 7.4p1-16.el7               @base</p>
+<p># ls -l /usr/sbin/sshd<br/>-rwxr-xr-x 1 root root 1288984 Feb 13 06:02 /usr/sbin/sshd</p>
+<p># ps aux|grep sshd<br/>root      8698  0.0  0.0  25236  1236 ?        Ss   06:02   0:00 sshd</p>
+</blockquote>
+<p>看起来是早上6点时sshd刚升级到7.4（文件更新同时进程重启），检查sshd状态发现有报错</p>
+<blockquote>
+<p># service sshd status<br/>Redirecting to /bin/systemctl status sshd.service<br/>鈼sshd.service - OpenSSH server daemon<br/>   Loaded: loaded (/usr/lib/systemd/system/sshd.service; enabled; vendor preset: enabled)<br/>   Active: activating (auto-restart) (Result: exit-code) since Wed 2019-02-13 13:41:32 CST; 18s ago<br/>     Docs: man:sshd(8)<br/>           man:sshd_config(5)<br/>  Process: 11999 ExecStart=/usr/sbin/sshd -D $OPTIONS (code=exited, status=255)<br/> Main PID: 11999 (code=exited, status=255)<br/>    Tasks: 0<br/>   Memory: 0B<br/>   CGroup: /system.slice/sshd.service</p>
+<p>Feb 13 13:41:32 $server systemd[1]: sshd.service: main process exited, code=exited, status=255/n/a<br/>Feb 13 13:41:32 $server sshd[11999]: This private key will be ignored.<br/>Feb 13 13:41:32 $server sshd[11999]: bad permissions: ignore key: /etc/ssh/ssh_host_rsa_key<br/>Feb 13 13:41:32 $server sshd[11999]: Could not load host key: /etc/ssh/ssh_host_rsa_key<br/>Feb 13 13:41:32 $server sshd[11999]: Could not load host key: /etc/ssh/ssh_host_dsa_key<br/>Feb 13 13:41:32 $server sshd[11999]: Disabling protocol version 2. Could not load host key<br/>Feb 13 13:41:32 $server systemd[1]: Failed to start OpenSSH server daemon.<br/>Feb 13 13:41:32 $server systemd[1]: Unit sshd.service entered failed state.<br/>Feb 13 13:41:32 $server systemd[1]: sshd.service failed.</p>
+</blockquote>
+<p>尝试手工启动sshd来看下具体的错误</p>
+<blockquote>
+<p># sshd -D -p 8822<br/>@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@<br/>@         WARNING: UNPROTECTED PRIVATE KEY FILE!          @<br/>@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@<br/>Permissions 0640 for '/etc/ssh/ssh_host_rsa_key' are too open.<br/>It is recommended that your private key files are NOT accessible by others.<br/>This private key will be ignored.<br/>bad permissions: ignore key: /etc/ssh/ssh_host_rsa_key<br/>Could not load host key: /etc/ssh/ssh_host_rsa_key<br/>Could not load host key: /etc/ssh/ssh_host_dsa_key<br/>Disabling protocol version 2. Could not load host key</p>
+</blockquote>
+<p>看起来是因为key文件权限太大导致ssh protocol 2被禁用</p>
+<blockquote>
+<p># ls -l /etc/ssh<br/>total 612<br/>-rw-r--r--  1 root root     581843 Apr 11  2018 moduli<br/>-rw-r--r--  1 root root       1144 Feb 13 06:02 ssh_config<br/>-rw-------  1 root root       2450 Feb 13 06:02 sshd_config<br/>-rw-r-----. 1 root ssh_keys    227 Jan 22  2018 ssh_host_ecdsa_key<br/>-rw-r--r--. 1 root root        162 Jan 22  2018 ssh_host_ecdsa_key.pub<br/>-rw-r-----. 1 root ssh_keys    387 Jan 22  2018 ssh_host_ed25519_key<br/>-rw-r--r--. 1 root root         82 Jan 22  2018 ssh_host_ed25519_key.pub<br/>-rw-------  1 root root        991 Feb 13 06:02 ssh_host_key<br/>-rw-r--r--  1 root root        656 Feb 13 06:02 ssh_host_key.pub<br/>-rw-r-----. 1 root ssh_keys   1675 Jan 22  2018 ssh_host_rsa_key<br/>-rw-r--r--. 1 root root        382 Jan 22  2018 ssh_host_rsa_key.pub</p>
+</blockquote>
+<p>将/etc/ssh下文件权限全部改为600</p>
+<blockquote>
+<p># chmod 600 /etc/ssh/*</p>
+</blockquote>
+<p>然后使用测试的sshd进程跳转8822端口一切正常，但是sshd service还是不断启动失败，怀疑是因为当前的sshd进程不是通过service启动，所以sshd service不断重启但是无法绑定端口，将sshd进程kill掉，再看sshd service终于启动正常</p>
+<blockquote>
+<p># service sshd status<br/>Redirecting to /bin/systemctl status sshd.service<br/>鈼sshd.service - OpenSSH server daemon<br/>   Loaded: loaded (/usr/lib/systemd/system/sshd.service; enabled; vendor preset: enabled)<br/>   Active: activating (start) since Wed 2019-02-13 13:35:32 CST; 16s ago<br/>     Docs: man:sshd(8)<br/>           man:sshd_config(5)<br/> Main PID: 4355 (sshd)<br/>    Tasks: 1<br/>   Memory: 416.0K<br/>   CGroup: /system.slice/sshd.service<br/>           鈹斺攢4355 /usr/sbin/sshd -D</p>
+<p>Feb 13 13:35:32 $server systemd[1]: Starting OpenSSH server daemon...<br/>Feb 13 13:35:32 $server sshd[4355]: Could not load host key: /etc/ssh/ssh_host_dsa_key<br/>Feb 13 13:35:32 $server sshd[4355]: Server listening on 0.0.0.0 port 22.<br/>Feb 13 13:35:32 $server sshd[4355]: error: Bind to port 22 on :: failed: Address already in use.</p>
+</blockquote>
+<p>但是还有一个error: Bind to port 22 on :: failed: Address already in use. 这个是因为在配置文件</p>
+<blockquote>
+<p>$ vi /etc/ssh/sshd_config<br/>#Port 22<br/>#Protocol 2,1<br/>#ListenAddress 0.0.0.0<br/>#ListenAddress ::</p>
+</blockquote>
+<p>默认会绑定ipv4和ipv6的22端口，将其中两行取消注释</p>
+<blockquote>
+<p>Port 22<br/>#Protocol 2,1<br/>ListenAddress 0.0.0.0<br/>#ListenAddress ::</p>
+</blockquote>
+<p>启动正常</p>
+<blockquote>
+<p>Feb 13 15:30:04 $server systemd[1]: Starting OpenSSH server daemon...<br/>Feb 13 15:30:04 $server sshd[4731]: Could not load host key: /etc/ssh/ssh_host_dsa_key<br/>Feb 13 15:30:04 $server sshd[4731]: Server listening on 0.0.0.0 port 22.</p>
+</blockquote>
+<p>但是过一段时间进程就会消失，查看sshd.service</p>
+<blockquote>
+<p># cat /usr/lib/systemd/system/sshd.service <br/>[Unit]<br/>Description=OpenSSH server daemon<br/>Documentation=man:sshd(8) man:sshd_config(5)<br/>After=network.target sshd-keygen.service<br/>Wants=sshd-keygen.service</p>
+<p>[Service]<br/>Type=notify<br/>EnvironmentFile=/etc/sysconfig/sshd<br/>ExecStart=/usr/sbin/sshd -D $OPTIONS<br/>ExecReload=/bin/kill -HUP $MAINPID<br/>KillMode=process<br/>Restart=on-failure<br/>RestartSec=42s</p>
+<p>[Install]<br/>WantedBy=multi-user.target</p>
+</blockquote>
+<p>通过journalctl查看日志发现</p>
+<blockquote>
+<p>Feb 13 16:08:09 $server systemd[1]: sshd.service start operation timed out. Terminating.<br/>Feb 13 16:08:09 $server sshd[26701]: Received signal 15; terminating.<br/>Feb 13 16:08:09 $server systemd[1]: sshd.service: main process exited, code=exited, status=255/n/a<br/>Feb 13 16:08:09 $server systemd[1]: Unit sshd.service entered failed state.<br/>Feb 13 16:08:09 $server systemd[1]: sshd.service failed.<br/>Feb 13 16:08:51 $server systemd[1]: sshd.service holdoff time over, scheduling restart.</p>
+</blockquote>
+<p>看起来是因为不断启动超时被中止进程导致；</p>
+<blockquote>
+<p># vi /usr/lib/systemd/system/sshd.service<br/>ExecStart=/usr/sbin/sshd $OPTIONS</p>
+</blockquote>
+<p>将-D去掉，然后将之前的sshd kill掉，然后重启sshd</p>
+<blockquote>
+<p># systemctl daemon-reload<br/># systemctl start sshd</p>
+</blockquote>
+<p>至此sshd服务恢复，ssh跳转恢复，所以openssh升级7.4时一定要修改/etc/ssh/下的文件权限，不然会禁用ssh protocol 2，同时也会导致之前的key失效；同时还要修改sshd.service；等一下，ansible还有报错</p>
+<blockquote>
+<p>192.168.0.1 | FAILED | rc=-1 &gt;&gt;<br/>failed to open a SFTP connection (Channel closed.)</p>
+</blockquote>
+<p>查看sshd_config</p>
+<blockquote>
+<p># vi /etc/ssh/sshd_config<br/>Subsystem       sftp    /usr/libexec/sftp-server</p>
+</blockquote>
+<p>发现sftp-server路径不存在/usr/libexec/sftp-server，实际的路径是/usr/libexec/openssh/sftp-server，修改之后重启sshd，上面问题修复，再等一下，scp也有报错</p>
+<blockquote>
+<p># scp 192.168.0.1:/file1 .<br/>command-line: line 0: Bad configuration option: PermitLocalCommand</p>
+</blockquote>
+<p>这个是由于scp、sftp和ssh版本不匹配导致的，通过yum查看这几个命令都在openssh-clients包中，但是这几个命令的最后修改时间不一样，重装openssh-clients</p>
+<blockquote>
+<p># yum reinstall openssh-clients</p>
+</blockquote>
+<p>然后这几个命令的最后修改时间都一致了，问题也消失了；</p>
+<p> </p>
+<p>参考：</p>
+<p>https://docs.ansible.com/ansible/latest/installation_guide/intro_installation.html#managed-node-requirements</p>
+<p>https://unix.stackexchange.com/questions/390224/openssh-server-start-failed-with-result-timeout/400644#400644</p>
+<p>http://www.webopius.com/content/350/solution-to-error-command-line-line-0-bad-configuration-option-permitlocalcommand</p>
+<p> </p>
+</div>
+            </div>
+
+            <!-- Post Footer -->
+            <div class="post-footer">
+                <div class="post-navigation">
+                    <a href="../blog_cn.html" class="nav-button">← Back to Home</a>
+                    <a href="0233.html" class="nav-button">Next Post →</a>
+                </div>
+            </div>
+        </article>
+    </div>
+</body>
+</html>

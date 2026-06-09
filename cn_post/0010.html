@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>大数据漫谈</title>
+    <link rel="stylesheet" href="../css/style3.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header Navigation -->
+        <div class="header">
+            <h1><a href="../blog_cn.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+        </div>
+
+        <!-- Post Container -->
+        <article class="post">
+            <!-- Post Header -->
+            <div class="post-header">
+                <h1>大数据漫谈</h1>
+                <div class="post-meta">
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📅</span>
+                        <span>May 31, 2022</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📖</span>
+                        <span>1 min read</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">👁️</span>
+                        <span>187 views</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Post Content -->
+            <div class="post-content">
+                <div class="blogpost-body cnblogs-markdown" id="cnblogs_post_body">
+<h1 id="一-50年科技发展史">一 50年科技发展史</h1>
+<table>
+<thead>
+<tr>
+<th>方向</th>
+<th>公司组织</th>
+<th>年代</th>
+<th>代表</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>大型机</td>
+<td>IBM</td>
+<td>70年代</td>
+<td>System z、AIX</td>
+</tr>
+<tr>
+<td>小型机</td>
+<td>DEC、SUN</td>
+<td>80年代</td>
+<td>SPARC、Solaris</td>
+</tr>
+<tr>
+<td>廉价PC+光纤</td>
+<td>Google</td>
+<td>90年代</td>
+<td>Intel、Seagate</td>
+</tr>
+<tr>
+<td>大数据</td>
+<td>Google</td>
+<td>2003-2004</td>
+<td>GFS、MapReduce、BigTable</td>
+</tr>
+<tr>
+<td>开源</td>
+<td>Apache</td>
+<td>2006-2007</td>
+<td>Hadoop、HBase</td>
+</tr>
+<tr>
+<td>人工智能、深度学习</td>
+<td>Google</td>
+<td>2016</td>
+<td>TensorFlow</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p>“当网络变得像处理器一样快的时候，连到网络上的电脑就会变得空空如也。”<br/>
+--埃里克 施密特，SUN CTO，1993</p>
+</blockquote>
+<blockquote>
+<p>“互联网即将消失，物联网将无所不能。”<br/>
+--埃里克 施密特，Google CEO，2015</p>
+</blockquote>
+<h2 id="背后的驱动力">背后的驱动力</h2>
+<h3 id="网络-互联网-数据爆炸-大数据-人工智能">网络-&gt;互联网-&gt;数据爆炸-&gt;大数据-&gt;人工智能</h3>
+<p><picture>
+  <source srcset="../img/1509647-20220531120046687-404467020.webp" type="image/webp">
+  <img alt="" src="../img/1509647-20220531120046687-404467020.png">
+</picture></p>
+<h1 id="二-回到硬件">二 回到硬件</h1>
+<table>
+<thead>
+<tr>
+<th>硬件</th>
+<th>细节</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>CPU</td>
+<td>SIMD指令（Single Instruction Multiple Data）-向量化查询</td>
+</tr>
+<tr>
+<td>GPU</td>
+<td>矩阵运算加速-算法</td>
+</tr>
+<tr>
+<td>内存</td>
+<td>DDR、JVM-GC</td>
+</tr>
+<tr>
+<td>硬盘</td>
+<td>接口：IDE/ATA、SATA、PCLE、SCSI、SAS、FC；分类：机械硬盘、固态硬盘；机械硬盘：5600转、7200转、垂直式、叠瓦式；读写：顺序读写、随机读写；RAID;</td>
+</tr>
+<tr>
+<td>网卡</td>
+<td>千兆网卡、万兆网卡；交换机；网络抖动；</td>
+</tr>
+</tbody>
+</table>
+<h2 id="性能量级">性能量级</h2>
+<table>
+<thead>
+<tr>
+<th>标的</th>
+<th>特点</th>
+<th>量级-顺序读写</th>
+<th>量级-随机读写</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>内存</td>
+<td>容量小、特别贵、读写特别快、无持久化</td>
+<td>10GB/S</td>
+<td>10GB/S</td>
+</tr>
+<tr>
+<td>机械硬盘HDD</td>
+<td>容量大、寿命长、便宜、读写慢（尤其是随机读写）</td>
+<td>100MB/S</td>
+<td>1MB/S</td>
+</tr>
+<tr>
+<td>固态硬盘SSD</td>
+<td>容量中、寿命短、一般贵、读写快</td>
+<td>100MB/s</td>
+<td>10MB/s</td>
+</tr>
+</tbody>
+</table>
+<h2 id="性能实例">性能实例</h2>
+<p><a href="https://www.userbenchmark.com/" rel="noopener nofollow" target="_blank">https://www.userbenchmark.com/</a><br/>
+<picture>
+  <source srcset="../img/1509647-20220531120258563-1866756057.webp" type="image/webp">
+  <img alt="" src="../img/1509647-20220531120258563-1866756057.png">
+</picture></p>
+<h3 id="内存">内存</h3>
+<p><picture>
+  <source srcset="../img/1509647-20220531120316367-647025901.webp" type="image/webp">
+  <img alt="" src="../img/1509647-20220531120316367-647025901.png">
+</picture></p>
+<h3 id="机械硬盘">机械硬盘</h3>
+<p><picture>
+  <source srcset="../img/1509647-20220531120329698-1260072163.webp" type="image/webp">
+  <img alt="" src="../img/1509647-20220531120329698-1260072163.png">
+</picture></p>
+<h3 id="固态硬盘">固态硬盘</h3>
+<p><picture>
+  <source srcset="../img/1509647-20220531120349119-230051710.webp" type="image/webp">
+  <img alt="" src="../img/1509647-20220531120349119-230051710.png">
+</picture></p>
+<h2 id="常识">常识</h2>
+<table>
+<thead>
+<tr>
+<th>标的1</th>
+<th>标的2</th>
+<th>对比</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>GPU-矩阵运算</td>
+<td>CPU-矩阵运算</td>
+<td>10倍以上</td>
+</tr>
+<tr>
+<td>内存-读写</td>
+<td>硬盘-顺序读写</td>
+<td>100倍</td>
+</tr>
+<tr>
+<td>内存-读写</td>
+<td>固态硬盘-随机读写</td>
+<td>1000倍</td>
+</tr>
+<tr>
+<td>内存-读写</td>
+<td>机械硬盘-随机读写</td>
+<td>10000倍</td>
+</tr>
+<tr>
+<td>固态硬盘-顺序读写</td>
+<td>固态硬盘-随机读写</td>
+<td>10倍</td>
+</tr>
+<tr>
+<td>机械硬盘-顺序读写</td>
+<td>机械硬盘-随机读写</td>
+<td>100倍</td>
+</tr>
+<tr>
+<td>固态硬盘-顺序读写</td>
+<td>机械硬盘-顺序读写</td>
+<td>10倍以内</td>
+</tr>
+<tr>
+<td>固态硬盘-随机读写</td>
+<td>机械硬盘-随机读写</td>
+<td>10倍</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li>机械硬盘随机读写瓶颈：机械臂寻址，寻址时间</li>
+<li>机械硬盘的反击：组RAID、拼数量、顺序读写</li>
+</ul>
+<p>清楚这些量级差距之后，就能了解海量实时写入为什么要这样实现，例如：HBase、Kafka</p>
+<h1 id="三-发展历程">三 发展历程</h1>
+<p><img alt="" src="../img/1509647-20220531120914905-1411560215.jpg"/></p>
+<p>2016：Is Big Data Still a Thing? (The 2016 Big Data Landscape)<br/>
+<a href="https://mattturck.com/big-data-landscape/" rel="noopener nofollow" target="_blank">https://mattturck.com/big-data-landscape/</a></p>
+<p>2017：Firing on All Cylinders: The 2017 Big Data Landscape<br/>
+<a href="https://mattturck.com/bigdata2017/" rel="noopener nofollow" target="_blank">https://mattturck.com/bigdata2017/</a></p>
+<p>2018：Great Power, Great Responsibility: The 2018 Big Data &amp; AI Landscape<br/>
+<a href="https://mattturck.com/bigdata2018/" rel="noopener nofollow" target="_blank">https://mattturck.com/bigdata2018/</a></p>
+<p>2019：A Turbulent Year: The 2019 Data &amp; AI Landscape<br/>
+<a href="https://mattturck.com/data2019/" rel="noopener nofollow" target="_blank">https://mattturck.com/data2019/</a></p>
+<p>2020：Resilience and Vibrancy: The 2020 Data &amp; AI Landscape<br/>
+<a href="https://mattturck.com/data2020/" rel="noopener nofollow" target="_blank">https://mattturck.com/data2020/</a></p>
+<p>2021: Red Hot: The 2021 Machine Learning, AI and Data (MAD) Landscape<br/>
+<a href="https://mattturck.com/data2021/" rel="noopener nofollow" target="_blank">https://mattturck.com/data2021/</a></p>
+</div>
+            </div>
+
+            <!-- Post Footer -->
+            <div class="post-footer">
+                <div class="post-navigation">
+                    <a href="../blog_cn.html" class="nav-button">← Back to Home</a>
+                    <a href="0011.html" class="nav-button">Next Post →</a>
+                </div>
+            </div>
+        </article>
+    </div>
+</body>
+</html>

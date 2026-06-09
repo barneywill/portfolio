@@ -1,0 +1,575 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ElasticSearch 2 - 常用API整理</title>
+    <link rel="stylesheet" href="../css/style3.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header Navigation -->
+        <div class="header">
+            <h1><a href="../blog_cn.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+        </div>
+
+        <!-- Post Container -->
+        <article class="post">
+            <!-- Post Header -->
+            <div class="post-header">
+                <h1>ElasticSearch 2 - 常用API整理</h1>
+                <div class="post-meta">
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📅</span>
+                        <span>January 20, 2019</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📖</span>
+                        <span>37 min read</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">👁️</span>
+                        <span>2722 views</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Post Content -->
+            <div class="post-content">
+                <div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<p>Fortunately, Elasticsearch provides a very comprehensive and powerful REST API that you can use to interact with your cluster. Among the few things that can be done with the API are as follows:</p>
+<ul>
+<li>Check your cluster, node, and index health, status, and statistics</li>
+<li>Administer your cluster, node, and index data and metadata</li>
+<li>Perform CRUD (Create, Read, Update, and Delete) and search operations against your indexes</li>
+<li>Execute advanced search operations such as paging, sorting, filtering, scripting, aggregations, and many others</li>
+</ul>
+<p><em>es提供了一套容易理解并且强大的rest api接口，通过该接口你可以和集群进行交互，完成各种操作：检查集群状态、管理集群、对索引做CRUD操作、查询索引；</em></p>
+<p> </p>
+<p>Rest API Pattern：</p>
+<blockquote>
+<p>&lt;REST Verb&gt; /&lt;Index&gt;/&lt;Type&gt;/&lt;ID&gt;[?pretty|v]</p>
+</blockquote>
+<p>ps：Type相当于Category或者Partition的概念；Type未来会被废弃掉；</p>
+<p>The pretty parameter, again, just tells Elasticsearch to return pretty-printed JSON results.</p>
+<p><em>所有返回json接口都可以增加pretty参数，这样返回的json是格式化的；</em></p>
+<p>Each of the commands accepts a query string parameter <code class="literal">v</code> to turn on verbose output.</p>
+<p><em>v参数意味着详细输出；</em></p>
+<p> </p>
+<p>以下通过CURL请求，关于CURL详见：<a href="https://www.cnblogs.com/barneywill/p/10279555.html" target="_blank">https://www.cnblogs.com/barneywill/p/10279555.html</a></p>
+<h1>一  集群相关</h1>
+<h2>1 查看健康情况</h2>
+<blockquote>
+<p># curl http://$es_server:9200/_cat/health?v<br/>epoch      timestamp cluster       status node.total node.data shards pri relo init unassign pending_tasks max_task_wait_time active_shards_percent<br/>1547990539 21:22:19  elasticsearch green           3         3     10   5    0    0        0             0                  -                100.0%</p>
+</blockquote>
+<h2>2 查看节点</h2>
+<blockquote>
+<p># curl http://$es_server:9200/_cat/nodes?v<br/>ip           heap.percent ram.percent cpu load_1m load_5m load_15m node.role master name<br/>server1           29          74   1    0.07    0.10     0.13 mdi       *      3iLMMxu<br/>server2           45          74   1    0.11    0.11     0.13 mdi       -      vz1k1MB<br/>server3           47          75   1    0.08    0.07     0.08 mdi       -      vGUu-b6</p>
+</blockquote>
+<h2>3 查看master</h2>
+<blockquote>
+<p># curl 'http://$es_server:9200/_cat/master?v'<br/>id                     host         ip           node<br/>3iLMMxuCTISHPJaVo6I4SA server1 server1 3iLMMxu</p>
+</blockquote>
+<h2>4 查看所有索引</h2>
+<blockquote>
+<p># curl http://$es_server:9200/_cat/indices?v<br/>health status index   uuid                   pri rep docs.count docs.deleted store.size pri.store.size<br/>green  open   testdoc GFZhtn6GSMy2pPPj8UK70Q   5   1          1            0      8.9kb          4.4kb</p>
+</blockquote>
+<h2>5 查看节点状态</h2>
+<blockquote>
+<p># curl -XGET 'http://localhost:9200/_nodes/stats?pretty'</p>
+</blockquote>
+<h1>二 索引相关</h1>
+<h2>1 建立新索引</h2>
+<blockquote>
+<p># curl -XPUT 'http://$es_server:9200/testdoc/'<br/>{"acknowledged":true,"shards_acknowledged":true,"index":"testdoc"}</p>
+</blockquote>
+<h2>2 删除索引</h2>
+<blockquote>
+<p># curl -XDELETE 'http://$es_server:9200/testdoc/'</p>
+</blockquote>
+<h2>3 查看shards</h2>
+<blockquote>
+<p># curl http://localhost:9200/_cat/shards</p>
+</blockquote>
+<h1>三 文档相关</h1>
+<h2>1 插入单个文档</h2>
+<blockquote>
+<p># curl -XPUT 'http://localhost:9200/testdoc/testtype/1' -d '{"name":"test"}'<br/>{"_index":"testdoc","_type":"testtype","_id":"1","_version":1,"result":"created","_shards":{"total":2,"successful":2,"failed":0},"_seq_no":0,"_primary_term":1}</p>
+</blockquote>
+<p>如果报错：</p>
+<p>{"error":"Incorrect HTTP method for uri [/testdoc/testtype] and method [PUT], allowed: [POST]","status":405}</p>
+<p>添加header</p>
+<p>-H 'Content-Type: application/json'</p>
+<h2>2 查询单个文档</h2>
+<blockquote>
+<p># curl -XGET 'http://$es_server:9200/testdoc/testtype/1'<br/>{"_index":"testdoc","_type":"testtype","_id":"1","_version":1,"found":true,"_source":{"name":"test"}}</p>
+</blockquote>
+<h2>3 修改单个文档</h2>
+<p>1）使用相同的id和不同的数据再调用一次</p>
+<blockquote>
+<p># curl -XPUT 'http://$es_server:9200/testdoc/testtype/1' -d '{"name":"test hello"}'<br/>{"_index":"testdoc","_type":"testtype","_id":"1","_version":2,"result":"updated","_shards":{"total":2,"successful":2,"failed":0},"_seq_no":1,"_primary_term":2}</p>
+</blockquote>
+<p>2）通过update</p>
+<blockquote>
+<p># curl -XPOST 'http://$es_server:9200/testdoc/testtype/1/_update' -d '{"doc":{"name":"test hello again"}}'<br/>{"_index":"testdoc","_type":"testtype","_id":"1","_version":3,"result":"updated","_shards":{"total":2,"successful":2,"failed":0},"_seq_no":2,"_primary_term":2}</p>
+</blockquote>
+<h2>4 删除单个文档</h2>
+<blockquote>
+<p># curl -XDELETE 'http://$es_server:9200/testdoc/testtype/1'</p>
+</blockquote>
+<h2>5 批量文档操作接口</h2>
+<p>同时进行两个插入一个修改一个删除</p>
+<blockquote>
+<p># curl -XPOST 'http://$es_server:9200/testdoc/testtype/1/_bulk' -d '<br/>{"index":{"_id":"3"}}<br/>{"name": "John Doe" }<br/>{"index":{"_id":"4"}}<br/>{"name": "Jane Doe" }<br/>{"update":{"_id":"1"}}<br/>{"doc": { "name": "John Doe becomes Jane Doe" } }<br/>{"delete":{"_id":"2"}}'</p>
+</blockquote>
+<h2>6 查询所有文档</h2>
+<p>以下两种请求等价</p>
+<blockquote>
+<p># curl -XGET 'http://$es_server:9200/testdoc/_search?q=*'<br/>{"took":2,"timed_out":false,"_shards":{"total":5,"successful":5,"skipped":0,"failed":0},"hits":{"total":1,"max_score":1.0,"hits":[{"_index":"testdoc","_type":"testtype","_id":"1","_score":1.0,"_source":{"name":"test hello again"}}]}}</p>
+<p># curl -XPOST 'http://$es_server:9200/testdoc/_search' -d '{"query":{"match_all":{}}}'</p>
+</blockquote>
+<h2>7 查询count总数</h2>
+<blockquote>
+<p># curl http://localhost:9200/testdoc/_count</p>
+</blockquote>
+<h2>8 通过条件查询count</h2>
+<blockquote>
+<p># curl http://localhost:9200/testdoc/_count?q=name:hello</p>
+<p># curl http://localhost:9200/testdoc/_count?q=name:hello%20AND%20age:10</p>
+</blockquote>
+<p>注意url传递query时如果有多个field，需要使用AND或OR连接，同时空格替换为编码%20</p>
+<h2>9 sql查询</h2>
+<blockquote>
+<p># curl -XPOST -H 'Content-Type: application/json' 'http://$es_server:9200/_xpack/sql?format=txt' -d '{"query":"select * from testdoc"}'<br/>      name      <br/>----------------<br/>test hello again</p>
+</blockquote>
+<h1>四 Setting相关</h1>
+<h2>1 查看一个索引的setting</h2>
+<blockquote>
+<p># curl -XGET 'http://localhost:9200/testdoc/_settings'</p>
+</blockquote>
+<h2>2 查看所有setting</h2>
+<blockquote>
+<p># curl -XGET 'http://localhost:9200/_all/_settings'</p>
+</blockquote>
+<h1>五 Mapping相关</h1>
+<p>Mapping（索引结构定义）类似于表结构定义，定义所有的字段、数据类型、是否存储、是否索引、analyzer等；</p>
+<p>Mapping is the process of defining how a document, and the fields it contains, are stored and indexed. For instance, use mappings to define:</p>
+<ul>
+<li>which string fields should be treated as full text fields.</li>
+<li>which fields contain numbers, dates, or geolocations.</li>
+<li>whether the values of all fields in the document should be indexed into the catch-all _all field.</li>
+<li>the format of date values.</li>
+<li>custom rules to control the mapping for dynamically added fields.</li>
+</ul>
+<h2>1 查看单个索引的mapping</h2>
+<blockquote>
+<p># curl http://localhost:9200/testdoc/_mapping/testtype<br/>{"testdoc":{"mappings":{"testtype":{"properties":{"name":{"type":"text","fields":{"keyword":{"type":"keyword","ignore_above":256}}}}}}}}</p>
+</blockquote>
+<h2>2 查看所有的索引的mapping</h2>
+<blockquote>
+<p># curl http://localhost:9200/_mapping<br/># curl http://localhost:9200/_all/_mapping</p>
+</blockquote>
+<h2>3 在已有mapping上添加字段</h2>
+<div class="cnblogs_code">
+<pre><span style="color: rgba(0, 128, 0, 1)">#</span><span style="color: rgba(0, 128, 0, 1)"> curl -XPOST -H 'Content-Type: application/json' http://localhost:9200/testdoc/_mapping/testtype -d '</span>
+<span style="color: rgba(0, 0, 0, 1)">{
+  </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">properties</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">: {
+    </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">email</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">: {
+      </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">type</span><span style="color: rgba(128, 0, 0, 1)">"</span>: <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">keyword</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">
+    }
+  }
+}'</span></pre>
+</div>
+<h2>4 设置mapping</h2>
+<div class="cnblogs_code">
+<pre><span style="color: rgba(0, 128, 0, 1)">#</span><span style="color: rgba(0, 128, 0, 1)"> curl -XPOST -H 'Content-Type: application/json' http://localhost:9200/testdoc -d '</span>
+<span style="color: rgba(0, 0, 0, 1)">{
+  </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">mappings</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">: {
+    </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">testtype</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">: { 
+      </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">properties</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">: { 
+        </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">title</span><span style="color: rgba(128, 0, 0, 1)">"</span>:    { <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">type</span><span style="color: rgba(128, 0, 0, 1)">"</span>: <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">text</span><span style="color: rgba(128, 0, 0, 1)">"</span>, <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">analyzer</span><span style="color: rgba(128, 0, 0, 1)">"</span>: <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">standard</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">}, 
+        </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">name</span><span style="color: rgba(128, 0, 0, 1)">"</span>:     { <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">type</span><span style="color: rgba(128, 0, 0, 1)">"</span>: <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">text</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">  }, 
+        </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">age</span><span style="color: rgba(128, 0, 0, 1)">"</span>:      { <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">type</span><span style="color: rgba(128, 0, 0, 1)">"</span>: <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">integer</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)"> },  
+        </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">created</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">:  {
+          </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">type</span><span style="color: rgba(128, 0, 0, 1)">"</span>:   <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">date</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">, 
+          </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">format</span><span style="color: rgba(128, 0, 0, 1)">"</span>: <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">strict_date_optional_time||epoch_millis</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">
+        }
+      }
+    }
+  }
+}'</span></pre>
+</div>
+<p> </p>
+<h2>5 更新mapping</h2>
+<p>mapping无法更新，只能使用新的mapping创建新的索引，然后重建索引来间接实现mapping更新；</p>
+<p>Other than where documented, existing field mappings cannot be updated. Changing the mapping would mean invalidating already indexed documents. Instead, you should create a new index with the correct mappings and reindex your data into that index. If you only wish to rename a field and not change its mappings, it may make sense to introduce an alias field.</p>
+<p>参考：https://www.elastic.co/guide/en/elasticsearch/reference/current/mapping.html</p>
+<h1>六 Analyzer相关</h1>
+<p>Analysis is the process of converting text, like the body of any email, into tokens or terms which are added to the inverted index for searching. Analysis is performed by an analyzer which can be either a built-in analyzer or a custom analyzer defined per index.</p>
+<p>analyzer在mapping中配置，比如</p>
+<blockquote>
+<p>"title": { "type": "text", "analyzer": "standard"}, \</p>
+</blockquote>
+<h2>测试analyzer</h2>
+<div class="cnblogs_code">
+<pre><span style="color: rgba(0, 128, 0, 1)">#</span><span style="color: rgba(0, 128, 0, 1)"> curl -XPOST -H 'Content-Type: application/json' http://localhost:9200/_analyze?pretty -d '{"tokenizer":"standard","filter":  [ "lowercase", "asciifolding" ],"text":      "Is this chandler?"}'</span>
+<span style="color: rgba(0, 0, 0, 1)">{
+  </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">tokens</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)"> : [
+    {
+      </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">token</span><span style="color: rgba(128, 0, 0, 1)">"</span> : <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">is</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">,
+      </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">start_offset</span><span style="color: rgba(128, 0, 0, 1)">"</span> : 0<span style="color: rgba(0, 0, 0, 1)">,
+      </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">end_offset</span><span style="color: rgba(128, 0, 0, 1)">"</span> : 2<span style="color: rgba(0, 0, 0, 1)">,
+      </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">type</span><span style="color: rgba(128, 0, 0, 1)">"</span> : <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">&lt;ALPHANUM&gt;</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">,
+      </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">position</span><span style="color: rgba(128, 0, 0, 1)">"</span> : 0<span style="color: rgba(0, 0, 0, 1)">
+    },
+    {
+      </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">token</span><span style="color: rgba(128, 0, 0, 1)">"</span> : <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">this</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">,
+      </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">start_offset</span><span style="color: rgba(128, 0, 0, 1)">"</span> : 3<span style="color: rgba(0, 0, 0, 1)">,
+      </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">end_offset</span><span style="color: rgba(128, 0, 0, 1)">"</span> : 7<span style="color: rgba(0, 0, 0, 1)">,
+      </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">type</span><span style="color: rgba(128, 0, 0, 1)">"</span> : <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">&lt;ALPHANUM&gt;</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">,
+      </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">position</span><span style="color: rgba(128, 0, 0, 1)">"</span> : 1<span style="color: rgba(0, 0, 0, 1)">
+    },
+    {
+      </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">token</span><span style="color: rgba(128, 0, 0, 1)">"</span> : <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">chandler</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">,
+      </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">start_offset</span><span style="color: rgba(128, 0, 0, 1)">"</span> : 8<span style="color: rgba(0, 0, 0, 1)">,
+      </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">end_offset</span><span style="color: rgba(128, 0, 0, 1)">"</span> : 16<span style="color: rgba(0, 0, 0, 1)">,
+      </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">type</span><span style="color: rgba(128, 0, 0, 1)">"</span> : <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">&lt;ALPHANUM&gt;</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">,
+      </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">position</span><span style="color: rgba(128, 0, 0, 1)">"</span> : 2<span style="color: rgba(0, 0, 0, 1)">
+    }
+  ]
+}</span></pre>
+</div>
+<div class="cnblogs_code">
+<pre><span style="color: rgba(0, 128, 0, 1)">#</span><span style="color: rgba(0, 128, 0, 1)"> curl -XPOST -H 'Content-Type: application/json' http://localhost:9200/_analyze?pretty -d '{"tokenizer":"standard","text":"联想是全球最大的笔记本厂商"}'</span>
+<span style="color: rgba(0, 0, 0, 1)">{
+  </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">tokens</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)"> : [
+    {
+      </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">token</span><span style="color: rgba(128, 0, 0, 1)">"</span> : <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">联</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">,
+      </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">start_offset</span><span style="color: rgba(128, 0, 0, 1)">"</span> : 0<span style="color: rgba(0, 0, 0, 1)">,
+      </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">end_offset</span><span style="color: rgba(128, 0, 0, 1)">"</span> : 1<span style="color: rgba(0, 0, 0, 1)">,
+      </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">type</span><span style="color: rgba(128, 0, 0, 1)">"</span> : <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">&lt;IDEOGRAPHIC&gt;</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">,
+      </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">position</span><span style="color: rgba(128, 0, 0, 1)">"</span> : 0<span style="color: rgba(0, 0, 0, 1)">
+    },
+    {
+      </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">token</span><span style="color: rgba(128, 0, 0, 1)">"</span> : <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">想</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">,
+      </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">start_offset</span><span style="color: rgba(128, 0, 0, 1)">"</span> : 1<span style="color: rgba(0, 0, 0, 1)">,
+      </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">end_offset</span><span style="color: rgba(128, 0, 0, 1)">"</span> : 2<span style="color: rgba(0, 0, 0, 1)">,
+      </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">type</span><span style="color: rgba(128, 0, 0, 1)">"</span> : <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">&lt;IDEOGRAPHIC&gt;</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">,
+      </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">position</span><span style="color: rgba(128, 0, 0, 1)">"</span> : 1<span style="color: rgba(0, 0, 0, 1)">
+    },
+    {
+      </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">token</span><span style="color: rgba(128, 0, 0, 1)">"</span> : <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">是</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">,
+      </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">start_offset</span><span style="color: rgba(128, 0, 0, 1)">"</span> : 2<span style="color: rgba(0, 0, 0, 1)">,
+      </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">end_offset</span><span style="color: rgba(128, 0, 0, 1)">"</span> : 3<span style="color: rgba(0, 0, 0, 1)">,
+      </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">type</span><span style="color: rgba(128, 0, 0, 1)">"</span> : <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">&lt;IDEOGRAPHIC&gt;</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">,
+      </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">position</span><span style="color: rgba(128, 0, 0, 1)">"</span> : 2<span style="color: rgba(0, 0, 0, 1)">
+    },
+    {
+      </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">token</span><span style="color: rgba(128, 0, 0, 1)">"</span> : <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">全</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">,
+      </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">start_offset</span><span style="color: rgba(128, 0, 0, 1)">"</span> : 3<span style="color: rgba(0, 0, 0, 1)">,
+      </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">end_offset</span><span style="color: rgba(128, 0, 0, 1)">"</span> : 4<span style="color: rgba(0, 0, 0, 1)">,
+      </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">type</span><span style="color: rgba(128, 0, 0, 1)">"</span> : <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">&lt;IDEOGRAPHIC&gt;</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">,
+      </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">position</span><span style="color: rgba(128, 0, 0, 1)">"</span> : 3<span style="color: rgba(0, 0, 0, 1)">
+    },
+    {
+      </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">token</span><span style="color: rgba(128, 0, 0, 1)">"</span> : <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">球</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">,
+      </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">start_offset</span><span style="color: rgba(128, 0, 0, 1)">"</span> : 4<span style="color: rgba(0, 0, 0, 1)">,
+      </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">end_offset</span><span style="color: rgba(128, 0, 0, 1)">"</span> : 5<span style="color: rgba(0, 0, 0, 1)">,
+      </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">type</span><span style="color: rgba(128, 0, 0, 1)">"</span> : <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">&lt;IDEOGRAPHIC&gt;</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">,
+      </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">position</span><span style="color: rgba(128, 0, 0, 1)">"</span> : 4<span style="color: rgba(0, 0, 0, 1)">
+    },
+    {
+      </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">token</span><span style="color: rgba(128, 0, 0, 1)">"</span> : <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">最</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">,
+      </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">start_offset</span><span style="color: rgba(128, 0, 0, 1)">"</span> : 5<span style="color: rgba(0, 0, 0, 1)">,
+      </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">end_offset</span><span style="color: rgba(128, 0, 0, 1)">"</span> : 6<span style="color: rgba(0, 0, 0, 1)">,
+      </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">type</span><span style="color: rgba(128, 0, 0, 1)">"</span> : <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">&lt;IDEOGRAPHIC&gt;</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">,
+      </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">position</span><span style="color: rgba(128, 0, 0, 1)">"</span> : 5<span style="color: rgba(0, 0, 0, 1)">
+    },
+    {
+      </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">token</span><span style="color: rgba(128, 0, 0, 1)">"</span> : <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">大</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">,
+      </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">start_offset</span><span style="color: rgba(128, 0, 0, 1)">"</span> : 6<span style="color: rgba(0, 0, 0, 1)">,
+      </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">end_offset</span><span style="color: rgba(128, 0, 0, 1)">"</span> : 7<span style="color: rgba(0, 0, 0, 1)">,
+      </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">type</span><span style="color: rgba(128, 0, 0, 1)">"</span> : <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">&lt;IDEOGRAPHIC&gt;</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">,
+      </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">position</span><span style="color: rgba(128, 0, 0, 1)">"</span> : 6<span style="color: rgba(0, 0, 0, 1)">
+    },
+    {
+      </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">token</span><span style="color: rgba(128, 0, 0, 1)">"</span> : <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">的</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">,
+      </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">start_offset</span><span style="color: rgba(128, 0, 0, 1)">"</span> : 7<span style="color: rgba(0, 0, 0, 1)">,
+      </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">end_offset</span><span style="color: rgba(128, 0, 0, 1)">"</span> : 8<span style="color: rgba(0, 0, 0, 1)">,
+      </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">type</span><span style="color: rgba(128, 0, 0, 1)">"</span> : <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">&lt;IDEOGRAPHIC&gt;</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">,
+      </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">position</span><span style="color: rgba(128, 0, 0, 1)">"</span> : 7<span style="color: rgba(0, 0, 0, 1)">
+    },
+    {
+      </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">token</span><span style="color: rgba(128, 0, 0, 1)">"</span> : <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">笔</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">,
+      </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">start_offset</span><span style="color: rgba(128, 0, 0, 1)">"</span> : 8<span style="color: rgba(0, 0, 0, 1)">,
+      </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">end_offset</span><span style="color: rgba(128, 0, 0, 1)">"</span> : 9<span style="color: rgba(0, 0, 0, 1)">,
+      </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">type</span><span style="color: rgba(128, 0, 0, 1)">"</span> : <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">&lt;IDEOGRAPHIC&gt;</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">,
+      </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">position</span><span style="color: rgba(128, 0, 0, 1)">"</span> : 8<span style="color: rgba(0, 0, 0, 1)">
+    },
+    {
+      </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">token</span><span style="color: rgba(128, 0, 0, 1)">"</span> : <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">记</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">,
+      </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">start_offset</span><span style="color: rgba(128, 0, 0, 1)">"</span> : 9<span style="color: rgba(0, 0, 0, 1)">,
+      </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">end_offset</span><span style="color: rgba(128, 0, 0, 1)">"</span> : 10<span style="color: rgba(0, 0, 0, 1)">,
+      </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">type</span><span style="color: rgba(128, 0, 0, 1)">"</span> : <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">&lt;IDEOGRAPHIC&gt;</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">,
+      </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">position</span><span style="color: rgba(128, 0, 0, 1)">"</span> : 9<span style="color: rgba(0, 0, 0, 1)">
+    },
+    {
+      </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">token</span><span style="color: rgba(128, 0, 0, 1)">"</span> : <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">本</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">,
+      </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">start_offset</span><span style="color: rgba(128, 0, 0, 1)">"</span> : 10<span style="color: rgba(0, 0, 0, 1)">,
+      </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">end_offset</span><span style="color: rgba(128, 0, 0, 1)">"</span> : 11<span style="color: rgba(0, 0, 0, 1)">,
+      </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">type</span><span style="color: rgba(128, 0, 0, 1)">"</span> : <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">&lt;IDEOGRAPHIC&gt;</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">,
+      </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">position</span><span style="color: rgba(128, 0, 0, 1)">"</span> : 10<span style="color: rgba(0, 0, 0, 1)">
+    },
+    {
+      </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">token</span><span style="color: rgba(128, 0, 0, 1)">"</span> : <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">厂</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">,
+      </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">start_offset</span><span style="color: rgba(128, 0, 0, 1)">"</span> : 11<span style="color: rgba(0, 0, 0, 1)">,
+      </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">end_offset</span><span style="color: rgba(128, 0, 0, 1)">"</span> : 12<span style="color: rgba(0, 0, 0, 1)">,
+      </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">type</span><span style="color: rgba(128, 0, 0, 1)">"</span> : <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">&lt;IDEOGRAPHIC&gt;</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">,
+      </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">position</span><span style="color: rgba(128, 0, 0, 1)">"</span> : 11<span style="color: rgba(0, 0, 0, 1)">
+    },
+    {
+      </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">token</span><span style="color: rgba(128, 0, 0, 1)">"</span> : <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">商</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">,
+      </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">start_offset</span><span style="color: rgba(128, 0, 0, 1)">"</span> : 12<span style="color: rgba(0, 0, 0, 1)">,
+      </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">end_offset</span><span style="color: rgba(128, 0, 0, 1)">"</span> : 13<span style="color: rgba(0, 0, 0, 1)">,
+      </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">type</span><span style="color: rgba(128, 0, 0, 1)">"</span> : <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">&lt;IDEOGRAPHIC&gt;</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">,
+      </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">position</span><span style="color: rgba(128, 0, 0, 1)">"</span> : 12<span style="color: rgba(0, 0, 0, 1)">
+    }
+  ]
+}</span></pre>
+</div>
+<p> </p>
+<h2>中文分词smarkcn</h2>
+<blockquote>
+<p>$ bin/elasticsearch-plugin install analysis-smartcn</p>
+</blockquote>
+<p>This plugin can be downloaded for offline install from https://artifacts.elastic.co/downloads/elasticsearch-plugins/analysis-smartcn/analysis-smartcn-6.6.2.zip.</p>
+<p>The plugin provides the smartcn analyzer and smartcn_tokenizer tokenizer, which are not configurable.</p>
+<p> </p>
+<h3>分词效果：</h3>
+<div class="cnblogs_code">
+<pre><span style="color: rgba(0, 128, 0, 1)">#</span><span style="color: rgba(0, 128, 0, 1)"> curl -XPOST -H 'Content-Type: application/json' http://localhost:9200/_analyze?pretty -d '{"tokenizer":"smartcn_tokenizer","text":"联想是全球最大的笔记本厂商"}'</span>
+<span style="color: rgba(0, 0, 0, 1)">{
+  </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">tokens</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)"> : [
+    {
+      </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">token</span><span style="color: rgba(128, 0, 0, 1)">"</span> : <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">联想</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">,
+      </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">start_offset</span><span style="color: rgba(128, 0, 0, 1)">"</span> : 0<span style="color: rgba(0, 0, 0, 1)">,
+      </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">end_offset</span><span style="color: rgba(128, 0, 0, 1)">"</span> : 2<span style="color: rgba(0, 0, 0, 1)">,
+      </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">type</span><span style="color: rgba(128, 0, 0, 1)">"</span> : <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">word</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">,
+      </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">position</span><span style="color: rgba(128, 0, 0, 1)">"</span> : 0<span style="color: rgba(0, 0, 0, 1)">
+    },
+    {
+      </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">token</span><span style="color: rgba(128, 0, 0, 1)">"</span> : <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">是</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">,
+      </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">start_offset</span><span style="color: rgba(128, 0, 0, 1)">"</span> : 2<span style="color: rgba(0, 0, 0, 1)">,
+      </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">end_offset</span><span style="color: rgba(128, 0, 0, 1)">"</span> : 3<span style="color: rgba(0, 0, 0, 1)">,
+      </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">type</span><span style="color: rgba(128, 0, 0, 1)">"</span> : <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">word</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">,
+      </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">position</span><span style="color: rgba(128, 0, 0, 1)">"</span> : 1<span style="color: rgba(0, 0, 0, 1)">
+    },
+    {
+      </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">token</span><span style="color: rgba(128, 0, 0, 1)">"</span> : <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">全球</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">,
+      </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">start_offset</span><span style="color: rgba(128, 0, 0, 1)">"</span> : 3<span style="color: rgba(0, 0, 0, 1)">,
+      </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">end_offset</span><span style="color: rgba(128, 0, 0, 1)">"</span> : 5<span style="color: rgba(0, 0, 0, 1)">,
+      </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">type</span><span style="color: rgba(128, 0, 0, 1)">"</span> : <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">word</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">,
+      </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">position</span><span style="color: rgba(128, 0, 0, 1)">"</span> : 2<span style="color: rgba(0, 0, 0, 1)">
+    },
+    {
+      </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">token</span><span style="color: rgba(128, 0, 0, 1)">"</span> : <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">最</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">,
+      </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">start_offset</span><span style="color: rgba(128, 0, 0, 1)">"</span> : 5<span style="color: rgba(0, 0, 0, 1)">,
+      </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">end_offset</span><span style="color: rgba(128, 0, 0, 1)">"</span> : 6<span style="color: rgba(0, 0, 0, 1)">,
+      </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">type</span><span style="color: rgba(128, 0, 0, 1)">"</span> : <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">word</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">,
+      </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">position</span><span style="color: rgba(128, 0, 0, 1)">"</span> : 3<span style="color: rgba(0, 0, 0, 1)">
+    },
+    {
+      </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">token</span><span style="color: rgba(128, 0, 0, 1)">"</span> : <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">大</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">,
+      </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">start_offset</span><span style="color: rgba(128, 0, 0, 1)">"</span> : 6<span style="color: rgba(0, 0, 0, 1)">,
+      </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">end_offset</span><span style="color: rgba(128, 0, 0, 1)">"</span> : 7<span style="color: rgba(0, 0, 0, 1)">,
+      </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">type</span><span style="color: rgba(128, 0, 0, 1)">"</span> : <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">word</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">,
+      </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">position</span><span style="color: rgba(128, 0, 0, 1)">"</span> : 4<span style="color: rgba(0, 0, 0, 1)">
+    },
+    {
+      </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">token</span><span style="color: rgba(128, 0, 0, 1)">"</span> : <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">的</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">,
+      </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">start_offset</span><span style="color: rgba(128, 0, 0, 1)">"</span> : 7<span style="color: rgba(0, 0, 0, 1)">,
+      </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">end_offset</span><span style="color: rgba(128, 0, 0, 1)">"</span> : 8<span style="color: rgba(0, 0, 0, 1)">,
+      </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">type</span><span style="color: rgba(128, 0, 0, 1)">"</span> : <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">word</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">,
+      </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">position</span><span style="color: rgba(128, 0, 0, 1)">"</span> : 5<span style="color: rgba(0, 0, 0, 1)">
+    },
+    {
+      </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">token</span><span style="color: rgba(128, 0, 0, 1)">"</span> : <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">笔记本</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">,
+      </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">start_offset</span><span style="color: rgba(128, 0, 0, 1)">"</span> : 8<span style="color: rgba(0, 0, 0, 1)">,
+      </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">end_offset</span><span style="color: rgba(128, 0, 0, 1)">"</span> : 11<span style="color: rgba(0, 0, 0, 1)">,
+      </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">type</span><span style="color: rgba(128, 0, 0, 1)">"</span> : <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">word</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">,
+      </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">position</span><span style="color: rgba(128, 0, 0, 1)">"</span> : 6<span style="color: rgba(0, 0, 0, 1)">
+    },
+    {
+      </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">token</span><span style="color: rgba(128, 0, 0, 1)">"</span> : <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">厂商</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">,
+      </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">start_offset</span><span style="color: rgba(128, 0, 0, 1)">"</span> : 11<span style="color: rgba(0, 0, 0, 1)">,
+      </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">end_offset</span><span style="color: rgba(128, 0, 0, 1)">"</span> : 13<span style="color: rgba(0, 0, 0, 1)">,
+      </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">type</span><span style="color: rgba(128, 0, 0, 1)">"</span> : <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">word</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">,
+      </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">position</span><span style="color: rgba(128, 0, 0, 1)">"</span> : 7<span style="color: rgba(0, 0, 0, 1)">
+    }
+  ]
+}</span></pre>
+</div>
+<p>参考：https://www.elastic.co/guide/en/elasticsearch/plugins/current/analysis-smartcn.html</p>
+<h2>中文分词ik</h2>
+<blockquote>
+<p>$ bin/elasticsearch-plugin install https://github.com/medcl/elasticsearch-analysis-ik/releases/download/v6.6.2/elasticsearch-analysis-ik-6.6.2.zip</p>
+</blockquote>
+<p>The IK Analysis plugin integrates Lucene IK analyzer (http://code.google.com/p/ik-analyzer/) into elasticsearch, support customized dictionary.<br/>Analyzer: ik_smart , ik_max_word , Tokenizer: ik_smart , ik_max_word</p>
+<p> </p>
+<h3>分词效果：</h3>
+<h4>ik_smark</h4>
+<div class="cnblogs_code">
+<pre><span style="color: rgba(0, 128, 0, 1)">#</span><span style="color: rgba(0, 128, 0, 1)"> curl -XPOST -H 'Content-Type: application/json' http://localhost:9200/_analyze?pretty -d '{"tokenizer":"ik_smart","text":"联想是全球最大的笔记本厂商"}'         </span>
+<span style="color: rgba(0, 0, 0, 1)">{
+  </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">tokens</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)"> : [
+    {
+      </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">token</span><span style="color: rgba(128, 0, 0, 1)">"</span> : <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">联想</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">,
+      </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">start_offset</span><span style="color: rgba(128, 0, 0, 1)">"</span> : 0<span style="color: rgba(0, 0, 0, 1)">,
+      </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">end_offset</span><span style="color: rgba(128, 0, 0, 1)">"</span> : 2<span style="color: rgba(0, 0, 0, 1)">,
+      </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">type</span><span style="color: rgba(128, 0, 0, 1)">"</span> : <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">CN_WORD</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">,
+      </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">position</span><span style="color: rgba(128, 0, 0, 1)">"</span> : 0<span style="color: rgba(0, 0, 0, 1)">
+    },
+    {
+      </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">token</span><span style="color: rgba(128, 0, 0, 1)">"</span> : <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">是</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">,
+      </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">start_offset</span><span style="color: rgba(128, 0, 0, 1)">"</span> : 2<span style="color: rgba(0, 0, 0, 1)">,
+      </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">end_offset</span><span style="color: rgba(128, 0, 0, 1)">"</span> : 3<span style="color: rgba(0, 0, 0, 1)">,
+      </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">type</span><span style="color: rgba(128, 0, 0, 1)">"</span> : <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">CN_CHAR</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">,
+      </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">position</span><span style="color: rgba(128, 0, 0, 1)">"</span> : 1<span style="color: rgba(0, 0, 0, 1)">
+    },
+    {
+      </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">token</span><span style="color: rgba(128, 0, 0, 1)">"</span> : <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">全球</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">,
+      </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">start_offset</span><span style="color: rgba(128, 0, 0, 1)">"</span> : 3<span style="color: rgba(0, 0, 0, 1)">,
+      </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">end_offset</span><span style="color: rgba(128, 0, 0, 1)">"</span> : 5<span style="color: rgba(0, 0, 0, 1)">,
+      </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">type</span><span style="color: rgba(128, 0, 0, 1)">"</span> : <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">CN_WORD</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">,
+      </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">position</span><span style="color: rgba(128, 0, 0, 1)">"</span> : 2<span style="color: rgba(0, 0, 0, 1)">
+    },
+    {
+      </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">token</span><span style="color: rgba(128, 0, 0, 1)">"</span> : <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">最大</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">,
+      </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">start_offset</span><span style="color: rgba(128, 0, 0, 1)">"</span> : 5<span style="color: rgba(0, 0, 0, 1)">,
+      </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">end_offset</span><span style="color: rgba(128, 0, 0, 1)">"</span> : 7<span style="color: rgba(0, 0, 0, 1)">,
+      </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">type</span><span style="color: rgba(128, 0, 0, 1)">"</span> : <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">CN_WORD</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">,
+      </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">position</span><span style="color: rgba(128, 0, 0, 1)">"</span> : 3<span style="color: rgba(0, 0, 0, 1)">
+    },
+    {
+      </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">token</span><span style="color: rgba(128, 0, 0, 1)">"</span> : <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">的</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">,
+      </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">start_offset</span><span style="color: rgba(128, 0, 0, 1)">"</span> : 7<span style="color: rgba(0, 0, 0, 1)">,
+      </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">end_offset</span><span style="color: rgba(128, 0, 0, 1)">"</span> : 8<span style="color: rgba(0, 0, 0, 1)">,
+      </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">type</span><span style="color: rgba(128, 0, 0, 1)">"</span> : <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">CN_CHAR</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">,
+      </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">position</span><span style="color: rgba(128, 0, 0, 1)">"</span> : 4<span style="color: rgba(0, 0, 0, 1)">
+    },
+    {
+      </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">token</span><span style="color: rgba(128, 0, 0, 1)">"</span> : <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">笔记本</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">,
+      </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">start_offset</span><span style="color: rgba(128, 0, 0, 1)">"</span> : 8<span style="color: rgba(0, 0, 0, 1)">,
+      </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">end_offset</span><span style="color: rgba(128, 0, 0, 1)">"</span> : 11<span style="color: rgba(0, 0, 0, 1)">,
+      </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">type</span><span style="color: rgba(128, 0, 0, 1)">"</span> : <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">CN_WORD</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">,
+      </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">position</span><span style="color: rgba(128, 0, 0, 1)">"</span> : 5<span style="color: rgba(0, 0, 0, 1)">
+    },
+    {
+      </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">token</span><span style="color: rgba(128, 0, 0, 1)">"</span> : <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">厂商</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">,
+      </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">start_offset</span><span style="color: rgba(128, 0, 0, 1)">"</span> : 11<span style="color: rgba(0, 0, 0, 1)">,
+      </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">end_offset</span><span style="color: rgba(128, 0, 0, 1)">"</span> : 13<span style="color: rgba(0, 0, 0, 1)">,
+      </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">type</span><span style="color: rgba(128, 0, 0, 1)">"</span> : <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">CN_WORD</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">,
+      </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">position</span><span style="color: rgba(128, 0, 0, 1)">"</span> : 6<span style="color: rgba(0, 0, 0, 1)">
+    }
+  ]
+}</span></pre>
+</div>
+<h4>ik_max_word</h4>
+<div class="cnblogs_code">
+<pre><span style="color: rgba(0, 128, 0, 1)">#</span><span style="color: rgba(0, 128, 0, 1)"> curl -XPOST -H 'Content-Type: application/json' http://localhost:9200/_analyze?pretty -d '{"tokenizer":"ik_max_word","text":"联想是全球最大的笔记本厂商"}'</span>
+<span style="color: rgba(0, 0, 0, 1)">{
+  </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">tokens</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)"> : [
+    {
+      </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">token</span><span style="color: rgba(128, 0, 0, 1)">"</span> : <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">联想</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">,
+      </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">start_offset</span><span style="color: rgba(128, 0, 0, 1)">"</span> : 0<span style="color: rgba(0, 0, 0, 1)">,
+      </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">end_offset</span><span style="color: rgba(128, 0, 0, 1)">"</span> : 2<span style="color: rgba(0, 0, 0, 1)">,
+      </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">type</span><span style="color: rgba(128, 0, 0, 1)">"</span> : <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">CN_WORD</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">,
+      </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">position</span><span style="color: rgba(128, 0, 0, 1)">"</span> : 0<span style="color: rgba(0, 0, 0, 1)">
+    },
+    {
+      </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">token</span><span style="color: rgba(128, 0, 0, 1)">"</span> : <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">是</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">,
+      </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">start_offset</span><span style="color: rgba(128, 0, 0, 1)">"</span> : 2<span style="color: rgba(0, 0, 0, 1)">,
+      </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">end_offset</span><span style="color: rgba(128, 0, 0, 1)">"</span> : 3<span style="color: rgba(0, 0, 0, 1)">,
+      </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">type</span><span style="color: rgba(128, 0, 0, 1)">"</span> : <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">CN_CHAR</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">,
+      </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">position</span><span style="color: rgba(128, 0, 0, 1)">"</span> : 1<span style="color: rgba(0, 0, 0, 1)">
+    },
+    {
+      </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">token</span><span style="color: rgba(128, 0, 0, 1)">"</span> : <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">全球</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">,
+      </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">start_offset</span><span style="color: rgba(128, 0, 0, 1)">"</span> : 3<span style="color: rgba(0, 0, 0, 1)">,
+      </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">end_offset</span><span style="color: rgba(128, 0, 0, 1)">"</span> : 5<span style="color: rgba(0, 0, 0, 1)">,
+      </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">type</span><span style="color: rgba(128, 0, 0, 1)">"</span> : <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">CN_WORD</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">,
+      </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">position</span><span style="color: rgba(128, 0, 0, 1)">"</span> : 2<span style="color: rgba(0, 0, 0, 1)">
+    },
+    {
+      </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">token</span><span style="color: rgba(128, 0, 0, 1)">"</span> : <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">最大</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">,
+      </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">start_offset</span><span style="color: rgba(128, 0, 0, 1)">"</span> : 5<span style="color: rgba(0, 0, 0, 1)">,
+      </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">end_offset</span><span style="color: rgba(128, 0, 0, 1)">"</span> : 7<span style="color: rgba(0, 0, 0, 1)">,
+      </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">type</span><span style="color: rgba(128, 0, 0, 1)">"</span> : <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">CN_WORD</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">,
+      </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">position</span><span style="color: rgba(128, 0, 0, 1)">"</span> : 3<span style="color: rgba(0, 0, 0, 1)">
+    },
+    {
+      </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">token</span><span style="color: rgba(128, 0, 0, 1)">"</span> : <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">的</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">,
+      </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">start_offset</span><span style="color: rgba(128, 0, 0, 1)">"</span> : 7<span style="color: rgba(0, 0, 0, 1)">,
+      </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">end_offset</span><span style="color: rgba(128, 0, 0, 1)">"</span> : 8<span style="color: rgba(0, 0, 0, 1)">,
+      </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">type</span><span style="color: rgba(128, 0, 0, 1)">"</span> : <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">CN_CHAR</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">,
+      </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">position</span><span style="color: rgba(128, 0, 0, 1)">"</span> : 4<span style="color: rgba(0, 0, 0, 1)">
+    },
+    {
+      </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">token</span><span style="color: rgba(128, 0, 0, 1)">"</span> : <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">笔记本</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">,
+      </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">start_offset</span><span style="color: rgba(128, 0, 0, 1)">"</span> : 8<span style="color: rgba(0, 0, 0, 1)">,
+      </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">end_offset</span><span style="color: rgba(128, 0, 0, 1)">"</span> : 11<span style="color: rgba(0, 0, 0, 1)">,
+      </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">type</span><span style="color: rgba(128, 0, 0, 1)">"</span> : <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">CN_WORD</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">,
+      </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">position</span><span style="color: rgba(128, 0, 0, 1)">"</span> : 5<span style="color: rgba(0, 0, 0, 1)">
+    },
+    {
+      </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">token</span><span style="color: rgba(128, 0, 0, 1)">"</span> : <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">笔记</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">,
+      </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">start_offset</span><span style="color: rgba(128, 0, 0, 1)">"</span> : 8<span style="color: rgba(0, 0, 0, 1)">,
+      </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">end_offset</span><span style="color: rgba(128, 0, 0, 1)">"</span> : 10<span style="color: rgba(0, 0, 0, 1)">,
+      </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">type</span><span style="color: rgba(128, 0, 0, 1)">"</span> : <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">CN_WORD</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">,
+      </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">position</span><span style="color: rgba(128, 0, 0, 1)">"</span> : 6<span style="color: rgba(0, 0, 0, 1)">
+    },
+    {
+      </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">token</span><span style="color: rgba(128, 0, 0, 1)">"</span> : <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">本厂</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">,
+      </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">start_offset</span><span style="color: rgba(128, 0, 0, 1)">"</span> : 10<span style="color: rgba(0, 0, 0, 1)">,
+      </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">end_offset</span><span style="color: rgba(128, 0, 0, 1)">"</span> : 12<span style="color: rgba(0, 0, 0, 1)">,
+      </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">type</span><span style="color: rgba(128, 0, 0, 1)">"</span> : <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">CN_WORD</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">,
+      </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">position</span><span style="color: rgba(128, 0, 0, 1)">"</span> : 7<span style="color: rgba(0, 0, 0, 1)">
+    },
+    {
+      </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">token</span><span style="color: rgba(128, 0, 0, 1)">"</span> : <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">厂商</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">,
+      </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">start_offset</span><span style="color: rgba(128, 0, 0, 1)">"</span> : 11<span style="color: rgba(0, 0, 0, 1)">,
+      </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">end_offset</span><span style="color: rgba(128, 0, 0, 1)">"</span> : 13<span style="color: rgba(0, 0, 0, 1)">,
+      </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">type</span><span style="color: rgba(128, 0, 0, 1)">"</span> : <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">CN_WORD</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">,
+      </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">position</span><span style="color: rgba(128, 0, 0, 1)">"</span> : 8<span style="color: rgba(0, 0, 0, 1)">
+    }
+  ]
+}</span></pre>
+</div>
+<p>参考：https://github.com/medcl/elasticsearch-analysis-ik</p>
+<h1>七 复杂查询</h1>
+<h2>1 查询接口主要参数</h2>
+<blockquote>
+<p>q<br/>The query string.</p>
+<p>stored_fields<br/>The selective stored fields of the document to return for each hit, comma delimited. Not specifying any value will cause no fields to return.</p>
+<p>sort<br/>Sorting to perform. Can either be in the form of fieldName, or fieldName:asc/fieldName:desc. The fieldName can either be an actual field within the document, or the special _score name to indicate sorting based on scores. There can be several sort parameters (order is important).</p>
+<p>from<br/>The starting from index of the hits to return. Defaults to 0.</p>
+<p>size<br/>The number of hits to return. Defaults to 10.</p>
+<p>timeout<br/>A search timeout, bounding the search request to be executed within the specified time value and bail with the hits accumulated up to that point when expired. Defaults to no timeout.</p>
+<p>default_operator<br/>The default operator to be used, can be AND or OR. Defaults to OR.</p>
+</blockquote>
+<p>其中sort有很多种实现，比如 _geo_distance 可以用来实现地理位置远近排序，另外还可以通过filter来实现地理位置圈定，详见：https://www.elastic.co/guide/en/elasticsearch/reference/current/query-dsl-geo-distance-query.html</p>
+<p> </p>
+</div>
+            </div>
+
+            <!-- Post Footer -->
+            <div class="post-footer">
+                <div class="post-navigation">
+                    <a href="../blog_cn.html" class="nav-button">← Back to Home</a>
+                    <a href="0261.html" class="nav-button">Next Post →</a>
+                </div>
+            </div>
+        </article>
+    </div>
+</body>
+</html>

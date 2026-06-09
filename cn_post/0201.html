@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Benchmark 1 - HiBench</title>
+    <link rel="stylesheet" href="../css/style3.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header Navigation -->
+        <div class="header">
+            <h1><a href="../blog_cn.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+        </div>
+
+        <!-- Post Container -->
+        <article class="post">
+            <!-- Post Header -->
+            <div class="post-header">
+                <h1>Benchmark 1 - HiBench</h1>
+                <div class="post-meta">
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📅</span>
+                        <span>February 26, 2019</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📖</span>
+                        <span>1 min read</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">👁️</span>
+                        <span>1976 views</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Post Content -->
+            <div class="post-content">
+                <div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<p>HiBench 7<br/>官方：https://github.com/intel-hadoop/HiBench</p>
+<h1>一 简介</h1>
+<p>HiBench is a big data benchmark suite that helps evaluate different big data frameworks in terms of speed, throughput and system resource utilizations. It contains a set of Hadoop, Spark and streaming workloads, including Sort, WordCount, TeraSort, Sleep, SQL, PageRank, Nutch indexing, Bayes, Kmeans, NWeight and enhanced DFSIO, etc. It also contains several streaming workloads for Spark Streaming, Flink, Storm and Gearpump.</p>
+<p>There are totally 19 workloads in HiBench. </p>
+<p>Supported Hadoop/Spark/Flink/Storm/Gearpump releases:</p>
+<blockquote>
+<p>Hadoop: Apache Hadoop 2.x, CDH5, HDP<br/>Spark: Spark 1.6.x, Spark 2.0.x, Spark 2.1.x, Spark 2.2.x<br/>Flink: 1.0.3<br/>Storm: 1.0.1<br/>Gearpump: 0.8.1<br/>Kafka: 0.8.2.2</p>
+</blockquote>
+<h1>二 spark sql测试</h1>
+<h2>1 download</h2>
+<blockquote>
+<p>$ wget https://github.com/intel-hadoop/HiBench/archive/HiBench-7.0.tar.gz<br/>$ tar xvf HiBench-7.0.tar.gz<br/>$ cd HiBench-HiBench-7.0</p>
+</blockquote>
+<h2>2 build</h2>
+<p>1）build all</p>
+<blockquote>
+<p>$ mvn - Dspark=2.1 - Dscala=2.11 clean package</p>
+</blockquote>
+<p>2）build hadoopbench and sparkbench</p>
+<blockquote>
+<p>$ mvn - Phadoopbench - Psparkbench - Dspark=2.1 - Dscala=2.11 clean package</p>
+</blockquote>
+<p>3）only build spark sql</p>
+<blockquote>
+<p>$ mvn - Psparkbench - Dmodules - Psql - Dspark=2.1 - Dscala=2.11 clean package</p>
+</blockquote>
+<h2>3 prepare</h2>
+<blockquote>
+<p>$ cp conf/hadoop.conf.template conf/hadoop.conf<br/>$ vi conf/hadoop.conf</p>
+<p>$ cp conf/spark.conf.template conf/spark.conf<br/>$ vi conf/spark.conf</p>
+<p>$ vi conf/hibench.conf<br/># Data scale profile. Available value is tiny, small, large, huge, gigantic and bigdata.<br/># The definition of these profiles can be found in the workload's conf file i.e. conf/workloads/micro/wordcount.conf<br/>hibench.scale.profile                bigdata</p>
+</blockquote>
+<h2>4 run</h2>
+<p>sql测试分为3种：scan/aggregation/join</p>
+<blockquote>
+<p>$ bin/workloads/sql/scan/prepare/prepare.sh<br/>$ bin/workloads/sql/scan/spark/run.sh</p>
+</blockquote>
+<p>具体配置位于conf/workloads/sql/scan.conf<br/>prepare之后会在hdfs的/HiBench/Scan/Input下生成测试数据，在report/scan/prepare/下生成报告<br/>run之后会在report/scan/spark/下生成报告，比如monitor.html，在hive的default库下可以看到测试数据表</p>
+<blockquote>
+<p>$ bin/workloads/sql/join/prepare/prepare.sh<br/>$ bin/workloads/sql/join/spark/run.sh</p>
+<p>$ bin/workloads/sql/aggregation/prepare/prepare.sh<br/>$ bin/workloads/sql/aggregation/spark/run.sh</p>
+</blockquote>
+<p>依此类推</p>
+<p> </p>
+<p>如果prepare时报错内存溢出</p>
+<p>尝试修改</p>
+<blockquote>
+<p>$ vi bin/functions/workload_functions.sh<br/>    local CMD="${HADOOP_EXECUTABLE} --config ${HADOOP_CONF_DIR} jar $job_jar $job_name $tail_arguments"</p>
+</blockquote>
+<p>格式：hadoop jar &lt;jarName&gt; &lt;youClassName&gt; - D mapreduce.reduce.memory.mb=5120 - D mapreduce.reduce.java.opts=-Xmx4608m &lt;otherArgs&gt;</p>
+<p>发现不能生效，尝试增加map数量</p>
+<blockquote>
+<p>$ vi bin/functions/hibench_prop_env_mapping.py:<br/>    NUM_MAPS="hibench.default.map.parallelism",</p>
+<p>$ vi conf/hibench.conf<br/>hibench.default.map.parallelism 5000</p>
+</blockquote>
+<p> </p>
+<p>参考：<br/>https://github.com/intel-hadoop/HiBench/blob/master/docs/build-hibench.md<br/>https://github.com/intel-hadoop/HiBench/blob/master/docs/run-sparkbench.md</p>
+</div>
+            </div>
+
+            <!-- Post Footer -->
+            <div class="post-footer">
+                <div class="post-navigation">
+                    <a href="../blog_cn.html" class="nav-button">← Back to Home</a>
+                    <a href="0202.html" class="nav-button">Next Post →</a>
+                </div>
+            </div>
+        </article>
+    </div>
+</body>
+</html>

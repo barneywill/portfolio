@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>vscode java language server初始化失败</title>
+    <link rel="stylesheet" href="../css/style3.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header Navigation -->
+        <div class="header">
+            <h1><a href="../blog_cn.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+        </div>
+
+        <!-- Post Container -->
+        <article class="post">
+            <!-- Post Header -->
+            <div class="post-header">
+                <h1>vscode java language server初始化失败</h1>
+                <div class="post-meta">
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📅</span>
+                        <span>July 20, 2020</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📖</span>
+                        <span>1 min read</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">👁️</span>
+                        <span>4052 views</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Post Content -->
+            <div class="post-content">
+                <div class="blogpost-body cnblogs-markdown" id="cnblogs_post_body">
+<p>vscode中的java插件 Language Support for Java by RedHat 正常初始化之后,vscode右下角是这样的<br/>
+<picture>
+  <source srcset="../img/1509647-20200720121011720-1929469016.webp" type="image/webp">
+  <img alt="" src="../img/1509647-20200720121011720-1929469016.png">
+</picture><br/>
+是一个大拇指的状态,这时main方法和TestCase方法上都会出现 Run|Debug 快捷链接,可以方便的进行测试<br/>
+<picture>
+  <source srcset="../img/1509647-20200720122605028-762202087.webp" type="image/webp">
+  <img alt="" src="../img/1509647-20200720122605028-762202087.png">
+</picture><br/>
+terminal中会输出如下类似信息</p>
+<pre><code>9b7c9ae3 Synchronizing projects [Done]
+30bb500f Building [Done]
+25a21665 Building [Done]
+182dd5d5 Refreshing workspace [Done]
+28b7d532 Setting classpath containers [Done]
+7329fe90 Building [Done]
+98cbeb3b Synchronizing projects [Done]
+2e750be6 Building [Done]
+75d81303 Building [Done]
+0b0220d7 Refreshing workspace [Done]
+02c5152f Refreshing workspace [Done]
+7cece74d Resolve plugin dependency [Done]
+1c86063d Building [Done]
+a5a3679d Building [Done]
+929ba446 Building [Done]
+5e357308 Register Watchers [Done]
+6b8ee61a Building [Done]
+0211f3bb Building [Done]
+5417ca59 Building [Done]
+6c426d2f Building [Done]
+ca8e1582 Building [Done]
+</code></pre>
+<p>有时会出现java插件初始化异常的情况,现象是大拇指位置一直在转圈,而且没有任何报错</p>
+<p>这时可以进行如下操作:</p>
+<ul>
+<li>设置java.trace.server=verbose<br/>
+<picture>
+  <source srcset="../img/1509647-20200720121950490-43990841.webp" type="image/webp">
+  <img alt="" src="../img/1509647-20200720121950490-43990841.png">
+</picture><br/>
+设置<br/>
+<picture>
+  <source srcset="../img/1509647-20200720122018598-1313960490.webp" type="image/webp">
+  <img alt="" src="../img/1509647-20200720122018598-1313960490.png">
+</picture></li>
+<li>打开developer tools (打开命令面板后输入 developer tools)<br/>
+Plug-in org.eclipse.jdt.ls.core was unable to load class org.eclipse.jdt.ls.core.internal.LanguageServero</li>
+</ul>
+<p>然后看到如下报错:</p>
+<pre><code>Plug-in org.eclipse.jdt.ls.core was unable to load class org.eclipse.jdt.ls.core.internal.LanguageServero
+</code></pre>
+<p>有一种方法可以解决,把代码工程拷贝到其他目录再打开,原因不详.</p>
+<p>参考:<br/>
+<a href="https://github.com/redhat-developer/vscode-java/wiki/Troubleshooting" rel="noopener nofollow" target="_blank">https://github.com/redhat-developer/vscode-java/wiki/Troubleshooting</a></p>
+</div>
+            </div>
+
+            <!-- Post Footer -->
+            <div class="post-footer">
+                <div class="post-navigation">
+                    <a href="../blog_cn.html" class="nav-button">← Back to Home</a>
+                    <a href="0059.html" class="nav-button">Next Post →</a>
+                </div>
+            </div>
+        </article>
+    </div>
+</body>
+</html>

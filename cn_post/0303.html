@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>hdfs文件create写入正常，append写入报错</title>
+    <link rel="stylesheet" href="../css/style3.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header Navigation -->
+        <div class="header">
+            <h1><a href="../blog_cn.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+        </div>
+
+        <!-- Post Container -->
+        <article class="post">
+            <!-- Post Header -->
+            <div class="post-header">
+                <h1>hdfs文件create写入正常，append写入报错</h1>
+                <div class="post-meta">
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📅</span>
+                        <span>December 21, 2018</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📖</span>
+                        <span>7 min read</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">👁️</span>
+                        <span>1505 views</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Post Content -->
+            <div class="post-content">
+                <div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<p>最近在hdfs写文件的时候发现一个问题，create写入正常，append写入报错，每次都能重现，代码示例如下：</p>
+<div class="cnblogs_code">
+<pre>        FileSystem fs =<span style="color: rgba(0, 0, 0, 1)"> FileSystem.get(conf);
+        OutputStream out </span>=<span style="color: rgba(0, 0, 0, 1)"> fs.create(file);
+        IOUtils.copyBytes(in, out, </span>4096, <span style="color: rgba(0, 0, 255, 1)">true</span>); <span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)">正常</span>
+        out =<span style="color: rgba(0, 0, 0, 1)"> fs.append(file);
+        IOUtils.copyBytes(in, out, </span>4096, <span style="color: rgba(0, 0, 255, 1)">true</span>); <span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)">报错</span></pre>
+</div>
+<p>通过hdfs fsck命令检查出问题的文件，发现只有一个副本，难道是因为这个？</p>
+<p>看FileSystem.append执行过程：</p>
+<p>org.apache.hadoop.fs.FileSystem</p>
+<div class="cnblogs_code">
+<pre>    <span style="color: rgba(0, 0, 255, 1)">public</span> <span style="color: rgba(0, 0, 255, 1)">abstract</span> FSDataOutputStream append(Path var1, <span style="color: rgba(0, 0, 255, 1)">int</span> var2, Progressable var3) <span style="color: rgba(0, 0, 255, 1)">throws</span> IOException;</pre>
+</div>
+<p>实现类在这里：</p>
+<p>org.apache.hadoop.hdfs.DistributedFileSystem</p>
+<div class="cnblogs_code">
+<pre>    <span style="color: rgba(0, 0, 255, 1)">public</span> FSDataOutputStream append(Path f, <span style="color: rgba(0, 0, 255, 1)">final</span> <span style="color: rgba(0, 0, 255, 1)">int</span> bufferSize, <span style="color: rgba(0, 0, 255, 1)">final</span> Progressable progress) <span style="color: rgba(0, 0, 255, 1)">throws</span><span style="color: rgba(0, 0, 0, 1)"> IOException {
+        </span><span style="color: rgba(0, 0, 255, 1)">this</span>.statistics.incrementWriteOps(1<span style="color: rgba(0, 0, 0, 1)">);
+        Path absF </span>= <span style="color: rgba(0, 0, 255, 1)">this</span><span style="color: rgba(0, 0, 0, 1)">.fixRelativePart(f);
+        </span><span style="color: rgba(0, 0, 255, 1)">return</span> (FSDataOutputStream)(<span style="color: rgba(0, 0, 255, 1)">new</span> FileSystemLinkResolver&lt;FSDataOutputStream&gt;<span style="color: rgba(0, 0, 0, 1)">() {
+            </span><span style="color: rgba(0, 0, 255, 1)">public</span> FSDataOutputStream doCall(Path p) <span style="color: rgba(0, 0, 255, 1)">throws</span><span style="color: rgba(0, 0, 0, 1)"> IOException, UnresolvedLinkException {
+                </span><span style="color: rgba(0, 0, 255, 1)">return</span> DistributedFileSystem.<span style="color: rgba(0, 0, 255, 1)">this</span>.dfs.append(DistributedFileSystem.<span style="color: rgba(0, 0, 255, 1)">this</span>.getPathName(p), bufferSize, progress, DistributedFileSystem.<span style="color: rgba(0, 0, 255, 1)">this</span><span style="color: rgba(0, 0, 0, 1)">.statistics);
+            }
+
+            </span><span style="color: rgba(0, 0, 255, 1)">public</span> FSDataOutputStream next(FileSystem fs, Path p) <span style="color: rgba(0, 0, 255, 1)">throws</span><span style="color: rgba(0, 0, 0, 1)"> IOException {
+                </span><span style="color: rgba(0, 0, 255, 1)">return</span><span style="color: rgba(0, 0, 0, 1)"> fs.append(p, bufferSize);
+            }
+        }).resolve(</span><span style="color: rgba(0, 0, 255, 1)">this</span><span style="color: rgba(0, 0, 0, 1)">, absF);
+    }</span></pre>
+</div>
+<p>这里会调用DFSClient.append方法</p>
+<p>org.apache.hadoop.hdfs.DFSClient</p>
+<div class="cnblogs_code">
+<pre>    <span style="color: rgba(0, 0, 255, 1)">private</span> DFSOutputStream append(String src, <span style="color: rgba(0, 0, 255, 1)">int</span> buffersize, Progressable progress) <span style="color: rgba(0, 0, 255, 1)">throws</span><span style="color: rgba(0, 0, 0, 1)"> IOException {
+        </span><span style="color: rgba(0, 0, 255, 1)">this</span><span style="color: rgba(0, 0, 0, 1)">.checkOpen();
+        DFSOutputStream result </span>= <span style="color: rgba(0, 0, 255, 1)">this</span><span style="color: rgba(0, 0, 0, 1)">.callAppend(src, buffersize, progress);
+        </span><span style="color: rgba(0, 0, 255, 1)">this</span><span style="color: rgba(0, 0, 0, 1)">.beginFileLease(result.getFileId(), result);
+        </span><span style="color: rgba(0, 0, 255, 1)">return</span><span style="color: rgba(0, 0, 0, 1)"> result;
+    }
+
+    </span><span style="color: rgba(0, 0, 255, 1)">private</span> DFSOutputStream callAppend(String src, <span style="color: rgba(0, 0, 255, 1)">int</span> buffersize, Progressable progress) <span style="color: rgba(0, 0, 255, 1)">throws</span><span style="color: rgba(0, 0, 0, 1)"> IOException {
+        LocatedBlock lastBlock </span>= <span style="color: rgba(0, 0, 255, 1)">null</span><span style="color: rgba(0, 0, 0, 1)">;
+
+        </span><span style="color: rgba(0, 0, 255, 1)">try</span><span style="color: rgba(0, 0, 0, 1)"> {
+            lastBlock </span>= <span style="color: rgba(0, 0, 255, 1)">this</span>.namenode.append(src, <span style="color: rgba(0, 0, 255, 1)">this</span><span style="color: rgba(0, 0, 0, 1)">.clientName);
+        } </span><span style="color: rgba(0, 0, 255, 1)">catch</span><span style="color: rgba(0, 0, 0, 1)"> (RemoteException var6) {
+            </span><span style="color: rgba(0, 0, 255, 1)">throw</span> var6.unwrapRemoteException(<span style="color: rgba(0, 0, 255, 1)">new</span> Class[]{AccessControlException.<span style="color: rgba(0, 0, 255, 1)">class</span>, FileNotFoundException.<span style="color: rgba(0, 0, 255, 1)">class</span>, SafeModeException.<span style="color: rgba(0, 0, 255, 1)">class</span>, DSQuotaExceededException.<span style="color: rgba(0, 0, 255, 1)">class</span>, UnsupportedOperationException.<span style="color: rgba(0, 0, 255, 1)">class</span>, UnresolvedPathException.<span style="color: rgba(0, 0, 255, 1)">class</span>, SnapshotAccessControlException.<span style="color: rgba(0, 0, 255, 1)">class</span><span style="color: rgba(0, 0, 0, 1)">});
+        }
+
+        HdfsFileStatus newStat </span>= <span style="color: rgba(0, 0, 255, 1)">this</span><span style="color: rgba(0, 0, 0, 1)">.getFileInfo(src);
+        </span><span style="color: rgba(0, 0, 255, 1)">return</span> DFSOutputStream.newStreamForAppend(<span style="color: rgba(0, 0, 255, 1)">this</span>, src, buffersize, progress, lastBlock, newStat, <span style="color: rgba(0, 0, 255, 1)">this</span><span style="color: rgba(0, 0, 0, 1)">.dfsClientConf.createChecksum());
+    }</span></pre>
+</div>
+<p>DFSClient.append最终会调用NameNodeRpcServer的append方法</p>
+<p>org.apache.hadoop.hdfs.server.namenode.NameNodeRpcServer</p>
+<div class="cnblogs_code">
+<pre>    <span style="color: rgba(0, 0, 255, 1)">public</span> LocatedBlock append(String src, String clientName) <span style="color: rgba(0, 0, 255, 1)">throws</span><span style="color: rgba(0, 0, 0, 1)"> IOException {
+        </span><span style="color: rgba(0, 0, 255, 1)">this</span><span style="color: rgba(0, 0, 0, 1)">.checkNNStartup();
+        String clientMachine </span>=<span style="color: rgba(0, 0, 0, 1)"> getClientMachine();
+        </span><span style="color: rgba(0, 0, 255, 1)">if</span><span style="color: rgba(0, 0, 0, 1)"> (stateChangeLog.isDebugEnabled()) {
+            stateChangeLog.debug(</span>"*DIR* NameNode.append: file " + src + " for " + clientName + " at " +<span style="color: rgba(0, 0, 0, 1)"> clientMachine);
+        }
+
+        </span><span style="color: rgba(0, 0, 255, 1)">this</span><span style="color: rgba(0, 0, 0, 1)">.namesystem.checkOperation(OperationCategory.WRITE);
+        LocatedBlock info </span>= <span style="color: rgba(0, 0, 255, 1)">this</span><span style="color: rgba(0, 0, 0, 1)">.namesystem.appendFile(src, clientName, clientMachine);
+        </span><span style="color: rgba(0, 0, 255, 1)">this</span><span style="color: rgba(0, 0, 0, 1)">.metrics.incrFilesAppended();
+        </span><span style="color: rgba(0, 0, 255, 1)">return</span><span style="color: rgba(0, 0, 0, 1)"> info;
+    }</span></pre>
+</div>
+<p>这里调用到FSNamesystem.append</p>
+<p>org.apache.hadoop.hdfs.server.namenode.FSNamesystem</p>
+<div class="cnblogs_code">
+<pre>    LocatedBlock appendFile(String src, String holder, String clientMachine) <span style="color: rgba(0, 0, 255, 1)">throws</span><span style="color: rgba(0, 0, 0, 1)"> AccessControlException, SafeModeException, 
+...
+                lb </span>= <span style="color: rgba(0, 0, 255, 1)">this</span>.appendFileInt(src, holder, clientMachine, cacheEntry != <span style="color: rgba(0, 0, 255, 1)">null</span><span style="color: rgba(0, 0, 0, 1)">);
+
+    </span><span style="color: rgba(0, 0, 255, 1)">private</span> LocatedBlock appendFileInt(String srcArg, String holder, String clientMachine, <span style="color: rgba(0, 0, 255, 1)">boolean</span> logRetryCache) <span style="color: rgba(0, 0, 255, 1)">throws</span><span style="color: rgba(0, 0, 0, 1)"> 
+...
+                lb </span>= <span style="color: rgba(0, 0, 255, 1)">this</span><span style="color: rgba(0, 0, 0, 1)">.appendFileInternal(pc, src, holder, clientMachine, logRetryCache);
+
+    </span><span style="color: rgba(0, 0, 255, 1)">private</span> LocatedBlock appendFileInternal(FSPermissionChecker pc, String src, String holder, String clientMachine, <span style="color: rgba(0, 0, 255, 1)">boolean</span> logRetryCache) <span style="color: rgba(0, 0, 255, 1)">throws</span><span style="color: rgba(0, 0, 0, 1)"> AccessControlException, UnresolvedLinkException, FileNotFoundException, IOException {
+        </span><span style="color: rgba(0, 0, 255, 1)">assert</span> <span style="color: rgba(0, 0, 255, 1)">this</span><span style="color: rgba(0, 0, 0, 1)">.hasWriteLock();
+
+        INodesInPath iip </span>= <span style="color: rgba(0, 0, 255, 1)">this</span><span style="color: rgba(0, 0, 0, 1)">.dir.getINodesInPath4Write(src);
+        INode inode </span>=<span style="color: rgba(0, 0, 0, 1)"> iip.getLastINode();
+        </span><span style="color: rgba(0, 0, 255, 1)">if</span> (inode != <span style="color: rgba(0, 0, 255, 1)">null</span> &amp;&amp;<span style="color: rgba(0, 0, 0, 1)"> inode.isDirectory()) {
+            </span><span style="color: rgba(0, 0, 255, 1)">throw</span> <span style="color: rgba(0, 0, 255, 1)">new</span> FileAlreadyExistsException("Cannot append to directory " + src + "; already exists as a directory."<span style="color: rgba(0, 0, 0, 1)">);
+        } </span><span style="color: rgba(0, 0, 255, 1)">else</span><span style="color: rgba(0, 0, 0, 1)"> {
+            </span><span style="color: rgba(0, 0, 255, 1)">if</span> (<span style="color: rgba(0, 0, 255, 1)">this</span><span style="color: rgba(0, 0, 0, 1)">.isPermissionEnabled) {
+                </span><span style="color: rgba(0, 0, 255, 1)">this</span><span style="color: rgba(0, 0, 0, 1)">.checkPathAccess(pc, src, FsAction.WRITE);
+            }
+
+            </span><span style="color: rgba(0, 0, 255, 1)">try</span><span style="color: rgba(0, 0, 0, 1)"> {
+                </span><span style="color: rgba(0, 0, 255, 1)">if</span> (inode == <span style="color: rgba(0, 0, 255, 1)">null</span><span style="color: rgba(0, 0, 0, 1)">) {
+                    </span><span style="color: rgba(0, 0, 255, 1)">throw</span> <span style="color: rgba(0, 0, 255, 1)">new</span> FileNotFoundException("failed to append to non-existent file " + src + " for client " +<span style="color: rgba(0, 0, 0, 1)"> clientMachine);
+                } </span><span style="color: rgba(0, 0, 255, 1)">else</span><span style="color: rgba(0, 0, 0, 1)"> {
+                    INodeFile myFile </span>= INodeFile.valueOf(inode, src, <span style="color: rgba(0, 0, 255, 1)">true</span><span style="color: rgba(0, 0, 0, 1)">);
+                    BlockStoragePolicy lpPolicy </span>= <span style="color: rgba(0, 0, 255, 1)">this</span>.blockManager.getStoragePolicy("LAZY_PERSIST"<span style="color: rgba(0, 0, 0, 1)">);
+                    </span><span style="color: rgba(0, 0, 255, 1)">if</span> (lpPolicy != <span style="color: rgba(0, 0, 255, 1)">null</span> &amp;&amp; lpPolicy.getId() ==<span style="color: rgba(0, 0, 0, 1)"> myFile.getStoragePolicyID()) {
+                        </span><span style="color: rgba(0, 0, 255, 1)">throw</span> <span style="color: rgba(0, 0, 255, 1)">new</span> UnsupportedOperationException("Cannot append to lazy persist file " +<span style="color: rgba(0, 0, 0, 1)"> src);
+                    } </span><span style="color: rgba(0, 0, 255, 1)">else</span><span style="color: rgba(0, 0, 0, 1)"> {
+                        </span><span style="color: rgba(0, 0, 255, 1)">this</span>.recoverLeaseInternal(myFile, src, holder, clientMachine, <span style="color: rgba(0, 0, 255, 1)">false</span><span style="color: rgba(0, 0, 0, 1)">);
+                        myFile </span>= INodeFile.valueOf(<span style="color: rgba(0, 0, 255, 1)">this</span>.dir.getINode(src), src, <span style="color: rgba(0, 0, 255, 1)">true</span><span style="color: rgba(0, 0, 0, 1)">);
+                        BlockInfo lastBlock </span>=<span style="color: rgba(0, 0, 0, 1)"> myFile.getLastBlock();
+                        </span><span style="color: rgba(0, 0, 255, 1)">if</span> (lastBlock != <span style="color: rgba(0, 0, 255, 1)">null</span> &amp;&amp; lastBlock.isComplete() &amp;&amp; !<span style="color: rgba(0, 0, 255, 1)">this</span><span style="color: rgba(0, 0, 0, 1)">.getBlockManager().isSufficientlyReplicated(lastBlock)) {
+                            </span><span style="color: rgba(0, 0, 255, 1)">throw</span> <span style="color: rgba(0, 0, 255, 1)">new</span> IOException("append: lastBlock=" + lastBlock + " of src=" + src + " is not sufficiently replicated yet."<span style="color: rgba(0, 0, 0, 1)">);
+                        } </span><span style="color: rgba(0, 0, 255, 1)">else</span><span style="color: rgba(0, 0, 0, 1)"> {
+                            </span><span style="color: rgba(0, 0, 255, 1)">return</span> <span style="color: rgba(0, 0, 255, 1)">this</span>.prepareFileForWrite(src, iip, holder, clientMachine, <span style="color: rgba(0, 0, 255, 1)">true</span><span style="color: rgba(0, 0, 0, 1)">, logRetryCache);
+                        }
+                    }
+                }
+            } </span><span style="color: rgba(0, 0, 255, 1)">catch</span><span style="color: rgba(0, 0, 0, 1)"> (IOException var11) {
+                NameNode.stateChangeLog.warn(</span>"DIR* NameSystem.append: " +<span style="color: rgba(0, 0, 0, 1)"> var11.getMessage());
+                </span><span style="color: rgba(0, 0, 255, 1)">throw</span><span style="color: rgba(0, 0, 0, 1)"> var11;
+            }
+        }
+    }
+
+    </span><span style="color: rgba(0, 0, 255, 1)">public</span> <span style="color: rgba(0, 0, 255, 1)">boolean</span><span style="color: rgba(0, 0, 0, 1)"> isSufficientlyReplicated(BlockInfo b) {
+        </span><span style="color: rgba(0, 0, 255, 1)">int</span> replication = Math.min(<span style="color: rgba(0, 0, 255, 1)">this</span>.minReplication, <span style="color: rgba(0, 0, 255, 1)">this</span><span style="color: rgba(0, 0, 0, 1)">.getDatanodeManager().getNumLiveDataNodes());
+        </span><span style="color: rgba(0, 0, 255, 1)">return</span> <span style="color: rgba(0, 0, 255, 1)">this</span>.countNodes(b).liveReplicas() &gt;=<span style="color: rgba(0, 0, 0, 1)"> replication;
+    }</span></pre>
+</div>
+<p>在append文件的时候，会首先取出这个文件最后一个block，然后会检查这个block是否满足副本要求，如果不满足就抛出异常，如果满足就准备写入；<br/>看来原因确实是因为文件只有1个副本导致append报错，那为什么新建文件只有1个副本，后来找到原因是因为机架配置有问题导致的，详见 <a href="https://www.cnblogs.com/barneywill/p/10114504.html" target="_blank" title="【原创】大数据基础之HDFS（1）HDFS新创建文件如何分配Datanode">https://www.cnblogs.com/barneywill/p/10114504.html</a></p>
+<p> </p>
+</div>
+            </div>
+
+            <!-- Post Footer -->
+            <div class="post-footer">
+                <div class="post-navigation">
+                    <a href="../blog_cn.html" class="nav-button">← Back to Home</a>
+                    <a href="0304.html" class="nav-button">Next Post →</a>
+                </div>
+            </div>
+        </article>
+    </div>
+</body>
+</html>

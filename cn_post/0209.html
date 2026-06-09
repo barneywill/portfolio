@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>集群搭建</title>
+    <link rel="stylesheet" href="../css/style3.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header Navigation -->
+        <div class="header">
+            <h1><a href="../blog_cn.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+        </div>
+
+        <!-- Post Container -->
+        <article class="post">
+            <!-- Post Header -->
+            <div class="post-header">
+                <h1>集群搭建</h1>
+                <div class="post-meta">
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📅</span>
+                        <span>February 22, 2019</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📖</span>
+                        <span>2 min read</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">👁️</span>
+                        <span>330 views</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Post Content -->
+            <div class="post-content">
+                <div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<p>Cluster OS&amp;Platform</p>
+<blockquote>
+<p>redhat/centos7, docker, mesos, cloudera manager(cdh)</p>
+</blockquote>
+<p>Checklist</p>
+<blockquote>
+<p>1 check user &amp; password &amp; network reachability, make sure everything is fine to login all remote servers by ssh client<br/>2 check linux release, upgrade or reinstall if necessary<br/>3 check yum repo<br/>4 check hardware: memory, cpu, disk &amp; partition, network device<br/>5 check network: lan &amp; wlan environment<br/>5 check data disk, make sure all data disks are mounted by fdisk/mke2fs/mount, /etc/fstab<br/>6 check user &amp; group, running processes, free memory, free disk, directory structure <br/>6 check iptables, make sure only the necessary protocols and ports are allowed<br/>7 check systemd, service</p>
+</blockquote>
+<p>Preparation</p>
+<blockquote>
+<p>1 login the first server by ssh client, it will be acted as deploy center<br/>2 upload 'deploy' directory(more than 15G: iso8G, cdh3G,registry2G) and 'deploy.sh' to $HOME by sftp or other tools<br/>3 use deploy.sh to generate deploy commands<br/>4 deploy the cluster offline</p>
+</blockquote>
+<p>Offline Deployment Details</p>
+<blockquote>
+<p>1 make sure root user login without password by ssh client between all servers<br/>2 create yum repo file using iso on local server<br/>3 install ansible on local server<br/>4 create &amp; push /etc/hosts to all servers by ansible<br/>5 install &amp; start docker on local server<br/>6 docker load registry image from local file<br/>7 docker run registry on local server<br/>8 docker run nginx on local server as 'yum repo server', 'docker registry server' and 'cloudera manager proxy server'<br/>9 docker run mysql on local server temporarily<br/>10 create mysql databases &amp; users and flush privileges<br/>11 create &amp; push yum repo file to all servers by ansible<br/>12 push deploy directory to all servers by ansible<br/>13 install ansible on other servers<br/>14 install and start docker on other servers<br/>15 install kerberos on all servers<br/>16 start kdc on local server<br/>17 install jdk on all servers<br/>18 install cloudera manager &amp; cdh on all servers<br/>19 start cloudera manager anget on all servers<br/>20 start cloudera manager master on local server <br/>21 deploy zookeeper by cloudera manager<br/>22 install mesos and marathon on all servers<br/>23 start mesos agent on all servers<br/>24 start mesos master on other two servers<br/>25 start marathon master on other two servers<br/>26 deploy marathon-lb on marathon by api<br/>27 docker stop mysql and redeploy mysql master&amp;slave on marathon by api<br/>28 deploy redis, elasticsearch, logstash, kibana, kafka, airflow on marathon by api<br/>29 deploy hdfs, yarn, hive, hbase, oozie, kudu, impala, sentry, hue by cloudera manager<br/>30 enable kerberos on cloudera manager<br/>31 deploy all kinds of client<br/>32 confirm all components working<br/>33 initialize data structure in mysql, hive, es, impala<br/>34 deploy business components like tomcat, logstash on marathon<br/>35 trigger all crontab stuff in airflow<br/>36 confirm all business working</p>
+</blockquote>
+<p>Optional</p>
+<blockquote>
+<p>use zabbix to monitor all servers</p>
+</blockquote>
+<p> </p>
+</div>
+            </div>
+
+            <!-- Post Footer -->
+            <div class="post-footer">
+                <div class="post-navigation">
+                    <a href="../blog_cn.html" class="nav-button">← Back to Home</a>
+                    <a href="0210.html" class="nav-button">Next Post →</a>
+                </div>
+            </div>
+        </article>
+    </div>
+</body>
+</html>

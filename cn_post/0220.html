@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>测试域名IP端口连通性</title>
+    <link rel="stylesheet" href="../css/style3.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header Navigation -->
+        <div class="header">
+            <h1><a href="../blog_cn.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+        </div>
+
+        <!-- Post Container -->
+        <article class="post">
+            <!-- Post Header -->
+            <div class="post-header">
+                <h1>测试域名IP端口连通性</h1>
+                <div class="post-meta">
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📅</span>
+                        <span>February 16, 2019</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📖</span>
+                        <span>1 min read</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">👁️</span>
+                        <span>6029 views</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Post Content -->
+            <div class="post-content">
+                <div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<h1>一 测试域名是否可达</h1>
+<h2>1 ping</h2>
+<blockquote>
+</blockquote>
+<h2>2 nslookup</h2>
+<blockquote>
+</blockquote>
+<h1>二 测试ip是否可达</h1>
+<h2>1 ping</h2>
+<blockquote>
+<p># ping 220.181.112.244<br/>PING 220.181.112.244 (220.181.112.244) 56(84) bytes of data.<br/>64 bytes from 220.181.112.244: icmp_seq=1 ttl=52 time=2.57 ms<br/>64 bytes from 220.181.112.244: icmp_seq=2 ttl=52 time=2.55 ms</p>
+</blockquote>
+<h2>2 traceroute</h2>
+<blockquote>
+<p># traceroute 220.181.112.244<br/>traceroute to 220.181.112.244 (220.181.112.244), 30 hops max, 60 byte packets<br/> 1  * * *<br/> 2  * * *<br/> 3  100.127.3.117 (100.127.3.117)  0.933 ms * 100.127.3.115 (100.127.3.115)  1.055 ms<br/> 4  * * *<br/> 5  100.127.125.82 (100.127.125.82)  2.489 ms 100.127.125.80 (100.127.125.80)  2.475 ms 100.127.125.18 (100.127.125.18)  2.519 ms<br/> 6  180.149.137.117 (180.149.137.117)  7.877 ms 180.149.137.145 (180.149.137.145)  3.965 ms 100.127.125.10 (100.127.125.10)  2.341 ms<br/> 7  180.149.159.77 (180.149.159.77)  2.347 ms 180.149.159.57 (180.149.159.57)  2.456 ms 180.149.159.17 (180.149.159.17)  3.372 ms<br/> 8  * 36.110.246.201 (36.110.246.201)  7.804 ms 180.149.159.17 (180.149.159.17)  2.341 ms<br/> 9  * 220.181.0.109 (220.181.0.109)  2.997 ms 36.110.246.205 (36.110.246.205)  2.756 ms<br/>10  * 220.181.17.94 (220.181.17.94)  2.962 ms 220.181.17.22 (220.181.17.22)  2.767 ms<br/>11  * * 220.181.17.150 (220.181.17.150)  2.559 ms<br/>12  * * *<br/>13  * * *<br/>14  * * *</p>
+</blockquote>
+<h1>三 测试端口是否可达</h1>
+<h2>1 telnet</h2>
+<blockquote>
+<p># telnet 220.181.112.244 80<br/>Trying 220.181.112.244...<br/>Connected to 220.181.112.244.<br/>Escape character is '^]'.</p>
+</blockquote>
+<h2>2 nc</h2>
+<blockquote>
+<p># nc 220.181.112.244 80 - v<br/>Ncat: Version 7.50 ( https://nmap.org/ncat )<br/>Ncat: Connected to 220.181.112.244:80.</p>
+</blockquote>
+<h2>3 curl</h2>
+<blockquote>
+</blockquote>
+<p> </p>
+</div>
+            </div>
+
+            <!-- Post Footer -->
+            <div class="post-footer">
+                <div class="post-navigation">
+                    <a href="../blog_cn.html" class="nav-button">← Back to Home</a>
+                    <a href="0221.html" class="nav-button">Next Post →</a>
+                </div>
+            </div>
+        </article>
+    </div>
+</body>
+</html>

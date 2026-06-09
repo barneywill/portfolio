@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kudu 6 - kudu tserver内存占用统计分析</title>
+    <link rel="stylesheet" href="../css/style3.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header Navigation -->
+        <div class="header">
+            <h1><a href="../blog_cn.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+        </div>
+
+        <!-- Post Container -->
+        <article class="post">
+            <!-- Post Header -->
+            <div class="post-header">
+                <h1>Kudu 6 - kudu tserver内存占用统计分析</h1>
+                <div class="post-meta">
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📅</span>
+                        <span>June 01, 2019</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📖</span>
+                        <span>1 min read</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">👁️</span>
+                        <span>3592 views</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Post Content -->
+            <div class="post-content">
+                <div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<p>kudu tserver占用内存过高后会拒绝部分写请求，日志如下：</p>
+<blockquote>
+<p>19/06/01 13:34:12 INFO AsyncKuduClient: Invalidating location 34b1c13d04664cc8bae6689d39b08b77($kudu_tserver:7050) for tablet 858c055c456549569af77d14eaf997e5: Service unavailable: Soft memory limit exceeded (at 92.36% of capacity). See https://kudu.apache.org/releases/1.7.0-cdh5.16.1/docs/troubleshooting.html</p>
+</blockquote>
+<h1>1 查看tserver内存详细占用</h1>
+<p>http://$kudu_tserver:8050/mem-trackers</p>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201906/1509647-20190601133929084-2095004077.png"/></p>
+<p>页面分为两个部分：</p>
+<p>Process memory usage 为总体占用</p>
+<p>Memory usage by subsystem为详细占比，其中乍看比较繁琐，其实是一个树形结构，通过parent来进行级联，</p>
+<p>比如root是全部占用为1.6G，root下面logcache占用了277K，再往下看</p>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201906/1509647-20190601134259931-587433739.png"/></p>
+<p>block_cache-sharded_lru_cache占用246M，server占用1.4G，server下面又分为很多个tablet，除了tablet之外，还有</p>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201906/1509647-20190601134457065-1354629864.png"/></p>
+<p>log_block_manager占用438M；</p>
+<p> </p>
+<p>如果发现某些tablet占用内存较多，想看下是在哪个table中，可以通过如下命令：</p>
+<p> </p>
+<h1>2 查看tserver上的所有tablet</h1>
+<blockquote>
+<p>sudo - u kudu kudu remote_replica list $kudu_tserver</p>
+</blockquote>
+<p>比如：</p>
+<div class="cnblogs_code">
+<pre><span style="color: rgba(0, 0, 0, 1)">Tablet id: e064f41775084680ab269b3cb3c21c76
+State: RUNNING
+Table name: impala::test_db.test_table1
+Partition: RANGE (dt) PARTITION </span>20190531 &lt;= VALUES &lt; 20190532<span style="color: rgba(0, 0, 0, 1)">
+Estimated on disk size: </span>30<span style="color: rgba(0, 0, 0, 1)">.71M
+Schema: Schema [
+        0:co1[int32 NOT NULL],
+        </span>1<span style="color: rgba(0, 0, 0, 1)">:co2[string NOT NULL],
+        </span>2<span style="color: rgba(0, 0, 0, 1)">:co3[string NOT NULL],
+        </span>3<span style="color: rgba(0, 0, 0, 1)">:co4[string NOT NULL],
+        </span>4<span style="color: rgba(0, 0, 0, 1)">:co5[string NULLABLE]
+]
+...</span></pre>
+</div>
+<p> </p>
+<p>关于kudu的内存估算，和数据量大小以及tablet多少以及活跃replica多少都有关系，详见：</p>
+<p>https://kudu.apache.org/docs/scaling_guide.html#memory</p>
+<p> </p>
+</div>
+            </div>
+
+            <!-- Post Footer -->
+            <div class="post-footer">
+                <div class="post-navigation">
+                    <a href="../blog_cn.html" class="nav-button">← Back to Home</a>
+                    <a href="0126.html" class="nav-button">Next Post →</a>
+                </div>
+            </div>
+        </article>
+    </div>
+</body>
+</html>

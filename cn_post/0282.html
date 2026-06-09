@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>spark sql插入表时的文件个数研究</title>
+    <link rel="stylesheet" href="../css/style3.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header Navigation -->
+        <div class="header">
+            <h1><a href="../blog_cn.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+        </div>
+
+        <!-- Post Container -->
+        <article class="post">
+            <!-- Post Header -->
+            <div class="post-header">
+                <h1>spark sql插入表时的文件个数研究</h1>
+                <div class="post-meta">
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📅</span>
+                        <span>January 09, 2019</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📖</span>
+                        <span>11 min read</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">👁️</span>
+                        <span>2445 views</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Post Content -->
+            <div class="post-content">
+                <div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<p><br/>spark sql执行insert overwrite table时，写到新表或者新分区的文件个数，有可能是200个，也有可能是任意个，为什么会有这种差别？</p>
+<p>首先看一下spark sql执行insert overwrite table流程：</p>
+<ul>
+<li>1 创建临时目录，比如
+<ul>
+<li>.hive-staging_hive_2018-06-23_00-39-39_825_3122897139441535352-2312/-ext-10000</li>
+</ul>
+</li>
+<li>2 将数据写到临时目录；</li>
+<li>3 执行loadTable或loadPartition将临时目录数据move到正是目录；</li>
+</ul>
+<p>对应的代码为：</p>
+<p>org.apache.spark.sql.hive.execution.InsertIntoHiveTable</p>
+<div class="cnblogs_code">
+<pre><span style="color: rgba(0, 0, 255, 1)">case</span> <span style="color: rgba(0, 0, 255, 1)">class</span><span style="color: rgba(0, 0, 0, 1)"> InsertIntoHiveTable(
+    table: MetastoreRelation,
+    partition: Map[String, Option[String]],
+    child: SparkPlan,
+    overwrite: Boolean,
+    ifNotExists: Boolean) </span><span style="color: rgba(0, 0, 255, 1)">extends</span><span style="color: rgba(0, 0, 0, 1)"> UnaryExecNode {
+...
+  </span><span style="color: rgba(0, 0, 255, 1)">protected</span>[sql] lazy val sideEffectResult: Seq[InternalRow] =<span style="color: rgba(0, 0, 0, 1)"> {
+...
+    val tmpLocation </span>=<span style="color: rgba(0, 0, 0, 1)"> getExternalTmpPath(tableLocation, hadoopConf)
+    val fileSinkConf </span>= <span style="color: rgba(0, 0, 255, 1)">new</span> FileSinkDesc(tmpLocation.toString, tableDesc, <span style="color: rgba(0, 0, 255, 1)">false</span><span style="color: rgba(0, 0, 0, 1)">)
+...
+    @</span><span style="color: rgba(0, 0, 255, 1)">transient</span> val outputClass =<span style="color: rgba(0, 0, 0, 1)"> writerContainer.newSerializer(table.tableDesc).getSerializedClass
+    saveAsHiveFile(child.execute(), outputClass, fileSinkConf, jobConfSer, writerContainer)
+...
+
+  </span><span style="color: rgba(0, 0, 255, 1)">private</span><span style="color: rgba(0, 0, 0, 1)"> def saveAsHiveFile(
+      rdd: RDD[InternalRow],
+      valueClass: Class[_],
+      fileSinkConf: FileSinkDesc,
+      conf: SerializableJobConf,
+      writerContainer: SparkHiveWriterContainer): Unit </span>=<span style="color: rgba(0, 0, 0, 1)"> {
+    </span><span style="color: rgba(0, 0, 255, 1)">assert</span>(valueClass != <span style="color: rgba(0, 0, 255, 1)">null</span>, "Output value class not set"<span style="color: rgba(0, 0, 0, 1)">)
+    conf.value.setOutputValueClass(valueClass)
+
+    val outputFileFormatClassName </span>=<span style="color: rgba(0, 0, 0, 1)"> fileSinkConf.getTableInfo.getOutputFileFormatClassName
+    </span><span style="color: rgba(0, 0, 255, 1)">assert</span>(outputFileFormatClassName != <span style="color: rgba(0, 0, 255, 1)">null</span>, "Output format class not set"<span style="color: rgba(0, 0, 0, 1)">)
+    conf.value.set(</span>"mapred.output.format.class"<span style="color: rgba(0, 0, 0, 1)">, outputFileFormatClassName)
+
+    FileOutputFormat.setOutputPath(
+      conf.value,
+      SparkHiveWriterContainer.createPathFromString(fileSinkConf.getDirName(), conf.value))
+    log.debug(</span>"Saving as hadoop file of type " +<span style="color: rgba(0, 0, 0, 1)"> valueClass.getSimpleName)
+    writerContainer.driverSideSetup()
+    sqlContext.sparkContext.runJob(rdd, writerContainer.writeToFile _)
+    writerContainer.commitJob()
+  }</span></pre>
+</div>
+<p>下面先看第一步创建临时目录过程，即getExternalTmpPath</p>
+<div class="cnblogs_code">
+<pre>  val stagingDir = hadoopConf.get("hive.exec.stagingdir", ".hive-staging"<span style="color: rgba(0, 0, 0, 1)">)
+
+  def getExternalTmpPath(path: Path, hadoopConf: Configuration): Path </span>=<span style="color: rgba(0, 0, 0, 1)"> {
+    val extURI: URI </span>=<span style="color: rgba(0, 0, 0, 1)"> path.toUri
+    </span><span style="color: rgba(0, 0, 255, 1)">if</span> (extURI.getScheme == "viewfs"<span style="color: rgba(0, 0, 0, 1)">) {
+      getExtTmpPathRelTo(path.getParent, hadoopConf)
+    } </span><span style="color: rgba(0, 0, 255, 1)">else</span><span style="color: rgba(0, 0, 0, 1)"> {
+      </span><span style="color: rgba(0, 0, 255, 1)">new</span> Path(getExternalScratchDir(extURI, hadoopConf), "-ext-10000"<span style="color: rgba(0, 0, 0, 1)">)
+    }
+  }
+
+  </span><span style="color: rgba(0, 0, 255, 1)">private</span> def getExternalScratchDir(extURI: URI, hadoopConf: Configuration): Path =<span style="color: rgba(0, 0, 0, 1)"> {
+    getStagingDir(</span><span style="color: rgba(0, 0, 255, 1)">new</span><span style="color: rgba(0, 0, 0, 1)"> Path(extURI.getScheme, extURI.getAuthority, extURI.getPath), hadoopConf)
+  }
+
+  </span><span style="color: rgba(0, 0, 255, 1)">private</span> def getStagingDir(inputPath: Path, hadoopConf: Configuration): Path =<span style="color: rgba(0, 0, 0, 1)"> {
+    val inputPathUri: URI </span>=<span style="color: rgba(0, 0, 0, 1)"> inputPath.toUri
+    val inputPathName: String </span>=<span style="color: rgba(0, 0, 0, 1)"> inputPathUri.getPath
+    val fs: FileSystem </span>=<span style="color: rgba(0, 0, 0, 1)"> inputPath.getFileSystem(hadoopConf)
+    val stagingPathName: String </span>=
+      <span style="color: rgba(0, 0, 255, 1)">if</span> (inputPathName.indexOf(stagingDir) == -1<span style="color: rgba(0, 0, 0, 1)">) {
+        </span><span style="color: rgba(0, 0, 255, 1)">new</span><span style="color: rgba(0, 0, 0, 1)"> Path(inputPathName, stagingDir).toString
+      } </span><span style="color: rgba(0, 0, 255, 1)">else</span><span style="color: rgba(0, 0, 0, 1)"> {
+        inputPathName.substring(</span>0, inputPathName.indexOf(stagingDir) +<span style="color: rgba(0, 0, 0, 1)"> stagingDir.length)
+      }
+    val dir: Path </span>=<span style="color: rgba(0, 0, 0, 1)">
+      fs.makeQualified(
+        </span><span style="color: rgba(0, 0, 255, 1)">new</span> Path(stagingPathName + "_" + executionId + "-" +<span style="color: rgba(0, 0, 0, 1)"> TaskRunner.getTaskRunnerID))
+    logDebug(</span>"Created staging dir = " + dir + " for path = " +<span style="color: rgba(0, 0, 0, 1)"> inputPath)
+    </span><span style="color: rgba(0, 0, 255, 1)">try</span><span style="color: rgba(0, 0, 0, 1)"> {
+      </span><span style="color: rgba(0, 0, 255, 1)">if</span> (!FileUtils.mkdir(fs, dir, <span style="color: rgba(0, 0, 255, 1)">true</span><span style="color: rgba(0, 0, 0, 1)">, hadoopConf)) {
+        </span><span style="color: rgba(0, 0, 255, 1)">throw</span> <span style="color: rgba(0, 0, 255, 1)">new</span> IllegalStateException("Cannot create staging directory  '" + dir.toString + "'"<span style="color: rgba(0, 0, 0, 1)">)
+      }
+      fs.deleteOnExit(dir)
+    } </span><span style="color: rgba(0, 0, 255, 1)">catch</span><span style="color: rgba(0, 0, 0, 1)"> {
+      </span><span style="color: rgba(0, 0, 255, 1)">case</span> e: IOException =&gt;
+        <span style="color: rgba(0, 0, 255, 1)">throw</span> <span style="color: rgba(0, 0, 255, 1)">new</span><span style="color: rgba(0, 0, 0, 1)"> RuntimeException(
+          </span>"Cannot create staging directory '" + dir.toString + "': " +<span style="color: rgba(0, 0, 0, 1)"> e.getMessage, e)
+
+    }
+    </span><span style="color: rgba(0, 0, 255, 1)">return</span><span style="color: rgba(0, 0, 0, 1)"> dir
+  }
+
+  </span><span style="color: rgba(0, 0, 255, 1)">private</span> def executionId: String =<span style="color: rgba(0, 0, 0, 1)"> {
+    val rand: Random </span>= <span style="color: rgba(0, 0, 255, 1)">new</span><span style="color: rgba(0, 0, 0, 1)"> Random
+    val format </span>= <span style="color: rgba(0, 0, 255, 1)">new</span> SimpleDateFormat("yyyy-MM-dd_HH-mm-ss_SSS"<span style="color: rgba(0, 0, 0, 1)">, Locale.US)
+    </span>"hive_" + format.format(<span style="color: rgba(0, 0, 255, 1)">new</span> Date) + "_" +<span style="color: rgba(0, 0, 0, 1)"> Math.abs(rand.nextLong)
+  }</span></pre>
+</div>
+<p>临时目录组成为【.hive-staging（配置hive.exec.stagingdir）】_【hive（硬编码）】_【2018-06-23_00-39-39_825（时分秒）】_【3122897139441535352（随机串）】_【2312（taskId）】/-ext-10000（硬编码）</p>
+<p> </p>
+<p>下面看写文件过程，即</p>
+<blockquote>
+<p>sqlContext.sparkContext.runJob(rdd, writerContainer.writeToFile _)</p>
+</blockquote>
+<p>org.apache.spark.SparkContext</p>
+<div class="cnblogs_code">
+<pre>  <span style="color: rgba(0, 128, 0, 1)">/**</span><span style="color: rgba(0, 128, 0, 1)">
+   * Run a job on all partitions in an RDD and return the results in an array.
+   </span><span style="color: rgba(0, 128, 0, 1)">*/</span><span style="color: rgba(0, 0, 0, 1)">
+  def runJob[T, U: ClassTag](rdd: RDD[T], func: (TaskContext, Iterator[T]) </span>=&gt; U): Array[U] =<span style="color: rgba(0, 0, 0, 1)"> {
+    runJob(rdd, func, </span>0<span style="color: rgba(0, 0, 0, 1)"> until rdd.partitions.length)
+  }</span></pre>
+</div>
+<p>可见是将rdd逐个分区执行写入操作，rdd有多少个分区就会写入多少个文件，rdd是通过child.execute返回的，即SparkPlan.execute，下面看SparkPlan</p>
+<p>org.apache.spark.sql.execution.SparkPlan</p>
+<div class="cnblogs_code">
+<pre>  <span style="color: rgba(0, 0, 255, 1)">final</span> def execute(): RDD[InternalRow] =<span style="color: rgba(0, 0, 0, 1)"> executeQuery {
+    doExecute()
+  }
+
+  </span><span style="color: rgba(0, 0, 255, 1)">protected</span> def doExecute(): RDD[InternalRow]</pre>
+</div>
+<p>doExecute是抽象方法，执行计划中的过程都对应到SparkPlan的子类，比如Project对应ProjectExec，SortMergeJoin对应SortMergeJoinExec；</p>
+<p>SparkPlan是由SparkPlanner生成的，下面看SparkPlanner：</p>
+<p>org.apache.spark.sql.execution.SparkPlanner</p>
+<div class="cnblogs_code">
+<pre>  def numPartitions: Int = conf.numShufflePartitions</pre>
+</div>
+<p>这里直接取的是SQLConf.numShufflePartitions，下面看SQLConf：</p>
+<p>org.apache.spark.sql.internal.SQLConf</p>
+<div class="cnblogs_code">
+<pre>  val SHUFFLE_PARTITIONS = SQLConfigBuilder("spark.sql.shuffle.partitions"<span style="color: rgba(0, 0, 0, 1)">)
+    .doc(</span>"The default number of partitions to use when shuffling data for joins or aggregations."<span style="color: rgba(0, 0, 0, 1)">)
+    .intConf
+    .createWithDefault(</span>200<span style="color: rgba(0, 0, 0, 1)">)
+
+  def numShufflePartitions: Int </span>= getConf(SHUFFLE_PARTITIONS)</pre>
+</div>
+<p>这里取的是配置spark.sql.shuffle.partitions，默认200；那么分区数量是怎样用到的？下面看BasicOperators：</p>
+<p>org.apache.spark.sql.execution.SparkStrategies.BasicOperators</p>
+<div class="cnblogs_code">
+<pre>    def numPartitions: Int =<span style="color: rgba(0, 0, 0, 1)"> self.numPartitions
+
+    def apply(plan: LogicalPlan): Seq[SparkPlan] </span>=<span style="color: rgba(0, 0, 0, 1)"> plan match {
+...
+      </span><span style="color: rgba(0, 0, 255, 1)">case</span> logical.RepartitionByExpression(expressions, child, nPartitions) =&gt;<span style="color: rgba(0, 0, 0, 1)">
+        exchange.ShuffleExchange(HashPartitioning(
+          expressions, nPartitions.getOrElse(numPartitions)), planLater(child)) :: Nil</span></pre>
+</div>
+<p>可见shuffle过程会根据numPartitions来创建HashPartitioning，如果sql执行过程需要shuffle（比如有join,group by等操作），那么默认会写200个文件；如果sql执行过程没有shuffle，那么会由HiveTableScan和Filter等来决定写多少个文件；</p>
+<p>也可以通过执行计划来看，如果有shuffle过程，执行计划中通常有这么一步：</p>
+<blockquote>
+<p>      :  +- Exchange(coordinator id: 371605426) hashpartitioning(id#60, 200), coordinator[target post-shuffle partition size: 67108864]</p>
+</blockquote>
+<p>其中hashpartitioning(id#60, 200)中的200就是spark.sql.shuffle.partitions的默认值；</p>
+<p> </p>
+<p>附ShuffleExchange过程：</p>
+<p>org.apache.spark.sql.execution.exchange.ShuffleExchange</p>
+<div class="cnblogs_code">
+<pre>  def apply(newPartitioning: Partitioning, child: SparkPlan): ShuffleExchange =<span style="color: rgba(0, 0, 0, 1)"> {
+    ShuffleExchange(newPartitioning, child, coordinator </span>=<span style="color: rgba(0, 0, 0, 1)"> Option.empty[ExchangeCoordinator])
+  }
+
+  </span><span style="color: rgba(0, 0, 255, 1)">protected</span> override def doExecute(): RDD[InternalRow] = attachTree(<span style="color: rgba(0, 0, 255, 1)">this</span>, "execute"<span style="color: rgba(0, 0, 0, 1)">) {
+    </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> Returns the same ShuffleRowRDD if this plan is used by multiple plans.</span>
+    <span style="color: rgba(0, 0, 255, 1)">if</span> (cachedShuffleRDD == <span style="color: rgba(0, 0, 255, 1)">null</span><span style="color: rgba(0, 0, 0, 1)">) {
+      cachedShuffleRDD </span>=<span style="color: rgba(0, 0, 0, 1)"> coordinator match {
+        </span><span style="color: rgba(0, 0, 255, 1)">case</span> Some(exchangeCoordinator) =&gt;<span style="color: rgba(0, 0, 0, 1)">
+          val shuffleRDD </span>= exchangeCoordinator.postShuffleRDD(<span style="color: rgba(0, 0, 255, 1)">this</span><span style="color: rgba(0, 0, 0, 1)">)
+          </span><span style="color: rgba(0, 0, 255, 1)">assert</span>(shuffleRDD.partitions.length ==<span style="color: rgba(0, 0, 0, 1)"> newPartitioning.numPartitions)
+          shuffleRDD
+        </span><span style="color: rgba(0, 0, 255, 1)">case</span> None =&gt;<span style="color: rgba(0, 0, 0, 1)">
+          val shuffleDependency </span>=<span style="color: rgba(0, 0, 0, 1)"> prepareShuffleDependency()
+          preparePostShuffleRDD(shuffleDependency)
+      }
+    }
+    cachedShuffleRDD
+  }
+
+  </span><span style="color: rgba(0, 128, 0, 1)">/**</span><span style="color: rgba(0, 128, 0, 1)">
+   * Returns a [[ShuffleDependency]] that will partition rows of its child based on
+   * the partitioning scheme defined in `newPartitioning`. Those partitions of
+   * the returned ShuffleDependency will be the input of shuffle.
+   </span><span style="color: rgba(0, 128, 0, 1)">*/</span>
+  <span style="color: rgba(0, 0, 255, 1)">private</span><span style="color: rgba(0, 0, 0, 1)">[exchange] def prepareShuffleDependency()
+    : ShuffleDependency[Int, InternalRow, InternalRow] </span>=<span style="color: rgba(0, 0, 0, 1)"> {
+    ShuffleExchange.prepareShuffleDependency(
+      child.execute(), child.output, newPartitioning, serializer)
+  }
+
+  </span><span style="color: rgba(0, 128, 0, 1)">/**</span><span style="color: rgba(0, 128, 0, 1)">
+   * Returns a [[ShuffledRowRDD]] that represents the post-shuffle dataset.
+   * This [[ShuffledRowRDD]] is created based on a given [[ShuffleDependency]] and an optional
+   * partition start indices array. If this optional array is defined, the returned
+   * [[ShuffledRowRDD]] will fetch pre-shuffle partitions based on indices of this array.
+   </span><span style="color: rgba(0, 128, 0, 1)">*/</span>
+  <span style="color: rgba(0, 0, 255, 1)">private</span><span style="color: rgba(0, 0, 0, 1)">[exchange] def preparePostShuffleRDD(
+      shuffleDependency: ShuffleDependency[Int, InternalRow, InternalRow],
+      specifiedPartitionStartIndices: Option[Array[Int]] </span>= None): ShuffledRowRDD =<span style="color: rgba(0, 0, 0, 1)"> {
+    </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> If an array of partition start indices is provided, we need to use this array
+    </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> to create the ShuffledRowRDD. Also, we need to update newPartitioning to
+    </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> update the number of post-shuffle partitions.</span>
+    specifiedPartitionStartIndices.foreach { indices =&gt;
+      <span style="color: rgba(0, 0, 255, 1)">assert</span><span style="color: rgba(0, 0, 0, 1)">(newPartitioning.isInstanceOf[HashPartitioning])
+      newPartitioning </span>=<span style="color: rgba(0, 0, 0, 1)"> UnknownPartitioning(indices.length)
+    }
+    </span><span style="color: rgba(0, 0, 255, 1)">new</span><span style="color: rgba(0, 0, 0, 1)"> ShuffledRowRDD(shuffleDependency, specifiedPartitionStartIndices)
+  }
+
+  </span><span style="color: rgba(0, 128, 0, 1)">/**</span><span style="color: rgba(0, 128, 0, 1)">
+   * Returns a [[ShuffleDependency]] that will partition rows of its child based on
+   * the partitioning scheme defined in `newPartitioning`. Those partitions of
+   * the returned ShuffleDependency will be the input of shuffle.
+   </span><span style="color: rgba(0, 128, 0, 1)">*/</span><span style="color: rgba(0, 0, 0, 1)">
+  def prepareShuffleDependency(
+      rdd: RDD[InternalRow],
+      outputAttributes: Seq[Attribute],
+      newPartitioning: Partitioning,
+      serializer: Serializer): ShuffleDependency[Int, InternalRow, InternalRow] </span>=<span style="color: rgba(0, 0, 0, 1)"> {
+    val part: Partitioner </span>=<span style="color: rgba(0, 0, 0, 1)"> newPartitioning match {
+      </span><span style="color: rgba(0, 0, 255, 1)">case</span> RoundRobinPartitioning(numPartitions) =&gt; <span style="color: rgba(0, 0, 255, 1)">new</span><span style="color: rgba(0, 0, 0, 1)"> HashPartitioner(numPartitions)
+      </span><span style="color: rgba(0, 0, 255, 1)">case</span> HashPartitioning(_, n) =&gt;
+        <span style="color: rgba(0, 0, 255, 1)">new</span><span style="color: rgba(0, 0, 0, 1)"> Partitioner {
+          override def numPartitions: Int </span>=<span style="color: rgba(0, 0, 0, 1)"> n
+          </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> For HashPartitioning, the partitioning key is already a valid partition ID, as we use
+          </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> `HashPartitioning.partitionIdExpression` to produce partitioning key.</span>
+          override def getPartition(key: Any): Int =<span style="color: rgba(0, 0, 0, 1)"> key.asInstanceOf[Int]
+        }
+      </span><span style="color: rgba(0, 0, 255, 1)">case</span> RangePartitioning(sortingExpressions, numPartitions) =&gt;
+        <span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> Internally, RangePartitioner runs a job on the RDD that samples keys to compute
+        </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> partition bounds. To get accurate samples, we need to copy the mutable keys.</span>
+        val rddForSampling = rdd.mapPartitionsInternal { iter =&gt;<span style="color: rgba(0, 0, 0, 1)">
+          val mutablePair </span>= <span style="color: rgba(0, 0, 255, 1)">new</span><span style="color: rgba(0, 0, 0, 1)"> MutablePair[InternalRow, Null]()
+          iter.map(row </span>=&gt; mutablePair.update(row.copy(), <span style="color: rgba(0, 0, 255, 1)">null</span><span style="color: rgba(0, 0, 0, 1)">))
+        }
+        implicit val ordering </span>= <span style="color: rgba(0, 0, 255, 1)">new</span><span style="color: rgba(0, 0, 0, 1)"> LazilyGeneratedOrdering(sortingExpressions, outputAttributes)
+        </span><span style="color: rgba(0, 0, 255, 1)">new</span> RangePartitioner(numPartitions, rddForSampling, ascending = <span style="color: rgba(0, 0, 255, 1)">true</span><span style="color: rgba(0, 0, 0, 1)">)
+      </span><span style="color: rgba(0, 0, 255, 1)">case</span> SinglePartition =&gt;
+        <span style="color: rgba(0, 0, 255, 1)">new</span><span style="color: rgba(0, 0, 0, 1)"> Partitioner {
+          override def numPartitions: Int </span>= 1<span style="color: rgba(0, 0, 0, 1)">
+          override def getPartition(key: Any): Int </span>= 0<span style="color: rgba(0, 0, 0, 1)">
+        }
+      </span><span style="color: rgba(0, 0, 255, 1)">case</span> _ =&gt; sys.error(s"Exchange not implemented for $newPartitioning"<span style="color: rgba(0, 0, 0, 1)">)
+      </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> TODO: Handle BroadcastPartitioning.</span>
+<span style="color: rgba(0, 0, 0, 1)">    }
+    def getPartitionKeyExtractor(): InternalRow </span>=&gt; Any =<span style="color: rgba(0, 0, 0, 1)"> newPartitioning match {
+      </span><span style="color: rgba(0, 0, 255, 1)">case</span> RoundRobinPartitioning(numPartitions) =&gt;
+        <span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> Distributes elements evenly across output partitions, starting from a random partition.</span>
+        var position = <span style="color: rgba(0, 0, 255, 1)">new</span><span style="color: rgba(0, 0, 0, 1)"> Random(TaskContext.get().partitionId()).nextInt(numPartitions)
+        (row: InternalRow) </span>=&gt;<span style="color: rgba(0, 0, 0, 1)"> {
+          </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> The HashPartitioner will handle the `mod` by the number of partitions</span>
+          position += 1<span style="color: rgba(0, 0, 0, 1)">
+          position
+        }
+      </span><span style="color: rgba(0, 0, 255, 1)">case</span> h: HashPartitioning =&gt;<span style="color: rgba(0, 0, 0, 1)">
+        val projection </span>=<span style="color: rgba(0, 0, 0, 1)"> UnsafeProjection.create(h.partitionIdExpression :: Nil, outputAttributes)
+        row </span>=&gt; projection(row).getInt(0<span style="color: rgba(0, 0, 0, 1)">)
+      </span><span style="color: rgba(0, 0, 255, 1)">case</span> RangePartitioning(_, _) | SinglePartition =&gt;<span style="color: rgba(0, 0, 0, 1)"> identity
+      </span><span style="color: rgba(0, 0, 255, 1)">case</span> _ =&gt; sys.error(s"Exchange not implemented for $newPartitioning"<span style="color: rgba(0, 0, 0, 1)">)
+    }
+    val rddWithPartitionIds: RDD[Product2[Int, InternalRow]] </span>=<span style="color: rgba(0, 0, 0, 1)"> {
+      </span><span style="color: rgba(0, 0, 255, 1)">if</span><span style="color: rgba(0, 0, 0, 1)"> (needToCopyObjectsBeforeShuffle(part, serializer)) {
+        rdd.mapPartitionsInternal { iter </span>=&gt;<span style="color: rgba(0, 0, 0, 1)">
+          val getPartitionKey </span>=<span style="color: rgba(0, 0, 0, 1)"> getPartitionKeyExtractor()
+          iter.map { row </span>=&gt;<span style="color: rgba(0, 0, 0, 1)"> (part.getPartition(getPartitionKey(row)), row.copy()) }
+        }
+      } </span><span style="color: rgba(0, 0, 255, 1)">else</span><span style="color: rgba(0, 0, 0, 1)"> {
+        rdd.mapPartitionsInternal { iter </span>=&gt;<span style="color: rgba(0, 0, 0, 1)">
+          val getPartitionKey </span>=<span style="color: rgba(0, 0, 0, 1)"> getPartitionKeyExtractor()
+          val mutablePair </span>= <span style="color: rgba(0, 0, 255, 1)">new</span><span style="color: rgba(0, 0, 0, 1)"> MutablePair[Int, InternalRow]()
+          iter.map { row </span>=&gt;<span style="color: rgba(0, 0, 0, 1)"> mutablePair.update(part.getPartition(getPartitionKey(row)), row) }
+        }
+      }
+    }
+
+    </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> Now, we manually create a ShuffleDependency. Because pairs in rddWithPartitionIds
+    </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> are in the form of (partitionId, row) and every partitionId is in the expected range
+    </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> [0, part.numPartitions - 1]. The partitioner of this is a PartitionIdPassthrough.</span>
+    val dependency =
+      <span style="color: rgba(0, 0, 255, 1)">new</span><span style="color: rgba(0, 0, 0, 1)"> ShuffleDependency[Int, InternalRow, InternalRow](
+        rddWithPartitionIds,
+        </span><span style="color: rgba(0, 0, 255, 1)">new</span><span style="color: rgba(0, 0, 0, 1)"> PartitionIdPassthrough(part.numPartitions),
+        serializer)
+
+    dependency
+  }</span></pre>
+</div>
+<p> </p>
+</div>
+            </div>
+
+            <!-- Post Footer -->
+            <div class="post-footer">
+                <div class="post-navigation">
+                    <a href="../blog_cn.html" class="nav-button">← Back to Home</a>
+                    <a href="0283.html" class="nav-button">Next Post →</a>
+                </div>
+            </div>
+        </article>
+    </div>
+</body>
+</html>

@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>kafka服务重启</title>
+    <link rel="stylesheet" href="../css/style3.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header Navigation -->
+        <div class="header">
+            <h1><a href="../blog_cn.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+        </div>
+
+        <!-- Post Container -->
+        <article class="post">
+            <!-- Post Header -->
+            <div class="post-header">
+                <h1>kafka服务重启</h1>
+                <div class="post-meta">
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📅</span>
+                        <span>May 19, 2022</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📖</span>
+                        <span>1 min read</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">👁️</span>
+                        <span>755 views</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Post Content -->
+            <div class="post-content">
+                <div class="blogpost-body cnblogs-markdown" id="cnblogs_post_body">
+<h1 id="背景">背景</h1>
+<p>kafka部分进程重启，报错如下：</p>
+<pre><code>java.io.IOException: Too many open files
+  at sun.nio.ch.ServerSocketChannelImpl.accept(ServerSocketChannelImpl.java:422)
+  at sun.nio.ch.ServerSocketChannelImpl.accept(ServerSocketChannelImpl.java:250)
+  at java.lang.Thread.run(Thread.java:748)
+
+</code></pre>
+<h1 id="定位">定位</h1>
+<p>通过ulimit - a查看当前用户open files是65535</p>
+<p><picture>
+  <source srcset="../img/1509647-20220519144021260-437063152.webp" type="image/webp">
+  <img alt="" src="../img/1509647-20220519144021260-437063152.png">
+</picture></p>
+<p>再进一步查看kafka进程的open files（位置/proc/$pid/ulimits）是4096</p>
+<p><picture>
+  <source srcset="../img/1509647-20220519144054666-1981960304.webp" type="image/webp">
+  <img alt="" src="../img/1509647-20220519144054666-1981960304.png">
+</picture></p>
+<p>两个配置不一样，原因是kafka进程由systemd启动，使用的配置和当前用户不一样，配置文件位置：</p>
+<blockquote>
+<p>/usr/lib/systemd/system/kafka.service<br/>
+LimitNOFILE=65535</p>
+</blockquote>
+<p>修改之后重新加载systemd配置</p>
+<blockquote>
+<p>systemctl daemon-reload</p>
+</blockquote>
+<p>重启kafka进程</p>
+<blockquote>
+<p>systemctl restart kafka</p>
+</blockquote>
+<p>查看/proc/$pid/ulimits确认生效。</p>
+</div>
+            </div>
+
+            <!-- Post Footer -->
+            <div class="post-footer">
+                <div class="post-navigation">
+                    <a href="../blog_cn.html" class="nav-button">← Back to Home</a>
+                    <a href="0025.html" class="nav-button">Next Post →</a>
+                </div>
+            </div>
+        </article>
+    </div>
+</body>
+</html>

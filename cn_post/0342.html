@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spark 2 - Spark on Yarn：container memory allocation容器内存分配</title>
+    <link rel="stylesheet" href="../css/style3.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header Navigation -->
+        <div class="header">
+            <h1><a href="../blog_cn.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+        </div>
+
+        <!-- Post Container -->
+        <article class="post">
+            <!-- Post Header -->
+            <div class="post-header">
+                <h1>Spark 2 - Spark on Yarn：container memory allocation容器内存分配</h1>
+                <div class="post-meta">
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📅</span>
+                        <span>December 11, 2018</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📖</span>
+                        <span>3 min read</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">👁️</span>
+                        <span>2955 views</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Post Content -->
+            <div class="post-content">
+                <div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<p>spark 2.1.1</p>
+<p> </p>
+<p>最近spark任务（spark on yarn）有一个报错</p>
+<blockquote>
+<p>Diagnostics: Container [pid=5901,containerID=container_1542879939729_30802_01_000001] is running beyond physical memory limits. Current usage: 11.0 GB of 11 GB physical memory used; 12.2 GB of 23.1 GB virtual memory used. Killing container.<br/>Dump of the process-tree for container_1542879939729_30802_01_000001 :<br/>|- PID PPID PGRPID SESSID CMD_NAME USER_MODE_TIME(MILLIS) SYSTEM_TIME(MILLIS) VMEM_USAGE(BYTES) RSSMEM_USAGE(PAGES) FULL_CMD_LINE<br/>|- 5901 5899 5901 5901 (bash) 3 4 115843072 361 /bin/bash - c LD_LIBRARY_PATH=/export/App/hadoop-2.6.1/lib/native::/usr/lib/hadoop/lib/native:/usr/lib/hadoop/lib/native::/export/App/hadoop-2.6.1/lib/native:/usr/lib/hadoop/lib/native:/usr/lib/hadoop/lib/native:/usr/lib/hadoop/lib/native::/export/App/hadoop-2.6.1/lib/native:/export/App/hadoop-2.6.1/lib/native /export/App/jdk1.8.0_60/bin/java - server - Xmx10240m - Djava.io.tmpdir=/export/Data/tmp/hadoop-tmp/nm-local-dir/usercache/hadoop/appcache/application_1542879939729_30802/container_1542879939729_30802_01_000001/tmp '-XX:+PrintGCDetails' '-XX:+UseG1GC' '-XX:G1HeapRegionSize=32M' '-XX:+UseGCOverheadLimit' '-XX:+ExplicitGCInvokesConcurrent' '-XX:+HeapDumpOnOutOfMemoryError' '-XX:-UseCompressedClassPointers' '-XX:CompressedClassSpaceSize=3G' '-XX:+PrintGCTimeStamps' '-Xloggc:/export/Logs/hadoop/g1gc.log' - Dspark.yarn.app.container.log.dir=/export/Logs/hadoop/userlogs/application_1542879939729_30802/container_1542879939729_30802_01_000001 org.apache.spark.deploy.yarn.ApplicationMaster --class 'app.package.AppClass' --jar file:/jarpath/app.jar --properties-file /export/Data/tmp/hadoop-tmp/nm-local-dir/usercache/hadoop/appcache/application_1542879939729_30802/container_1542879939729_30802_01_000001/__spark_conf__/__spark_conf__.properties 1&gt; /export/Logs/hadoop/userlogs/application_1542879939729_30802/container_1542879939729_30802_01_000001/stdout 2&gt; /export/Logs/hadoop/userlogs/application_1542879939729_30802/container_1542879939729_30802_01_000001/stderr<br/>|- 6406 5901 5901 5901 (java) 1834301 372741 13026095104 2888407 /export/App/jdk1.8.0_60/bin/java - server - Xmx10240m - Djava.io.tmpdir=/export/Data/tmp/hadoop-tmp/nm-local-dir/usercache/hadoop/appcache/application_1542879939729_30802/container_1542879939729_30802_01_000001/tmp - XX:+PrintGCDetails - XX:+UseG1GC - XX:G1HeapRegionSize=32M - XX:+UseGCOverheadLimit - XX:+ExplicitGCInvokesConcurrent - XX:+HeapDumpOnOutOfMemoryError - XX:-UseCompressedClassPointers - XX:CompressedClassSpaceSize=3G - XX:+PrintGCTimeStamps - Xloggc:/export/Logs/hadoop/g1gc.log - Dspark.yarn.app.container.log.dir=/export/Logs/hadoop/userlogs/application_1542879939729_30802/container_1542879939729_30802_01_000001 org.apache.spark.deploy.yarn.ApplicationMaster --class app.package.AppClass --jar file:/jarpath/app.jar --properties-file /export/Data/tmp/hadoop-tmp/nm-local-dir/usercache/hadoop/appcache/application_1542879939729_30802/container_1542879939729_30802_01_000001/__spark_conf__/__spark_conf__.properties<br/>Container killed on request. Exit code is 143<br/>Container exited with a non-zero exit code 143<br/>Failing this attempt</p>
+</blockquote>
+<p>从containerID=container_1542879939729_30802_01_000001，以及org.apache.spark.deploy.yarn.ApplicationMaster，可知这个是yarn的ApplicationMaster，运行的是spark的driver，</p>
+<p>问题是提交spark任务时参数为 --driver-moery 10g，而且进程启动命令中也确实是 -Xmx10240m，为什么container被kill是因为超过11g？</p>
+<blockquote>
+<p>Container [pid=5901,containerID=container_1542879939729_30802_01_000001] is running beyond physical memory limits. Current usage: 11.0 GB of 11 GB physical memory used;</p>
+</blockquote>
+<p>跟进spark任务提交过程，详见：https://www.cnblogs.com/barneywill/p/9820684.html</p>
+<p> </p>
+<p>org.apache.spark.launcher.SparkSubmitCommandBuilder</p>
+<div class="cnblogs_code">
+<pre>      String tsMemory =<span style="color: rgba(0, 0, 0, 1)">
+        isThriftServer(mainClass) </span>? System.getenv("SPARK_DAEMON_MEMORY") : <span style="color: rgba(0, 0, 255, 1)">null</span><span style="color: rgba(0, 0, 0, 1)">;
+      String memory </span>=<span style="color: rgba(0, 0, 0, 1)"> firstNonEmpty(tsMemory, config.get(SparkLauncher.DRIVER_MEMORY),
+        System.getenv(</span>"SPARK_DRIVER_MEMORY"), System.getenv("SPARK_MEM"<span style="color: rgba(0, 0, 0, 1)">), DEFAULT_MEM);
+      cmd.add(</span>"-Xmx" + memory);</pre>
+</div>
+<p>这里会取driver memory的值，取的地方有一个优先级，firstNonEmpty</p>
+<p> </p>
+<p>org.apache.spark.deploy.SparkSubmit</p>
+<div class="cnblogs_code">
+<pre>    <span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> In yarn-cluster mode, use yarn.Client as a wrapper around the user class</span>
+    <span style="color: rgba(0, 0, 255, 1)">if</span><span style="color: rgba(0, 0, 0, 1)"> (isYarnCluster) {
+      childMainClass </span>= "org.apache.spark.deploy.yarn.Client"</pre>
+</div>
+<p>如果--master yarn时，会提交Client类</p>
+<p> </p>
+<p>org.apache.spark.deploy.yarn.Client</p>
+<div class="cnblogs_code">
+<pre>  <span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> AM related configurations</span>
+  <span style="color: rgba(0, 0, 255, 1)">private</span> val amMemory = <span style="color: rgba(0, 0, 255, 1)">if</span><span style="color: rgba(0, 0, 0, 1)"> (isClusterMode) {
+    sparkConf.get(DRIVER_MEMORY).toInt
+  } </span><span style="color: rgba(0, 0, 255, 1)">else</span><span style="color: rgba(0, 0, 0, 1)"> {
+    sparkConf.get(AM_MEMORY).toInt
+  }
+  </span><span style="color: rgba(0, 0, 255, 1)">private</span> val amMemoryOverhead =<span style="color: rgba(0, 0, 0, 1)"> {
+    val amMemoryOverheadEntry </span>= <span style="color: rgba(0, 0, 255, 1)">if</span> (isClusterMode) DRIVER_MEMORY_OVERHEAD <span style="color: rgba(0, 0, 255, 1)">else</span><span style="color: rgba(0, 0, 0, 1)"> AM_MEMORY_OVERHEAD
+    sparkConf.get(amMemoryOverheadEntry).getOrElse(
+      math.max((MEMORY_OVERHEAD_FACTOR </span>*<span style="color: rgba(0, 0, 0, 1)"> amMemory).toLong, MEMORY_OVERHEAD_MIN)).toInt
+  }
+  </span><span style="color: rgba(0, 0, 255, 1)">private</span> val amCores = <span style="color: rgba(0, 0, 255, 1)">if</span><span style="color: rgba(0, 0, 0, 1)"> (isClusterMode) {
+    sparkConf.get(DRIVER_CORES)
+  } </span><span style="color: rgba(0, 0, 255, 1)">else</span><span style="color: rgba(0, 0, 0, 1)"> {
+    sparkConf.get(AM_CORES)
+  }
+
+  </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> Executor related configurations</span>
+  <span style="color: rgba(0, 0, 255, 1)">private</span> val executorMemory =<span style="color: rgba(0, 0, 0, 1)"> sparkConf.get(EXECUTOR_MEMORY)
+  </span><span style="color: rgba(0, 0, 255, 1)">private</span> val executorMemoryOverhead =<span style="color: rgba(0, 0, 0, 1)"> sparkConf.get(EXECUTOR_MEMORY_OVERHEAD).getOrElse(
+    math.max((MEMORY_OVERHEAD_FACTOR </span>* executorMemory).toLong, MEMORY_OVERHEAD_MIN)).toInt</pre>
+</div>
+<p>其中会设置amMemoryOverhead 和executorMemoryOverhead </p>
+<div class="cnblogs_code">
+<pre>    val capability =<span style="color: rgba(0, 0, 0, 1)"> Records.newRecord(classOf[Resource])
+    capability.setMemory(amMemory </span>+<span style="color: rgba(0, 0, 0, 1)"> amMemoryOverhead)
+    capability.setVirtualCores(amCores)</span></pre>
+</div>
+<p>然后会根据amMemory+amMemoryOverhead的值来向yarn申请资源；</p>
+<p> </p>
+<p>一些默认值和配置如下：</p>
+<p>org.apache.spark.deploy.yarn.YarnSparkHadoopUtil</p>
+<div class="cnblogs_code">
+<pre><span style="color: rgba(0, 0, 0, 1)">object YarnSparkHadoopUtil {
+  </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> Additional memory overhead
+  </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> 10% was arrived at experimentally. In the interest of minimizing memory waste while covering
+  </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> the common cases. Memory overhead tends to grow with container size.</span>
+<span style="color: rgba(0, 0, 0, 1)">
+  val MEMORY_OVERHEAD_FACTOR </span>= 0.10<span style="color: rgba(0, 0, 0, 1)">
+  val MEMORY_OVERHEAD_MIN </span>= 384L</pre>
+</div>
+<p>org.apache.spark.deploy.yarn.config</p>
+<div class="cnblogs_code">
+<pre>  <span style="color: rgba(0, 0, 255, 1)">private</span>[spark] val DRIVER_MEMORY_OVERHEAD = ConfigBuilder("spark.yarn.driver.memoryOverhead"<span style="color: rgba(0, 0, 0, 1)">)
+    .bytesConf(ByteUnit.MiB)
+    .createOptional
+
+  </span><span style="color: rgba(0, 0, 255, 1)">private</span>[spark] val EXECUTOR_MEMORY_OVERHEAD = ConfigBuilder("spark.yarn.executor.memoryOverhead"<span style="color: rgba(0, 0, 0, 1)">)
+    .bytesConf(ByteUnit.MiB)
+    .createOptional</span></pre>
+</div>
+<p> </p>
+<p>所以默认的driver memory申请方式为</p>
+<p>1 spark.yarn.driver.memoryOverhead 配置优先</p>
+<p>2 driverMemory + overhead</p>
+<p>其中 overhead = math.max((0.1 * driverMemory).toLong, 384))</p>
+<p>所以--driver-memory 10g时向yarn申请的container内存是11g</p>
+<p> </p>
+</div>
+            </div>
+
+            <!-- Post Footer -->
+            <div class="post-footer">
+                <div class="post-navigation">
+                    <a href="../blog_cn.html" class="nav-button">← Back to Home</a>
+                    <a href="0343.html" class="nav-button">Next Post →</a>
+                </div>
+            </div>
+        </article>
+    </div>
+</body>
+</html>

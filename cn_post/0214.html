@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>hive metastore报错</title>
+    <link rel="stylesheet" href="../css/style3.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header Navigation -->
+        <div class="header">
+            <h1><a href="../blog_cn.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+        </div>
+
+        <!-- Post Container -->
+        <article class="post">
+            <!-- Post Header -->
+            <div class="post-header">
+                <h1>hive metastore报错</h1>
+                <div class="post-meta">
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📅</span>
+                        <span>February 19, 2019</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📖</span>
+                        <span>1 min read</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">👁️</span>
+                        <span>996 views</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Post Content -->
+            <div class="post-content">
+                <div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<p>hive metastore在建表时报错</p>
+<blockquote>
+<p>[pool-5-thread-2]: MetaException(message:Got exception: java.net.ConnectException Call From server2 to server1:8020 failed on connection exception: java.net.ConnectException: Connection refused; For more details see: http://wiki.apache.org/hadoop/ConnectionRefused)</p>
+</blockquote>
+<p>其中server1:8020是namenode，但是正常的namenode是server2:8020，为什么会连接一个不存在的namenode？<br/>检查cdh hive的启动过程中使用的conf目录：</p>
+<blockquote>
+<p>using /opt/cloudera/parcels/CDH-5.16.1-1.cdh5.16.1.p0.3/lib/hive as HIVE_HOME<br/>using /opt/cloudera-manager/cm-5.16.1/run/cloudera-scm-agent/process/245-hive-HIVEMETASTORE as HIVE_CONF_DIR<br/>using /opt/cloudera/parcels/CDH-5.16.1-1.cdh5.16.1.p0.3/lib/hadoop as HADOOP_HOME<br/>using /opt/cloudera-manager/cm-5.16.1/run/cloudera-scm-agent/process/245-hive-HIVEMETASTORE/yarn-conf as HADOOP_CONF_DIR</p>
+</blockquote>
+<p>这些目录中都是正常的namenode配置，忽然想到数据库中会保存hdfs路径，</p>
+<blockquote>
+<p>mysql&gt; select db_location_uri from DBS;</p>
+</blockquote>
+<p>果然是这里存储的hdfs路径有问题，修改之后正常；</p>
+<p> </p>
+</div>
+            </div>
+
+            <!-- Post Footer -->
+            <div class="post-footer">
+                <div class="post-navigation">
+                    <a href="../blog_cn.html" class="nav-button">← Back to Home</a>
+                    <a href="0215.html" class="nav-button">Next Post →</a>
+                </div>
+            </div>
+        </article>
+    </div>
+</body>
+</html>

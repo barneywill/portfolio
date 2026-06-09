@@ -1,0 +1,541 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>创建hive表时格式如何选择</title>
+    <link rel="stylesheet" href="../css/style3.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header Navigation -->
+        <div class="header">
+            <h1><a href="../blog_cn.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+        </div>
+
+        <!-- Post Container -->
+        <article class="post">
+            <!-- Post Header -->
+            <div class="post-header">
+                <h1>创建hive表时格式如何选择</h1>
+                <div class="post-meta">
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📅</span>
+                        <span>December 12, 2018</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📖</span>
+                        <span>8 min read</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">👁️</span>
+                        <span>2585 views</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Post Content -->
+            <div class="post-content">
+                <div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<h1>常用格式</h1>
+<h2 id="id-20180928整理-textfile">textfile</h2>
+<p>需要定义分隔符，占用空间大，读写效率最低，非常容易发生冲突（分隔符）的一种格式，基本上只有需要导入数据的时候才会使用，比如导入csv文件；</p>
+<blockquote>
+<p>ROW FORMAT DELIMITED</p>
+<p>  FIELDS TERMINATED BY '\u0001'</p>
+<p>  LINES TERMINATED BY '\n'</p>
+<p>STORED AS TEXTFILE</p>
+</blockquote>
+<h2 id="id-20180928整理-json">json</h2>
+<p>hive3.0后官方支持json格式，之前需要使用第三方，导入jar，<a class="external-link" href="http://www.congiu.net/hive-json-serde/" rel="noopener nofollow">http://www.congiu.net/hive-json-serde/</a>，</p>
+<blockquote>
+<p>add jar hdfs://nn/jarpath/json-udf-1.3.8-jar-with-dependencies.jar;<br/>add jar hdfs://nn/jarpath/json-serde-1.3.8-jar-with-dependencies.jar;</p>
+</blockquote>
+<p>占用空间最大，读写效率低，基本上只有需要导入数据的时候才会使用，比如导入json文件；</p>
+<blockquote>
+<p>ROW FORMAT SERDE 'org.openx.data.jsonserde.JsonSerDe'<br/>STORED AS TEXTFILE</p>
+</blockquote>
+<h2>xml</h2>
+<p><a href="http://central.maven.org/maven2/com/ibm/spss/hive/serde2/xml/hivexmlserde/1.0.0.0/hivexmlserde-1.0.0.0.jar" rel="noopener nofollow">http://central.maven.org/maven2/com/ibm/spss/hive/serde2/xml/hivexmlserde/1.0.0.0/hivexmlserde-1.0.0.0.jar</a></p>
+<div class="cnblogs_code">
+<pre><span style="color: rgba(0, 0, 0, 1)">   CREATE TABLE xml_bank(customer_id STRING, income BIGINT, demographics 
+   map</span>&lt;string,string&gt;, financial map&lt;string,string&gt;<span style="color: rgba(0, 0, 0, 1)">)
+   ROW FORMAT SERDE </span><span style="color: rgba(128, 0, 0, 1)">'</span><span style="color: rgba(128, 0, 0, 1)">com.ibm.spss.hive.serde2.xml.XmlSerDe</span><span style="color: rgba(128, 0, 0, 1)">'</span><span style="color: rgba(0, 0, 0, 1)">
+   WITH SERDEPROPERTIES (
+   </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">column.xpath.customer_id</span><span style="color: rgba(128, 0, 0, 1)">"</span>=<span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">/record/@customer_id</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">,
+   </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">column.xpath.income</span><span style="color: rgba(128, 0, 0, 1)">"</span>=<span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">/record/income/text()</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">,
+   </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">column.xpath.demographics</span><span style="color: rgba(128, 0, 0, 1)">"</span>=<span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">/record/demographics/*</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">,
+   </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">column.xpath.financial</span><span style="color: rgba(128, 0, 0, 1)">"</span>=<span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">/record/financial/*</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">
+    )
+    TBLPROPERTIES (
+    </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">xmlinput.start</span><span style="color: rgba(128, 0, 0, 1)">"</span>=<span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">&lt;record customer</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">,
+    </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">xmlinput.end</span><span style="color: rgba(128, 0, 0, 1)">"</span>=<span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">&lt;/record&gt;</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">
+    );</span></pre>
+</div>
+<h2>lzo</h2>
+<p>相比textfile多了lzo压缩，占用空间更小；</p>
+<blockquote>
+<p>ROW FORMAT DELIMITED <br/>  FIELDS TERMINATED BY '\t' <br/>STORED AS INPUTFORMAT <br/>  'com.hadoop.mapred.DeprecatedLzoTextInputFormat' <br/>OUTPUTFORMAT <br/>  'org.apache.hadoop.hive.ql.io.HiveIgnoreKeyTextOutputFormat'</p>
+</blockquote>
+<h2 id="id-20180928整理-orc">orc</h2>
+<p>列式存储，占用空间最小，非常适合用来做数仓；</p>
+<blockquote>
+<p>STORED AS ORC</p>
+</blockquote>
+<p>压缩</p>
+<blockquote>
+<p>STORED AS ORC TBLPROPERTIES ("orc.compression"="ZLIB")</p>
+<p>STORED AS ORC TBLPROPERTIES ("orc.compression"="SNAPPY")</p>
+</blockquote>
+<p>注意设置orc压缩格式前一定要先设置：</p>
+<blockquote>
+<p>set hive.exec.orc.compression.strategy=COMPRESSION;</p>
+</blockquote>
+<p>否则压缩不生效；</p>
+<h2 id="id-20180928整理-parquet">parquet</h2>
+<p>列式存储，占用空间居中，如果后期使用spark来处理，parquet是最佳格式；</p>
+<blockquote>
+<p> STORED AS PARQUET</p>
+</blockquote>
+<p>parquet+snappy</p>
+<blockquote>
+<p>STORED AS PARQUET TBLPROPERTIES ("parquet.compression"="SNAPPY")</p>
+</blockquote>
+<p> </p>
+<h1>对比测试</h1>
+<p>测试表：test_table</p>
+<p>测试行数：10亿</p>
+<p>测试sql类型：aggregation</p>
+<p>测试sql：select col_1, count(1) from test_table group by col_1;</p>
+<p>测试结果</p>
+<table border="1" cellpadding="0" cellspacing="0">
+<tbody>
+<tr>
+<td valign="top" width="86">
+<p><strong>fs</strong></p>
+</td>
+<td colspan="6" valign="top" width="412">
+<p><strong>hdfs</strong></p>
+</td>
+<td valign="top" width="68">
+<p><strong>kudu</strong></p>
+</td>
+</tr>
+<tr>
+<td valign="top" width="86">
+<p><strong>format</strong></p>
+</td>
+<td valign="top" width="69">
+<p><strong>textfile</strong></p>
+</td>
+<td valign="top" width="68">
+<p><strong>lzo</strong></p>
+</td>
+<td valign="top" width="69">
+<p><strong>parquet</strong></p>
+</td>
+<td valign="top" width="69">
+<p><strong>parquet snappy</strong></p>
+</td>
+<td valign="top" width="68">
+<p><strong>orc</strong></p>
+</td>
+<td valign="top" width="69">
+<p><strong>orc snappy</strong></p>
+</td>
+<td valign="top" width="68">
+<p><strong> </strong></p>
+</td>
+</tr>
+<tr>
+<td valign="top" width="86">
+<p><strong>capacity</strong></p>
+</td>
+<td valign="top" width="69">
+<p>464.0 G</p>
+</td>
+<td valign="top" width="68">
+<p>169.4 G</p>
+</td>
+<td valign="top" width="69">
+<p>177.2 G</p>
+</td>
+<td valign="top" width="69">
+<p>111.3 G</p>
+</td>
+<td valign="top" width="68">
+<p>71.5 G</p>
+</td>
+<td valign="top" width="69">
+<p>65.7G</p>
+</td>
+<td valign="top" width="68">
+<p>184 G</p>
+</td>
+</tr>
+<tr>
+<td valign="top" width="86">
+<p> </p>
+</td>
+<td valign="top" width="69">
+<p>100%</p>
+</td>
+<td valign="top" width="68">
+<p>36%</p>
+</td>
+<td valign="top" width="69">
+<p>37%</p>
+</td>
+<td valign="top" width="69">
+<p>23%</p>
+</td>
+<td valign="top" width="68">
+<p>15%</p>
+</td>
+<td valign="top" width="69">
+<p>14%</p>
+</td>
+<td valign="top" width="68">
+<p>39%</p>
+</td>
+</tr>
+<tr>
+<td valign="top" width="86">
+<p><strong>Hive2.3.4</strong></p>
+</td>
+<td valign="top" width="69">
+<p>816 s</p>
+</td>
+<td valign="top" width="68">
+<p>711 s</p>
+</td>
+<td valign="top" width="69">
+<p>250 s</p>
+</td>
+<td valign="top" width="69">
+<p>158 s</p>
+</td>
+<td valign="top" width="68">
+<p>130 s</p>
+</td>
+<td valign="top" width="69">
+<p>127 s</p>
+</td>
+<td valign="top" width="68">
+<p> </p>
+</td>
+</tr>
+<tr>
+<td valign="top" width="86">
+<p><strong>Hive2.3.4</strong></p>
+<p><strong>Tuning</strong></p>
+</td>
+<td valign="top" width="69">
+<p> </p>
+</td>
+<td valign="top" width="68">
+<p> </p>
+</td>
+<td valign="top" width="69">
+<p>251 s</p>
+</td>
+<td valign="top" width="69">
+<p>163 s</p>
+</td>
+<td valign="top" width="68">
+<p>109 s</p>
+</td>
+<td valign="top" width="69">
+<p>96 s</p>
+</td>
+<td valign="top" width="68">
+<p> </p>
+</td>
+</tr>
+<tr>
+<td valign="top" width="86">
+<p><strong>Hive2.3.4</strong></p>
+<p><strong>On</strong></p>
+<p><strong>spark2.4.0</strong></p>
+</td>
+<td valign="top" width="69">
+<p> </p>
+</td>
+<td valign="top" width="68">
+<p> </p>
+</td>
+<td valign="top" width="69">
+<p>54 s</p>
+</td>
+<td valign="top" width="69">
+<p>47 s</p>
+</td>
+<td valign="top" width="68">
+<p>149 s</p>
+</td>
+<td valign="top" width="69">
+<p>138 s</p>
+</td>
+<td valign="top" width="68">
+<p> </p>
+</td>
+</tr>
+<tr>
+<td valign="top" width="86">
+<p><strong>Spark2.1.1</strong></p>
+</td>
+<td valign="top" width="69">
+<p>371 s</p>
+</td>
+<td valign="top" width="68">
+<p>293 s</p>
+</td>
+<td valign="top" width="69">
+<p>17 s</p>
+</td>
+<td valign="top" width="69">
+<p>16 s</p>
+</td>
+<td valign="top" width="68">
+<p>51 s</p>
+</td>
+<td valign="top" width="69">
+<p> </p>
+</td>
+<td valign="top" width="68">
+<p> </p>
+</td>
+</tr>
+<tr>
+<td valign="top" width="86">
+<p><strong>Spark2.4.0</strong></p>
+</td>
+<td valign="top" width="69">
+<p>496 s</p>
+</td>
+<td valign="top" width="68">
+<p>297 s</p>
+</td>
+<td valign="top" width="69">
+<p>16 s</p>
+</td>
+<td valign="top" width="69">
+<p>16 s</p>
+</td>
+<td valign="top" width="68">
+<p>21 s</p>
+</td>
+<td valign="top" width="69">
+<p>21 s</p>
+</td>
+<td valign="top" width="68">
+<p> </p>
+</td>
+</tr>
+<tr>
+<td valign="top" width="86">
+<p><strong>Drill1.15.0</strong></p>
+</td>
+<td valign="top" width="69">
+<p> </p>
+</td>
+<td valign="top" width="68">
+<p> </p>
+</td>
+<td valign="top" width="69">
+<p>59 s</p>
+</td>
+<td valign="top" width="69">
+<p>57 s</p>
+</td>
+<td valign="top" width="68">
+<p>75 s</p>
+</td>
+<td valign="top" width="69">
+<p>45 s</p>
+</td>
+<td valign="top" width="68">
+<p> </p>
+</td>
+</tr>
+<tr>
+<td valign="top" width="86">
+<p><strong>Impala2.12</strong></p>
+</td>
+<td valign="top" width="69">
+<p> </p>
+</td>
+<td valign="top" width="68">
+<p> </p>
+</td>
+<td valign="top" width="69">
+<p> </p>
+</td>
+<td valign="top" width="69">
+<p>15 s</p>
+</td>
+<td valign="top" width="68">
+<p> </p>
+</td>
+<td valign="top" width="69">
+<p> </p>
+</td>
+<td valign="top" width="68">
+<p>16 s</p>
+</td>
+</tr>
+<tr>
+<td valign="top" width="86">
+<p><strong>Presto0.215</strong></p>
+</td>
+<td valign="top" width="69">
+<p> </p>
+</td>
+<td valign="top" width="68">
+<p> </p>
+</td>
+<td valign="top" width="69">
+<p>25 s</p>
+</td>
+<td valign="top" width="69">
+<p>21 s</p>
+</td>
+<td valign="top" width="68">
+<p>13 s</p>
+</td>
+<td valign="top" width="69">
+<p>12 s</p>
+</td>
+<td valign="top" width="68">
+<p> </p>
+</td>
+</tr>
+<tr>
+<td valign="top" width="86">
+<p><strong> </strong></p>
+</td>
+<td valign="top" width="69">
+<p> </p>
+</td>
+<td valign="top" width="68">
+<p> </p>
+</td>
+<td valign="top" width="69">
+<p> </p>
+</td>
+<td valign="top" width="69">
+<p> </p>
+</td>
+<td valign="top" width="68">
+<p> </p>
+</td>
+<td valign="top" width="69">
+<p> </p>
+</td>
+<td valign="top" width="68">
+<p> </p>
+</td>
+</tr>
+<tr>
+<td valign="top" width="86">
+<p><strong> </strong></p>
+</td>
+<td valign="top" width="69">
+<p> </p>
+</td>
+<td valign="top" width="68">
+<p> </p>
+</td>
+<td valign="top" width="69">
+<p> </p>
+</td>
+<td valign="top" width="69">
+<p> </p>
+</td>
+<td valign="top" width="68">
+<p> </p>
+</td>
+<td valign="top" width="69">
+<p> </p>
+</td>
+<td valign="top" width="68">
+<p> </p>
+</td>
+</tr>
+</tbody>
+</table>
+<p> </p>
+<ul>
+<li>从数据大小和查询效率上看，表现最好的是presto+orc+snappy；</li>
+<li>hive下最佳格式为orc snappy，数据大小最小，并且查询最快；</li>
+<li>hive切换engine为spark后，对parquet格式的查询有一些提升，但是占用相同资源的情况下，远不如直接使用spark sql快；</li>
+<li>spark2.3以后对orc格式相比之前有很大优化，已经很接近parquet格式；</li>
+<li>impala+parquet+hdfs的性能和impala+kudu差不多，kudu的好处是支持实时更新；</li>
+<li>drill看起来没有必要；</li>
+<li>spark2.4.0中的parquet为2.4，parquet从2.5开始支持column index，预计以后的spark版本对parquet的查询会更快；</li>
+<li>impala对orc的支持从3.1开始作为实验功能的一部分；</li>
+</ul>
+<p> </p>
+<h2>详细数据</h2>
+<p>yarn 200g 50core</p>
+<h3>1 hive-2.3.4</h3>
+<p>set mapreduce.map.memory.mb=4096;<br/>set mapreduce.map.java.opts=-Xmx3072m;</p>
+<p>hive-textfile: <br/>Time taken: 816.202 seconds, Fetched: 32 row(s)<br/>Stage-Stage-1: Map: 1831  Reduce: 1009   Cumulative CPU: 27614.77 sec   HDFS Read: 498267775168 HDFS Write: 88861 SUCCESS<br/>Total MapReduce CPU Time Spent: 0 days 7 hours 40 minutes 14 seconds 770 msec</p>
+<p>hive-lzo: <br/>Time taken: 711.266 seconds, Fetched: 32 row(s) <br/>Stage-Stage-1: Map: 183  Reduce: 711   Cumulative CPU: 13949.24 sec   HDFS Read: 181881436157 HDFS Write: 62935 SUCCESS<br/>Total MapReduce CPU Time Spent: 0 days 3 hours 52 minutes 29 seconds 240 msec</p>
+<p>hive-orc:<br/>Time taken: 130.194 seconds, Fetched: 32 row(s)<br/>Stage-Stage-1: Map: 275  Reduce: 300   Cumulative CPU: 4368.67 sec   HDFS Read: 626004573 HDFS Write: 27178 SUCCESS<br/>Total MapReduce CPU Time Spent: 0 days 1 hours 12 minutes 48 seconds 670 msec</p>
+<p>hive-orc snappy:<br/>Time taken: 127.803 seconds, Fetched: 32 row(s)<br/>Stage-Stage-1: Map: 191  Reduce: 276   Cumulative CPU: 4374.74 sec   HDFS Read: 580889407 HDFS Write: 25090 SUCCESS<br/>Total MapReduce CPU Time Spent: 0 days 1 hours 12 minutes 54 seconds 740 msec</p>
+<p>hive-orc-tuning:<br/>Time taken: 109.539 seconds, Fetched: 32 row(s)<br/>Stage-Stage-1: Map: 275  Reduce: 300   Cumulative CPU: 3051.67 sec   HDFS Read: 627064673 HDFS Write: 40321 SUCCESS<br/>Total MapReduce CPU Time Spent: 50 minutes 51 seconds 670 msec</p>
+<p>hive-orc snappy-tuning:<br/>Time taken: 94.135 seconds, Fetched: 32 row(s)<br/>Stage-Stage-1: Map: 191  Reduce: 276   Cumulative CPU: 2393.92 sec   HDFS Read: 581727151 HDFS Write: 37201 SUCCESS<br/>Total MapReduce CPU Time Spent: 39 minutes 53 seconds 920 msec</p>
+<p>hive-parquet: <br/>Time taken: 250.786 seconds, Fetched: 32 row(s)<br/>Stage-Stage-1: Map: 642  Reduce: 744   Cumulative CPU: 10919.85 sec   HDFS Read: 873784253 HDFS Write: 65806 SUCCESS<br/>Total MapReduce CPU Time Spent: 0 days 3 hours 1 minutes 59 seconds 850 msec</p>
+<p>hive-parquet snappy: <br/>Time taken: 158.009 seconds, Fetched: 32 row(s)<br/>Stage-Stage-1: Map: 367  Reduce: 467   Cumulative CPU: 6246.0 sec   HDFS Read: 721915438 HDFS Write: 41707 SUCCESS<br/>Total MapReduce CPU Time Spent: 0 days 1 hours 44 minutes 6 seconds 0 msec</p>
+<h3>2 hive-2.3.4 on spark-2.4.0</h3>
+<p>set spark.driver.memory=4g;<br/>set spark.executor.memory=4g;<br/>set spark.executor.instances=10;</p>
+<p>hive on spark-parquet:<br/>Time taken: 54.446 seconds, Fetched: 32 row(s)</p>
+<p>hive on spark-parquet snappy:<br/>Time taken: 47.364 seconds, Fetched: 32 row(s)</p>
+<p>hive on spark-orc:<br/>Time taken: 149.901 seconds, Fetched: 32 row(s)</p>
+<p>hive on spark-orc snappy:<br/>Time taken: 138.844 seconds, Fetched: 32 row(s)</p>
+<h3>3 impala-2.12</h3>
+<p>MEM_LIMIT=20g * 3</p>
+<p>impala-parquet snappy: <br/>Fetched 32 row(s) in 15.10s<br/>+--------------+--------+----------+----------+-------+------------+-----------+---------------+---------------------------------------------------+<br/>| Operator     | #Hosts | Avg Time | Max Time | #Rows | Est. #Rows | Peak Mem  | Est. Peak Mem | Detail                                            |<br/>+--------------+--------+----------+----------+-------+------------+-----------+---------------+---------------------------------------------------+<br/>| 04:EXCHANGE  | 1      | 211.45us | 211.45us | 32    | 50         | 208.00 KB | 0 B           | UNPARTITIONED                                     |<br/>| 03:AGGREGATE | 3      | 2.58ms   | 2.91ms   | 32    | 50         | 34.03 MB  | 128.00 MB     | FINALIZE                                          |<br/>| 02:EXCHANGE  | 3      | 29.23us  | 30.92us  | 96    | 1.04B      | 32.00 KB  | 0 B           | HASH(cpp_addr_province)                           |<br/>| 01:AGGREGATE | 3      | 13.29s   | 13.97s   | 96    | 1.04B      | 34.05 MB  | 128.00 MB     | STREAMING                                         |<br/>| 00:SCAN HDFS | 3      | 723.09ms | 760.01ms | 1.04B | 1.04B      | 36.55 MB  | 88.00 MB      | temp.app_ba_userprofile_prop_nonpolar_view_ext_ps |<br/>+--------------+--------+----------+----------+-------+------------+-----------+---------------+---------------------------------------------------+</p>
+<p>impala-kudu: <br/>Fetched 32 row(s) in 15.61s</p>
+<h3>4 drill-1.15</h3>
+<p>10g+10g+1g+1g * 3</p>
+<p>drill-parquet:<br/>32 rows selected (59.501 seconds)</p>
+<p>drill-parquet snappy:<br/>32 rows selected (57.653 seconds)</p>
+<p>drill-orc:<br/>32 rows selected (75.749 seconds)</p>
+<p>drill-orc snappy:<br/>32 rows selected (45.323 seconds)</p>
+<h3>5 spark-sql --master yarn --num-executors 10 --executor-memory 4g --driver-memory 4g</h3>
+<h4>5.1 spark-2.1.1</h4>
+<p>spark sql-textfile: <br/>Time taken: 371.77 seconds, Fetched 32 row(s)</p>
+<p>spark sql-lzo: <br/>Time taken: 293.391 seconds, Fetched 32 row(s)</p>
+<p>spark sql-parquet:<br/>Time taken: 17.338 seconds, Fetched 32 row(s)</p>
+<p>spark sql-parquet snappy: <br/>Time taken: 16.609 seconds, Fetched 32 row(s)</p>
+<p>spark sql-orc:<br/>Time taken: 51.959 seconds, Fetched 32 row(s)</p>
+<h4><br/>5.2 spark-2.4.0</h4>
+<p>spark sql-textfile: <br/>Time taken: 496.395 seconds, Fetched 32 row(s)</p>
+<p>spark sql-lzo: <br/>Time taken: 297.142 seconds, Fetched 32 row(s)</p>
+<p>spark sql-parquet:<br/>Time taken: 16.728 seconds, Fetched 32 row(s)</p>
+<p>spark sql-parquet snappy:<br/>Time taken: 16.879 seconds, Fetched 32 row(s)</p>
+<p>spark sql-orc:<br/>Time taken: 21.432 seconds, Fetched 32 row(s)</p>
+<p>spark sql-orc snappy:<br/>Time taken: 21.935 seconds, Fetched 32 row(s)</p>
+<p> </p>
+<h4>6 presto</h4>
+<p>presto-parquet:<br/>Splits: 3,182 total, 3,182 done (100.00%)<br/>0:25 [1.04B rows, 612MB] [42.2M rows/s, 24.9MB/s]</p>
+<p>presto-parquet snappy:<br/>Splits: 2,088 total, 2,088 done (100.00%)<br/>0:21 [1.04B rows, 584MB] [49.3M rows/s, 27.8MB/s</p>
+<p>presto-orc：<br/>Splits: 1,532 total, 1,532 done (100.00%)<br/>0:13 [1.04B rows, 850MB] [81.7M rows/s, 66.8MB/s]</p>
+<p>presto-orc snappy：<br/>Splits: 1,353 total, 1,353 done (100.00%)<br/>0:12 [1.04B rows, 1.13GB] [87.5M rows/s, 97.4MB/s]</p>
+<p> </p>
+</div>
+            </div>
+
+            <!-- Post Footer -->
+            <div class="post-footer">
+                <div class="post-navigation">
+                    <a href="../blog_cn.html" class="nav-button">← Back to Home</a>
+                    <a href="0333.html" class="nav-button">Next Post →</a>
+                </div>
+            </div>
+        </article>
+    </div>
+</body>
+</html>

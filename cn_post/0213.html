@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CM金丝雀Canary报错</title>
+    <link rel="stylesheet" href="../css/style3.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header Navigation -->
+        <div class="header">
+            <h1><a href="../blog_cn.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+        </div>
+
+        <!-- Post Container -->
+        <article class="post">
+            <!-- Post Header -->
+            <div class="post-header">
+                <h1>CM金丝雀Canary报错</h1>
+                <div class="post-meta">
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📅</span>
+                        <span>February 19, 2019</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📖</span>
+                        <span>1 min read</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">👁️</span>
+                        <span>5362 views</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Post Content -->
+            <div class="post-content">
+                <div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<p>CM金丝雀Canary报错</p>
+<blockquote>
+<p>1 HDFS 金丝雀<br/>Canary 测试无法为 /tmp/.cloudera_health_monitoring_canary_files 创建父目录。</p>
+<p>2 Hive Metastore Canary<br/>Hive Metastore canary 创建 hue hdfs 主目录失败。</p>
+</blockquote>
+<p>检查：</p>
+<p>1）hdfs是否处于safemode，正常是off</p>
+<blockquote>
+<p># hdfs dfsadmin -safemode get<br/>Safe mode is OFF</p>
+</blockquote>
+<p>2）hdfs datanode是否健康，磁盘空间是否空闲，可自行上传文件测试</p>
+<blockquote>
+<p># hdfs dfsadmin -report</p>
+</blockquote>
+<p>3）根据错误提示查看目录权限，如果有问题，改为777</p>
+<blockquote>
+<p># hdfs dfs -ls /tmp<br/>Found 3 items<br/>d---------   - hdfs   supergroup          0 2019-02-18 23:57 /tmp/.cloudera_health_monitoring_canary_files<br/># hdfs dfs -chmod 777 /tmp/.cloudera_health_monitoring_canary_files</p>
+</blockquote>
+<p>如果都确认过还报错，请重启cloudera-scm-server</p>
+</div>
+            </div>
+
+            <!-- Post Footer -->
+            <div class="post-footer">
+                <div class="post-navigation">
+                    <a href="../blog_cn.html" class="nav-button">← Back to Home</a>
+                    <a href="0214.html" class="nav-button">Next Post →</a>
+                </div>
+            </div>
+        </article>
+    </div>
+</body>
+</html>

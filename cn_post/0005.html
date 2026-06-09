@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hive</title>
+    <link rel="stylesheet" href="../css/style3.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header Navigation -->
+        <div class="header">
+            <h1><a href="../blog_cn.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+        </div>
+
+        <!-- Post Container -->
+        <article class="post">
+            <!-- Post Header -->
+            <div class="post-header">
+                <h1>Hive</h1>
+                <div class="post-meta">
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📅</span>
+                        <span>May 31, 2022</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📖</span>
+                        <span>3 min read</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">👁️</span>
+                        <span>288 views</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Post Content -->
+            <div class="post-content">
+                <div class="blogpost-body cnblogs-markdown" id="cnblogs_post_body">
+<p><a href="http://hive.apache.org/" rel="noopener nofollow" target="_blank">http://hive.apache.org/</a><br/>
+The Apache Hive ™ data warehouse software facilitates reading, writing, and managing large datasets residing in distributed storage using SQL. Structure can be projected onto data already in storage. A command line tool and JDBC driver are provided to connect users to Hive.</p>
+<h1 id="一-部署结构">一 部署结构</h1>
+<h2 id="服务端">服务端</h2>
+<ul>
+<li>HiveServer2</li>
+<li>Metastore</li>
+</ul>
+<h2 id="客户端">客户端</h2>
+<ul>
+<li>hive</li>
+<li>beeline</li>
+</ul>
+<p><picture>
+  <source srcset="../img/1509647-20220531173255938-39941964.webp" type="image/webp">
+  <img alt="" src="../img/1509647-20220531173255938-39941964.png">
+</picture></p>
+<h1 id="二-安装">二 安装</h1>
+<h2 id="依赖">依赖</h2>
+<h3 id="1-jdk">1 JDK</h3>
+<h3 id="2-hadoop">2 Hadoop</h3>
+<p>$HADOOP_HOME</p>
+<p>目录</p>
+<blockquote>
+<p>$ $HADOOP_HOME/bin/hadoop fs - mkdir       /tmp<br/>
+$ $HADOOP_HOME/bin/hadoop fs - mkdir       /user/hive/warehouse<br/>
+$ $HADOOP_HOME/bin/hadoop fs - chmod g+w   /tmp<br/>
+$ $HADOOP_HOME/bin/hadoop fs - chmod g+w   /user/hive/warehous</p>
+</blockquote>
+<p>配置</p>
+<blockquote>
+<p>hive.metastore.warehouse.dir</p>
+</blockquote>
+<h3 id="3-mysql">3 Mysql</h3>
+<p>Server<br/>
+jdbc jar</p>
+<h2 id="安装">安装</h2>
+<p>所有版本下载</p>
+<blockquote>
+<p><a href="http://archive.apache.org/dist/hive/" rel="noopener nofollow" target="_blank">http://archive.apache.org/dist/hive/</a></p>
+</blockquote>
+<p>安装</p>
+<blockquote>
+<p>$ tar - xzvf hive-x.y.z.tar.gz<br/>
+$ cd hive-x.y.z<br/>
+$ export HIVE_HOME={{pwd}}<br/>
+$ export PATH=$HIVE_HOME/bin:$PATH</p>
+</blockquote>
+<h2 id="初始化">初始化</h2>
+<p>配置文件：$HIVE_HOME/conf/hive-site.xml</p>
+<blockquote>
+<p>javax.jdo.option.ConnectionURL<br/>
+javax.jdo.option.ConnectionDriverName<br/>
+javax.jdo.option.ConnectionUserName<br/>
+javax.jdo.option.ConnectionPassword</p>
+</blockquote>
+<p>所有可配置项</p>
+<blockquote>
+<p>$ wc - l $HIVE_HOME/conf/hive-default.xml.template<br/>
+5959</p>
+</blockquote>
+<p>初始化元数据库</p>
+<blockquote>
+<p>$HIVE_HOME/bin/schematool - dbType <db type=""> - initSchema</db></p>
+</blockquote>
+<p>所有初始化脚本</p>
+<blockquote>
+<p># ls $HIVE_HOME/scripts/metastore/upgrade/<br/>
+derby  mssql  mysql  oracle  postgres<br/>
+# ls $HIVE_HOME/scripts/metastore/upgrade/mysql<br/>
+hive-schema-0.10.0.mysql.sql<br/>
+hive-schema-2.1.0.mysql.sql<br/>
+hive-schema-2.3.0.mysql.sql<br/>
+hive-txn-schema-2.1.0.mysql.sql<br/>
+hive-txn-schema-2.3.0.mysql.sql<br/>
+upgrade-0.10.0-to-0.11.0.mysql.sql<br/>
+upgrade-2.1.0-to-2.2.0.mysql.sql<br/>
+upgrade-2.2.0-to-2.3.0.mysql.sql</p>
+</blockquote>
+<h2 id="元数据库结构">元数据库结构</h2>
+<h3 id="版本">版本</h3>
+<p>VERSION</p>
+<h3 id="元数据">元数据</h3>
+<p>DBS：数据库<br/>
+TBLS：表<br/>
+PARTITIONS：分区<br/>
+COLUMNS_V2：列<br/>
+SERDES：序列化反序列化<br/>
+FUNCS：函数<br/>
+IDXS：索引</p>
+<h3 id="权限">权限</h3>
+<p>DB_PRIVS<br/>
+TBL_COL_PRIVS</p>
+<h3 id="统计">统计</h3>
+<p>TAB_COL_STATS</p>
+<h2 id="启动metastore">启动Metastore</h2>
+<p>启动进程metastore</p>
+<blockquote>
+<p>$ $HIVE_HOME/bin/hive --service metastore</p>
+</blockquote>
+<p>启动类</p>
+<blockquote>
+<p>org.apache.hadoop.hive.metastore.HiveMetaStore</p>
+</blockquote>
+<p>端口配置</p>
+<blockquote>
+<p>hive.metastore.port : 9083</p>
+</blockquote>
+<p>配置</p>
+<blockquote>
+<p>hive.metastore.uris<br/>
+javax.jdo.option.*</p>
+</blockquote>
+<h2 id="启动hiveserver2">启动HiveServer2</h2>
+<p>启动进程hiveserver2</p>
+<blockquote>
+<p>$ $HIVE_HOME/bin/hiveserver2<br/>
+$ $HIVE_HOME/bin/hive --service hiveserver2</p>
+</blockquote>
+<p>启动类</p>
+<blockquote>
+<p>org.apache.hive.service.server.HiveServer2</p>
+</blockquote>
+<p>端口配置</p>
+<blockquote>
+<p>hive.server2.thrift.port : 10000</p>
+</blockquote>
+<h2 id="ha">HA</h2>
+<p>Metastore<br/>
+配置</p>
+<blockquote>
+<p>hive.metastore.uris</p>
+</blockquote>
+<p>HiveServer2<br/>
+配置</p>
+<blockquote>
+<p>hive.server2.support.dynamic.service.discovery<br/>
+hive.server2.zookeeper.namespace<br/>
+hive.zookeeper.quorum</p>
+</blockquote>
+<p>URL</p>
+<blockquote>
+<p>jdbc:hive2://zkNode1:2181,zkNode2:2181,zkNode3:2181/;serviceDiscoveryMode=zooKeeper;zooKeeperNamespace=hiveserver2</p>
+</blockquote>
+<h1 id="三-客户端">三 客户端</h1>
+<h2 id="hive">hive</h2>
+<p>客户端命令</p>
+<blockquote>
+<p>$ $HIVE_HOME/bin/hive</p>
+</blockquote>
+<p>启动类</p>
+<blockquote>
+<p>org.apache.hadoop.hive.cli.CliDriver<br/>
+run-&gt;executeDriver</p>
+</blockquote>
+<p>直接执行sql</p>
+<blockquote>
+<p>hive - e "$sql"<br/>
+hive - f $file_path</p>
+</blockquote>
+<h2 id="beeline">beeline</h2>
+<p>客户端命令</p>
+<blockquote>
+<p>$ $HIVE_HOME/bin/beeline - u jdbc:hive2://$HS2_HOST:$HS2_PORT</p>
+</blockquote>
+<h1 id="四-其他">四 其他</h1>
+<h2 id="执行引擎">执行引擎</h2>
+<p>配置</p>
+<blockquote>
+<p>hive.execution.engine</p>
+</blockquote>
+<p>可选</p>
+<ul>
+<li>mr</li>
+<li>spark</li>
+<li>tez</li>
+</ul>
+<h2 id="外部表">外部表</h2>
+<p>create external table * ();</p>
+<p>内部表与外部表的差别</p>
+<blockquote>
+<p>location<br/>
+drop table</p>
+</blockquote>
+<p>用途</p>
+<ul>
+<li>数据安全</li>
+<li>可以方便的访问外部数据：hbase、es</li>
+</ul>
+<h2 id="存储格式压缩格式">存储格式、压缩格式</h2>
+<p>SERDE</p>
+<ul>
+<li>Serialize/Deserilize</li>
+</ul>
+<p>存储格式</p>
+<ul>
+<li>行式</li>
+<li>textfile（原生、csv、json、xml）
+<ul>
+<li>用途：原始数据导入</li>
+</ul>
+</li>
+<li>列式
+<ul>
+<li>orc</li>
+<li>parquet</li>
+<li>用途：查询</li>
+</ul>
+</li>
+</ul>
+<p>压缩格式</p>
+<ul>
+<li>lzo</li>
+<li>snappy</li>
+</ul>
+<h3 id="不同格式与serde">不同格式与SERDE</h3>
+<blockquote>
+<p>csv<br/>
+org.apache.hadoop.hive.serde2.OpenCSVSerde<br/>
+json<br/>
+org.apache.hive.hcatalog.data.JsonSerDe<br/>
+xml<br/>
+com.ibm.spss.hive.serde2.xml.XmlSerDe<br/>
+parquet<br/>
+org.apache.hadoop.hive.ql.io.parquet.serde.ParquetHiveSerDe<br/>
+orc<br/>
+org.apache.hadoop.hive.ql.io.orc.OrcSerde<br/>
+hbase<br/>
+org.apache.hadoop.hive.hbase.HBaseSerDe</p>
+</blockquote>
+<h2 id="数据导入">数据导入</h2>
+<h3 id="文件导入">文件导入</h3>
+<p>普通表<br/>
+hive</p>
+<blockquote>
+<p>LOAD DATA LOCAL INPATH ${local_path} INTO TABLE ${db.${table};<br/>
+LOAD DATA INPATH ${hdfs_path} INTO TABLE ${db.${table};</p>
+</blockquote>
+<p>hdfs</p>
+<blockquote>
+<p>hdfs dfs - put ${filepath} /user/hive/warehouse/${db}.db/$</p>
+</blockquote>
+<p>分区表<br/>
+hive</p>
+<blockquote>
+<p>LOAD DATA LOCAL INPATH ${local_path} INTO TABLE ${db}.${table} partition(dt='${value}');</p>
+</blockquote>
+<p>hdfs</p>
+<blockquote>
+<p>hdfs dfs - mkdir /user/hive/warehouse/${db}.db/${table}/dt=${value}<br/>
+hdfs dfs - put ${filepath} /user/hive/warehouse/${db}.db/${table}/dt=${value}<br/>
+msck repair table ${db}.$</p>
+</blockquote>
+<h3 id="数据库导入">数据库导入</h3>
+<blockquote>
+<p>sqoop<br/>
+spark-sql<br/>
+datax<br/>
+kettle<br/>
+flume<br/>
+logstash</p>
+</blockquote>
+<h2 id="数据查询">数据查询</h2>
+<h3 id="单表查询">单表查询</h3>
+<h4 id="查询过程">查询过程</h4>
+<blockquote>
+<p>SQL-&gt;AST(Abstract Syntax Tree)-&gt;Task（MapRedTask，FetchTask）-&gt;QueryPlan（Task集合）-&gt;Job（Yarn）</p>
+</blockquote>
+<p>核心代码</p>
+<blockquote>
+<p>org.apache.hadoop.hive.ql.Driver.compile<br/>
+org.apache.hadoop.hive.ql.parse.ParseDriver<br/>
+org.apache.hadoop.hive.ql.parse.BaseSemanticAnalyzer<br/>
+org.apache.hadoop.hive.ql.QueryPlan<br/>
+org.apache.hadoop.hive.ql.Driver.execute<br/>
+org.apache.hadoop.hive.ql.Driver.getResult</p>
+</blockquote>
+<p><picture>
+  <source srcset="../img/1509647-20220531174757720-85482692.webp" type="image/webp">
+  <img alt="" src="../img/1509647-20220531174757720-85482692.png">
+</picture></p>
+<h3 id="多表查询">多表查询</h3>
+<h4 id="join">Join</h4>
+<ul>
+<li>map join、broadcast
+<ul>
+<li>场景：大表、小表</li>
+<li>配置：hive.auto.convert.join</li>
+</ul>
+</li>
+<li>bucket map join
+<ul>
+<li>场景：大表、大表</li>
+<li>配置：hive.optimize.bucketmapjoin</li>
+<li>clustered by</li>
+</ul>
+</li>
+<li>sorted merge bucket join
+<ul>
+<li>配置：hive.optimize.bucketmapjoin.sortedmerge</li>
+</ul>
+</li>
+<li>skew join
+<ul>
+<li>场景：数据倾斜</li>
+<li>配置：hive.optimize.skewjoin</li>
+</ul>
+</li>
+<li>left semi join
+<ul>
+<li>场景：in、exists</li>
+</ul>
+</li>
+</ul>
+<h4 id="cbo">CBO</h4>
+<p>CBO-Cost Based Optimize<br/>
+The main goal of a CBO is to generate efficient execution plans by examining the tables and conditions specified in the query, ultimately cutting down on query execution time and reducing resource utilization.</p>
+<h4 id="解释计划">解释计划</h4>
+<p>explain</p>
+<p>查询过程</p>
+<ul>
+<li>Map
+<ul>
+<li>TableScan</li>
+<li>Filter Operator</li>
+<li>Selector Operator</li>
+<li>Group By Operator</li>
+<li>Reduce Output Operator</li>
+</ul>
+</li>
+<li>Reduce
+<ul>
+<li>Group By Operator</li>
+<li>File Output Operator</li>
+</ul>
+</li>
+<li>Fetch Operator</li>
+</ul>
+<p>代码</p>
+<blockquote>
+<p>org.apache.hadoop.hive.ql.exec</p>
+</blockquote>
+</div>
+            </div>
+
+            <!-- Post Footer -->
+            <div class="post-footer">
+                <div class="post-navigation">
+                    <a href="../blog_cn.html" class="nav-button">← Back to Home</a>
+                    <a href="0006.html" class="nav-button">Next Post →</a>
+                </div>
+            </div>
+        </article>
+    </div>
+</body>
+</html>

@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>hive和mysql数据互导</title>
+    <link rel="stylesheet" href="../css/style3.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header Navigation -->
+        <div class="header">
+            <h1><a href="../blog_cn.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+        </div>
+
+        <!-- Post Container -->
+        <article class="post">
+            <!-- Post Header -->
+            <div class="post-header">
+                <h1>hive和mysql数据互导</h1>
+                <div class="post-meta">
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📅</span>
+                        <span>October 10, 2019</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📖</span>
+                        <span>1 min read</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">👁️</span>
+                        <span>647 views</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Post Content -->
+            <div class="post-content">
+                <div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<p>hive和mysql数据互导，首先想到的是sqoop，并且可以和调度框架（比如oozie等）配合配置定时任务，还有一种更简单的方式是通过spark-sql：</p>
+<div class="cnblogs_code">
+<pre><span style="color: rgba(0, 0, 0, 1)">CREATE OR REPLACE TEMPORARY VIEW tmp_tbl_test
+USING org.apache.spark.sql.jdbc OPTIONS (
+url </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">jdbc:mysql://1.1.1.1:3306/db_test?useUnicode=true&amp;characterEncoding=utf-8&amp;tinyInt1isBit=false&amp;zeroDateTimeBehavior=convertToNull</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">,
+dbtable </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">tbl_test</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">,
+user </span><span style="color: rgba(128, 0, 0, 1)">'</span><span style="color: rgba(128, 0, 0, 1)">root</span><span style="color: rgba(128, 0, 0, 1)">'</span><span style="color: rgba(0, 0, 0, 1)">,
+password </span><span style="color: rgba(128, 0, 0, 1)">'</span><span style="color: rgba(128, 0, 0, 1)">123456</span><span style="color: rgba(128, 0, 0, 1)">'</span>);</pre>
+</div>
+<p>然后可以在spark-sql中对tmp_tbl_test读或者写，相当于直接对mysql进行读或者写，<br/>如果只需要读，甚至不需要将数据从mysql先导到hive，而是直接读mysql；</p>
+<p> </p>
+<p>如果需要并发读取，可以增加参数</p>
+<div class="cnblogs_code">
+<pre>partitionColumn <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">id</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">, 
+lowerBound </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">10000</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">, 
+upperBound </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">20000</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">, 
+numPartitions </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">4</span><span style="color: rgba(128, 0, 0, 1)">"</span></pre>
+</div>
+<p>另外注意如果where里的查询条件设置不当，可能导致全表扫描，具体可以通过explain查询计划来确认，比如常见的时间类型：</p>
+<blockquote>
+<p>select * from test_table where create_time &gt; '2019-01-01'</p>
+</blockquote>
+<div class="cnblogs_code">
+<pre>== Physical Plan ==
+*(2) HashAggregate(keys=[], functions=[count(1<span style="color: rgba(0, 0, 0, 1)">)])
+</span>+-<span style="color: rgba(0, 0, 0, 1)"> Exchange SinglePartition
+   </span>+- *(1) HashAggregate(keys=[], functions=[partial_count(1<span style="color: rgba(0, 0, 0, 1)">)])
+      </span>+- *(1<span style="color: rgba(0, 0, 0, 1)">) Project
+         </span>+- *(1) Filter (cast(create_time#2 as string) &gt; 2019-01-01)
+            +- *(1) Scan JDBCRelation(test_table) [numPartitions=1] [create_time<span style="color: rgba(0, 128, 0, 1)">#</span><span style="color: rgba(0, 128, 0, 1)">1643] PushedFilters: [], ReadSchema: struct&lt;create_time:timestamp&gt;</span>
+Time taken: 0.034 seconds, Fetched 1 row(s)</pre>
+</div>
+<p>以上查询计划会将test_table整个scan到spark中然后做filter过滤create_time，而不是将查询条件push down到scan中，显然这不是期望的行为，修改查询条件为</p>
+<blockquote>
+<p>select * from test_table where create_time &gt; date_sub(now(), 100)</p>
+</blockquote>
+<p>则可解决问题； </p>
+<p> </p>
+<p>另外注意:</p>
+<p>1）连接串中的tinyInt1isBit=false，由于spark-sql和sqoop都是基于jdbc来读mysql，然后jdbc中会将mysql的字段类型tinyint默认认为是java.sql.Types.BIT，进而读出来的不是数字int，而是布尔值Boolean，如果不需要这种默认行为，则需要在连接串中增加tinyInt1isBit=false；</p>
+<p>2）连接串中的zeroDateTimeBehavior=convertToNull，如果mysql日期字段值为0000-00-00 00:00:00，从spark中读取会报错：</p>
+<p>java.sql.SQLException: Value '0000-00-00 00:00:00' can not be represented as java.sql.Timestamp</p>
+<p>设置 zeroDateTimeBehavior 属性，当遇到 DATETIME 值完全由 0 组成时，最终的有效值可以设置为，异常(exception)，一个近似值(round)，或将这个值转换为 null(convertToNull)。</p>
+<p> </p>
+<p>参考：</p>
+<p>https://github.com/apache/spark/blob/master/sql/core/src/main/scala/org/apache/spark/sql/execution/datasources/jdbc/JDBCRelation.scala</p>
+<p> </p>
+</div>
+            </div>
+
+            <!-- Post Footer -->
+            <div class="post-footer">
+                <div class="post-navigation">
+                    <a href="../blog_cn.html" class="nav-button">← Back to Home</a>
+                    <a href="0088.html" class="nav-button">Next Post →</a>
+                </div>
+            </div>
+        </article>
+    </div>
+</body>
+</html>

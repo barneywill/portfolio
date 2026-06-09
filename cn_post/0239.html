@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>常用命令</title>
+    <link rel="stylesheet" href="../css/style3.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header Navigation -->
+        <div class="header">
+            <h1><a href="../blog_cn.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+        </div>
+
+        <!-- Post Container -->
+        <article class="post">
+            <!-- Post Header -->
+            <div class="post-header">
+                <h1>常用命令</h1>
+                <div class="post-meta">
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📅</span>
+                        <span>January 30, 2019</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📖</span>
+                        <span>2 min read</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">👁️</span>
+                        <span>362 views</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Post Content -->
+            <div class="post-content">
+                <div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<h1>1 磁盘、cpu、内存相关</h1>
+<p>查看全部设备信息</p>
+<blockquote>
+<p># lspci</p>
+</blockquote>
+<p>查看整体磁盘空间占用情况</p>
+<blockquote>
+<p># df -h</p>
+</blockquote>
+<p>查看磁盘分区及文件系统</p>
+<blockquote>
+<p># df -T</p>
+</blockquote>
+<p>查看整体磁盘inode占用情况</p>
+<blockquote>
+<p># df -i</p>
+</blockquote>
+<p>查看文件详细信息</p>
+<blockquote>
+<p># ls -l $path</p>
+</blockquote>
+<p>查看文件inode信息</p>
+<blockquote>
+<p># ls -i $path<br/># stat $path</p>
+</blockquote>
+<p>查看指定目录磁盘占用情况，按照目录汇总，深度为1</p>
+<blockquote>
+<p># du -h --max-depth=1 $path</p>
+<p># du -sh $path/*</p>
+</blockquote>
+<p>在指定目录下按照名字查找指定文件</p>
+<blockquote>
+<p># find $path -name $file_name</p>
+</blockquote>
+<p>在指定目录下查找所有大于100M的文件</p>
+<blockquote>
+<p>$ find $path -size +100M</p>
+</blockquote>
+<p>查看磁盘io</p>
+<blockquote>
+<p># iostat</p>
+</blockquote>
+<p>查看磁盘读性能</p>
+<blockquote>
+<p># hdparm -t /dev/sda</p>
+</blockquote>
+<p>查看磁盘统计信息比如通电时间/接口类型等</p>
+<blockquote>
+<p># smartctl -a /dev/sda</p>
+</blockquote>
+<p>查看cpu信息</p>
+<blockquote>
+<p># cat /proc/cpuinfo</p>
+</blockquote>
+<p>查看物理CPU个数</p>
+<blockquote>
+<p># cat /proc/cpuinfo| grep "physical id"</p>
+</blockquote>
+<p>查看每个物理CPU中core的个数(即核数)</p>
+<blockquote>
+<p># cat /proc/cpuinfo| grep "cpu cores"</p>
+</blockquote>
+<p>查看逻辑CPU的个数</p>
+<blockquote>
+<p># cat /proc/cpuinfo| grep "processor" </p>
+</blockquote>
+<p>查看内存信息</p>
+<blockquote>
+<p># cat /proc/meminfo</p>
+</blockquote>
+<p>查看剩余内存</p>
+<blockquote>
+<p># free -m</p>
+</blockquote>
+<h1>2 统计、负载、进程相关</h1>
+<p>查看整体统计信息，包括进程、虚拟内存、磁盘和 CPU</p>
+<blockquote>
+<p># vmstat</p>
+</blockquote>
+<p>查看当前负载</p>
+<blockquote>
+<p># top</p>
+</blockquote>
+<p>然后输入M会按照内存占用排序，输入P会按照CPU占用排序，输入H查看线程，输入c切换查看详细启动命令</p>
+<p>查看一个进程中所有线程的资源占用情况</p>
+<blockquote>
+<p># top -H -p $pid</p>
+</blockquote>
+<p>这里展示的pid转化为16进制后</p>
+<blockquote>
+<p># echo 'obase=16;$pid'|bc</p>
+</blockquote>
+<p>再到jstack中搜对应的线程；</p>
+<p> </p>
+<p>查看当前所有的进程</p>
+<blockquote>
+<p># ps aux</p>
+</blockquote>
+<p>查看进程中所有的线程</p>
+<blockquote>
+<p># ps -T -p $pid</p>
+</blockquote>
+<p>杀死进程</p>
+<blockquote>
+<p># kill $pid</p>
+</blockquote>
+<p>强制杀死进程</p>
+<blockquote>
+<p># kill -9 $pid</p>
+</blockquote>
+<h1>3 crontab相关</h1>
+<p>查看crontab</p>
+<blockquote>
+<p># crontab -l</p>
+</blockquote>
+<p>编辑crontab</p>
+<blockquote>
+<p># crontab -e</p>
+</blockquote>
+<p>查看crontab日志</p>
+<blockquote>
+<p># tail -f /var/log/cron</p>
+</blockquote>
+<h1>4 网络端口相关</h1>
+<p>查看网络信息</p>
+<blockquote>
+<p># ifconfig</p>
+</blockquote>
+<p>查看ip路由信息</p>
+<blockquote>
+<p># ip route get 1</p>
+</blockquote>
+<p>查看某个进程绑定的端口或者某个端口被哪个进程绑定</p>
+<blockquote>
+<p># netstat -tnlp|grep $pid<br/># netstat -tnlp|grep $port</p>
+</blockquote>
+<p>查看端口占用情况</p>
+<blockquote>
+<p># lsof -i:$port</p>
+</blockquote>
+<p>查看某个端口的绑定和连接情况</p>
+<blockquote>
+<p># netstat -nat|grep $port</p>
+</blockquote>
+<p>针对端口抓包</p>
+<blockquote>
+<p># tcpdump -i eth1 tcp port $port -Xxv</p>
+</blockquote>
+<p>修改静态ip</p>
+<blockquote>
+<p># vi /etc/sysconfig/network-scripts/ifcfg-ens33</p>
+<p>TYPE=Ethernet</p>
+<p>PROXY_METHOD=none</p>
+<p>BROWSER_ONLY=no</p>
+<p>BOOTPROTO=static</p>
+<p>IPADDR=192.168.1.252</p>
+<p>NETMAST=255.255.255.0</p>
+<p>GATEWAY=192.168.1.1</p>
+<p>DEFROUTE=yes</p>
+<p>IPV4_FAILURE_FATAL=no</p>
+<p>IPV6INIT=yes</p>
+<p>IPV6_AUTOCONF=yes</p>
+<p>IPV6_DEFROUTE=yes</p>
+<p>IPV6_FAILURE_FATAL=no</p>
+<p>IPV6_ADDR_GEN_MODE=stable-privacy</p>
+<p>NAME=ens33</p>
+<p>UUID=989f4fa4-d0d5-4592-8891-99a50a1bb4a7</p>
+<p>DEVICE=ens33</p>
+<p>ONBOOT=yes</p>
+<p># service network restart</p>
+</blockquote>
+<h1>5 压缩解压相关</h1>
+<p>将目录打成tar包</p>
+<blockquote>
+<p>$ tar cvf $tar_name.tar $dir_name</p>
+<p>$ tar cvf $tar_name.tar $dir_name --exclude $exclude_file --exclude $exclude_dir</p>
+</blockquote>
+<p>排除指定目录</p>
+<blockquote>
+<p>$ tar cvf $tar_name.tar $dir_name --exclude $dir_name/$exclude_name</p>
+</blockquote>
+<p>解压tar包</p>
+<blockquote>
+<p>$ tar xvf $tar_name.tar</p>
+</blockquote>
+<p>解压tar包至指定目录 -C $target_dir</p>
+<p>压缩tar包，得到*.tar.gz</p>
+<blockquote>
+<p>$ gzip $tar_name.tar</p>
+</blockquote>
+<p>解压tar.gz</p>
+<blockquote>
+<p>$ tar xvf $tar_name.tar.gz</p>
+</blockquote>
+<p><br/>将指定目录打成zip包</p>
+<blockquote>
+<p>$ zip -r $zip_name.zip $dir_name</p>
+</blockquote>
+<p>解压zip包</p>
+<blockquote>
+<p>$ unzip $zip_name.zip</p>
+</blockquote>
+<p>解压zip包至指定目录 -d $target_dir</p>
+<h1>6 软件包相关</h1>
+<p>查看已安装软件包</p>
+<blockquote>
+<p># yum list installed</p>
+</blockquote>
+<p>查找软件包</p>
+<blockquote>
+<p># yum search $name</p>
+</blockquote>
+<p>安装软件包</p>
+<blockquote>
+<p># yum install $name</p>
+</blockquote>
+<p>下载软件包及所有依赖到指定目录</p>
+<blockquote>
+<p># yum install --downloadonly --downloaddir=$dir $name</p>
+</blockquote>
+<p>卸载软件包</p>
+<blockquote>
+<p># yum remove $name</p>
+</blockquote>
+<p>查看某个命令在哪个软件包中</p>
+<blockquote>
+<p># yum whatprovides $cmd</p>
+</blockquote>
+<p>rpm安装</p>
+<blockquote>
+<p># rpm -ivh $name.rpm</p>
+</blockquote>
+<p>yum安装rpm包</p>
+<blockquote>
+<p># yum localinstall $name.rpm</p>
+</blockquote>
+<p>以上两者的区别是yum localinstall会自动安装发现的依赖</p>
+<p>rpm查询已安装</p>
+<blockquote>
+<p># rpm -qa | grep $name</p>
+</blockquote>
+<p>rpm卸载</p>
+<blockquote>
+<p># rpm -e --nodeps $name</p>
+</blockquote>
+<h1>7 shell相关</h1>
+<p>查看当前shell</p>
+<blockquote>
+<p># echo $SHELL</p>
+</blockquote>
+<p>查看所有shell</p>
+<blockquote>
+<p># cat /etc/shells</p>
+</blockquote>
+<p>修改默认shell</p>
+<blockquote>
+<p># chsh -s /bin/zsh</p>
+</blockquote>
+<h1>8 其他</h1>
+<p>查看当前哪些用户正在登录</p>
+<blockquote>
+<p># w</p>
+</blockquote>
+<p>切换其他用户执行命令</p>
+<blockquote>
+<p># su - $user -c 'whoami'</p>
+</blockquote>
+<p>查找命令在哪</p>
+<blockquote>
+<p># whereis $cmd</p>
+</blockquote>
+<p>查看命令路径</p>
+<blockquote>
+<p># which $cmd</p>
+</blockquote>
+<p>查看之前执行的命令</p>
+<blockquote>
+<p># history</p>
+</blockquote>
+<p>查看系统限制</p>
+<blockquote>
+<p># ulimit -a</p>
+</blockquote>
+<p>后台执行命令</p>
+<blockquote>
+<p># nohup $cmd $arg 1&gt;output.log 2&gt;&amp;1 &amp;</p>
+</blockquote>
+<p>设置时区</p>
+<blockquote>
+<p># timedatectl set-timezone Asia/Shanghai</p>
+</blockquote>
+<p>拷贝</p>
+<blockquote>
+<p># cp -R /source /target</p>
+</blockquote>
+<p>拷贝显示进度和速度</p>
+<blockquote>
+<p># rsync -rv --progress /source /target</p>
+</blockquote>
+<h1>6 更多</h1>
+<p>iptables相关：<br/><a href="https://www.cnblogs.com/barneywill/p/10263530.html" target="_blank">https://www.cnblogs.com/barneywill/p/10263530.html</a></p>
+<p>用户组相关：<br/><a href="https://www.cnblogs.com/barneywill/p/10303553.html" target="_blank">https://www.cnblogs.com/barneywill/p/10303553.html</a></p>
+<p>文本替换相关：<br/><a href="https://www.cnblogs.com/barneywill/p/10115539.html" target="_blank">https://www.cnblogs.com/barneywill/p/10115539.html</a></p>
+<p>ssh相关：<br/><a href="https://www.cnblogs.com/barneywill/p/10271679.html" target="_blank">https://www.cnblogs.com/barneywill/p/10271679.html</a><br/><a href="https://www.cnblogs.com/barneywill/p/10331354.html" target="_blank">https://www.cnblogs.com/barneywill/p/10331354.html</a></p>
+<p>后台运行相关：<br/><a href="https://www.cnblogs.com/barneywill/p/10266211.html" target="_blank">https://www.cnblogs.com/barneywill/p/10266211.html</a></p>
+<p>远程拷贝文件相关：<br/><a href="https://www.cnblogs.com/barneywill/p/10115108.html" target="_blank">https://www.cnblogs.com/barneywill/p/10115108.html</a></p>
+<p>查看发行版本相关：<br/><a href="https://www.cnblogs.com/barneywill/p/10251262.html" target="_blank">https://www.cnblogs.com/barneywill/p/10251262.html</a></p>
+<p>上传下载相关：<br/><a href="https://www.cnblogs.com/barneywill/p/10265704.html" target="_blank">https://www.cnblogs.com/barneywill/p/10265704.html</a></p>
+<p>sudo相关：<br/><a href="https://www.cnblogs.com/barneywill/p/10272455.html" target="_blank">https://www.cnblogs.com/barneywill/p/10272455.html</a></p>
+<p>curl相关：<br/><a href="https://www.cnblogs.com/barneywill/p/10279555.html" target="_blank">https://www.cnblogs.com/barneywill/p/10279555.html</a></p>
+<p>挂载硬盘相关：</p>
+<p><a href="https://www.cnblogs.com/barneywill/p/10365848.html" target="_blank">https://www.cnblogs.com/barneywill/p/10365848.html</a></p>
+<p>连通性相关：</p>
+<p><a href="https://www.cnblogs.com/barneywill/p/10386968.html" target="_blank">https://www.cnblogs.com/barneywill/p/10386968.html</a></p>
+</div>
+            </div>
+
+            <!-- Post Footer -->
+            <div class="post-footer">
+                <div class="post-navigation">
+                    <a href="../blog_cn.html" class="nav-button">← Back to Home</a>
+                    <a href="0240.html" class="nav-button">Next Post →</a>
+                </div>
+            </div>
+        </article>
+    </div>
+</body>
+</html>

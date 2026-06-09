@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>confluence和jira配置</title>
+    <link rel="stylesheet" href="../css/style3.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header Navigation -->
+        <div class="header">
+            <h1><a href="../blog_cn.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+        </div>
+
+        <!-- Post Container -->
+        <article class="post">
+            <!-- Post Header -->
+            <div class="post-header">
+                <h1>confluence和jira配置</h1>
+                <div class="post-meta">
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📅</span>
+                        <span>July 10, 2019</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📖</span>
+                        <span>1 min read</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">👁️</span>
+                        <span>1480 views</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Post Content -->
+            <div class="post-content">
+                <div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<h1>一 下载</h1>
+<p>confluence</p>
+<blockquote>
+<p>https://product-downloads.atlassian.com/software/confluence/downloads/atlassian-confluence-6.15.6-x64.bin</p>
+</blockquote>
+<p>jira</p>
+<blockquote>
+<p>https://product-downloads.atlassian.com/software/jira/downloads/atlassian-jira-software-8.2.2-x64.bin</p>
+</blockquote>
+<h1>二 安装</h1>
+<p>mysql建库</p>
+<blockquote>
+<p class="p1"><span class="s1">CREATE DATABASE confluence CHARACTER SET utf8 COLLATE utf8_bin;</span></p>
+<p class="p1"><span class="s1">grant all privileges on confluence.* to 'confluence'@'%';</span></p>
+<p class="p1">flush privileges;</p>
+</blockquote>
+<p class="p1"> </p>
+<p class="p1">将mysql-connector-java-5.1.47.jar和<span class="s1">atlassian-extras-decoder-v2-3.4.1.jar(pojie)拷贝到</span></p>
+<p class="p1"><span class="s1">/opt/atlassian/confluence/confluence/WEB-INF/lib/</span></p>
+<p class="p1">停止命令</p>
+<blockquote>
+<p class="p1"># sh /opt/atlassian/confluence/bin/stop-confluence.sh</p>
+<p class="p1"><span class="s1"># sh /opt/atlassian/jira/bin/stop-jira.sh</span></p>
+</blockquote>
+<p class="p1">启动命令</p>
+<blockquote>
+<p class="p1"># sh /opt/atlassian/confluence/bin/start-confluence.sh</p>
+<p class="p1"># sh <span class="s1">/opt/atlassian/jira/bin/start-jira.sh</span></p>
+</blockquote>
+<h1>三 配置</h1>
+<p>1 如果要在confluence前加lb，比如nginx，需要配置</p>
+<p>/opt/atlassian/confluence/conf/server.xml</p>
+<div class="cnblogs_code">
+<pre>        &lt;Connector port="8090" connectionTimeout="20000" redirectPort="8443"<span style="color: rgba(0, 0, 0, 1)">
+                   maxThreads</span>="48" minSpareThreads="10"<span style="color: rgba(0, 0, 0, 1)">
+                   enableLookups</span>="false" acceptCount="10" debug="0" URIEncoding="UTF-8"<span style="color: rgba(0, 0, 0, 1)">
+                   protocol</span>="org.apache.coyote.http11.Http11NioProtocol" scheme="http" proxyName="$host" proxyPort="$port"/&gt;</pre>
+</div>
+<p>其中的schema、proxyName、proxyPort</p>
+<p>jira位于</p>
+<p>/opt/atlassian/jira/conf/server.xml</p>
+<p> </p>
+<p>2 如果要将confluence配置到context下，比如通过 /confluence 访问</p>
+<p>/opt/atlassian/confluence/conf/server.xml</p>
+<div class="cnblogs_code">
+<pre>                &lt;Context path="/confluence" docBase="../confluence" debug="0" reloadable="false" useHttpOnly="true"&gt;</pre>
+</div>
+<p> </p>
+<p>3 如果中文乱码</p>
+<p>/var/atlassian/application-data/confluence/confluence.cfg.xml</p>
+<div class="cnblogs_code">
+<pre>&lt;property name="hibernate.connection.url"&gt;jdbc:mysql:<span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)">$server:3306/confluence?useUnicode=true&amp;amp;characterEncoding=utf8&lt;/property&gt;</span></pre>
+</div>
+<p>jira配置文件：</p>
+<p>/var/atlassian/application-data/jira/dbconfig.xml</p>
+<p> </p>
+<p>4 如果保存时报错</p>
+<div class="cnblogs_code">
+<pre> java.lang.IllegalArgumentException: Invalid character found <span style="color: rgba(0, 0, 255, 1)">in</span> the request target. The valid characters are defined <span style="color: rgba(0, 0, 255, 1)">in</span> RFC 7230 <span style="color: rgba(0, 0, 255, 1)">and</span> RFC 3986<span style="color: rgba(0, 0, 0, 1)">
+    at org.apache.coyote.http11.Http11InputBuffer.parseRequestLine(Http11InputBuffer.java:</span>467<span style="color: rgba(0, 0, 0, 1)">)
+    at org.apache.coyote.http11.Http11Processor.service(Http11Processor.java:</span>294<span style="color: rgba(0, 0, 0, 1)">)
+    at org.apache.coyote.AbstractProcessorLight.process(AbstractProcessorLight.java:</span>66<span style="color: rgba(0, 0, 0, 1)">)
+    at org.apache.coyote.AbstractProtocol$ConnectionHandler.process(AbstractProtocol.java:</span>836<span style="color: rgba(0, 0, 0, 1)">)
+    at org.apache.tomcat.util.net.NioEndpoint$SocketProcessor.doRun(NioEndpoint.java:</span>1747<span style="color: rgba(0, 0, 0, 1)">)
+    at org.apache.tomcat.util.net.SocketProcessorBase.run(SocketProcessorBase.java:</span>49<span style="color: rgba(0, 0, 0, 1)">)
+    at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:</span>1149<span style="color: rgba(0, 0, 0, 1)">)
+    at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:</span>624<span style="color: rgba(0, 0, 0, 1)">)
+    at org.apache.tomcat.util.threads.TaskThread$WrappingRunnable.run(TaskThread.java:</span>61<span style="color: rgba(0, 0, 0, 1)">)
+    at java.lang.Thread.run(Thread.java:</span>748)</pre>
+</div>
+<p>需要配置</p>
+<p>/opt/atlassian/confluence/conf/catalina.properties</p>
+<div class="cnblogs_code">
+<pre>tomcat.util.http.parser.HttpParser.requestTargetAllow=</pre>
+</div>
+<p> </p>
+<p>5 如果有mysql相关的报警，修改mysql配置文件后重启</p>
+<div class="cnblogs_code">
+<pre>innodb_log_file_size =<span style="color: rgba(0, 0, 0, 1)"> 256M
+max_allowed_packet </span>= 256M</pre>
+</div>
+<p> </p>
+<p>6 页面配置过程一定要直接访问tomcat,不要加nginx等代码,否则访问不到</p>
+<p> </p>
+<p>7 修改General Configuration-Server Base Url</p>
+<p> </p>
+<p> 参考：</p>
+<p>https://confluence.atlassian.com/doc/configuring-the-server-base-url-148592.html</p>
+<p>https://confluence.atlassian.com/confkb/exceeds-max-allowed-packet-for-mysql-179443425.html</p>
+</div>
+            </div>
+
+            <!-- Post Footer -->
+            <div class="post-footer">
+                <div class="post-navigation">
+                    <a href="../blog_cn.html" class="nav-button">← Back to Home</a>
+                    <a href="0100.html" class="nav-button">Next Post →</a>
+                </div>
+            </div>
+        </article>
+    </div>
+</body>
+</html>
