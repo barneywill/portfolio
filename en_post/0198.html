@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>CM clears disk space</title>
+<link href="../css/style3.css" rel="stylesheet"/>
+</head>
+<body>
+<div class="container">
+<!-- Header Navigation -->
+<div class="header">
+<h1><a href="../blog.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+</div>
+<!-- Post Container -->
+<article class="post">
+<!-- Post Header -->
+<div class="post-header">
+<h1>CM clears disk space</h1>
+<div class="post-meta">
+<div class="post-meta-item">
+<span class="meta-icon">📅</span>
+<span>February 27, 2019</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">📖</span>
+<span>1 min read</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">👁️</span>
+<span>1941 views</span>
+</div>
+</div>
+</div>
+<!-- Post Content -->
+<div class="post-content">
+<div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<p>Regularly clear the disk space of Cloudera Manager server</p>
+<h1>1 Stop Service Monitor and Host Monitor</h1>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201902/1509647-20190227203117900-527233020.png"/></p>
+<h1>2 Delete log</h1>
+<blockquote>
+<p># /bin/rm /var/lib/cloudera-host-monitor/ts/*/partition*/* - rf<br/># /bin/rm /var/lib/cloudera-service-monitor/ts/*/partition*/* - rf</p>
+</blockquote>
+<h1> 3 Restart Service Monitor and Host Monitor</h1>
+<p>Confirm whether new log and metadata files are generated</p>
+<blockquote>
+<p># ls /var/lib/cloudera-service-monitor/ts/stream/partitions<br/># ls /var/lib/cloudera-service-monitor/ts/stream/partition_metadata/</p>
+</blockquote>
+<p>Confirm whether the chart on the page has data</p>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201902/1509647-20190227203910960-201157090.png"/></p>
+<p> </p>
+</div>
+</div>
+<!-- Post Footer -->
+<div class="post-footer">
+<div class="post-navigation">
+<a class="nav-button" href="../blog.html">← Back to Home</a>
+<a class="nav-button" href="0199.html">Next Post →</a>
+</div>
+</div>
+</article>
+</div>
+</body>
+</html>

@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Nginx 3 - location and rewrite</title>
+<link href="../css/style3.css" rel="stylesheet"/>
+</head>
+<body>
+<div class="container">
+<!-- Header Navigation -->
+<div class="header">
+<h1><a href="../blog.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+</div>
+<!-- Post Container -->
+<article class="post">
+<!-- Post Header -->
+<div class="post-header">
+<h1>Nginx 3 - location and rewrite</h1>
+<div class="post-meta">
+<div class="post-meta-item">
+<span class="meta-icon">📅</span>
+<span>May 07, 2019</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">📖</span>
+<span>1 min read</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">👁️</span>
+<span>361 views</span>
+</div>
+</div>
+</div>
+<!-- Post Content -->
+<div class="post-content">
+<div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<h1>nginx location</h1>
+<ul>
+<li>=: Exact match (must all be equal)</li>
+<li>~: case sensitive, regular matching</li>
+<li>~*: ignore case, regular matching</li>
+<li>^~: Only needs to match the uri part, exact match</li>
+<li>@: internal service jump, exact match</li>
+</ul>
+<p>Priority:</p>
+<ol>
+<li>Exact match =</li>
+<li>Forward match ^~ /</li>
+<li>Case sensitive regex ~ /</li>
+<li>Case insensitive regex ~*</li>
+<li>Path match /</li>
+</ol>
+<h1>rule</h1>
+<p>The exact match rule is "maximum prefix".<br/>The regular matching rule is "sequential matching". As long as the first one is matched, subsequent matching will be stopped.<br/>Universal match "/" last match</p>
+<h1>nginx rewrite</h1>
+<blockquote>
+<p>rewrite ^(.*)$ /other/path/or/server/$1 break;</p>
+</blockquote>
+<p> </p>
+</div>
+</div>
+<!-- Post Footer -->
+<div class="post-footer">
+<div class="post-navigation">
+<a class="nav-button" href="../blog.html">← Back to Home</a>
+<a class="nav-button" href="0142.html">Next Post →</a>
+</div>
+</div>
+</article>
+</div>
+</body>
+</html>

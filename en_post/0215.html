@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>CM turns on Kerberos</title>
+<link href="../css/style3.css" rel="stylesheet"/>
+</head>
+<body>
+<div class="container">
+<!-- Header Navigation -->
+<div class="header">
+<h1><a href="../blog.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+</div>
+<!-- Post Container -->
+<article class="post">
+<!-- Post Header -->
+<div class="post-header">
+<h1>CM turns on Kerberos</h1>
+<div class="post-meta">
+<div class="post-meta-item">
+<span class="meta-icon">📅</span>
+<span>February 19, 2019</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">📖</span>
+<span>2 min read</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">👁️</span>
+<span>3142 views</span>
+</div>
+</div>
+</div>
+<!-- Post Content -->
+<div class="post-content">
+<div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<p>For details on Kerberos installation, see:<a href="https://www.cnblogs.com/barneywill/p/10394164.html" target="_blank">https://www.cnblogs.com/barneywill/p/10394164.html</a> </p>
+<h1> </h1>
+<h1>1. Create a user for CM</h1>
+<blockquote>
+<p># kadmin.local - q "addprinc scm/admin"</p>
+</blockquote>
+<p>The name and password are arbitrary and will be used in subsequent configurations.</p>
+<p> </p>
+<h1>2. CM configuration process</h1>
+<p>1 Enable Kerberos</p>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201902/1509647-20190218231801392-491928675.png"/></p>
+<p>2 Select all</p>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201902/1509647-20190218232411084-1724855740.png"/></p>
+<p>3 Fill in according to /etc/krb5.conf</p>
+<p> <img alt="" src="https://img2018.cnblogs.com/blog/1509647/201902/1509647-20190218232328073-415717711.png"/></p>
+<p>4 </p>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201902/1509647-20190218232600090-1472924275.png"/></p>
+<p>5 Fill in the username and password you just created</p>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201902/1509647-20190218235435116-750371403.png"/></p>
+<p>6 next step</p>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201902/1509647-20190218235525603-1770427626.png"/></p>
+<p>7 next step</p>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201902/1509647-20190218235544169-962496580.png"/></p>
+<p>8 </p>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201902/1509647-20190218235640622-202550691.png"/></p>
+<p>You can view the users created by CM</p>
+<blockquote>
+<p># kadmin.local - q 'listprincs'</p>
+</blockquote>
+<h1>Three possible questions</h1>
+<p>If there is a problem during the installation process, some components may fail to start.</p>
+<p>1）impala</p>
+<p>statestored startup error</p>
+<blockquote>
+<p>SASL message (Kerberos (internal)): Couldn't find mech GSSAPI</p>
+</blockquote>
+<p>Or catalogd and impalad report an error when starting</p>
+<blockquote>
+<p>I0219 00:31:16.314851 857 statestore-subscriber.cc:238] statestore registration unsuccessful: Couldn't open transport for $server2.bj:24000 (No more data to read.)<br/>F0219 00:31:16.314926   857 catalogd-main.cc:88] Couldn't open transport for $server2.bj:24000 (No more data to read.)<br/>. Impalad exiting.</p>
+</blockquote>
+<p>Check whether the following library is installed</p>
+<blockquote>
+<p># yum install cyrus-sasl-plain  cyrus-sasl-devel  cyrus-sasl-gssapi</p>
+</blockquote>
+<p> </p>
+<p>2）hue</p>
+<p>hue instance Kerberos Ticket Renewer failed to start</p>
+<blockquote>
+<p>INFO kt_renewer <br/>Renewing kerberos ticket to work around kerberos 1.8.1: /bin/kinit - R - c /var/run/hue/hue_krb5_ccache<br/>ERROR	kt_renewer	<br/>Couldn't renew kerberos ticket in order to work around Kerberos 1.8.1 issue. Please check that the ticket for 'hue/$server1@ANYTHING.COM' is still renewable:<br/>  $ klist - f - c /var/run/hue/hue_krb5_ccache<br/>If the 'renew until' date is the same as the 'valid starting' date, the ticket cannot be renewed. Please check your KDC configuration, and the ticket renewal policy (maxrenewlife) for the 'hue/$server1@ANYTHING.COM' and `krbtgt' principals.<br/>[19/Feb/2019 07:32:04 ] settings     INFO     Welcome to Hue 3.9.0</p>
+</blockquote>
+<p>Reproduce the problem</p>
+<blockquote>
+<p># klist - f - c /var/run/hue/hue_krb5_ccache<br/>Ticket cache: FILE:/var/run/hue/hue_krb5_ccache<br/>Default principal: hue/$server1@ANYTHING.COM</p>
+<p>Valid starting       Expires              Service principal<br/>02/19/2019 10:06:50  02/20/2019 10:06:50  krbtgt/ANYTHING.COM@ANYTHING.COM<br/>        Flags: FI<br/># /bin/kinit - R - c /var/run/hue/hue_krb5_ccache<br/>kinit: KDC can't fulfill requested option while renewing credentials</p>
+</blockquote>
+<p>examine:</p>
+<p>1) Check the configuration file</p>
+<blockquote>
+<p># vi /etc/krb5.conf<br/>ticket_lifetime = 24h<br/>renew_lifetime = 7d<br/># vi /var/kerberos/krb5kdc/kdc.conf<br/>  max_renewable_life = 7d 0h 0m 0s<br/>  default_principal_flags = +renewable</p>
+</blockquote>
+<p>2) Check the Maximum renewable life of krbtgt users</p>
+<blockquote>
+<p># kadmin.local - q 'getprinc krbtgt/ANYTHING.COM@ANYTHING.COM'<br/>Principal: krbtgt/ANYTHING.COM@ANYTHING.COM<br/>Expiration date: [never]<br/>Last password change: [never]<br/>Password expiration date: [never]<br/>Maximum ticket life: 1 day 00:00:00<br/>Maximum renewable life: 0 days 00:00:00<br/>Last modified: Mon Feb 18 22:02:42 CST 2019 (db_creation@ANYTHING.COM)<br/>Last successful authentication: [never]<br/>Last failed authentication: [never]<br/>Failed password attempts: 0<br/>Number of keys: 9<br/>Key: vno 1, aes256-cts-hmac-sha1-96<br/>Key: vno 1, aes128-cts-hmac-sha1-96<br/>Key: vno 1, des3-cbc-sha1<br/>Key: vno 1, arcfour-hmac<br/>Key: vno 1, camellia256-cts-cmac<br/>Key: vno 1, camellia128-cts-cmac<br/>Key: vno 1, des-hmac-sha1<br/>Key: vno 1, des-cbc-md5<br/>Key: vno 1, des-cbc-crc<br/>MKey: vno 1<br/>Attributes: LOCKDOWN_KEYS<br/>Policy: [none]</p>
+</blockquote>
+<p>The point is</p>
+<blockquote>
+<p>Maximum renewable life: 0 days 00:00:00</p>
+</blockquote>
+<p>Modify krbtgt’s maxrenewlife</p>
+<blockquote>
+<p># kadmin.local - q 'modprinc - maxrenewlife "7d" krbtgt/ANYTHING.COM'</p>
+</blockquote>
+<p>If necessary, modify other users' maxrenewlife</p>
+<blockquote>
+<p># kadmin.local - q 'modprinc - maxrenewlife "7d" +allow_renewable $user/$host@ANYTHING.COM'</p>
+</blockquote>
+<p>delete cache</p>
+<blockquote>
+<p># /bin/rm /var/run/hue/hue_krb5_ccache</p>
+</blockquote>
+<p>Restart Kerberos Ticket Renewer</p>
+<p> </p>
+<p>3）</p>
+<p>Activity Monitor error</p>
+<blockquote>
+<p>ERROR Main <br/>Failed to start Firehose<br/>java.lang.RuntimeException: java.util.concurrent.ExecutionException: java.lang.RuntimeException: java.io.IOException: Login failure for hue/$server1@ANYTHING.COM from keytab cmon.keytab<br/>...<br/>Caused by: KrbException: no supported default etypes for default_tkt_enctypes</p>
+</blockquote>
+<p>Find default_tkt_enctypes</p>
+<blockquote>
+<p># vi /etc/krb5.conf<br/>default_tkt_enctypes = aes256-cts</p>
+</blockquote>
+<p>Find cmon.keytab</p>
+<blockquote>
+<p># find /opt - name cmon.keytab<br/>/opt/cloudera-manager/cm-5.16.1/run/cloudera-scm-agent/process/240-cloudera-mgmt-ACTIVITYMONITOR/cmon.keytab</p>
+</blockquote>
+<p>View principal in keytab</p>
+<blockquote>
+<p># klist - k /opt/cloudera-manager/cm-5.16.1/run/cloudera-scm-agent/process/240-cloudera-mgmt-ACTIVITYMONITOR/cmon.keytab<br/>Keytab name: FILE:/opt/cloudera-manager/cm-5.16.1/run/cloudera-scm-agent/process/240-cloudera-mgmt-ACTIVITYMONITOR/cmon.keytab<br/>KVNO Principal<br/>---- --------------------------------------------------------------------------<br/>   2 hue/$server1@ANYTHING.COM (aes256-cts-hmac-sha1-96) <br/>   2 hue/$server1@ANYTHING.COM (aes128-cts-hmac-sha1-96) <br/>   2 hue/$server1@ANYTHING.COM (des3-cbc-sha1) <br/>   2 hue/$server1@ANYTHING.COM (arcfour-hmac) <br/>   2 hue/$server1@ANYTHING.COM (camellia256-cts-cmac) <br/>   2 hue/$server1@ANYTHING.COM (camellia128-cts-cmac) <br/>   2 hue/$server1@ANYTHING.COM (des-hmac-sha1) <br/>   2 hue/$server1@ANYTHING.COM (des-cbc-md5) </p>
+</blockquote>
+<p>Found that there is indeed no aes256-cts, modified</p>
+<blockquote>
+<p># vi /etc/krb5.conf</p>
+<p>default_tgs_enctypes = aes256-cts des3-cbc-sha1<br/>default_tkt_enctypes = aes256-cts des3-cbc-sha1<br/>permitted_enctypes = aes256-cts des3-cbc-sha1</p>
+</blockquote>
+<p> Restart Activity Monitor</p>
+<p> </p>
+<p>4) If you encounter</p>
+<blockquote>
+<p>[javax.security.sasl.SaslException: GSS initiate failed [Caused by GSSException: Failure unspecified at GSS-API level (Mechanism level: Encryption type AES256 CTS mode with HMAC SHA1-96 is not supported/enabled)]]</p>
+</blockquote>
+<p>Please see: https://www.cnblogs.com/barneywill/p/10540008.html</p>
+<p> </p>
+</div>
+</div>
+<!-- Post Footer -->
+<div class="post-footer">
+<div class="post-navigation">
+<a class="nav-button" href="../blog.html">← Back to Home</a>
+<a class="nav-button" href="0216.html">Next Post →</a>
+</div>
+</div>
+</article>
+</div>
+</body>
+</html>

@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Text replacement of commonly used Linux commands</title>
+<link href="../css/style3.css" rel="stylesheet"/>
+</head>
+<body>
+<div class="container">
+<!-- Header Navigation -->
+<div class="header">
+<h1><a href="../blog.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+</div>
+<!-- Post Container -->
+<article class="post">
+<!-- Post Header -->
+<div class="post-header">
+<h1>Text replacement of commonly used Linux commands</h1>
+<div class="post-meta">
+<div class="post-meta-item">
+<span class="meta-icon">📅</span>
+<span>December 13, 2018</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">📖</span>
+<span>1 min read</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">👁️</span>
+<span>5963 views</span>
+</div>
+</div>
+</div>
+<!-- Post Content -->
+<div class="post-content">
+<div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<p>Text replacement of commonly used Linux commands</p>
+<h1>1 vi</h1>
+<blockquote>
+<p>vi test_file</p>
+</blockquote>
+<blockquote>
+<p>:%s/h/h1/g</p>
+</blockquote>
+<p>Note: Full text replacement, replace h with h1</p>
+<blockquote>
+<p>:1,4s/h/h1/g</p>
+</blockquote>
+<p>Note: Replace h in lines 1 to 4 with h1</p>
+<blockquote>
+<p>:%s/\n/,/g</p>
+</blockquote>
+<p>Note: Replace the newline character with,</p>
+<h1>2 sed</h1>
+<blockquote>
+<p>sed - e 's/h/h1/g' test_file</p>
+</blockquote>
+<p>Note: Full text replacement, replace h with h1</p>
+<blockquote>
+<p>sed - e '1,4s/h/h1/g' test_file</p>
+</blockquote>
+<p>Note: Replace h in lines 1 to 4 with h1</p>
+<blockquote>
+<p>sed ':a;N;$!ba;s/\n/,/g' test_file</p>
+</blockquote>
+<p>Note: Replace the newline character with,</p>
+<blockquote>
+<p>sed 'nd' test_file</p>
+</blockquote>
+<p>Comment: Delete the nth line</p>
+<blockquote>
+<p>sed - e '1s/h/h1/g;4s/h/h1/g' test_file</p>
+</blockquote>
+<p>Note: Multiple replacements at the same time, separated by ;</p>
+<p> </p>
+<p>If you want to modify the file directly, add the -i parameter;</p>
+<h1>3 direct replacement</h1>
+<blockquote>
+<p>$ echo ${var//a/b}</p>
+</blockquote>
+<p> </p>
+</div>
+</div>
+<!-- Post Footer -->
+<div class="post-footer">
+<div class="post-navigation">
+<a class="nav-button" href="../blog.html">← Back to Home</a>
+<a class="nav-button" href="0319.html">Next Post →</a>
+</div>
+</div>
+</article>
+</div>
+</body>
+</html>

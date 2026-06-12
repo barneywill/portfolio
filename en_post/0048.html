@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>CentOS Boots into Emergency Mode</title>
+<link href="../css/style3.css" rel="stylesheet"/>
+</head>
+<body>
+<div class="container">
+<!-- Header Navigation -->
+<div class="header">
+<h1><a href="../blog.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+</div>
+<!-- Post Container -->
+<article class="post">
+<!-- Post Header -->
+<div class="post-header">
+<h1>CentOS Boots into Emergency Mode</h1>
+<div class="post-meta">
+<div class="post-meta-item">
+<span class="meta-icon">📅</span>
+<span>December 04, 2020</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">📖</span>
+<span>1 min read</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">👁️</span>
+<span>1141 views</span>
+</div>
+</div>
+</div>
+<!-- Post Content -->
+<div class="post-content">
+<div class="blogpost-body cnblogs-markdown" id="cnblogs_post_body">
+<p>CentOS boots into emergency mode. After logging in to the root account, you can pass</p>
+<blockquote>
+<h1 id="journalctl--xb">journalctl - xb</h1>
+</blockquote>
+<p>Check the log. There will be specific error information in it. There are two common errors:<br/>
+1) If you have changed /etc/fstab before restarting, there may be a problem with the configuration. Recheck the file and then try again.</p>
+<blockquote>
+<h1 id="reboot">reboot</h1>
+</blockquote>
+<p>Restart and the problem is solved;<br/>
+2) If you were fORCed to power off and shut down before restarting, it may be that some content was not written from the memory to the disk in time due to the shutdown, causing problems. Find the problematic partition from the log, temporarily comment out the partition in /etc/fstab, and then restart</p>
+<blockquote>
+<h1 id="reboot-1">reboot</h1>
+</blockquote>
+<p>Restart and you can temporarily enter the system;<br/>
+To repair the problematic partition, you need to operate according to different file systems. For example, to repair the xfs file system, use</p>
+<blockquote>
+<h1 id="xfs_repair-devsda1">xfs_repair /dev/sda1</h1>
+</blockquote>
+<p>If an error is reported, add the -L parameter and some data may be lost.</p>
+<blockquote>
+<h1 id="xfs_repair--l-devsda1">xfs_repair - L /dev/sda1</h1>
+</blockquote>
+<p>It is better than losing everything. After repairing, restore /etc/fstab and then restart.</p>
+</div>
+</div>
+<!-- Post Footer -->
+<div class="post-footer">
+<div class="post-navigation">
+<a class="nav-button" href="../blog.html">← Back to Home</a>
+<a class="nav-button" href="0049.html">Next Post →</a>
+</div>
+</div>
+</article>
+</div>
+</body>
+</html>

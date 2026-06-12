@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Introduction to Java Basics ClassLoader Class Loader</title>
+<link href="../css/style3.css" rel="stylesheet"/>
+</head>
+<body>
+<div class="container">
+<!-- Header Navigation -->
+<div class="header">
+<h1><a href="../blog.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+</div>
+<!-- Post Container -->
+<article class="post">
+<!-- Post Header -->
+<div class="post-header">
+<h1>Introduction to Java Basics ClassLoader Class Loader</h1>
+<div class="post-meta">
+<div class="post-meta-item">
+<span class="meta-icon">📅</span>
+<span>December 12, 2018</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">📖</span>
+<span>1 min read</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">👁️</span>
+<span>357 views</span>
+</div>
+</div>
+</div>
+<!-- Post Content -->
+<div class="post-content">
+<div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<h1>Introduction to classloader</h1>
+<h2>1 classloader hierarchy (parent-child relationship)</h2>
+<p>Bootstrap（ClassLoader）</p>
+<ul>
+<li>ExtClassLoader
+<ul>
+<li>AppClassLoader
+<ul>
+<li>XXXClassLoader</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<p>See the code below for details:</p>
+<h5 id="section-0326-1"><strong>sun.misc.Launcher</strong></h5>
+<div class="cnblogs_code">
+<pre>public<span> Launcher() {
+
+        Launcher.ExtClassLoader var1;
+
+        try<span> {
+
+            var1 =<span> Launcher.ExtClassLoader.getExtClassLoader();
+
+        } catch<span> (IOException var10) {
+
+            throw new InternalError("Could not create extension class loader"<span>, var10);
+
+        }
+
+ 
+
+        try<span> {
+
+            this.loader =<span> Launcher.AppClassLoader.getAppClassLoader(var1);
+
+        } catch<span> (IOException var9) {
+
+            throw new InternalError("Could not create application class loader"<span>, var9);
+
+        }</span></span></span></span></span></span></span></span></span></pre>
+</div>
+<h2>2 classloader class loading process</h2>
+<p>When loading a class, the classloader first tries to load it through the parent classloader. If it cannot be loaded, it will try to load it by itself, which is often called "parental delegation".</p>
+<p>And if a class depends on other classes, such as ClassA depends on ClassB, ClassB will be loaded by ClassA's classloader by default.</p>
+<blockquote>
+<p>* &lt;p&gt; The methods and constructors of objects created by a class loader may<br/>* reference other classes. To determine the class(es) referred to, the Java<br/>* virtual machine invokes the {@link #loadClass &lt;tt&gt;loadClass&lt;/tt&gt;} method of<br/>* the class loader that originally created the class.</p>
+</blockquote>
+<p>See the code below for details:</p>
+<h5 id="section-0326-2"><strong>java.lang.ClassLoader</strong></h5>
+<div class="cnblogs_code">
+<pre>protected Class&lt;?&gt; loadClass(String name, boolean<span> resolve)
+
+        throws<span> ClassNotFoundException
+
+    {
+
+        synchronized<span> (getClassLoadingLock(name)) {
+
+            // First, check if the class has already been loaded
+<span>
+            Class&lt;?&gt; c =<span> findLoadedClass(name);
+
+            if (c == null<span>) {
+
+                long t0 =<span> System.nanoTime();
+
+                try<span> {
+
+                    if (parent != null<span>) {
+
+                        c = parent.loadClass(name, false<span>);
+
+                    } else<span> {
+
+                        c =<span> findBootstrapClassOrNull(name);
+
+                    }
+
+                } catch<span> (ClassNotFoundException e) {
+
+                    // ClassNotFoundException thrown if class not found
+
+                    // from the non-null parent class loader
+<span>
+                }
+
+ 
+
+                if (c == null<span>) {
+
+                    // If still not found, then invoke findClass in order
+
+                    // to find the class.
+
+                    long t1 =<span> System.nanoTime();
+
+                    c =<span> findClass(name);
+
+ 
+
+                    // this is the defining class loader; record the stats
+<span>
+                    sun.misc.PerfCounter.getParentDelegationTime().addTime(t1 - <span> t0);
+
+                    sun.misc.PerfCounter.getFindClassTime().addElapsedTimeFrom(t1);
+
+                    sun.misc.PerfCounter.getFindClasses().increment();
+
+                }
+
+            }
+
+            if<span> (resolve) {
+
+                resolveClass(c);
+
+            }
+
+            return<span> c;
+
+        }
+
+    }</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></pre>
+<p><span> </span></p>
+</div>
+</div>
+</div>
+<!-- Post Footer -->
+<div class="post-footer">
+<div class="post-navigation">
+<a class="nav-button" href="../blog.html">← Back to Home</a>
+<a class="nav-button" href="0327.html">Next Post →</a>
+</div>
+</div>
+</article>
+</div>
+</body>
+</html>

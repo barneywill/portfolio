@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Thinking in BigData 1 - Introduction to Big Data</title>
+<link href="../css/style3.css" rel="stylesheet"/>
+</head>
+<body>
+<div class="container">
+<!-- Header Navigation -->
+<div class="header">
+<h1><a href="../blog.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+</div>
+<!-- Post Container -->
+<article class="post">
+<!-- Post Header -->
+<div class="post-header">
+<h1>Thinking in BigData 1 - Introduction to Big Data</h1>
+<div class="post-meta">
+<div class="post-meta-item">
+<span class="meta-icon">📅</span>
+<span>October 16, 2018</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">📖</span>
+<span>3 min read</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">👁️</span>
+<span>572 views</span>
+</div>
+</div>
+</div>
+<!-- Post Content -->
+<div class="post-content">
+<div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<p>When it comes to big data, you have to mention Hadoop. When you mention Hadoop, you have to mention the three research papers published by Google: GFS, MapReduce, and BigTable. Google is indeed a great company that has opened up the global era of big data.</p>
+<p> </p>
+<p>In "The Post-Google Era: The Decline of Big Data and the Rise of the Blockchain Economy":</p>
+<blockquote>
+<p><em>The word googol means 10 to the 100th power - an incredibly large number.</em></p>
+<p><em>...</em></p>
+<p><em>Over the years, Google has digitized nearly every available book in the world (2005), digitized all the languages and their translations in the great tapestry of world languages (2010), and digitized the topography of the planet (Google Maps and Google Earth, 2007). , even down to the appearance and structure of each street (Street View) and its traffic conditions (Waze, 2016), it even digitized the facial expressions of the entire world in its digital facial recognition software (2006, now massively upgraded and part of Google Photos). With the arrival of YouTube in 2006, Google commanded an incredibly explosive and ever-expanding digital show that encompasses most of the world's images, music, and interviews.</em></p>
+<p><em>Unifying the amorphous chaos of Earth's surface, sounds, images, accounts, songs, speeches, roads, buildings, documents, information, and narratives into a planetary digital tool is a feat of unparalleled and priceless proportions.</em></p>
+<p><em>...</em></p>
+<p><em>Google's success is almost incredible.</em></p>
+<p><em>...</em></p>
+<p><em>Except for a few small but crucial areas, everything Google provides to its customers is free.</em></p>
+<p><em>...</em></p>
+<p><em>Free maps with amazing coverage and resolution make Google the master of mobile and local services; free YouTube is becoming the preferred carrier of Internet audio and video with amazing quality and diversity; free email, elegant, concise and slightly mysterious spam filters, convenient attachments and hundreds of megabytes of storage space, as well as free links to view calendars and contact lists; free Android apps, free games, and free search bring speed and improve efficiency. Free, free, free. Free holiday slideshows, free moral enhancement, free classics of world literature, free answers. All your whims come from Google's brain.</em></p>
+</blockquote>
+<p><br/>Let’s go back to the beginning. Google started out as a search engine. To put it simply, a search engine requires a bunch of crawlers to crawl all the web pages on the entire network according to certain rules. Then it needs to extract the content of these web pages, and then segment the content and build an inverted index. When the user searches, the user’s search keywords are segmented into words and then checked in the inverted index and combined with some weights to sort the results and return them to the user in pages.</p>
+<p>In fact, many details are ignored here. For example, to store all original web page data after crawling, distributed file storage is required, so GFS appears; in GFS, distributed consistency issues need to be solved, so Chubby appears; when results are sorted, page weights need to be referenced, that is, to calculate PageRank, so the computing model MapReduce appears; web page data needs to retain historical versions, support massive real-time writing, and support real-time random access, such as the web page snapshot function, so BigTable appears. . .</p>
+<p> </p>
+<p>The following is a simple comparison table I compiled. If there are any mistakes, please point them out. The left side is Google's original version, and the right side is the open source version:</p>
+<table class="confluenceTable">
+<tbody>
+<tr><th class="confluenceTh">Google</th><th class="confluenceTh">OpenSource</th></tr>
+<tr>
+<td class="confluenceTd" colspan="1">GSA</td>
+<td class="confluenceTd" colspan="1">Lucene、Elastic Search</td>
+</tr>
+<tr>
+<td class="confluenceTd"><span>Chubby</span></td>
+<td class="confluenceTd">Zookeeper</td>
+</tr>
+<tr>
+<td class="confluenceTd">GFS</td>
+<td class="confluenceTd">Hadoop HDFS</td>
+</tr>
+<tr>
+<td class="confluenceTd">MapReduce</td>
+<td class="confluenceTd">Hadoop MapReduce</td>
+</tr>
+<tr>
+<td class="confluenceTd">BigTable</td>
+<td class="confluenceTd">HBase</td>
+</tr>
+<tr>
+<td class="confluenceTd">Dremel</td>
+<td class="confluenceTd">Drill、Impala</td>
+</tr>
+<tr>
+<td class="confluenceTd" colspan="1">Pregel</td>
+<td class="confluenceTd" colspan="1">Giraph</td>
+</tr>
+<tr>
+<td class="confluenceTd" colspan="1">MillWheel</td>
+<td class="confluenceTd" colspan="1">Storm、Spark Streaming、Flink、Samza</td>
+</tr>
+<tr>
+<td class="confluenceTd">Spanner</td>
+<td class="confluenceTd"> </td>
+</tr>
+<tr>
+<td class="confluenceTd">Beam</td>
+<td class="confluenceTd"> </td>
+</tr>
+<tr>
+<td class="confluenceTd">TensorFlow</td>
+<td class="confluenceTd"> </td>
+</tr>
+<tr>
+<td class="confluenceTd">Kubernetes</td>
+<td class="confluenceTd"> </td>
+</tr>
+</tbody>
+</table>
+<p style="text-align: left">The current open source field of big data components is dazzling</p>
+<p style="text-align: left"><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201811/1509647-20181107105630669-774323724.png"/></p>
+<h1 style="text-align: left">1. List of commonly used open source components</h1>
+<table border="0">
+<tbody>
+<tr>
+<td style="width: 110px"><strong>Zookeeper</strong></td>
+<td style="width: 180px"> </td>
+<td>Distributed consistency, often used for master-slave switching of other components</td>
+<td><a class="external-link" href="http://zookeeper.apache.org/" rel="noopener nofollow">http://zookeeper.apache.org/</a></td>
+</tr>
+<tr>
+<td style="width: 110px"><strong>Kafka</strong></td>
+<td style="width: 180px"> </td>
+<td>MessageQueue, log summary</td>
+<td><a class="external-link" href="http://kafka.apache.org/" rel="noopener nofollow">http://kafka.apache.org</a></td>
+</tr>
+<tr>
+<td style="width: 110px"><strong>Hadoop</strong></td>
+<td style="width: 180px">HDFS</td>
+<td>Distributed file system</td>
+<td> </td>
+</tr>
+<tr>
+<td style="width: 110px"><strong> </strong></td>
+<td style="width: 180px">Yarn</td>
+<td>Resource (CPU/Memory) Scheduling</td>
+<td> </td>
+</tr>
+<tr>
+<td style="width: 110px"><strong> </strong></td>
+<td style="width: 180px">MapReduce</td>
+<td>Now almost no one uses it directly, but other components such as Hive, Oozie, etc. are still in use.</td>
+<td> </td>
+</tr>
+<tr>
+<td style="width: 110px"><strong>Hive</strong></td>
+<td style="width: 180px"> </td>
+<td>Data warehouse, offline SQL query</td>
+<td> </td>
+</tr>
+<tr>
+<td style="width: 110px"><strong>Flume</strong></td>
+<td style="width: 180px"> </td>
+<td>Log collection, agent deployed on each terminal node</td>
+<td> </td>
+</tr>
+<tr>
+<td style="width: 110px"><strong>Sqoop</strong></td>
+<td style="width: 180px"> </td>
+<td>Data is imported and exported inside and outside the Hadoop ecosystem, such as Hive&lt;-&gt;MySQL</td>
+<td> </td>
+</tr>
+<tr>
+<td style="width: 110px"><strong>Gobblin</strong></td>
+<td style="width: 180px"> </td>
+<td>ETL tools, such as Kafka-&gt;HDFS</td>
+<td> </td>
+</tr>
+<tr>
+<td style="width: 110px"><strong>Spark</strong></td>
+<td style="width: 180px">Spark</td>
+<td>Offline calculation</td>
+<td> </td>
+</tr>
+<tr>
+<td style="width: 110px"><strong> </strong></td>
+<td style="width: 180px">SparkSQL</td>
+<td>Offline SQL query</td>
+<td> </td>
+</tr>
+<tr>
+<td style="width: 110px"><strong> </strong></td>
+<td style="width: 180px">SparkStreaming</td>
+<td>real time calculation</td>
+<td> </td>
+</tr>
+<tr>
+<td style="width: 110px"><strong> </strong></td>
+<td style="width: 180px">SparkStructuredStreaming</td>
+<td>SQL real-time calculation</td>
+<td> </td>
+</tr>
+<tr>
+<td style="width: 110px"><strong> </strong></td>
+<td style="width: 180px">SparkML</td>
+<td>machine learning</td>
+<td> </td>
+</tr>
+<tr>
+<td style="width: 110px"><strong>HBase</strong></td>
+<td style="width: 180px"> </td>
+<td>Massive KV database</td>
+<td> </td>
+</tr>
+<tr>
+<td style="width: 110px">
+<p><strong>Oozie</strong></p>
+<p><strong>Azkaban</strong></p>
+<p><strong>Quartz</strong></p>
+</td>
+<td style="width: 180px"> </td>
+<td>Task scheduling</td>
+<td>
+<p><a class="external-link" href="http://oozie.apache.org/" rel="noopener nofollow">http://oozie.apache.org/</a></p>
+<p><a class="external-link" href="https://azkaban.github.io/" rel="noopener nofollow">https://azkaban.github.io/</a></p>
+<p><a class="external-link" href="http://www.quartz-scheduler.org/" rel="noopener nofollow">http://www.quartz-scheduler.org/</a></p>
+</td>
+</tr>
+<tr>
+<td style="width: 110px">
+<p><strong>Parquet</strong></p>
+<p><strong>ORC</strong></p>
+<p><strong>Kudu</strong></p>
+</td>
+<td style="width: 180px"> </td>
+<td>Data storage format, columnar storage</td>
+<td>
+<p><a class="external-link" href="https://orc.apache.org/" rel="noopener nofollow">https://orc.apache.org</a></p>
+<p><a class="external-link" href="http://parquet.apache.org/" rel="noopener nofollow">http://parquet.apache.org</a></p>
+</td>
+</tr>
+<tr>
+<td style="width: 110px">
+<p><strong>ProtocolBuffer</strong></p>
+<p><strong>Thrift</strong></p>
+<p><strong>Avro</strong></p>
+<p><strong>Json</strong></p>
+</td>
+<td style="width: 180px"> </td>
+<td>Data serialization</td>
+<td> </td>
+</tr>
+<tr>
+<td style="width: 110px"><strong>Scala</strong></td>
+<td style="width: 180px"> </td>
+<td>Programming language, general functional programming and object-oriented programming, concise code</td>
+<td> </td>
+</tr>
+<tr>
+<td style="width: 110px">
+<p><strong>ElasticSearch</strong></p>
+<p><strong>Lucene</strong></p>
+</td>
+<td style="width: 180px"> </td>
+<td>Inverted index search</td>
+<td> </td>
+</tr>
+<tr>
+<td style="width: 110px"><strong>Cassandra</strong></td>
+<td style="width: 180px"> </td>
+<td>Massive KV database, faster than HBase</td>
+<td> </td>
+</tr>
+<tr>
+<td style="width: 110px"><strong>Kylin</strong></td>
+<td style="width: 180px"> </td>
+<td>Real-time query, using HBase space to exchange time</td>
+<td> </td>
+</tr>
+<tr>
+<td style="width: 110px"><strong>Druid</strong></td>
+<td style="width: 180px"> </td>
+<td> </td>
+<td> </td>
+</tr>
+<tr>
+<td style="width: 110px">
+<p><strong>Impala</strong></p>
+<p><strong>Drill</strong></p>
+</td>
+<td style="width: 180px"> </td>
+<td>Real-time query</td>
+<td> </td>
+</tr>
+<tr>
+<td style="width: 110px"><strong>Hue</strong></td>
+<td style="width: 180px"> </td>
+<td>Hadoop UI, a page UI that integrates multiple components of the Hadoop ecosystem</td>
+<td> </td>
+</tr>
+<tr>
+<td style="width: 110px"><strong>Ambari</strong></td>
+<td style="width: 180px"> </td>
+<td>Big data cluster rapid deployment tools and monitoring tools</td>
+<td> </td>
+</tr>
+<tr>
+<td style="width: 110px"><strong>Nagios</strong></td>
+<td style="width: 180px"> </td>
+<td>Monitoring tools</td>
+<td> </td>
+</tr>
+<tr>
+<td style="width: 110px"><strong>Ranger</strong></td>
+<td style="width: 180px"> </td>
+<td>Permission control</td>
+<td> </td>
+</tr>
+<tr>
+<td style="width: 110px"><strong>Kerberos</strong></td>
+<td style="width: 180px"> </td>
+<td>Security certification</td>
+<td> </td>
+</tr>
+<tr>
+<td style="width: 110px"><strong>Kubernetes</strong></td>
+<td style="width: 180px"> </td>
+<td>Container cluster management</td>
+<td> </td>
+</tr>
+</tbody>
+</table>
+<p>(content is being added gradually)</p>
+<p> </p>
+<h1 style="text-align: left">Two releases</h1>
+<p style="text-align: left">Open source components usually come in 3 distributions:</p>
+<h2 style="text-align: left">1 Apache </h2>
+<p style="text-align: left">base distribution</p>
+<h2 style="text-align: left">2 CDH（Cloudera's Distribution, including Apache Hadoop）</h2>
+<p style="text-align: left"><a class="external-link" href="https://www.cloudera.com/products/open-source/apache-hadoop/key-cdh-components.html" rel="noopener nofollow">https://www.cloudera.com/products/open-source/apache-hadoop/key-cdh-components.html</a></p>
+<p style="text-align: left"><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201811/1509647-20181107105722122-902163269.png"/></p>
+<p> </p>
+<p style="text-align: left">CDH is Cloudera’s 100% open source platform distribution, including Apache Hadoop and built specifically to meet enterprise demands. CDH delivers everything you need for enterprise use right out of the box. By integrating Hadoop with more than a dozen other critical open source projects, Cloudera has created a functionally advanced system that helps you perform end-to-end Big Data workflows.</p>
+<h2 style="text-align: left">3 HDP（Hortonworks Data Platform） </h2>
+<p style="text-align: left"><a class="external-link" href="https://hortonworks.com/" rel="noopener nofollow">https://hortonworks.com/</a></p>
+<p style="text-align: left"><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201811/1509647-20181107105756617-1250301709.png"/></p>
+<p> </p>
+<p style="text-align: left">HDP is the industry's only true secure, enterprise-ready open source Apache™ Hadoop® distribution based on a centralized architecture (<a class="external-link" href="https://hortonworks.com/apache/yarn/" rel="noopener nofollow" title="Yarn">YARN</a>). HDP addresses the complete needs of data-at-rest, powers real-time customer applications and delivers robust big data analytics that accelerate decision making and innovation. </p>
+<p style="text-align: left"><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201811/1509647-20181107105835239-474324270.png"/></p>
+<p> </p>
+<p style="text-align: left"> Why are there so many distributions? To put it simply, CDH and HDP are both based on Apache. If you use Apache directly, the version of each component is chosen arbitrarily, and version compatibility issues are easy to occur. CDH and HDP are equivalent to packaging a series of version-compatible components and naming a new version, and the updates are relatively lagging; in addition, there will be some unique components, such as CDH's Cloudera Manager, Hue, Impala, etc., HDP's Ambari, etc., which facilitate cluster construction, management, monitoring, etc.;</p>
+<p style="text-align: left">Ambari is more open and supports the installation of third-party components, such as Elasticsearch, Airflow, Impala, Hue, etc. For details, see:<a href="https://www.cnblogs.com/barneywill/p/10268501.html" target="_blank">https://www.cnblogs.com/barneywill/p/10268501.html</a></p>
+<p style="text-align: left">ps: Cloudera and Hortonworks have recently merged, and CDH and HDP may be further integrated in the future.</p>
+</div>
+</div>
+<!-- Post Footer -->
+<div class="post-footer">
+<div class="post-navigation">
+<a class="nav-button" href="../blog.html">← Back to Home</a>
+<a class="nav-button" href="0366.html">Next Post →</a>
+</div>
+</div>
+</article>
+</div>
+</body>
+</html>

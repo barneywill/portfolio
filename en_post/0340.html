@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>When Oozie submits a Spark task, it reports Java.lang.NoClassDefFoundError: org/apache/Kafka/clients/producer/KafkaProducer</title>
+<link href="../css/style3.css" rel="stylesheet"/>
+</head>
+<body>
+<div class="container">
+<!-- Header Navigation -->
+<div class="header">
+<h1><a href="../blog.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+</div>
+<!-- Post Container -->
+<article class="post">
+<!-- Post Header -->
+<div class="post-header">
+<h1>When Oozie submits a Spark task, it reports Java.lang.NoClassDefFoundError: org/apache/Kafka/clients/producer/KafkaProducer</h1>
+<div class="post-meta">
+<div class="post-meta-item">
+<span class="meta-icon">📅</span>
+<span>December 12, 2018</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">📖</span>
+<span>1 min read</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">👁️</span>
+<span>3747 views</span>
+</div>
+</div>
+</div>
+<!-- Post Content -->
+<div class="post-content">
+<div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<p>Oozie supports many action types, such as Spark and Hive, and the corresponding tags are:</p>
+<blockquote>
+<p>&lt;spark xmlns="uri:oozie:spark-action:0.1"&gt; </p>
+</blockquote>
+<p>...</p>
+<p>Sharelib in Oozie is used to store the dependencies required by each action type. You can view all current action types and the dependencies of each action type.</p>
+<blockquote>
+<p><strong>oozie admin - shareliblist</strong><br/>[Available ShareLib]<br/>hive<br/>sparkbak<br/>distcp<br/>mapreduce-streaming<br/>spark<br/>oozie<br/>hcatalog<br/>hive2<br/>sqoop<br/>pig</p>
+</blockquote>
+<p> </p>
+<blockquote>
+<p><strong>oozie admin - shareliblist spark</strong></p>
+<p>...</p>
+</blockquote>
+<p>The above error is due to the lack of Kafka-clients-0.8.2.2.jar in the Kafka basic dependency in Spark dependency in Oozie. Upload the jar to the sharelib directory and then update it manually.</p>
+<blockquote>
+<p><strong>oozie admin - sharelibupdate</strong></p>
+</blockquote>
+<p>Visible after update:</p>
+<blockquote>
+<p> <strong>oozie admin -shareliblist spark|grep kafka</strong><br/>        <a rel="nofollow">hdfs://hdfs_name/oozie/share/lib_20180801121138/spark/kafka-clients-0.8.2.2.jar</a><br/>        <a rel="nofollow">hdfs://hdfs_name/oozie/share/lib_20180801121138/spark/kafka_2.11-0.8.2.1.jar</a><br/>        <a rel="nofollow">hdfs://hdfs_name/oozie/share/lib_20180801121138/spark/spark-streaming-kafka-0-8_2.11-2.1.0.jar</a> </p>
+</blockquote>
+<p>Added successfully</p>
+</div>
+</div>
+<!-- Post Footer -->
+<div class="post-footer">
+<div class="post-navigation">
+<a class="nav-button" href="../blog.html">← Back to Home</a>
+<a class="nav-button" href="0341.html">Next Post →</a>
+</div>
+</div>
+</article>
+</div>
+</body>
+</html>

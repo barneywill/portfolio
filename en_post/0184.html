@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Hive 5 - Performance TuningPerformance Tuning</title>
+<link href="../css/style3.css" rel="stylesheet"/>
+</head>
+<body>
+<div class="container">
+<!-- Header Navigation -->
+<div class="header">
+<h1><a href="../blog.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+</div>
+<!-- Post Container -->
+<article class="post">
+<!-- Post Header -->
+<div class="post-header">
+<h1>Hive 5 - Performance TuningPerformance Tuning</h1>
+<div class="post-meta">
+<div class="post-meta-item">
+<span class="meta-icon">📅</span>
+<span>March 12, 2019</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">📖</span>
+<span>13 min read</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">👁️</span>
+<span>3778 views</span>
+</div>
+</div>
+</div>
+<!-- Post Content -->
+<div class="post-content">
+<div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<h1>1 compress &amp; mr</h1>
+<p>The default execution engine of Hive is mr</p>
+<blockquote>
+<p>hive&gt; set hive.execution.engine;<br/>hive.execution.engine=mr</p>
+</blockquote>
+<p>So the optimization for mr is the optimization of Hive, such as compression and temporary directory</p>
+<p>mapred-site.xml</p>
+<div class="cnblogs_code">
+<pre>    <span style="color: rgba(0, 0, 255, 1)">&lt;</span><span style="color: rgba(128, 0, 0, 1)">property</span><span style="color: rgba(0, 0, 255, 1)">&gt;</span>
+        <span style="color: rgba(0, 0, 255, 1)">&lt;</span><span style="color: rgba(128, 0, 0, 1)">name</span><span style="color: rgba(0, 0, 255, 1)">&gt;</span>mapreduce.map.output.compress<span style="color: rgba(0, 0, 255, 1)">&lt;/</span><span style="color: rgba(128, 0, 0, 1)">name</span><span style="color: rgba(0, 0, 255, 1)">&gt;</span>  
+        <span style="color: rgba(0, 0, 255, 1)">&lt;</span><span style="color: rgba(128, 0, 0, 1)">value</span><span style="color: rgba(0, 0, 255, 1)">&gt;</span>true<span style="color: rgba(0, 0, 255, 1)">&lt;/</span><span style="color: rgba(128, 0, 0, 1)">value</span><span style="color: rgba(0, 0, 255, 1)">&gt;</span>
+    <span style="color: rgba(0, 0, 255, 1)">&lt;/</span><span style="color: rgba(128, 0, 0, 1)">property</span><span style="color: rgba(0, 0, 255, 1)">&gt;</span>
+    <span style="color: rgba(0, 0, 255, 1)">&lt;</span><span style="color: rgba(128, 0, 0, 1)">property</span><span style="color: rgba(0, 0, 255, 1)">&gt;</span>
+        <span style="color: rgba(0, 0, 255, 1)">&lt;</span><span style="color: rgba(128, 0, 0, 1)">name</span><span style="color: rgba(0, 0, 255, 1)">&gt;</span>mapred.map.output.compress.codec<span style="color: rgba(0, 0, 255, 1)">&lt;/</span><span style="color: rgba(128, 0, 0, 1)">name</span><span style="color: rgba(0, 0, 255, 1)">&gt;</span>  
+        <span style="color: rgba(0, 0, 255, 1)">&lt;</span><span style="color: rgba(128, 0, 0, 1)">value</span><span style="color: rgba(0, 0, 255, 1)">&gt;</span>org.apache.hadoop.io.compress.SnappyCodec<span style="color: rgba(0, 0, 255, 1)">&lt;/</span><span style="color: rgba(128, 0, 0, 1)">value</span><span style="color: rgba(0, 0, 255, 1)">&gt;</span>
+    <span style="color: rgba(0, 0, 255, 1)">&lt;/</span><span style="color: rgba(128, 0, 0, 1)">property</span><span style="color: rgba(0, 0, 255, 1)">&gt;</span></pre>
+</div>
+<p>yarn-site.xml</p>
+<div class="cnblogs_code">
+<pre>    <span style="color: rgba(0, 0, 255, 1)">&lt;</span><span style="color: rgba(128, 0, 0, 1)">property</span><span style="color: rgba(0, 0, 255, 1)">&gt;</span>
+        <span style="color: rgba(0, 0, 255, 1)">&lt;</span><span style="color: rgba(128, 0, 0, 1)">name</span><span style="color: rgba(0, 0, 255, 1)">&gt;</span>yarn.nodemanager.local-dirs<span style="color: rgba(0, 0, 255, 1)">&lt;/</span><span style="color: rgba(128, 0, 0, 1)">name</span><span style="color: rgba(0, 0, 255, 1)">&gt;</span>
+        <span style="color: rgba(0, 0, 255, 1)">&lt;</span><span style="color: rgba(128, 0, 0, 1)">value</span><span style="color: rgba(0, 0, 255, 1)">&gt;</span>${hadoop.tmp.dir}/nm-local-dir<span style="color: rgba(0, 0, 255, 1)">&lt;/</span><span style="color: rgba(128, 0, 0, 1)">value</span><span style="color: rgba(0, 0, 255, 1)">&gt;</span>
+    <span style="color: rgba(0, 0, 255, 1)">&lt;/</span><span style="color: rgba(128, 0, 0, 1)">property</span><span style="color: rgba(0, 0, 255, 1)">&gt;</span></pre>
+</div>
+<p> </p>
+<h2>1.1 Hive enables compression</h2>
+<blockquote>
+<p>set hive.exec.compress.output=true;</p>
+</blockquote>
+<p>This controls whether the final outputs of a query (to a local/hdfs file or a Hive table) is compressed. The compression codec and other options are determined from Hadoop configuration variables mapred.output.compress* .</p>
+<blockquote>
+<p>set hive.exec.compress.intermediate=true;</p>
+</blockquote>
+<p>This controls whether intermediate files produced by Hive between multiple map-reduce jobs are compressed. The compression codec and other options are determined from Hadoop configuration variables mapred.output.compress*.</p>
+<h1>2 decompose</h1>
+<p>decomposing table data sets into more manageable parts</p>
+<p>Break the table data into multiple parts (files or directories) so that you can skip unnecessary data based on where conditions. There are 3 ways</p>
+<h2>2.1 partition</h2>
+<p>Partition</p>
+<p>Hive Partitioning provides a way of segregating hive table data into multiple files/directories.</p>
+<p>Partitioned tables can be created using the PARTITIONED BY clause. A table can have one or more partition columns and a separate data directory is created for each distinct value combination in the partition columns. Further, tables or partitions can be bucketed using CLUSTERED BY columns, and data can be sorted within that bucket via SORT BY columns. This can improve performance on certain kinds of queries.</p>
+<p>Common ones include time Partitioning</p>
+<blockquote>
+<p>PARTITIONED BY(dt STRING, country STRING)</p>
+</blockquote>
+<h2>2.2 bucket</h2>
+<p>bucket</p>
+<p>Bucketed tables are fantastic in that they allow much more efficient sampling than do non-bucketed tables, and they may later allow for time saving operations such as mapside joins. However, the bucketing specified at table creation is not enforced when the table is written to, and so it is possible for the table's metadata to advertise properties which are not upheld by the table's actual layout. This should obviously be avoided.</p>
+<p>How does Hive distribute the rows across the buckets? In general, the bucket number is determined by the expression hash_function(bucketing_column) mod num_buckets.</p>
+<p>Generally, in the table directory, each bucket is just a file, and Bucket numbering is 1-based.</p>
+<blockquote>
+<p>CLUSTERED BY(userid) SORTED BY(viewTime) INTO 32 BUCKETS</p>
+<p>set hive.enforce.bucketing = true; (for Hive 0.x and 1.x)</p>
+</blockquote>
+<p>refer to:<br/>https://cwiki-test.apache.org/confluence/display/Hive/LanguageManual+DDL+BucketedTables<br/>https://data-flair.training/blogs/bucketing-in-hive/</p>
+<h2>2.3 skewed</h2>
+<p>tilt</p>
+<p>This feature can be used to improve performance for tables where one or more columns have skewed values. By specifying the values that appear very often (heavy skew) Hive will split those out into separate files (or directories in case of list bucketing) automatically and take this fact into account during queries so that it can skip or include the whole file (or directory in case of list bucketing) if possible.</p>
+<blockquote>
+<p>SKEWED BY (key) ON (1,5,6) [STORED AS DIRECTORIES]</p>
+</blockquote>
+<h1>3 index</h1>
+<p>Indexing Is Removed since 3.0</p>
+<p>The index was deleted in version 3.0, and the alternative is a materialized view (Materialized View, which should be familiar to those familiar with Oracle), or the use of column storage formats (such as Parquet, ORC);</p>
+<p>There are alternate options which might work similarily to indexing:</p>
+<ul>
+<li> Materialized views with automatic rewriting can result in very similar results.  Hive 2.3.0 adds support for materialzed views.</li>
+<li> Using columnar file formats (Parquet, ORC) – they can do selective scanning; they may even skip entire files/blocks.</li>
+</ul>
+<h2>3.1 Materialized view</h2>
+<p>materialized view</p>
+<p>Traditionally, one of the most powerful techniques used to accelerate query processing in data warehouses is the pre-computation of relevant summaries or materialized views.</p>
+<p>Using a materialized view, the optimizer can compare old and new tables, rewrite queries to accelerate processing, and manage maintenance of the materialized view when data updates occur. The optimizer can use a materialized view to fully or partially rewrite projections, filters, joins, and aggregations. Hive stores materialized views in the Hive warehouse or Druid.</p>
+<blockquote>
+<p>CREATE MATERIALIZED VIEW [IF NOT EXISTS] [db_name.]materialized_view_name AS &lt;query&gt;;</p>
+</blockquote>
+<p>refer to:<br/>https://cwiki.apache.org/confluence/display/Hive/Materialized+views<br/>https://cwiki.apache.org/confluence/display/Hive/LanguageManual+Indexing</p>
+<h1>4 format</h1>
+<p>Data storage format</p>
+<h2>4.1 lzo</h2>
+<blockquote>
+<p>STORED AS INPUTFORMAT <br/>'com.hadoop.mapred.DeprecatedLzoTextInputFormat' <br/>OUTPUTFORMAT <br/>'org.apache.hadoop.hive.ql.io.HiveIgnoreKeyTextOutputFormat'</p>
+</blockquote>
+<h2>4.2 orc</h2>
+<blockquote>
+<p>STORED AS ORC<br/>STORED AS ORC TBLPROPERTIES ("orc.compression"="ZLIB")</p>
+</blockquote>
+<p>Note that before setting the ORC compression format, you must set it first:</p>
+<blockquote>
+<p>set hive.exec.orc.compression.strategy=COMPRESSION;</p>
+</blockquote>
+<p>Otherwise, compression will not take effect;</p>
+<h3>4.2.1 </h3>
+<blockquote>
+<p>set hive.orc.zerocopy=true;</p>
+</blockquote>
+<p>ORC can use the new HDFS Caching APIs and the ZeroCopy readers to avoid extra data copies into memory while scanning files.</p>
+<h2>4.3 parquet</h2>
+<blockquote>
+<p>STORED AS PARQUET</p>
+</blockquote>
+<h2>4.4 snappy</h2>
+<blockquote>
+<p>STORED AS PARQUET TBLPROPERTIES ("parquet.compression"="SNAPPY")<br/>STORED AS ORC TBLPROPERTIES ("orc.compression"="SNAPPY")</p>
+</blockquote>
+<p>For details on LZO support: https://www.cnblogs.com/barneywill/p/10439181.html<br/>For details on the comparison test of the format, please see: https://www.cnblogs.com/barneywill/p/10109508.html</p>
+<h1>5 vectorization</h1>
+<p>Vectorized query execution is a Hive feature that greatly reduces the CPU usage for typical query operations like scans, filters, aggregates, and joins. A standard query execution system processes one row at a time. This involves long code paths and significant metadata interpretation in the inner loop of execution. Vectorized query execution streamlines operations by processing a block of 1024 rows at a time. Within the block, each column is stored as a vector (an array of a primitive data type). Simple operations like arithmetic and comparisons are done by quickly iterating through the vectors in a tight loop, with no or very few function calls or conditional branches inside the loop. These loops compile in a streamlined way that uses relatively few instructions and finishes each instruction in fewer clock cycles, on average, by effectively using the processor pipeline and cache memory.</p>
+<blockquote>
+<p>set hive.vectorized.execution.enabled=true;<br/>set hive.vectorized.execution.reduce.enabled=true;<br/>set hive.vectorized.execution.reduce.groupby.enabled=true;</p>
+</blockquote>
+<p>Reference: https://cwiki.apache.org/confluence/display/Hive/Vectorized+Query+Execution</p>
+<h1>6 join</h1>
+<h2>6.1 Common Join</h2>
+<p>i.e.shuffle</p>
+<p>Use Mappers to do the parallel sort of the tables on the join keys, which are then passed on to reducers. All of the tuples with same key is given to same reducer. A reducer may get tuples for more than one key. Key for tuple will also include table id, thus sorted output from two different tables with same key can be recognized. Reducers will merge the sorted stream to get join output.</p>
+<h2>6.2 Map Join</h2>
+<p>Useful for star schema joins, this joining algorithm keeps all of the small tables (dimension tables) in memory in all of the mappers and big table (fact table) is streamed over it in the mapper. This avoids shuffling cost that is inherent in Common-Join. For each of the small table (dimension table) a hash table would be created using join key as the hash table key.</p>
+<blockquote>
+<p>set hive.auto.convert.join=true;<br/>set hive.auto.convert.join.noconditionaltask = true;<br/>set hive.auto.convert.join.noconditionaltask.size = 10000000;</p>
+</blockquote>
+<p>MAPJOINs are processed by loading the smaller table into an in-memory hash map and matching keys with the larger table as they are streamed through. The prior implementation has this division of labor:</p>
+<ul>
+<li>Local work:
+<ul>
+<li>read records via standard table scan (including filters and projections) from source on local machine</li>
+<li>build hashtable in memory</li>
+<li>write hashtable to local disk</li>
+<li>upload hashtable to dfs</li>
+<li>add hashtable to distributed cache</li>
+</ul>
+</li>
+<li>Map task
+<ul>
+<li>read hashtable from local disk (distributed cache) into memory</li>
+<li>match records' keys against hashtable</li>
+<li>combine matches and write to output</li>
+</ul>
+</li>
+<li>No reduce task</li>
+</ul>
+<h2>6.3 Bucket Map Join</h2>
+<p>If the joining keys of map-join are bucketed then instead of keeping whole of small table (dimension table) in every mapper, only the matching buckets will be kept. This reduces the memory footprint of the map-join.</p>
+<blockquote>
+<p>set hive.auto.convert.sortmerge.join=true;<br/>set hive.optimize.bucketmapjoin = true; </p>
+</blockquote>
+<h2>6.4 SMB Join</h2>
+<p>This is an optimization on Bucket Map Join; if data to be joined is already sorted on joining keys then hash table creation is avoided and instead a sort merge join algorithm is used.</p>
+<blockquote>
+<p>set hive.optimize.bucketmapjoin.sortedmerge = true; </p>
+</blockquote>
+<p>SMB joins are used wherever the tables are sorted and bucketed. The join boils down to just merging the already sorted tables, allowing this operation to be faster than an ordinary map-join. However, if the tables are partitioned, there could be a slow down as each mapper would need to get a very small chunk of a partition which has a single key.</p>
+<h2>6.5 Skew Join</h2>
+<p>If the distribution of data is skewed for some specific values, then join performance may suffer since some of the instances of join operators (reducers in map-reduce world) may get over loaded and others may get under utilized. On user hint, hive would rewrite a join query around skew value as union of joins.</p>
+<blockquote>
+<p>set hive.optimize.skewjoin=true;<br/>set hive.skewjoin.key=100000;</p>
+</blockquote>
+<p>Whether to enable skew join optimization. The algorithm is as follows: At runtime, detect the keys with a large skew. Instead of processing those keys, store them temporarily in an HDFS directory. In a follow-up map-reduce job, process those skewed keys. The same key need not be skewed for all the tables, and so, the follow-up map-reduce job (for the skewed keys) would be much faster, since it would be a map-join.</p>
+<h2>6.6 semi join</h2>
+<p>LEFT SEMI JOIN implements the uncorrelated IN/EXISTS subquery semantics in an efficient way. As of Hive 0.13 the IN/NOT IN/EXISTS/NOT EXISTS operators are supported using subqueries so most of these JOINs don't have to be performed manually anymore. </p>
+<p>refer to:<br/>https://medium.com/hotels-com-technology/skew-join-optimization-in-hive-b66a1f4cc6ba<br/>https://cwiki.apache.org/confluence/display/Hive/LanguageManual+Joins</p>
+<h1>7 merge small files （too many mappers）</h1>
+<blockquote>
+<p>set hive.hadoop.supports.splittable.combineinputformat=true;</p>
+</blockquote>
+<p>Whether to combine small input files so that fewer mappers are spawned.</p>
+<blockquote>
+<p>set mapreduce.input.fileinputformat.split.minsize=1;<br/>set mapreduce.input.fileinputformat.split.maxsize=256000000;</p>
+</blockquote>
+<p>The minimum size chunk that map input should be split into. Note that some file formats may have minimum split sizes that take priority over this setting.</p>
+<blockquote>
+<p>set hive.merge.mapfiles=true;</p>
+</blockquote>
+<p>Merge small files at the end of a map-only job.</p>
+<blockquote>
+<p>set hive.merge.mapredfiles=true;</p>
+</blockquote>
+<p>Merge small files at the end of a map-reduce job.</p>
+<h1>8 Stats &amp; CBO(Cost-Based Optimizer)</h1>
+<p>Most of the existing query optimizations in Hive are about minimizing shuffling cost. Currently user would have to submit an optimized query to Hive with right join order for query to be executed efficiently. Logical optimizations in Hive are limited to filter push down, projection pruning and partition pruning. Cost based logical optimizations can significantly improve Apache Hive’s query latency and ease of use.</p>
+<p>Join reordering and join algorithm selection are few of the optimizations that can benefit from a cost based optimizer. Cost based optimizer would free up user from having to rearrange joins in the right order or from having to specify join algorithm by using query hints and configuration options. This can potentially free up users to model their reporting and ETL needs close to business process without having to worry about query optimizations.</p>
+<p>Calcite is an open source cost based query optimizer and query execution framework. Calcite currently has more than fifty query optimization rules that can rewrite query tree, and an efficient plan pruner that can select cheapest query plan in an optimal manner. </p>
+<p>CBO will be introduced in to Hive in a Phased manner. In the first phase, Calcite would be used to reorder joins and to pick right join algorithm so as to reduce query latency. Table cardinality and Boundary statistics will be used for this cost based optimizations.</p>
+<p><br/>Hive’s Cost-Based Optimizer (CBO) is a core component in Hive’s query processing engine. Powered by Apache Calcite, the CBO optimizes and calculates the cost of various plans for a query.</p>
+<p>The main goal of a CBO is to generate efficient execution plans by examining the tables and conditions specified in the query, ultimately cutting down on query execution time and reducing resource utilization. After parsing, a query gets converted to a logical tree (Abstract Syntax Tree) that represents the operations that the query must perform, such as reading a particular table or performing an inner JOIN.</p>
+<p>Calcite applies various optimizations such as query rewrite, JOIN reordering, and deriving implied predicates and JOIN elimination to produce logically equivalent plans. The current model prefers bushy plans for maximum parallelism. Each logical plan is assigned a cost based in number of distinct value based heuristics.</p>
+<p>Calcite has an efficient plan pruner that can select the cheapest query plan. The chosen logical plan is then converted by Hive to a physical operator tree, optimized and converted to Tez jobs, and then executed on the Hadoop cluster.</p>
+<p><br/>Enabling Cost-Based Optimization</p>
+<blockquote>
+<p>set hive.cbo.enable=true;<br/>set hive.stats.autogather=true;<br/>set hive.compute.query.using.stats=true;<br/>set hive.stats.fetch.partition.stats=true;<br/>set hive.stats.fetch.column.stats=true;</p>
+</blockquote>
+<p>Generating Hive Statistics</p>
+<blockquote>
+<p>ANALYZE TABLE [table_name] COMPUTE STATISTICS;<br/>ANALYZE TABLE [table_name] PARTITION(partition_column) COMPUTE STATISTICS;<br/>ANALYZE TABLE [table_name] COMPUTE STATISTICS for COLUMNS [comma_separated_column_list];</p>
+</blockquote>
+<p>Viewing Generated Statistics</p>
+<blockquote>
+<p>DESCRIBE [EXTENDED] table_name;<br/>DESCRIBE FORMATTED [db_name.]table_name.column_name;</p>
+</blockquote>
+<p>Reference: https://cwiki.apache.org/confluence/display/Hive/Cost-based+optimization+in+Hive</p>
+<h1>9 correlation</h1>
+<blockquote>
+<p>set hive.optimize.correlation=true;</p>
+</blockquote>
+<p>In Hadoop environments, an SQL query submitted to Hive will be evaluated in distributed systems. Thus, after generating a query operator tree representing the submitted SQL query, Hive needs to determine what operations can be executed in a task which will be evalauted in a single node. Also, since a MapReduce job can shuffle data data once, Hive also needs to cut the tree to multiple MapReduce jobs. It is important to cut an operator tree to multiple MapReduce in a good way, so the generated plan can evaluate the query efficiently.</p>
+<p>In a more complex query, correlation-unaware query planning can generate a very inefficient execution plan and result in poor performance.</p>
+<p> </p>
+<p>Reference: https://cwiki.apache.org/confluence/display/Hive/Correlation+Optimizer</p>
+<h1>10 write a good sql</h1>
+<h2>10.1 execution plan</h2>
+<p>Understand the execution plan</p>
+<p>hive&gt; explain $sql;</p>
+<h2>10.2 good practice</h2>
+<p> </p>
+<h1>11 engine</h1>
+<p>switch engine</p>
+<blockquote>
+<p>set hive.query.engine=spark;</p>
+</blockquote>
+<h1>12 other</h1>
+<h2>12.1 parallel</h2>
+<blockquote>
+<p>set hive.exec.parallel=true;</p>
+</blockquote>
+<p>Whether to execute jobs in parallel.  Applies to MapReduce jobs that can run in parallel, for example jobs processing different source tables before a join.  As of Hive 0.14, also applies to move tasks that can run in parallel, for example moving files to insert targets during multi-insert.</p>
+<h2>12.2 limit is very slow</h2>
+<p>Limit will be converted to local fetch execution by default. If you add complex query conditions to a large table, you need to specify the limit to be submitted to YARN for execution.</p>
+<blockquote>
+<p>set hive.fetch.task.conversion=more;</p>
+</blockquote>
+<p>Some select queries can be converted to a single FETCH task, minimizing latency. Currently the query should be single sourced not having any subquery and should not have any aggregations or distincts (which incur RS – ReduceSinkOperator, requiring a MapReduce task), lateral views and joins.</p>
+<p>Supported values are none, minimal and more.<br/>0. none:  Disable hive.fetch.task.conversion<br/>1. minimal:  SELECT *, FILTER on partition columns (WHERE and HAVING clauses), LIMIT only<br/>2. more:  SELECT, FILTER, LIMIT only (including TABLESAMPLE, virtual columns)</p>
+<blockquote>
+<p>set hive.fetch.task.conversion.threshold=1073741824;</p>
+</blockquote>
+<p>Input threshold (in bytes) for applying hive.fetch.task.conversion. If target table is native, input length is calculated by summation of file lengths. If it's not native, the storage handler for the table can optionally implement the org.apache.hadoop.hive.ql.metadata.InputEstimator interface. A negative threshold means hive.fetch.task.conversion is applied without any input length threshold.</p>
+<h2>12.3 sample</h2>
+<p>Just want to quickly view some data</p>
+<blockquote>
+<p>set hive.limit.optimize.enable=true;</p>
+</blockquote>
+<p>Whether to enable to optimization to trying a smaller subset of data for simple LIMIT first.</p>
+<blockquote>
+<p>set hive.optimize.sampling.orderby=true;</p>
+</blockquote>
+<p>Uses sampling on order-by clause for parallel execution.</p>
+<p> </p>
+<p>Tuning</p>
+<blockquote>
+<p>set hive.exec.compress.output=true;<br/>set hive.exec.compress.intermediate=true;<br/>set hive.vectorized.execution.enabled = true;<br/>set hive.optimize.skewjoin=true;<br/>set hive.hadoop.supports.splittable.combineinputformat=true;<br/>set hive.optimize.correlation=true;<br/>set hive.exec.parallel=true;<br/>set hive.orc.zerocopy=true;</p>
+<p><br/>set hive.cbo.enable=true;<br/>set hive.stats.autogather=true;<br/>set hive.compute.query.using.stats=true;<br/>set hive.stats.fetch.partition.stats=true;<br/>set hive.stats.fetch.column.stats=true;<br/>set hive.auto.convert.join=true;<br/>set hive.auto.convert.join.noconditionaltask = true;<br/>set hive.map.aggr=true;<br/>set hive.optimize.reducededuplication=true;<br/>set hive.optimize.distinct.rewrite=true;<br/>set hive.optimize.groupby=true;<br/>set hive.merge.mapfiles=true;<br/>set hive.merge.mapredfiles=true;<br/>set hive.merge.orcfile.stripe.level=true;<br/>set hive.optimize.sort.dynamic.partition=true;<br/>set hive.mapjoin.lazy.hashtable=true;</p>
+</blockquote>
+<p><br/>refer to:<br/>https://cwiki.apache.org/confluence/display/Hive/Configuration+Properties<br/>https://streever.atlassian.net/wiki/spaces/HADOOP/pages/1933314/Hive+Performance+Tips<br/>https://hortonworks.com/blog/5-ways-make-hive-queries-run-faster/<br/>https://docs.hortonworks.com/HDPDocuments/HDP2/HDP-2.6.5/bk_hive-performance-tuning/content/ch_cost-based-optimizer.html</p>
+<p> </p>
+</div>
+</div>
+<!-- Post Footer -->
+<div class="post-footer">
+<div class="post-navigation">
+<a class="nav-button" href="../blog.html">← Back to Home</a>
+<a class="nav-button" href="0185.html">Next Post →</a>
+</div>
+</div>
+</article>
+</div>
+</body>
+</html>

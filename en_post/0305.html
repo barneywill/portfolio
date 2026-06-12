@@ -1,0 +1,891 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Spark 4 - RDD principle and code analysis</title>
+<link href="../css/style3.css" rel="stylesheet"/>
+</head>
+<body>
+<div class="container">
+<!-- Header Navigation -->
+<div class="header">
+<h1><a href="../blog.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+</div>
+<!-- Post Container -->
+<article class="post">
+<!-- Post Header -->
+<div class="post-header">
+<h1>Spark 4 - RDD principle and code analysis</h1>
+<div class="post-meta">
+<div class="post-meta-item">
+<span class="meta-icon">📅</span>
+<span>December 20, 2018</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">📖</span>
+<span>35 min read</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">👁️</span>
+<span>1695 views</span>
+</div>
+</div>
+</div>
+<!-- Post Content -->
+<div class="post-content">
+<div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<h1>1 Introduction</h1>
+<p>The core of Spark is RDD, official document address: https://Spark.apache.org/docs/latest/rdd-programming-guide.html#resilient-distributed-datasets-rdds<br/>The official description is as follows: The focus is on fault tolerance and parallel processing.</p>
+<blockquote>
+<p>Spark revolves around the concept of a resilient distributed dataset (RDD), which is a fault-tolerant collection of elements that can be operated on in parallel. There are two ways to create RDDs: parallelizing an existing collection in your driver program, or referencing a dataset in an external storage system, such as a shared filesystem, HDFS, HBase, or any data source offering a Hadoop InputFormat.</p>
+</blockquote>
+<p>RDD supports two types of operations: transformation and action. The official description is as follows:</p>
+<blockquote>
+<p>RDDs support two types of operations: transformations, which create a new dataset from an existing one, and actions, which return a value to the driver program after running a computation on the dataset.<br/>All transformations in Spark are lazy, in that they do not compute their results right away. Instead, they just remember the transformations applied to some base dataset (e.g. a file). The transformations are only computed when an action requires a result to be returned to the driver program. This design enables Spark to run more efficiently.</p>
+</blockquote>
+<p>In short,</p>
+<ul>
+<li>The implementation of transformation is to return a new RDD. The new RDD is actually the wrapper of the old RDD (that is, the parent RDD). This is a decoration mode that wraps the parent RDD and records the transformation process (the essence of lazy is here, there is no calculation here, only the wrapper). In this way, when the new RDD is actually calculated, it is equivalent to deforming the parent RDD. The specific process is detailed in the code later;</li>
+<li>Action is implemented by submitting jobs directly to SparkContext;</li>
+</ul>
+<p>org.apache.spark.rdd.RDD</p>
+<div class="cnblogs_code">
+<pre>  <span style="color: rgba(0, 128, 0, 1)">/**</span><span style="color: rgba(0, 128, 0, 1)">
+   * Return a new RDD by applying a function to all elements of this RDD.
+   </span><span style="color: rgba(0, 128, 0, 1)">*/</span><span style="color: rgba(0, 0, 0, 1)">
+  def map[U: ClassTag](f: T </span>=&gt; U): RDD[U] =<span style="color: rgba(0, 0, 0, 1)"> withScope {
+    val cleanF </span>=<span style="color: rgba(0, 0, 0, 1)"> sc.clean(f)
+    </span><span style="color: rgba(0, 0, 255, 1)">new</span> MapPartitionsRDD[U, T](<span style="color: rgba(0, 0, 255, 1)">this</span>, (context, pid, iter) =&gt;<span style="color: rgba(0, 0, 0, 1)"> iter.map(cleanF))
+  }
+  
+  </span><span style="color: rgba(0, 128, 0, 1)">/**</span><span style="color: rgba(0, 128, 0, 1)">
+   * Return the number of elements in the RDD.
+   </span><span style="color: rgba(0, 128, 0, 1)">*/</span><span style="color: rgba(0, 0, 0, 1)">
+  def count(): Long </span>= sc.runJob(<span style="color: rgba(0, 0, 255, 1)">this</span>, Utils.getIteratorSize _).sum</pre>
+</div>
+<ul>
+<li>Map is a type of transformation. The map method directly returns a MapPartitionsRDD. This MapPartitionsRDD wraps the original RDD (passed in through the constructor). Other transformations also follow this routine;</li>
+<li>Count is a type of action. Here you submit the job directly. After submitting the job, you wait for the result to be returned to the driver. There is no redundant logic. Other actions also follow this routine;</li>
+</ul>
+<h1>Two examples</h1>
+<p>Let’s first look at a classic hello world level example: word frequency statistics</p>
+<div class="cnblogs_code">
+<pre>sc.textFile("test_word.log") <span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)">Construct RDD</span>
+.flatMap(_.split("\\s+")) <span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)">transformation: "hello hello world" -&gt; "hello", "hello", "word"</span>
+.map((_, 1)) <span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)">transformation: "hello" -&gt; ("hello", 1)</span>
+.reduceByKey(_ + _) <span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)">transformation: ("hello", 2)</span>
+.sortBy(_._2, <span style="color: rgba(0, 0, 255, 1)">false</span>) <span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)">transformation</span>
+.take(10) <span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)">action</span>
+.foreach(println) <span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)">Driver side iterates println</span></pre>
+</div>
+<h1>Three principles and code analysis</h1>
+<p>As we all know, the process of executing a job in Spark is:</p>
+<p>job-&gt;stage-&gt;task</p>
+<p>That is, the job is divided into stages, then the stages are divided into tasks, and finally the tasks are distributed to the executors for execution. Let’s look at the execution process after submitting the job:</p>
+<p>org.apache.spark.SparkContext</p>
+<div class="cnblogs_code">
+<pre><span style="color: rgba(0, 0, 0, 1)">  def runJob[T, U: ClassTag](
+      rdd: RDD[T],
+      func: (TaskContext, Iterator[T]) </span>=&gt;<span style="color: rgba(0, 0, 0, 1)"> U,
+      partitions: Seq[Int],
+      resultHandler: (Int, U) </span>=&gt; Unit): Unit =<span style="color: rgba(0, 0, 0, 1)"> {
+    </span><span style="color: rgba(0, 0, 255, 1)">if</span><span style="color: rgba(0, 0, 0, 1)"> (stopped.get()) {
+      </span><span style="color: rgba(0, 0, 255, 1)">throw</span> <span style="color: rgba(0, 0, 255, 1)">new</span> IllegalStateException("SparkContext has been shutdown"<span style="color: rgba(0, 0, 0, 1)">)
+    }
+    val callSite </span>=<span style="color: rgba(0, 0, 0, 1)"> getCallSite
+    val cleanedFunc </span>=<span style="color: rgba(0, 0, 0, 1)"> clean(func)
+    logInfo(</span>"Starting job: " +<span style="color: rgba(0, 0, 0, 1)"> callSite.shortForm)
+    </span><span style="color: rgba(0, 0, 255, 1)">if</span> (conf.getBoolean("spark.logLineage", <span style="color: rgba(0, 0, 255, 1)">false</span><span style="color: rgba(0, 0, 0, 1)">)) {
+      logInfo(</span>"RDD's recursive dependencies:\n" +<span style="color: rgba(0, 0, 0, 1)"> rdd.toDebugString)
+    }
+    dagScheduler.runJob(rdd, cleanedFunc, partitions, callSite, resultHandler, localProperties.get)
+    progressBar.foreach(_.finishAll())
+    rdd.doCheckpoint()
+  }</span></pre>
+</div>
+<p>Here directly call DAGScheduler.runJob</p>
+<p>org.apache.spark.scheduler.DAGScheduler</p>
+<div class="cnblogs_code">
+<pre><span style="color: rgba(0, 0, 0, 1)">  def runJob[T, U](
+      rdd: RDD[T],
+      func: (TaskContext, Iterator[T]) </span>=&gt;<span style="color: rgba(0, 0, 0, 1)"> U,
+      partitions: Seq[Int],
+      callSite: CallSite,
+      resultHandler: (Int, U) </span>=&gt;<span style="color: rgba(0, 0, 0, 1)"> Unit,
+      properties: Properties): Unit </span>=<span style="color: rgba(0, 0, 0, 1)"> {
+    val start </span>=<span style="color: rgba(0, 0, 0, 1)"> System.nanoTime
+    val waiter </span>=<span style="color: rgba(0, 0, 0, 1)"> submitJob(rdd, func, partitions, callSite, resultHandler, properties)
+    </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> Note: Do not call Await.ready(future) because that calls `scala.concurrent.blocking`,
+    </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> which causes concurrent SQL executions to fail if a fork-join pool is used. Note that
+    </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> due to idiosyncrasies in Scala, `awaitPermission` is not actually used anywhere so it's
+    </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> safe to pass in null here. For more detail, see SPARK-13747.</span>
+    val awaitPermission = <span style="color: rgba(0, 0, 255, 1)">null</span><span style="color: rgba(0, 0, 0, 1)">.asInstanceOf[scala.concurrent.CanAwait]
+    waiter.completionFuture.ready(Duration.Inf)(awaitPermission)
+    waiter.completionFuture.value.get match {
+      </span><span style="color: rgba(0, 0, 255, 1)">case</span> scala.util.Success(_) =&gt;<span style="color: rgba(0, 0, 0, 1)">
+        logInfo(</span>"Job %d finished: %s, took %f s"<span style="color: rgba(0, 0, 0, 1)">.format
+          (waiter.jobId, callSite.shortForm, (System.nanoTime </span>- start) /<span style="color: rgba(0, 0, 0, 1)"> 1e9))
+      </span><span style="color: rgba(0, 0, 255, 1)">case</span> scala.util.Failure(exception) =&gt;<span style="color: rgba(0, 0, 0, 1)">
+        logInfo(</span>"Job %d failed: %s, took %f s"<span style="color: rgba(0, 0, 0, 1)">.format
+          (waiter.jobId, callSite.shortForm, (System.nanoTime </span>- start) /<span style="color: rgba(0, 0, 0, 1)"> 1e9))
+        </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> SPARK-8644: Include user stack trace in exceptions coming from DAGScheduler.</span>
+        val callerStackTrace =<span style="color: rgba(0, 0, 0, 1)"> Thread.currentThread().getStackTrace.tail
+        exception.setStackTrace(exception.getStackTrace </span>++<span style="color: rgba(0, 0, 0, 1)"> callerStackTrace)
+        </span><span style="color: rgba(0, 0, 255, 1)">throw</span><span style="color: rgba(0, 0, 0, 1)"> exception
+    }
+  }
+
+  def submitJob[T, U](
+      rdd: RDD[T],
+      func: (TaskContext, Iterator[T]) </span>=&gt;<span style="color: rgba(0, 0, 0, 1)"> U,
+      partitions: Seq[Int],
+      callSite: CallSite,
+      resultHandler: (Int, U) </span>=&gt;<span style="color: rgba(0, 0, 0, 1)"> Unit,
+      properties: Properties): JobWaiter[U] </span>=<span style="color: rgba(0, 0, 0, 1)"> {
+    </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> Check to make sure we are not launching a task on a partition that does not exist.</span>
+    val maxPartitions =<span style="color: rgba(0, 0, 0, 1)"> rdd.partitions.length
+    partitions.find(p </span>=&gt; p &gt;= maxPartitions || p &lt; 0).foreach { p =&gt;
+      <span style="color: rgba(0, 0, 255, 1)">throw</span> <span style="color: rgba(0, 0, 255, 1)">new</span><span style="color: rgba(0, 0, 0, 1)"> IllegalArgumentException(
+        </span>"Attempting to access a non-existent partition: " + p + ". " +
+          "Total number of partitions: " +<span style="color: rgba(0, 0, 0, 1)"> maxPartitions)
+    }
+
+    val jobId </span>=<span style="color: rgba(0, 0, 0, 1)"> nextJobId.getAndIncrement()
+
+    </span><span style="color: rgba(0, 0, 255, 1)">if</span> (partitions.size == 0<span style="color: rgba(0, 0, 0, 1)">) {
+      </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> Return immediately if the job is running 0 tasks</span>
+      <span style="color: rgba(0, 0, 255, 1)">return</span> <span style="color: rgba(0, 0, 255, 1)">new</span> JobWaiter[U](<span style="color: rgba(0, 0, 255, 1)">this</span>, jobId, 0<span style="color: rgba(0, 0, 0, 1)">, resultHandler)
+    }
+
+    </span><span style="color: rgba(0, 0, 255, 1)">assert</span>(partitions.size &gt; 0<span style="color: rgba(0, 0, 0, 1)">)
+    val func2 </span>= func.asInstanceOf[(TaskContext, Iterator[_]) =&gt;<span style="color: rgba(0, 0, 0, 1)"> _]
+    val waiter </span>= <span style="color: rgba(0, 0, 255, 1)">new</span> JobWaiter(<span style="color: rgba(0, 0, 255, 1)">this</span><span style="color: rgba(0, 0, 0, 1)">, jobId, partitions.size, resultHandler)
+    eventProcessLoop.post(JobSubmitted(
+      jobId, rdd, func2, partitions.toArray, callSite, waiter,
+      SerializationUtils.clone(properties)))
+    waiter
+  }</span></pre>
+</div>
+<p>Here runJob directly calls submitJob, and submitJob first creates a jobId, and then returns a JobWaiter. JobWaiter itself has no logic. Note that before returning to waiter, a JobSubmitted event is triggered by calling eventProcessLoop.post. This is an Observer mode.<br/>The interface is</p>
+<blockquote>
+<p>org.apache.spark.util.EventLoop</p>
+</blockquote>
+<p>The implementation class is</p>
+<p>org.apache.spark.scheduler.DAGSchedulerEventProcessLoop</p>
+<div class="cnblogs_code">
+<pre>  <span style="color: rgba(0, 0, 255, 1)">private</span> def doOnReceive(event: DAGSchedulerEvent): Unit =<span style="color: rgba(0, 0, 0, 1)"> event match {
+    </span><span style="color: rgba(0, 0, 255, 1)">case</span> JobSubmitted(jobId, rdd, func, partitions, callSite, listener, properties) =&gt;<span style="color: rgba(0, 0, 0, 1)">
+      dagScheduler.handleJobSubmitted(jobId, rdd, func, partitions, callSite, listener, properties)</span></pre>
+</div>
+<p>org.apache.spark.scheduler.DAGScheduler</p>
+<div class="cnblogs_code">
+<pre>  <span style="color: rgba(0, 0, 255, 1)">private</span><span style="color: rgba(0, 0, 0, 1)">[scheduler] def handleJobSubmitted(jobId: Int,
+      finalRDD: RDD[_],
+      func: (TaskContext, Iterator[_]) </span>=&gt;<span style="color: rgba(0, 0, 0, 1)"> _,
+      partitions: Array[Int],
+      callSite: CallSite,
+      listener: JobListener,
+      properties: Properties) {
+    var finalStage: ResultStage </span>= <span style="color: rgba(0, 0, 255, 1)">null</span>
+    <span style="color: rgba(0, 0, 255, 1)">try</span><span style="color: rgba(0, 0, 0, 1)"> {
+      </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> New stage creation may throw an exception if, for example, jobs are run on a
+      </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> HadoopRDD whose underlying HDFS files have been deleted.</span>
+      finalStage =<span style="color: rgba(0, 0, 0, 1)"> createResultStage(finalRDD, func, partitions, jobId, callSite)
+    } </span><span style="color: rgba(0, 0, 255, 1)">catch</span><span style="color: rgba(0, 0, 0, 1)"> {
+      </span><span style="color: rgba(0, 0, 255, 1)">case</span> e: Exception =&gt;<span style="color: rgba(0, 0, 0, 1)">
+        logWarning(</span>"Creating new stage failed due to exception - job: " +<span style="color: rgba(0, 0, 0, 1)"> jobId, e)
+        listener.jobFailed(e)
+        </span><span style="color: rgba(0, 0, 255, 1)">return</span><span style="color: rgba(0, 0, 0, 1)">
+    }
+
+    val job </span>= <span style="color: rgba(0, 0, 255, 1)">new</span><span style="color: rgba(0, 0, 0, 1)"> ActiveJob(jobId, finalStage, callSite, listener, properties)
+    clearCacheLocs()
+    logInfo(</span>"Got job %s (%s) with %d output partitions"<span style="color: rgba(0, 0, 0, 1)">.format(
+      job.jobId, callSite.shortForm, partitions.length))
+    logInfo(</span>"Final stage: " + finalStage + " (" + finalStage.name + ")"<span style="color: rgba(0, 0, 0, 1)">)
+    logInfo(</span>"Parents of final stage: " +<span style="color: rgba(0, 0, 0, 1)"> finalStage.parents)
+    logInfo(</span>"Missing parents: " +<span style="color: rgba(0, 0, 0, 1)"> getMissingParentStages(finalStage))
+
+    val jobSubmissionTime </span>=<span style="color: rgba(0, 0, 0, 1)"> clock.getTimeMillis()
+    jobIdToActiveJob(jobId) </span>=<span style="color: rgba(0, 0, 0, 1)"> job
+    activeJobs </span>+=<span style="color: rgba(0, 0, 0, 1)"> job
+    finalStage.setActiveJob(job)
+    val stageIds </span>=<span style="color: rgba(0, 0, 0, 1)"> jobIdToStageIds(jobId).toArray
+    val stageInfos </span>= stageIds.flatMap(id =&gt;<span style="color: rgba(0, 0, 0, 1)"> stageIdToStage.get(id).map(_.latestInfo))
+    listenerBus.post(
+      SparkListenerJobStart(job.jobId, jobSubmissionTime, stageInfos, properties))
+    submitStage(finalStage)
+  }
+
+  </span><span style="color: rgba(0, 128, 0, 1)">/**</span><span style="color: rgba(0, 128, 0, 1)">
+   * Create a ResultStage associated with the provided jobId.
+   </span><span style="color: rgba(0, 128, 0, 1)">*/</span>
+  <span style="color: rgba(0, 0, 255, 1)">private</span><span style="color: rgba(0, 0, 0, 1)"> def createResultStage(
+      rdd: RDD[_],
+      func: (TaskContext, Iterator[_]) </span>=&gt;<span style="color: rgba(0, 0, 0, 1)"> _,
+      partitions: Array[Int],
+      jobId: Int,
+      callSite: CallSite): ResultStage </span>=<span style="color: rgba(0, 0, 0, 1)"> {
+    val parents </span>=<span style="color: rgba(0, 0, 0, 1)"> getOrCreateParentStages(rdd, jobId)
+    val id </span>=<span style="color: rgba(0, 0, 0, 1)"> nextStageId.getAndIncrement()
+    val stage </span>= <span style="color: rgba(0, 0, 255, 1)">new</span><span style="color: rgba(0, 0, 0, 1)"> ResultStage(id, rdd, func, partitions, parents, jobId, callSite)
+    stageIdToStage(id) </span>=<span style="color: rgba(0, 0, 0, 1)"> stage
+    updateJobIdStageIdMaps(jobId, stage)
+    stage
+  }
+
+ </span><span style="color: rgba(0, 128, 0, 1)">/**</span><span style="color: rgba(0, 128, 0, 1)">
+   * Get or create the list of parent stages for a given RDD.  The new Stages will be created with
+   * the provided firstJobId.
+   </span><span style="color: rgba(0, 128, 0, 1)">*/</span>
+  <span style="color: rgba(0, 0, 255, 1)">private</span> def getOrCreateParentStages(rdd: RDD[_], firstJobId: Int): List[Stage] =<span style="color: rgba(0, 0, 0, 1)"> {
+    getShuffleDependencies(rdd).map { shuffleDep </span>=&gt;<span style="color: rgba(0, 0, 0, 1)">
+      getOrCreateShuffleMapStage(shuffleDep, firstJobId)
+    }.toList
+  }
+
+  </span><span style="color: rgba(0, 128, 0, 1)">/**</span><span style="color: rgba(0, 128, 0, 1)">
+   * Returns shuffle dependencies that are immediate parents of the given RDD.
+   *
+   * This function will not return more distant ancestors.  For example, if C has a shuffle
+   * dependency on B which has a shuffle dependency on A:
+   *
+   * A &lt;-- B &lt;-- C
+   *
+   * calling this function with rdd C will only return the B &lt;-- C dependency.
+   *
+   * This function is scheduler-visible for the purpose of unit testing.
+   </span><span style="color: rgba(0, 128, 0, 1)">*/</span>
+  <span style="color: rgba(0, 0, 255, 1)">private</span><span style="color: rgba(0, 0, 0, 1)">[scheduler] def getShuffleDependencies(
+      rdd: RDD[_]): HashSet[ShuffleDependency[_, _, _]] </span>=<span style="color: rgba(0, 0, 0, 1)"> {
+    val parents </span>= <span style="color: rgba(0, 0, 255, 1)">new</span><span style="color: rgba(0, 0, 0, 1)"> HashSet[ShuffleDependency[_, _, _]]
+    val visited </span>= <span style="color: rgba(0, 0, 255, 1)">new</span><span style="color: rgba(0, 0, 0, 1)"> HashSet[RDD[_]]
+    val waitingForVisit </span>= <span style="color: rgba(0, 0, 255, 1)">new</span><span style="color: rgba(0, 0, 0, 1)"> Stack[RDD[_]]
+    waitingForVisit.push(rdd)
+    </span><span style="color: rgba(0, 0, 255, 1)">while</span><span style="color: rgba(0, 0, 0, 1)"> (waitingForVisit.nonEmpty) {
+      val toVisit </span>=<span style="color: rgba(0, 0, 0, 1)"> waitingForVisit.pop()
+      </span><span style="color: rgba(0, 0, 255, 1)">if</span> (!<span style="color: rgba(0, 0, 0, 1)">visited(toVisit)) {
+        visited </span>+=<span style="color: rgba(0, 0, 0, 1)"> toVisit
+        toVisit.dependencies.foreach {
+          </span><span style="color: rgba(0, 0, 255, 1)">case</span> shuffleDep: ShuffleDependency[_, _, _] =&gt;<span style="color: rgba(0, 0, 0, 1)">
+            parents </span>+=<span style="color: rgba(0, 0, 0, 1)"> shuffleDep
+          </span><span style="color: rgba(0, 0, 255, 1)">case</span> dependency =&gt;<span style="color: rgba(0, 0, 0, 1)">
+            waitingForVisit.push(dependency.rdd)
+        }
+      }
+    }
+    parents
+  }
+
+  </span><span style="color: rgba(0, 128, 0, 1)">/**</span><span style="color: rgba(0, 128, 0, 1)">
+   * Registers the given jobId among the jobs that need the given stage and
+   * all of that stage's ancestors.
+   </span><span style="color: rgba(0, 128, 0, 1)">*/</span>
+  <span style="color: rgba(0, 0, 255, 1)">private</span> def updateJobIdStageIdMaps(jobId: Int, stage: Stage): Unit =<span style="color: rgba(0, 0, 0, 1)"> {
+    @tailrec
+    def updateJobIdStageIdMapsList(stages: List[Stage]) {
+      </span><span style="color: rgba(0, 0, 255, 1)">if</span><span style="color: rgba(0, 0, 0, 1)"> (stages.nonEmpty) {
+        val s </span>=<span style="color: rgba(0, 0, 0, 1)"> stages.head
+        s.jobIds </span>+=<span style="color: rgba(0, 0, 0, 1)"> jobId
+        jobIdToStageIds.getOrElseUpdate(jobId, </span><span style="color: rgba(0, 0, 255, 1)">new</span> HashSet[Int]()) +=<span style="color: rgba(0, 0, 0, 1)"> s.id
+        val parentsWithoutThisJobId </span>= s.parents.filter { !<span style="color: rgba(0, 0, 0, 1)"> _.jobIds.contains(jobId) }
+        updateJobIdStageIdMapsList(parentsWithoutThisJobId </span>++<span style="color: rgba(0, 0, 0, 1)"> stages.tail)
+      }
+    }
+    updateJobIdStageIdMapsList(List(stage))
+  }</span></pre>
+</div>
+<p>handleJobSubmitted calls createResultStage to create a ResultStage. The parents in ResultStage are a collection that contains all stages. This is a combination mode.</p>
+<div class="cnblogs_code">
+<pre><span style="color: rgba(0, 128, 0, 1)">/**</span><span style="color: rgba(0, 128, 0, 1)">
+ * ResultStages apply a function on some partitions of an RDD to compute the result of an action.
+ * The ResultStage object captures the function to execute, `func`, which will be applied to each
+ * partition, and the set of partition IDs, `partitions`. Some stages may not run on all partitions
+ * of the RDD, for actions like first() and lookup().
+ </span><span style="color: rgba(0, 128, 0, 1)">*/</span>
+<span style="color: rgba(0, 0, 255, 1)">private</span>[spark] <span style="color: rgba(0, 0, 255, 1)">class</span><span style="color: rgba(0, 0, 0, 1)"> ResultStage(
+    id: Int,
+    rdd: RDD[_],
+    val func: (TaskContext, Iterator[_]) </span>=&gt;<span style="color: rgba(0, 0, 0, 1)"> _,
+    val partitions: Array[Int],
+    parents: List[Stage],
+    firstJobId: Int,
+    callSite: CallSite)
+  </span><span style="color: rgba(0, 0, 255, 1)">extends</span> Stage(id, rdd, partitions.length, parents, firstJobId, callSite) {</pre>
+</div>
+<p>So createResultStage is actually a process of dividing a job into multiple stages;</p>
+<p><em>createResultStage will call getShuffleDependencies to get a collection of ShuffleDependencies (where getShuffleDependencies starts from the last rdd and iteratively traverses in reverse (parent rdd) to obtain all ShuffleDependencies), and converts ShuffleDependency into ShuffleMapStage one by one, thus obtaining a collection of all stages, so the division of stages is based on shuffle;</em></p>
+<p>After the stages are divided, the stage will be submitted. Let’s look at the submitStage process:</p>
+<p>org.apache.spark.scheduler.DAGScheduler</p>
+<div class="cnblogs_code">
+<pre>  <span style="color: rgba(0, 128, 0, 1)">/**</span><span style="color: rgba(0, 128, 0, 1)"> Submits stage, but first recursively submits any missing parents. </span><span style="color: rgba(0, 128, 0, 1)">*/</span>
+  <span style="color: rgba(0, 0, 255, 1)">private</span><span style="color: rgba(0, 0, 0, 1)"> def submitStage(stage: Stage) {
+    val jobId </span>=<span style="color: rgba(0, 0, 0, 1)"> activeJobForStage(stage)
+    </span><span style="color: rgba(0, 0, 255, 1)">if</span><span style="color: rgba(0, 0, 0, 1)"> (jobId.isDefined) {
+      logDebug(</span>"submitStage(" + stage + ")"<span style="color: rgba(0, 0, 0, 1)">)
+      </span><span style="color: rgba(0, 0, 255, 1)">if</span> (!waitingStages(stage) &amp;&amp; !runningStages(stage) &amp;&amp; !<span style="color: rgba(0, 0, 0, 1)">failedStages(stage)) {
+        val missing </span>=<span style="color: rgba(0, 0, 0, 1)"> getMissingParentStages(stage).sortBy(_.id)
+        logDebug(</span>"missing: " +<span style="color: rgba(0, 0, 0, 1)"> missing)
+        </span><span style="color: rgba(0, 0, 255, 1)">if</span><span style="color: rgba(0, 0, 0, 1)"> (missing.isEmpty) {
+          logInfo(</span>"Submitting " + stage + " (" + stage.rdd + "), which has no missing parents"<span style="color: rgba(0, 0, 0, 1)">)
+          submitMissingTasks(stage, jobId.get)
+        } </span><span style="color: rgba(0, 0, 255, 1)">else</span><span style="color: rgba(0, 0, 0, 1)"> {
+          </span><span style="color: rgba(0, 0, 255, 1)">for</span> (parent &lt;-<span style="color: rgba(0, 0, 0, 1)"> missing) {
+            submitStage(parent)
+          }
+          waitingStages </span>+=<span style="color: rgba(0, 0, 0, 1)"> stage
+        }
+      }
+    } </span><span style="color: rgba(0, 0, 255, 1)">else</span><span style="color: rgba(0, 0, 0, 1)"> {
+      abortStage(stage, </span>"No active job for stage " +<span style="color: rgba(0, 0, 0, 1)"> stage.id, None)
+    }
+  }
+
+  </span><span style="color: rgba(0, 128, 0, 1)">/**</span><span style="color: rgba(0, 128, 0, 1)"> Called when stage's parents are available and we can now do its task. </span><span style="color: rgba(0, 128, 0, 1)">*/</span>
+  <span style="color: rgba(0, 0, 255, 1)">private</span><span style="color: rgba(0, 0, 0, 1)"> def submitMissingTasks(stage: Stage, jobId: Int) {
+    logDebug(</span>"submitMissingTasks(" + stage + ")"<span style="color: rgba(0, 0, 0, 1)">)
+    </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> Get our pending tasks and remember them in our pendingTasks entry</span>
+<span style="color: rgba(0, 0, 0, 1)">    stage.pendingPartitions.clear()
+
+    </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> First figure out the indexes of partition ids to compute.</span>
+    val partitionsToCompute: Seq[Int] =<span style="color: rgba(0, 0, 0, 1)"> stage.findMissingPartitions()
+
+    </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> Use the scheduling pool, job group, description, etc. from an ActiveJob associated
+    </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> with this Stage</span>
+    val properties =<span style="color: rgba(0, 0, 0, 1)"> jobIdToActiveJob(jobId).properties
+
+    runningStages </span>+=<span style="color: rgba(0, 0, 0, 1)"> stage
+    </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> SparkListenerStageSubmitted should be posted before testing whether tasks are
+    </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> serializable. If tasks are not serializable, a SparkListenerStageCompleted event
+    </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> will be posted, which should always come after a corresponding SparkListenerStageSubmitted
+    </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> event.</span>
+<span style="color: rgba(0, 0, 0, 1)">    stage match {
+      </span><span style="color: rgba(0, 0, 255, 1)">case</span> s: ShuffleMapStage =&gt;<span style="color: rgba(0, 0, 0, 1)">
+        outputCommitCoordinator.stageStart(stage </span>= s.id, maxPartitionId = s.numPartitions - 1<span style="color: rgba(0, 0, 0, 1)">)
+      </span><span style="color: rgba(0, 0, 255, 1)">case</span> s: ResultStage =&gt;<span style="color: rgba(0, 0, 0, 1)">
+        outputCommitCoordinator.stageStart(
+          stage </span>= s.id, maxPartitionId = s.rdd.partitions.length - 1<span style="color: rgba(0, 0, 0, 1)">)
+    }
+    val taskIdToLocations: Map[Int, Seq[TaskLocation]] </span>= <span style="color: rgba(0, 0, 255, 1)">try</span><span style="color: rgba(0, 0, 0, 1)"> {
+      stage match {
+        </span><span style="color: rgba(0, 0, 255, 1)">case</span> s: ShuffleMapStage =&gt;<span style="color: rgba(0, 0, 0, 1)">
+          partitionsToCompute.map { id </span>=&gt;<span style="color: rgba(0, 0, 0, 1)"> (id, getPreferredLocs(stage.rdd, id))}.toMap
+        </span><span style="color: rgba(0, 0, 255, 1)">case</span> s: ResultStage =&gt;<span style="color: rgba(0, 0, 0, 1)">
+          partitionsToCompute.map { id </span>=&gt;<span style="color: rgba(0, 0, 0, 1)">
+            val p </span>=<span style="color: rgba(0, 0, 0, 1)"> s.partitions(id)
+            (id, getPreferredLocs(stage.rdd, p))
+          }.toMap
+      }
+    } </span><span style="color: rgba(0, 0, 255, 1)">catch</span><span style="color: rgba(0, 0, 0, 1)"> {
+      </span><span style="color: rgba(0, 0, 255, 1)">case</span> NonFatal(e) =&gt;<span style="color: rgba(0, 0, 0, 1)">
+        stage.makeNewStageAttempt(partitionsToCompute.size)
+        listenerBus.post(SparkListenerStageSubmitted(stage.latestInfo, properties))
+        abortStage(stage, s</span>"Task creation failed: $e\n${Utils.exceptionString(e)}"<span style="color: rgba(0, 0, 0, 1)">, Some(e))
+        runningStages </span>-=<span style="color: rgba(0, 0, 0, 1)"> stage
+        </span><span style="color: rgba(0, 0, 255, 1)">return</span><span style="color: rgba(0, 0, 0, 1)">
+    }
+
+    stage.makeNewStageAttempt(partitionsToCompute.size, taskIdToLocations.values.toSeq)
+    listenerBus.post(SparkListenerStageSubmitted(stage.latestInfo, properties))
+
+    </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> TODO: Maybe we can keep the taskBinary in Stage to avoid serializing it multiple times.
+    </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> Broadcasted binary for the task, used to dispatch tasks to executors. Note that we broadcast
+    </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> the serialized copy of the RDD and for each task we will deserialize it, which means each
+    </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> task gets a different copy of the RDD. This provides stronger isolation between tasks that
+    </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> might modify state of objects referenced in their closures. This is necessary in Hadoop
+    </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> where the JobConf/Configuration object is not thread-safe.</span>
+    var taskBinary: Broadcast[Array[Byte]] = <span style="color: rgba(0, 0, 255, 1)">null</span>
+    <span style="color: rgba(0, 0, 255, 1)">try</span><span style="color: rgba(0, 0, 0, 1)"> {
+      </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> For ShuffleMapTask, serialize and broadcast (rdd, shuffleDep).
+      </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> For ResultTask, serialize and broadcast (rdd, func).</span>
+      val taskBinaryBytes: Array[Byte] =<span style="color: rgba(0, 0, 0, 1)"> stage match {
+        </span><span style="color: rgba(0, 0, 255, 1)">case</span> stage: ShuffleMapStage =&gt;<span style="color: rgba(0, 0, 0, 1)">
+          JavaUtils.bufferToArray(
+            closureSerializer.serialize((stage.rdd, stage.shuffleDep): AnyRef))
+        </span><span style="color: rgba(0, 0, 255, 1)">case</span> stage: ResultStage =&gt;<span style="color: rgba(0, 0, 0, 1)">
+          JavaUtils.bufferToArray(closureSerializer.serialize((stage.rdd, stage.func): AnyRef))
+      }
+
+      taskBinary </span>=<span style="color: rgba(0, 0, 0, 1)"> sc.broadcast(taskBinaryBytes)
+    } </span><span style="color: rgba(0, 0, 255, 1)">catch</span><span style="color: rgba(0, 0, 0, 1)"> {
+      </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> In the case of a failure during serialization, abort the stage.</span>
+      <span style="color: rgba(0, 0, 255, 1)">case</span> e: NotSerializableException =&gt;<span style="color: rgba(0, 0, 0, 1)">
+        abortStage(stage, </span>"Task not serializable: " +<span style="color: rgba(0, 0, 0, 1)"> e.toString, Some(e))
+        runningStages </span>-=<span style="color: rgba(0, 0, 0, 1)"> stage
+
+        </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> Abort execution</span>
+        <span style="color: rgba(0, 0, 255, 1)">return</span>
+      <span style="color: rgba(0, 0, 255, 1)">case</span> NonFatal(e) =&gt;<span style="color: rgba(0, 0, 0, 1)">
+        abortStage(stage, s</span>"Task serialization failed: $e\n${Utils.exceptionString(e)}"<span style="color: rgba(0, 0, 0, 1)">, Some(e))
+        runningStages </span>-=<span style="color: rgba(0, 0, 0, 1)"> stage
+        </span><span style="color: rgba(0, 0, 255, 1)">return</span><span style="color: rgba(0, 0, 0, 1)">
+    }
+
+    val tasks: Seq[Task[_]] </span>= <span style="color: rgba(0, 0, 255, 1)">try</span><span style="color: rgba(0, 0, 0, 1)"> {
+      stage match {
+        </span><span style="color: rgba(0, 0, 255, 1)">case</span> stage: ShuffleMapStage =&gt;<span style="color: rgba(0, 0, 0, 1)">
+          partitionsToCompute.map { id </span>=&gt;<span style="color: rgba(0, 0, 0, 1)">
+            val locs </span>=<span style="color: rgba(0, 0, 0, 1)"> taskIdToLocations(id)
+            val part </span>=<span style="color: rgba(0, 0, 0, 1)"> stage.rdd.partitions(id)
+            </span><span style="color: rgba(0, 0, 255, 1)">new</span><span style="color: rgba(0, 0, 0, 1)"> ShuffleMapTask(stage.id, stage.latestInfo.attemptId,
+              taskBinary, part, locs, stage.latestInfo.taskMetrics, properties, Option(jobId),
+              Option(sc.applicationId), sc.applicationAttemptId)
+          }
+
+        </span><span style="color: rgba(0, 0, 255, 1)">case</span> stage: ResultStage =&gt;<span style="color: rgba(0, 0, 0, 1)">
+          partitionsToCompute.map { id </span>=&gt;<span style="color: rgba(0, 0, 0, 1)">
+            val p: Int </span>=<span style="color: rgba(0, 0, 0, 1)"> stage.partitions(id)
+            val part </span>=<span style="color: rgba(0, 0, 0, 1)"> stage.rdd.partitions(p)
+            val locs </span>=<span style="color: rgba(0, 0, 0, 1)"> taskIdToLocations(id)
+            </span><span style="color: rgba(0, 0, 255, 1)">new</span><span style="color: rgba(0, 0, 0, 1)"> ResultTask(stage.id, stage.latestInfo.attemptId,
+              taskBinary, part, locs, id, properties, stage.latestInfo.taskMetrics,
+              Option(jobId), Option(sc.applicationId), sc.applicationAttemptId)
+          }
+      }
+    } </span><span style="color: rgba(0, 0, 255, 1)">catch</span><span style="color: rgba(0, 0, 0, 1)"> {
+      </span><span style="color: rgba(0, 0, 255, 1)">case</span> NonFatal(e) =&gt;<span style="color: rgba(0, 0, 0, 1)">
+        abortStage(stage, s</span>"Task creation failed: $e\n${Utils.exceptionString(e)}"<span style="color: rgba(0, 0, 0, 1)">, Some(e))
+        runningStages </span>-=<span style="color: rgba(0, 0, 0, 1)"> stage
+        </span><span style="color: rgba(0, 0, 255, 1)">return</span><span style="color: rgba(0, 0, 0, 1)">
+    }
+
+    </span><span style="color: rgba(0, 0, 255, 1)">if</span> (tasks.size &gt; 0<span style="color: rgba(0, 0, 0, 1)">) {
+      logInfo(</span>"Submitting " + tasks.size + " missing tasks from " + stage + " (" + stage.rdd + ")"<span style="color: rgba(0, 0, 0, 1)">)
+      stage.pendingPartitions </span>++=<span style="color: rgba(0, 0, 0, 1)"> tasks.map(_.partitionId)
+      logDebug(</span>"New pending partitions: " +<span style="color: rgba(0, 0, 0, 1)"> stage.pendingPartitions)
+      taskScheduler.submitTasks(</span><span style="color: rgba(0, 0, 255, 1)">new</span><span style="color: rgba(0, 0, 0, 1)"> TaskSet(
+        tasks.toArray, stage.id, stage.latestInfo.attemptId, jobId, properties))
+      stage.latestInfo.submissionTime </span>=<span style="color: rgba(0, 0, 0, 1)"> Some(clock.getTimeMillis())
+    } </span><span style="color: rgba(0, 0, 255, 1)">else</span><span style="color: rgba(0, 0, 0, 1)"> {
+      </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> Because we posted SparkListenerStageSubmitted earlier, we should mark
+      </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> the stage as completed here in case there are no tasks to run</span>
+<span style="color: rgba(0, 0, 0, 1)">      markStageAsFinished(stage, None)
+
+      val debugString </span>=<span style="color: rgba(0, 0, 0, 1)"> stage match {
+        </span><span style="color: rgba(0, 0, 255, 1)">case</span> stage: ShuffleMapStage =&gt;<span style="color: rgba(0, 0, 0, 1)">
+          s</span>"Stage ${stage} is actually done; " +<span style="color: rgba(0, 0, 0, 1)">
+            s</span>"(available: ${stage.isAvailable}," +<span style="color: rgba(0, 0, 0, 1)">
+            s</span>"available outputs: ${stage.numAvailableOutputs}," +<span style="color: rgba(0, 0, 0, 1)">
+            s</span>"partitions: ${stage.numPartitions})"
+        <span style="color: rgba(0, 0, 255, 1)">case</span> stage : ResultStage =&gt;<span style="color: rgba(0, 0, 0, 1)">
+          s</span>"Stage ${stage} is actually done; (partitions: ${stage.numPartitions})"<span style="color: rgba(0, 0, 0, 1)">
+      }
+      logDebug(debugString)
+
+      submitWaitingChildStages(stage)
+    }
+  }</span></pre>
+</div>
+<p>submitStage is a recursive call. It will first try to call the submitStage of all parents. If there is no parent, submitMissingTasks will be called. SubmitMissingTasks will divide a stage into multiple tasks;</p>
+<p><em>submitMissingTasks will first get taskIdToLocations through partitionsToCompute, then broadcast the task code, taskBinaryBytes, and then divide the tasks according to partitionsToCompute: if it is ShuffleMapStage, it will be divided into multiple ShuffleMapTasks; if it is ResultStage, it will be divided into multiple ResultTasks; therefore, tasks and partitions are in one-to-one correspondence;</em></p>
+<p>After dividing the tasks, submit the task collection for execution by calling taskScheduler.submitTasks:</p>
+<p>org.apache.spark.scheduler.TaskSchedulerImpl</p>
+<div class="cnblogs_code">
+<pre><span style="color: rgba(0, 0, 0, 1)">  override def submitTasks(taskSet: TaskSet) {
+    val tasks </span>=<span style="color: rgba(0, 0, 0, 1)"> taskSet.tasks
+    logInfo(</span>"Adding task set " + taskSet.id + " with " + tasks.length + " tasks"<span style="color: rgba(0, 0, 0, 1)">)
+    </span><span style="color: rgba(0, 0, 255, 1)">this</span>.<span style="color: rgba(0, 0, 255, 1)">synchronized</span><span style="color: rgba(0, 0, 0, 1)"> {
+      val manager </span>=<span style="color: rgba(0, 0, 0, 1)"> createTaskSetManager(taskSet, maxTaskFailures)
+      val stage </span>=<span style="color: rgba(0, 0, 0, 1)"> taskSet.stageId
+      val stageTaskSets </span>=<span style="color: rgba(0, 0, 0, 1)">
+        taskSetsByStageIdAndAttempt.getOrElseUpdate(stage, </span><span style="color: rgba(0, 0, 255, 1)">new</span><span style="color: rgba(0, 0, 0, 1)"> HashMap[Int, TaskSetManager])
+      stageTaskSets(taskSet.stageAttemptId) </span>=<span style="color: rgba(0, 0, 0, 1)"> manager
+      val conflictingTaskSet </span>= stageTaskSets.exists { <span style="color: rgba(0, 0, 255, 1)">case</span> (_, ts) =&gt;<span style="color: rgba(0, 0, 0, 1)">
+        ts.taskSet </span>!= taskSet &amp;&amp; !<span style="color: rgba(0, 0, 0, 1)">ts.isZombie
+      }
+      </span><span style="color: rgba(0, 0, 255, 1)">if</span><span style="color: rgba(0, 0, 0, 1)"> (conflictingTaskSet) {
+        </span><span style="color: rgba(0, 0, 255, 1)">throw</span> <span style="color: rgba(0, 0, 255, 1)">new</span> IllegalStateException(s"more than one active taskSet for stage $stage:" +<span style="color: rgba(0, 0, 0, 1)">
+          s</span>" ${stageTaskSets.toSeq.map{_._2.taskSet.id}.mkString(",")}"<span style="color: rgba(0, 0, 0, 1)">)
+      }
+      schedulableBuilder.addTaskSetManager(manager, manager.taskSet.properties)
+
+      </span><span style="color: rgba(0, 0, 255, 1)">if</span> (!isLocal &amp;&amp; !<span style="color: rgba(0, 0, 0, 1)">hasReceivedTask) {
+        starvationTimer.scheduleAtFixedRate(</span><span style="color: rgba(0, 0, 255, 1)">new</span><span style="color: rgba(0, 0, 0, 1)"> TimerTask() {
+          override def run() {
+            </span><span style="color: rgba(0, 0, 255, 1)">if</span> (!<span style="color: rgba(0, 0, 0, 1)">hasLaunchedTask) {
+              logWarning(</span>"Initial job has not accepted any resources; " +
+                "check your cluster UI to ensure that workers are registered " +
+                "and have sufficient resources"<span style="color: rgba(0, 0, 0, 1)">)
+            } </span><span style="color: rgba(0, 0, 255, 1)">else</span><span style="color: rgba(0, 0, 0, 1)"> {
+              </span><span style="color: rgba(0, 0, 255, 1)">this</span><span style="color: rgba(0, 0, 0, 1)">.cancel()
+            }
+          }
+        }, STARVATION_TIMEOUT_MS, STARVATION_TIMEOUT_MS)
+      }
+      hasReceivedTask </span>= <span style="color: rgba(0, 0, 255, 1)">true</span><span style="color: rgba(0, 0, 0, 1)">
+    }
+    backend.reviveOffers()
+  }</span></pre>
+</div>
+<p>A TaskSetManager will be created in submitTasks (which encapsulates a task collection and determines the order of task execution), and then adds the TaskSetManager to the ScheduledBuilder;</p>
+<p>SchedulableBuilder has two implementations: FIFOSchedulableBuilder and FairSchedulableBuilder. This can be modified by configuration. The default is FIFOSchedulableBuilder;</p>
+<blockquote>
+<p>spark.scheduler.mode=FAIR</p>
+</blockquote>
+<p>Let’s look at the FIFOSchedulableBuilder implementation first. addTaskSetManager puts TaskSetManager into the Pool.</p>
+<p>org.apache.spark.scheduler.FIFOSchedulableBuilder</p>
+<div class="cnblogs_code">
+<pre><span style="color: rgba(0, 0, 0, 1)">  override def addTaskSetManager(manager: Schedulable, properties: Properties) {
+    rootPool.addSchedulable(manager)
+  }</span></pre>
+</div>
+<p>org.apache.spark.scheduler.Pool</p>
+<div class="cnblogs_code">
+<pre><span style="color: rgba(0, 0, 0, 1)">  override def addSchedulable(schedulable: Schedulable) {
+    require(schedulable </span>!= <span style="color: rgba(0, 0, 255, 1)">null</span><span style="color: rgba(0, 0, 0, 1)">)
+    schedulableQueue.add(schedulable)
+    schedulableNameToSchedulable.put(schedulable.name, schedulable)
+    schedulable.parent </span>= <span style="color: rgba(0, 0, 255, 1)">this</span><span style="color: rgba(0, 0, 0, 1)">
+  }
+
+  override def getSortedTaskSetQueue: ArrayBuffer[TaskSetManager] </span>=<span style="color: rgba(0, 0, 0, 1)"> {
+    var sortedTaskSetQueue </span>= <span style="color: rgba(0, 0, 255, 1)">new</span><span style="color: rgba(0, 0, 0, 1)"> ArrayBuffer[TaskSetManager]
+    val sortedSchedulableQueue </span>=<span style="color: rgba(0, 0, 0, 1)">
+      schedulableQueue.asScala.toSeq.sortWith(taskSetSchedulingAlgorithm.comparator)
+    </span><span style="color: rgba(0, 0, 255, 1)">for</span> (schedulable &lt;-<span style="color: rgba(0, 0, 0, 1)"> sortedSchedulableQueue) {
+      sortedTaskSetQueue </span>++=<span style="color: rgba(0, 0, 0, 1)"> schedulable.getSortedTaskSetQueue
+    }
+    sortedTaskSetQueue
+  }</span></pre>
+</div>
+<p>After TaskSetManager is added to the Pool, the Pool will be taken out and processed by TaskSchedulerImpl by calling getSortedTaskSetQueue.</p>
+<p>org.apache.spark.scheduler.TaskSchedulerImpl</p>
+<div class="cnblogs_code">
+<pre>  <span style="color: rgba(0, 128, 0, 1)">/**</span><span style="color: rgba(0, 128, 0, 1)">
+   * Called by cluster manager to offer resources on slaves. We respond by asking our active task
+   * sets for tasks in order of priority. We fill each node with tasks in a round-robin manner so
+   * that tasks are balanced across the cluster.
+   </span><span style="color: rgba(0, 128, 0, 1)">*/</span><span style="color: rgba(0, 0, 0, 1)">
+  def resourceOffers(offers: IndexedSeq[WorkerOffer]): Seq[Seq[TaskDescription]] </span>= <span style="color: rgba(0, 0, 255, 1)">synchronized</span><span style="color: rgba(0, 0, 0, 1)"> {
+    </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> Mark each slave as alive and remember its hostname
+    </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> Also track if new executor is added</span>
+    var newExecAvail = <span style="color: rgba(0, 0, 255, 1)">false</span>
+    <span style="color: rgba(0, 0, 255, 1)">for</span> (o &lt;-<span style="color: rgba(0, 0, 0, 1)"> offers) {
+      </span><span style="color: rgba(0, 0, 255, 1)">if</span> (!<span style="color: rgba(0, 0, 0, 1)">hostToExecutors.contains(o.host)) {
+        hostToExecutors(o.host) </span>= <span style="color: rgba(0, 0, 255, 1)">new</span><span style="color: rgba(0, 0, 0, 1)"> HashSet[String]()
+      }
+      </span><span style="color: rgba(0, 0, 255, 1)">if</span> (!<span style="color: rgba(0, 0, 0, 1)">executorIdToRunningTaskIds.contains(o.executorId)) {
+        hostToExecutors(o.host) </span>+=<span style="color: rgba(0, 0, 0, 1)"> o.executorId
+        executorAdded(o.executorId, o.host)
+        executorIdToHost(o.executorId) </span>=<span style="color: rgba(0, 0, 0, 1)"> o.host
+        executorIdToRunningTaskIds(o.executorId) </span>=<span style="color: rgba(0, 0, 0, 1)"> HashSet[Long]()
+        newExecAvail </span>= <span style="color: rgba(0, 0, 255, 1)">true</span><span style="color: rgba(0, 0, 0, 1)">
+      }
+      </span><span style="color: rgba(0, 0, 255, 1)">for</span> (rack &lt;-<span style="color: rgba(0, 0, 0, 1)"> getRackForHost(o.host)) {
+        hostsByRack.getOrElseUpdate(rack, </span><span style="color: rgba(0, 0, 255, 1)">new</span> HashSet[String]()) +=<span style="color: rgba(0, 0, 0, 1)"> o.host
+      }
+    }
+
+    </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> Randomly shuffle offers to avoid always placing tasks on the same set of workers.</span>
+    val shuffledOffers =<span style="color: rgba(0, 0, 0, 1)"> Random.shuffle(offers)
+    </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> Build a list of tasks to assign to each worker.</span>
+    val tasks = shuffledOffers.map(o =&gt; <span style="color: rgba(0, 0, 255, 1)">new</span><span style="color: rgba(0, 0, 0, 1)"> ArrayBuffer[TaskDescription](o.cores))
+    val availableCpus </span>= shuffledOffers.map(o =&gt;<span style="color: rgba(0, 0, 0, 1)"> o.cores).toArray
+    val sortedTaskSets </span>=<span style="color: rgba(0, 0, 0, 1)"> rootPool.getSortedTaskSetQueue
+    </span><span style="color: rgba(0, 0, 255, 1)">for</span> (taskSet &lt;-<span style="color: rgba(0, 0, 0, 1)"> sortedTaskSets) {
+      logDebug(</span>"parentName: %s, name: %s, runningTasks: %s"<span style="color: rgba(0, 0, 0, 1)">.format(
+        taskSet.parent.name, taskSet.name, taskSet.runningTasks))
+      </span><span style="color: rgba(0, 0, 255, 1)">if</span><span style="color: rgba(0, 0, 0, 1)"> (newExecAvail) {
+        taskSet.executorAdded()
+      }
+    }
+
+    </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> Take each TaskSet in our scheduling order, and then offer it each node in increasing order
+    </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> of locality levels so that it gets a chance to launch local tasks on all of them.
+    </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> NOTE: the preferredLocality order: PROCESS_LOCAL, NODE_LOCAL, NO_PREF, RACK_LOCAL, ANY</span>
+    <span style="color: rgba(0, 0, 255, 1)">for</span> (taskSet &lt;-<span style="color: rgba(0, 0, 0, 1)"> sortedTaskSets) {
+      var launchedAnyTask </span>= <span style="color: rgba(0, 0, 255, 1)">false</span><span style="color: rgba(0, 0, 0, 1)">
+      var launchedTaskAtCurrentMaxLocality </span>= <span style="color: rgba(0, 0, 255, 1)">false</span>
+      <span style="color: rgba(0, 0, 255, 1)">for</span> (currentMaxLocality &lt;-<span style="color: rgba(0, 0, 0, 1)"> taskSet.myLocalityLevels) {
+        </span><span style="color: rgba(0, 0, 255, 1)">do</span><span style="color: rgba(0, 0, 0, 1)"> {
+          launchedTaskAtCurrentMaxLocality </span>=<span style="color: rgba(0, 0, 0, 1)"> resourceOfferSingleTaskSet(
+            taskSet, currentMaxLocality, shuffledOffers, availableCpus, tasks)
+          launchedAnyTask </span>|=<span style="color: rgba(0, 0, 0, 1)"> launchedTaskAtCurrentMaxLocality
+        } </span><span style="color: rgba(0, 0, 255, 1)">while</span><span style="color: rgba(0, 0, 0, 1)"> (launchedTaskAtCurrentMaxLocality)
+      }
+      </span><span style="color: rgba(0, 0, 255, 1)">if</span> (!<span style="color: rgba(0, 0, 0, 1)">launchedAnyTask) {
+        taskSet.abortIfCompletelyBlacklisted(hostToExecutors)
+      }
+    }
+
+    </span><span style="color: rgba(0, 0, 255, 1)">if</span> (tasks.size &gt; 0<span style="color: rgba(0, 0, 0, 1)">) {
+      hasLaunchedTask </span>= <span style="color: rgba(0, 0, 255, 1)">true</span><span style="color: rgba(0, 0, 0, 1)">
+    }
+    </span><span style="color: rgba(0, 0, 255, 1)">return</span><span style="color: rgba(0, 0, 0, 1)"> tasks
+  }
+
+  </span><span style="color: rgba(0, 0, 255, 1)">private</span><span style="color: rgba(0, 0, 0, 1)"> def resourceOfferSingleTaskSet(
+      taskSet: TaskSetManager,
+      maxLocality: TaskLocality,
+      shuffledOffers: Seq[WorkerOffer],
+      availableCpus: Array[Int],
+      tasks: IndexedSeq[ArrayBuffer[TaskDescription]]) : Boolean </span>=<span style="color: rgba(0, 0, 0, 1)"> {
+    var launchedTask </span>= <span style="color: rgba(0, 0, 255, 1)">false</span>
+    <span style="color: rgba(0, 0, 255, 1)">for</span> (i &lt;- 0<span style="color: rgba(0, 0, 0, 1)"> until shuffledOffers.size) {
+      val execId </span>=<span style="color: rgba(0, 0, 0, 1)"> shuffledOffers(i).executorId
+      val host </span>=<span style="color: rgba(0, 0, 0, 1)"> shuffledOffers(i).host
+      </span><span style="color: rgba(0, 0, 255, 1)">if</span> (availableCpus(i) &gt;=<span style="color: rgba(0, 0, 0, 1)"> CPUS_PER_TASK) {
+        </span><span style="color: rgba(0, 0, 255, 1)">try</span><span style="color: rgba(0, 0, 0, 1)"> {
+          </span><span style="color: rgba(0, 0, 255, 1)">for</span> (task &lt;-<span style="color: rgba(0, 0, 0, 1)"> taskSet.resourceOffer(execId, host, maxLocality)) {
+            tasks(i) </span>+=<span style="color: rgba(0, 0, 0, 1)"> task
+            val tid </span>=<span style="color: rgba(0, 0, 0, 1)"> task.taskId
+            taskIdToTaskSetManager(tid) </span>=<span style="color: rgba(0, 0, 0, 1)"> taskSet
+            taskIdToExecutorId(tid) </span>=<span style="color: rgba(0, 0, 0, 1)"> execId
+            executorIdToRunningTaskIds(execId).add(tid)
+            availableCpus(i) </span>-=<span style="color: rgba(0, 0, 0, 1)"> CPUS_PER_TASK
+            </span><span style="color: rgba(0, 0, 255, 1)">assert</span>(availableCpus(i) &gt;= 0<span style="color: rgba(0, 0, 0, 1)">)
+            launchedTask </span>= <span style="color: rgba(0, 0, 255, 1)">true</span><span style="color: rgba(0, 0, 0, 1)">
+          }
+        } </span><span style="color: rgba(0, 0, 255, 1)">catch</span><span style="color: rgba(0, 0, 0, 1)"> {
+          </span><span style="color: rgba(0, 0, 255, 1)">case</span> e: TaskNotSerializableException =&gt;<span style="color: rgba(0, 0, 0, 1)">
+            logError(s</span>"Resource offer failed, task set ${taskSet.name} was not serializable"<span style="color: rgba(0, 0, 0, 1)">)
+            </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> Do not offer resources for this task, but don't throw an error to allow other
+            </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> task sets to be submitted.</span>
+            <span style="color: rgba(0, 0, 255, 1)">return</span><span style="color: rgba(0, 0, 0, 1)"> launchedTask
+        }
+      }
+    }
+    </span><span style="color: rgba(0, 0, 255, 1)">return</span><span style="color: rgba(0, 0, 0, 1)"> launchedTask
+  }</span></pre>
+</div>
+<p>Here you can see the implementation of Spark's data locality, which is 'data locality' (pushing calculations to data). The priority of data locality is: PROCESS_LOCAL, NODE_LOCAL, NO_PREF, RACK_LOCAL, ANY, that is, tasks are allocated in this order;</p>
+<p><br/>resourceOffers first calls executorAdded to recomputeLocality, and then uses the priority of data locality to fetch tasks from the tasksSet for execution, so the tasks with the highest priority will be executed first;</p>
+<p>The specific levels are described as follows:</p>
+<ul>
+<li>PROCESS_LOCAL means that the data is in the executor process (that is, the same JVM), and the data reading speed is the fastest;</li>
+<li>NODE_LOCAL means that the data is on the executor's server; reading data is the second fastest, requiring disk IO or reading from other processes;</li>
+<li>RACK_LOCAL means that the data is on other servers in the rack where the executor server is located. The speed of reading data is the same and requires intra-rack network IO;</li>
+<li>Any means that on other racks, the reading speed is the slowest and requires inter-rack network io;</li>
+</ul>
+<p>resourceOffers calls resourceOfferSingleTaskSet to process TaskSetManager one by one. resourceOfferSingleTaskSet will call TaskSetManager.resourceOffer to take out the highest priority task.</p>
+<p>org.apache.spark.scheduler.TaskSetManager</p>
+<div class="cnblogs_code">
+<pre><span style="color: rgba(0, 0, 0, 1)">  def resourceOffer(
+      execId: String,
+      host: String,
+      maxLocality: TaskLocality.TaskLocality)
+    : Option[TaskDescription] </span>=<span style="color: rgba(0, 0, 0, 1)">
+  {
+    val offerBlacklisted </span>= taskSetBlacklistHelperOpt.exists { blacklist =&gt;<span style="color: rgba(0, 0, 0, 1)">
+      blacklist.isNodeBlacklistedForTaskSet(host) </span>||<span style="color: rgba(0, 0, 0, 1)">
+        blacklist.isExecutorBlacklistedForTaskSet(execId)
+    }
+    </span><span style="color: rgba(0, 0, 255, 1)">if</span> (!isZombie &amp;&amp; !<span style="color: rgba(0, 0, 0, 1)">offerBlacklisted) {
+      val curTime </span>=<span style="color: rgba(0, 0, 0, 1)"> clock.getTimeMillis()
+
+      var allowedLocality </span>=<span style="color: rgba(0, 0, 0, 1)"> maxLocality
+
+      </span><span style="color: rgba(0, 0, 255, 1)">if</span> (maxLocality !=<span style="color: rgba(0, 0, 0, 1)"> TaskLocality.NO_PREF) {
+        allowedLocality </span>=<span style="color: rgba(0, 0, 0, 1)"> getAllowedLocalityLevel(curTime)
+        </span><span style="color: rgba(0, 0, 255, 1)">if</span> (allowedLocality &gt;<span style="color: rgba(0, 0, 0, 1)"> maxLocality) {
+          </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> We're not allowed to search for farther-away tasks</span>
+          allowedLocality =<span style="color: rgba(0, 0, 0, 1)"> maxLocality
+        }
+      }
+
+      dequeueTask(execId, host, allowedLocality).map { </span><span style="color: rgba(0, 0, 255, 1)">case</span> ((index, taskLocality, speculative)) =&gt;
+        <span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> Found a task; do some bookkeeping and return a task description</span>
+        val task =<span style="color: rgba(0, 0, 0, 1)"> tasks(index)
+        val taskId </span>=<span style="color: rgba(0, 0, 0, 1)"> sched.newTaskId()
+        </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> Do various bookkeeping</span>
+        copiesRunning(index) += 1<span style="color: rgba(0, 0, 0, 1)">
+        val attemptNum </span>=<span style="color: rgba(0, 0, 0, 1)"> taskAttempts(index).size
+        val info </span>= <span style="color: rgba(0, 0, 255, 1)">new</span><span style="color: rgba(0, 0, 0, 1)"> TaskInfo(taskId, index, attemptNum, curTime,
+          execId, host, taskLocality, speculative)
+        taskInfos(taskId) </span>=<span style="color: rgba(0, 0, 0, 1)"> info
+        taskAttempts(index) </span>=<span style="color: rgba(0, 0, 0, 1)"> info :: taskAttempts(index)
+        </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> Update our locality level for delay scheduling
+        </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> NO_PREF will not affect the variables related to delay scheduling</span>
+        <span style="color: rgba(0, 0, 255, 1)">if</span> (maxLocality !=<span style="color: rgba(0, 0, 0, 1)"> TaskLocality.NO_PREF) {
+          currentLocalityIndex </span>=<span style="color: rgba(0, 0, 0, 1)"> getLocalityIndex(taskLocality)
+          lastLaunchTime </span>=<span style="color: rgba(0, 0, 0, 1)"> curTime
+        }
+        </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> Serialize and return the task</span>
+        val startTime =<span style="color: rgba(0, 0, 0, 1)"> clock.getTimeMillis()
+        val serializedTask: ByteBuffer </span>= <span style="color: rgba(0, 0, 255, 1)">try</span><span style="color: rgba(0, 0, 0, 1)"> {
+          Task.serializeWithDependencies(task, sched.sc.addedFiles, sched.sc.addedJars, ser)
+        } </span><span style="color: rgba(0, 0, 255, 1)">catch</span><span style="color: rgba(0, 0, 0, 1)"> {
+          </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> If the task cannot be serialized, then there's no point to re-attempt the task,
+          </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> as it will always fail. So just abort the whole task-set.</span>
+          <span style="color: rgba(0, 0, 255, 1)">case</span> NonFatal(e) =&gt;<span style="color: rgba(0, 0, 0, 1)">
+            val msg </span>= s"Failed to serialize task $taskId, not attempting to retry it."<span style="color: rgba(0, 0, 0, 1)">
+            logError(msg, e)
+            abort(s</span>"$msg Exception during serialization: $e"<span style="color: rgba(0, 0, 0, 1)">)
+            </span><span style="color: rgba(0, 0, 255, 1)">throw</span> <span style="color: rgba(0, 0, 255, 1)">new</span><span style="color: rgba(0, 0, 0, 1)"> TaskNotSerializableException(e)
+        }
+        </span><span style="color: rgba(0, 0, 255, 1)">if</span> (serializedTask.limit &gt; TaskSetManager.TASK_SIZE_TO_WARN_KB * 1024 &amp;&amp;
+          !<span style="color: rgba(0, 0, 0, 1)">emittedTaskSizeWarning) {
+          emittedTaskSizeWarning </span>= <span style="color: rgba(0, 0, 255, 1)">true</span><span style="color: rgba(0, 0, 0, 1)">
+          logWarning(s</span>"Stage ${task.stageId} contains a task of very large size " +<span style="color: rgba(0, 0, 0, 1)">
+            s</span>"(${serializedTask.limit / 1024} KB). The maximum recommended task size is " +<span style="color: rgba(0, 0, 0, 1)">
+            s</span>"${TaskSetManager.TASK_SIZE_TO_WARN_KB} KB."<span style="color: rgba(0, 0, 0, 1)">)
+        }
+        addRunningTask(taskId)
+
+        </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> We used to log the time it takes to serialize the task, but task size is already
+        </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> a good proxy to task serialization time.
+        </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> val timeTaken = clock.getTime() - startTime</span>
+        val taskName = s"task ${info.id} in stage ${taskSet.id}"<span style="color: rgba(0, 0, 0, 1)">
+        logInfo(s</span>"Starting $taskName (TID $taskId, $host, executor ${info.executorId}, " +<span style="color: rgba(0, 0, 0, 1)">
+          s</span>"partition ${task.partitionId}, $taskLocality, ${serializedTask.limit} bytes)"<span style="color: rgba(0, 0, 0, 1)">)
+
+        sched.dagScheduler.taskStarted(task, info)
+        </span><span style="color: rgba(0, 0, 255, 1)">new</span> TaskDescription(taskId = taskId, attemptNumber =<span style="color: rgba(0, 0, 0, 1)"> attemptNum, execId,
+          taskName, index, serializedTask)
+      }
+    } </span><span style="color: rgba(0, 0, 255, 1)">else</span><span style="color: rgba(0, 0, 0, 1)"> {
+      None
+    }
+  }
+
+  </span><span style="color: rgba(0, 128, 0, 1)">/**</span><span style="color: rgba(0, 128, 0, 1)">
+   * Get the level we can launch tasks according to delay scheduling, based on current wait time.
+   </span><span style="color: rgba(0, 128, 0, 1)">*/</span>
+  <span style="color: rgba(0, 0, 255, 1)">private</span> def getAllowedLocalityLevel(curTime: Long): TaskLocality.TaskLocality =<span style="color: rgba(0, 0, 0, 1)"> {
+    </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> Remove the scheduled or finished tasks lazily</span>
+    def tasksNeedToBeScheduledFrom(pendingTaskIds: ArrayBuffer[Int]): Boolean =<span style="color: rgba(0, 0, 0, 1)"> {
+      var indexOffset </span>=<span style="color: rgba(0, 0, 0, 1)"> pendingTaskIds.size
+      </span><span style="color: rgba(0, 0, 255, 1)">while</span> (indexOffset &gt; 0<span style="color: rgba(0, 0, 0, 1)">) {
+        indexOffset </span>-= 1<span style="color: rgba(0, 0, 0, 1)">
+        val index </span>=<span style="color: rgba(0, 0, 0, 1)"> pendingTaskIds(indexOffset)
+        </span><span style="color: rgba(0, 0, 255, 1)">if</span> (copiesRunning(index) == 0 &amp;&amp; !<span style="color: rgba(0, 0, 0, 1)">successful(index)) {
+          </span><span style="color: rgba(0, 0, 255, 1)">return</span> <span style="color: rgba(0, 0, 255, 1)">true</span><span style="color: rgba(0, 0, 0, 1)">
+        } </span><span style="color: rgba(0, 0, 255, 1)">else</span><span style="color: rgba(0, 0, 0, 1)"> {
+          pendingTaskIds.remove(indexOffset)
+        }
+      }
+      </span><span style="color: rgba(0, 0, 255, 1)">false</span><span style="color: rgba(0, 0, 0, 1)">
+    }
+    </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> Walk through the list of tasks that can be scheduled at each location and returns true
+    </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> if there are any tasks that still need to be scheduled. Lazily cleans up tasks that have
+    </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> already been scheduled.</span>
+    def moreTasksToRunIn(pendingTasks: HashMap[String, ArrayBuffer[Int]]): Boolean =<span style="color: rgba(0, 0, 0, 1)"> {
+      val emptyKeys </span>= <span style="color: rgba(0, 0, 255, 1)">new</span><span style="color: rgba(0, 0, 0, 1)"> ArrayBuffer[String]
+      val hasTasks </span>=<span style="color: rgba(0, 0, 0, 1)"> pendingTasks.exists {
+        </span><span style="color: rgba(0, 0, 255, 1)">case</span> (id: String, tasks: ArrayBuffer[Int]) =&gt;
+          <span style="color: rgba(0, 0, 255, 1)">if</span><span style="color: rgba(0, 0, 0, 1)"> (tasksNeedToBeScheduledFrom(tasks)) {
+            </span><span style="color: rgba(0, 0, 255, 1)">true</span><span style="color: rgba(0, 0, 0, 1)">
+          } </span><span style="color: rgba(0, 0, 255, 1)">else</span><span style="color: rgba(0, 0, 0, 1)"> {
+            emptyKeys </span>+=<span style="color: rgba(0, 0, 0, 1)"> id
+            </span><span style="color: rgba(0, 0, 255, 1)">false</span><span style="color: rgba(0, 0, 0, 1)">
+          }
+      }
+      </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> The key could be executorId, host or rackId</span>
+      emptyKeys.foreach(id =&gt;<span style="color: rgba(0, 0, 0, 1)"> pendingTasks.remove(id))
+      hasTasks
+    }
+
+    </span><span style="color: rgba(0, 0, 255, 1)">while</span> (currentLocalityIndex &lt; myLocalityLevels.length - 1<span style="color: rgba(0, 0, 0, 1)">) {
+      val moreTasks </span>=<span style="color: rgba(0, 0, 0, 1)"> myLocalityLevels(currentLocalityIndex) match {
+        </span><span style="color: rgba(0, 0, 255, 1)">case</span> TaskLocality.PROCESS_LOCAL =&gt;<span style="color: rgba(0, 0, 0, 1)"> moreTasksToRunIn(pendingTasksForExecutor)
+        </span><span style="color: rgba(0, 0, 255, 1)">case</span> TaskLocality.NODE_LOCAL =&gt;<span style="color: rgba(0, 0, 0, 1)"> moreTasksToRunIn(pendingTasksForHost)
+        </span><span style="color: rgba(0, 0, 255, 1)">case</span> TaskLocality.NO_PREF =&gt;<span style="color: rgba(0, 0, 0, 1)"> pendingTasksWithNoPrefs.nonEmpty
+        </span><span style="color: rgba(0, 0, 255, 1)">case</span> TaskLocality.RACK_LOCAL =&gt;<span style="color: rgba(0, 0, 0, 1)"> moreTasksToRunIn(pendingTasksForRack)
+      }
+      </span><span style="color: rgba(0, 0, 255, 1)">if</span> (!<span style="color: rgba(0, 0, 0, 1)">moreTasks) {
+        </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> This is a performance optimization: if there are no more tasks that can
+        </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> be scheduled at a particular locality level, there is no point in waiting
+        </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> for the locality wait timeout (SPARK-4939).</span>
+        lastLaunchTime =<span style="color: rgba(0, 0, 0, 1)"> curTime
+        logDebug(s</span>"No tasks for locality level ${myLocalityLevels(currentLocalityIndex)}, " +<span style="color: rgba(0, 0, 0, 1)">
+          s</span>"so moving to locality level ${myLocalityLevels(currentLocalityIndex + 1)}"<span style="color: rgba(0, 0, 0, 1)">)
+        currentLocalityIndex </span>+= 1<span style="color: rgba(0, 0, 0, 1)">
+      } </span><span style="color: rgba(0, 0, 255, 1)">else</span> <span style="color: rgba(0, 0, 255, 1)">if</span> (curTime - lastLaunchTime &gt;=<span style="color: rgba(0, 0, 0, 1)"> localityWaits(currentLocalityIndex)) {
+        </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> Jump to the next locality level, and reset lastLaunchTime so that the next locality
+        </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> wait timer doesn't immediately expire</span>
+        lastLaunchTime +=<span style="color: rgba(0, 0, 0, 1)"> localityWaits(currentLocalityIndex)
+        logDebug(s</span>"Moving to ${myLocalityLevels(currentLocalityIndex + 1)} after waiting for " +<span style="color: rgba(0, 0, 0, 1)">
+          s</span>"${localityWaits(currentLocalityIndex)}ms"<span style="color: rgba(0, 0, 0, 1)">)
+        currentLocalityIndex </span>+= 1<span style="color: rgba(0, 0, 0, 1)">
+      } </span><span style="color: rgba(0, 0, 255, 1)">else</span><span style="color: rgba(0, 0, 0, 1)"> {
+        </span><span style="color: rgba(0, 0, 255, 1)">return</span><span style="color: rgba(0, 0, 0, 1)"> myLocalityLevels(currentLocalityIndex)
+      }
+    }
+    myLocalityLevels(currentLocalityIndex)
+  }
+
+
+  </span><span style="color: rgba(0, 0, 255, 1)">private</span> def getLocalityWait(level: TaskLocality.TaskLocality): Long =<span style="color: rgba(0, 0, 0, 1)"> {
+    val defaultWait </span>= conf.get("spark.locality.wait", "3s"<span style="color: rgba(0, 0, 0, 1)">)
+    val localityWaitKey </span>=<span style="color: rgba(0, 0, 0, 1)"> level match {
+      </span><span style="color: rgba(0, 0, 255, 1)">case</span> TaskLocality.PROCESS_LOCAL =&gt; "spark.locality.wait.process"
+      <span style="color: rgba(0, 0, 255, 1)">case</span> TaskLocality.NODE_LOCAL =&gt; "spark.locality.wait.node"
+      <span style="color: rgba(0, 0, 255, 1)">case</span> TaskLocality.RACK_LOCAL =&gt; "spark.locality.wait.rack"
+      <span style="color: rgba(0, 0, 255, 1)">case</span> _ =&gt; <span style="color: rgba(0, 0, 255, 1)">null</span><span style="color: rgba(0, 0, 0, 1)">
+    }
+
+    </span><span style="color: rgba(0, 0, 255, 1)">if</span> (localityWaitKey != <span style="color: rgba(0, 0, 255, 1)">null</span><span style="color: rgba(0, 0, 0, 1)">) {
+      conf.getTimeAsMs(localityWaitKey, defaultWait)
+    } </span><span style="color: rgba(0, 0, 255, 1)">else</span><span style="color: rgba(0, 0, 0, 1)"> {
+      </span>0L<span style="color: rgba(0, 0, 0, 1)">
+    }
+  }</span></pre>
+</div>
+<p>resourceOffer will call getAllowedLocalityLevel to obtain the locality level that is currently allowed to start tasks. GetAllowedLocalityLevel internally controls which levels are allowed through time delay and whether there are more tasks. For example, only the PROCESS_LOCAL level is allowed at the beginning. After a delay, tasks at the PROCESS_LOCAL and NODE_LOCAL levels are allowed to be started, and so on;</p>
+<p>The specific delay time can be found in the getLocalityWait method. Several configurations are used. The commonly used ones are</p>
+<blockquote>
+<p>spark.locality.wait</p>
+</blockquote>
+<p>It can also be defined based on specific levels, such as</p>
+<blockquote>
+<p>spark.locality.wait.process</p>
+</blockquote>
+<p>The task is finally started here</p>
+<p>org.apache.spark.scheduler.cluster.CoarseGrainedSchedulerBackend.DriverEndpoint</p>
+<div class="cnblogs_code">
+<pre>    <span style="color: rgba(0, 0, 255, 1)">private</span><span style="color: rgba(0, 0, 0, 1)"> def makeOffers(executorId: String) {
+      </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> Filter out executors under killing</span>
+      <span style="color: rgba(0, 0, 255, 1)">if</span><span style="color: rgba(0, 0, 0, 1)"> (executorIsAlive(executorId)) {
+        val executorData </span>=<span style="color: rgba(0, 0, 0, 1)"> executorDataMap(executorId)
+        val workOffers </span>=<span style="color: rgba(0, 0, 0, 1)"> IndexedSeq(
+          </span><span style="color: rgba(0, 0, 255, 1)">new</span><span style="color: rgba(0, 0, 0, 1)"> WorkerOffer(executorId, executorData.executorHost, executorData.freeCores))
+        launchTasks(scheduler.resourceOffers(workOffers))
+      }
+    }
+
+    </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> Launch tasks returned by a set of resource offers</span>
+    <span style="color: rgba(0, 0, 255, 1)">private</span><span style="color: rgba(0, 0, 0, 1)"> def launchTasks(tasks: Seq[Seq[TaskDescription]]) {
+      </span><span style="color: rgba(0, 0, 255, 1)">for</span> (task &lt;-<span style="color: rgba(0, 0, 0, 1)"> tasks.flatten) {
+        val serializedTask </span>=<span style="color: rgba(0, 0, 0, 1)"> ser.serialize(task)
+        </span><span style="color: rgba(0, 0, 255, 1)">if</span> (serializedTask.limit &gt;=<span style="color: rgba(0, 0, 0, 1)"> maxRpcMessageSize) {
+          scheduler.taskIdToTaskSetManager.get(task.taskId).foreach { taskSetMgr </span>=&gt;
+            <span style="color: rgba(0, 0, 255, 1)">try</span><span style="color: rgba(0, 0, 0, 1)"> {
+              var msg </span>= "Serialized task %s:%d was %d bytes, which exceeds max allowed: " +
+                "spark.rpc.message.maxSize (%d bytes). Consider increasing " +
+                "spark.rpc.message.maxSize or using broadcast variables for large values."<span style="color: rgba(0, 0, 0, 1)">
+              msg </span>=<span style="color: rgba(0, 0, 0, 1)"> msg.format(task.taskId, task.index, serializedTask.limit, maxRpcMessageSize)
+              taskSetMgr.abort(msg)
+            } </span><span style="color: rgba(0, 0, 255, 1)">catch</span><span style="color: rgba(0, 0, 0, 1)"> {
+              </span><span style="color: rgba(0, 0, 255, 1)">case</span> e: Exception =&gt; logError("Exception in error callback"<span style="color: rgba(0, 0, 0, 1)">, e)
+            }
+          }
+        }
+        </span><span style="color: rgba(0, 0, 255, 1)">else</span><span style="color: rgba(0, 0, 0, 1)"> {
+          val executorData </span>=<span style="color: rgba(0, 0, 0, 1)"> executorDataMap(task.executorId)
+          executorData.freeCores </span>-=<span style="color: rgba(0, 0, 0, 1)"> scheduler.CPUS_PER_TASK
+
+          logDebug(s</span>"Launching task ${task.taskId} on executor id: ${task.executorId} hostname: " +<span style="color: rgba(0, 0, 0, 1)">
+            s</span>"${executorData.executorHost}."<span style="color: rgba(0, 0, 0, 1)">)
+
+          executorData.executorEndpoint.send(LaunchTask(</span><span style="color: rgba(0, 0, 255, 1)">new</span><span style="color: rgba(0, 0, 0, 1)"> SerializableBuffer(serializedTask)))
+        }
+      }
+    }</span></pre>
+</div>
+<p>That is, sending tasks from the driver to the executor</p>
+<p> </p>
+</div>
+</div>
+<!-- Post Footer -->
+<div class="post-footer">
+<div class="post-navigation">
+<a class="nav-button" href="../blog.html">← Back to Home</a>
+<a class="nav-button" href="0306.html">Next Post →</a>
+</div>
+</div>
+</article>
+</div>
+</body>
+</html>

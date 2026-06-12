@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Cardinality Estimate cardinality counting probability algorithm</title>
+<link href="../css/style3.css" rel="stylesheet"/>
+</head>
+<body>
+<div class="container">
+<!-- Header Navigation -->
+<div class="header">
+<h1><a href="../blog.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+</div>
+<!-- Post Container -->
+<article class="post">
+<!-- Post Header -->
+<div class="post-header">
+<h1>Cardinality Estimate cardinality counting probability algorithm</h1>
+<div class="post-meta">
+<div class="post-meta-item">
+<span class="meta-icon">📅</span>
+<span>December 25, 2018</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">📖</span>
+<span>1 min read</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">👁️</span>
+<span>938 views</span>
+</div>
+</div>
+</div>
+<!-- Post Content -->
+<div class="post-content">
+<div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<p>Those who have read "Programming Pearls" should still remember the Case at the beginning. The approximate scene is:</p>
+<p><em>A friend of the author who works in a telephone company wants to count the number of different phone numbers over a period of time. The number of phone numbers is very large, and the memory at that time is very small, so it is not possible to put all the phone numbers in the memory and repeat the statistics. His friend is very distressed.</em></p>
+<p>The author cleverly thought of using a bit array to solve the problem. Each phone number can be mapped to the index of the bit array. All bits in the initial state of the bit array are 0. All phone numbers are processed one by one: set the corresponding position of the bit array to 1. After processing, just count how many 1's there are in the bit array.</p>
+<blockquote>
+<p>Example: [0,1,0,0,0,1,0,...] This bit array indicates that 2 and 5 exist</p>
+</blockquote>
+<p>I have to say that this idea is very subtle, that is, it reduces the memory usage (if all 8-digit phone numbers are put into the memory, it will take 381M (each phone number is saved as an Integer and takes up 4Byte calculation), but using a bit array only takes 11M), and only needs two loops to get the result;</p>
+<p> </p>
+<p>This is a cardinality counting problem, Cardinality: estimating the number of distinct elements.</p>
+<h1>1 Bitmap</h1>
+<p>The method mentioned above is to use bitmap. The idea is to map each element in the dataset to a bit without allowing conflicts. The memory space required is approximately the base * 1 bit (100,000,000 bit in the above example), and the counting is accurate;</p>
+<p>But when the base is very large, even the bitmap memory cannot fit in it!</p>
+<p>The good news is that if counting accuracy is not required (allowing a certain range of error), you can use a probability estimation algorithm:</p>
+<h1>2 LC：Linear Counting</h1>
+<h2>formula</h2>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201812/1509647-20181225223626433-368458240.png"/></p>
+<p>Among them: n is the estimated value, m is the bitmap size, Vn is the ratio of 0 occurrences in the bitmap, such as 0.1;</p>
+<h2>principle</h2>
+<p>Using a fixed-size hashtable to store the dataset, you can imagine:</p>
+<ul>
+<li>The smaller the base of the dataset, the emptier the hashtable. When the base is 0, all keys in the hashtable are empty.</li>
+<li>The larger the cardinality of the dataset, the fuller the hashtable and the more conflicts. When the cardinality is infinite, all keys in the hashtable are occupied and each key has a large number of conflicts.</li>
+</ul>
+<p>Therefore, the cardinality of the dataset can be estimated based on the occupied keys in the hashtable. The characteristics of the logarithmic curve are mainly used here (the section 0&lt;x&lt;1):</p>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201812/1509647-20181225161001925-966177561.png"/></p>
+<h2>process</h2>
+<p>Initialize a bitmap with all bits set to 0. Each element of the dataset is hashed to a bit of the bitmap. After hashing, the corresponding bit position is set to 1. Conflicts are allowed in hashing. Finally, the base is estimated by a formula based on the number of 0s in the bitmap and the size of the bitmap;</p>
+<p>Note: Although LC also uses bitmap, compared with the original bitmap algorithm, the bitmap size of LC can be much smaller than the base because LC's mapping allows conflicts. In addition, the bitmap size can be set to determine the size of the error;</p>
+<p> </p>
+<p>For details on the derivation process, please refer to the reference</p>
+<p>refer to:<a href="http://dblab.kaist.ac.kr/Prof/pdf/ACM90_TODS_v15n2.pdf" rel="noopener nofollow" target="_blank">A linear-time probabilistic counting algorithm for database applications</a></p>
+<h1>3 LLC：LogLog Counting</h1>
+<h2>formula</h2>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201812/1509647-20181225162419859-813522263.png"/><br/>Among them: m is the number of buckets, M is the set of buckets, k is the number of digits used for bucketing, ρ is the first subscript of 1 in the bit array, which is the index, and E is the estimated value;</p>
+<h2>principle</h2>
+<p>Let’s look at the process of tossing a coin. The process of tossing a coin is a Bernoulli process. Each result is either 0 or 1, and the probability is 1/2. Assume that a coin tossing game is defined as tossing until 1, which may be the first It is possible to toss 1 every time (P=0.5), or it is possible that 0 has been tossed i times before and finally 1 (P=1-0.5^i); the more times you play the coin tossing game, the easier it is to have 0s for many times in the past. This is because there are consecutive 0s at the beginning. The more 0s appear, the smaller the probability of occurrence, and the more times the Bernoulli process needs to be tried. Therefore, the probability can be used to deduce the condition (how many times the game has been played, i.e. n=2^i) based on the result (the number of 0s appearing at the beginning, i.e. i). This is also easy to understand. For example, the probability of winning a lottery is 1/10,000, that is, it takes an average of 10,000 lottery tickets to win one prize. On the other hand, if someone wins a prize, he should buy 10,000 lottery tickets with a high probability);</p>
+<p>However, due to the existence of randomness, the error is large, so the randomness is reduced by dividing the dataset into m parts, each part is counted separately, and finally the arithmetic average is taken to reduce the error;</p>
+<h2>process</h2>
+<p>Each element of the dataset is first mapped to a bit array, such as a 32-bit bit array. The value from 1 to k bits of this bit array is used as the bucket_index of the bucket (that is, which bucket), and the first index of 1 among the k+1 to 32 bits is placed in the bucket as a value, such as If there is already a value in the bucket, the bucket will save the largest value. After all the data set elements are mapped, the arithmetic average of the values ​​of all the buckets is taken. According to n=2^i, the cardinality in each bucket can be obtained, and then multiplied by m to get the cardinality of the entire dataset. The alpha at the front of the formula is the correction parameter;</p>
+<p>For example, k=2, then m=2^k=4, that is, 4 buckets. The bit array mapped by an element in the dataset is [1,0,0,0,0,1,0,...]. The value corresponding to the first two digits [1,0] is 2, which is the second bucket. Take the array after the third digit [0,0,0,1,0,...]. It can be seen that the index of the first bit 1 is 3. Put 3 into bucket 2, and so on;</p>
+<p> </p>
+<p>For details on the derivation process, please refer to the reference</p>
+<p>refer to:<a href="http://algo.inria.fr/flajolet/Publications/DuFl03-LNCS.pdf" rel="noopener nofollow" target="_blank">Loglog Counting of Large Cardinalities</a></p>
+<h1>4 HLLC：Hyper LogLog Counting</h1>
+<h1>formula </h1>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201812/1509647-20181225231243394-562520084.png"/></p>
+<h2>principle</h2>
+<p>Same as LLC, there is only one difference: when taking the mean, the arithmetic mean is not used but the harmonic mean is used.</p>
+<p> </p>
+<p>For details on the derivation process, please refer to the reference</p>
+<p>refer to:<a href="http://algo.inria.fr/flajolet/Publications/FlFuGaMe07.pdf" rel="noopener nofollow" target="_blank">HyperLogLog: the analysis of a near-optimal cardinality estimation algorithm</a></p>
+<h1>5 Best Practices</h1>
+<h2>formula</h2>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201812/1509647-20181225142142552-1064509869.png"/></p>
+<h2>process</h2>
+<p>In a large amount of practice, optimization is carried out according to various parameters and results, and algorithms such as HLLC and LC are comprehensively used.</p>
+<p> </p>
+<p>refer to:<a href="http://static.googleusercontent.com/media/research.google.com/en//pubs/archive/40671.pdf" rel="noopener nofollow" target="_blank">HyperLogLog in Practice: Algorithmic Engineering of a State of The Art Cardinality Estimation Algorithm</a></p>
+<p> </p>
+<h1>Summarize</h1>
+<p>Currently, HLLC is used in many open source components, such as Redis, druid, etc.</p>
+<p> </p>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201812/1509647-20181225232513562-1144852378.png"/></p>
+<p>other:</p>
+<p>https://research.neustar.biz/2012/10/25/sketch-of-the-day-hyperloglog-cornerstone-of-a-big-data-infrastructure/</p>
+<p> </p>
+</div>
+</div>
+<!-- Post Footer -->
+<div class="post-footer">
+<div class="post-navigation">
+<a class="nav-button" href="../blog.html">← Back to Home</a>
+<a class="nav-button" href="0298.html">Next Post →</a>
+</div>
+</div>
+</article>
+</div>
+</body>
+</html>

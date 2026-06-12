@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>User population positioning solution based on address location</title>
+<link href="../css/style3.css" rel="stylesheet"/>
+</head>
+<body>
+<div class="container">
+<!-- Header Navigation -->
+<div class="header">
+<h1><a href="../blog.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+</div>
+<!-- Post Container -->
+<article class="post">
+<!-- Post Header -->
+<div class="post-header">
+<h1>User population positioning solution based on address location</h1>
+<div class="post-meta">
+<div class="post-meta-item">
+<span class="meta-icon">📅</span>
+<span>October 17, 2018</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">📖</span>
+<span>1 min read</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">👁️</span>
+<span>885 views</span>
+</div>
+</div>
+</div>
+<!-- Post Content -->
+<div class="post-content">
+<div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<h1 id="section-0366-1">background</h1>
+<p>Assume that an application has a lot of basic data of user location information. The abstract data format is as follows:</p>
+<div class="table-wrap">
+<table class="confluenceTable tablesorter tablesorter-default">
+<thead>
+<tr class="tablesorter-headerRow"><th class="confluenceTh sortableHeader" data-column="0">
+<div class="tablesorter-header-inner">user_id</div>
+</th><th class="confluenceTh sortableHeader" data-column="1">
+<div class="tablesorter-header-inner">date</div>
+</th><th class="confluenceTh sortableHeader" data-column="2">
+<div class="tablesorter-header-inner">time</div>
+</th><th class="confluenceTh sortableHeader" data-column="3">
+<div class="tablesorter-header-inner">address</div>
+</th><th class="confluenceTh sortableHeader" data-column="4">
+<div class="tablesorter-header-inner">province</div>
+</th><th class="confluenceTh sortableHeader" data-column="5">
+<div class="tablesorter-header-inner">city</div>
+</th><th class="confluenceTh sortableHeader" data-column="6">
+<div class="tablesorter-header-inner">district</div>
+</th><th class="confluenceTh sortableHeader" data-column="7">
+<div class="tablesorter-header-inner">latitude</div>
+</th><th class="confluenceTh sortableHeader" colspan="1" data-column="8">
+<div class="tablesorter-header-inner">longitude</div>
+</th></tr>
+</thead>
+<tbody>
+<tr>
+<td class="confluenceTd">user1</td>
+<td class="confluenceTd">2018-01-01</td>
+<td class="confluenceTd">12:00:00</td>
+<td class="confluenceTd">Chaoyang Joy City, Chaoyang District, Beijing</td>
+<td class="confluenceTd">Beijing</td>
+<td class="confluenceTd">Beijing</td>
+<td class="confluenceTd">Chaoyang</td>
+<td class="confluenceTd">1.1</td>
+<td class="confluenceTd" colspan="1">1.2</td>
+</tr>
+<tr>
+<td class="confluenceTd">...</td>
+<td class="confluenceTd"> </td>
+<td class="confluenceTd"> </td>
+<td class="confluenceTd"> </td>
+<td class="confluenceTd"> </td>
+<td class="confluenceTd"> </td>
+<td class="confluenceTd"> </td>
+<td class="confluenceTd"> </td>
+<td class="confluenceTd" colspan="1"> </td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>There are some needs in the application that need to locate users based on address location.<strong>abstract question</strong>Just give me a piece<strong>area</strong>Find all user_ids in the area, as follows:</p>
+<ol>
+<li>given a<em>Latitude and longitude parameters</em>as well as<em>Radius kilometers parameter</em>, extract all user_ids within the circle;</li>
+<li>Given an arbitrary polygon<em>Latitude and longitude parameters of all vertices</em>, extract all user_ids within the polygon range;</li>
+</ol>
+<p>Two are needed here<strong>Basic functions</strong>，</p>
+<p>One is to calculate the distance, calDistance, based on the longitude and latitude of two points;<a class="external-link" href="https://www.cnblogs.com/zhoug2020/p/3950933.html" rel="nofollow">https://www.cnblogs.com/zhoug2020/p/3950933.html</a></p>
+<p>One is to determine whether a point is within a given polygon, isInPolygon;<a class="external-link" href="https://www.cnblogs.com/luxiaoxun/p/3722358.html" rel="nofollow">https://www.cnblogs.com/luxiaoxun/p/3722358.html</a></p>
+<p> </p>
+<h1 id="section-0366-2">Option 1: SQL</h1>
+<h2>step</h2>
+<ol>
+<li>Define calDistance and isInPolygon as UDF, and you can get the result with just one SQL;</li>
+</ol>
+<h2>analyze</h2>
+<ul>
+<li><strong>advantage</strong>:Simple;</li>
+<li><strong>shortcoming</strong>: The calculation is large, runs slowly, and contains a lot of useless calculations;</li>
+</ul>
+<p> </p>
+<p>Option 1 will do a lot of<strong>Useless calculations</strong>, and the two high-order floating point calculations calDistance and isInPolygon are very expensive</p>
+<ol>
+<li>For example, a given area is in Henan Province, but user data from other provinces (such as Hebei) will also participate in the calculation and will be discarded after the calculation;</li>
+<li>For example, a given area is in Zhengzhou City, Henan Province, but data from other cities (such as Luoyang) will also participate in the calculation and will be discarded after the calculation;</li>
+<li>For example, a given area is in Zhongyuan District, Zhengzhou City, Henan Province, but data from other districts (such as Jinshui District) will also participate in the calculation and will be discarded after the calculation;</li>
+</ol>
+<p>In order to optimize these useless calculations, the second solution is as follows:</p>
+<p> </p>
+<h1 id="section-0366-3">Option 2</h1>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201811/1509647-20181107110206254-1059861481.png"/></p>
+<h2> step</h2>
+<ol>
+<li>Only query necessary user location data based on a given area (within Zhongyuan District, Zhengzhou City, Henan Province), for example, only query user data in Zhengzhou City (why not directly query the data in Zhongyuan District? Because in the first case, although the central store is in Zhongyuan District, the area may include other districts when the radius is large), the amount of read data is reduced to less than 1% of the original, avoiding 1 and 2 in useless calculations;</li>
+<li>For a given area (circle or polygon), find a rectangle that can contain the area and have the smallest side length. In this way, it is easy to avoid calDistance or isInPolygon calculations by judging whether a point is inside the rectangle. For example, if a point is outside the rectangle, it can be discarded directly. High-order floating point operations are converted into simple numerical comparison operations, and the amount of calculated data is reduced to less than one ten thousandth of the original, simplifying and avoiding 3 in useless calculations;</li>
+<li>Calculate calDistance or isInPolygon for all user data within the rectangle to obtain accurate results;</li>
+</ol>
+<h2>analyze</h2>
+<ul>
+<li><strong>advantage</strong>: Improved a large number of useless calculations in Scheme 1, avoiding or simplifying them;</li>
+<li><strong>shortcoming</strong>: Still contains some useless calculations, such as calculating points in the area, and cannot quickly respond to some needs, such as quickly returning the number of users in the area;</li>
+</ul>
+<p> </p>
+<p>Option 2 can be abstracted as<strong>mapping</strong>, the first round of mapping uses province and city information to reduce the amount of read data, and the second round of mapping uses whether it is outside the square to reduce the amount of calculated data; and both rounds of mapping are ready-made, or easy to calculate; if the mapping is changed to a grid, the effect is better than the above two rounds of mapping, and the third solution is as follows:</p>
+<p> </p>
+<h1 id="section-0366-4">Option three</h1>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201811/1509647-20181107110516938-225418770.png"/></p>
+<h2>step</h2>
+<ol>
+<li>Preprocessing, all user location data is divided into grids and marked for storage, such as dividing the grid per square kilometer (and obtaining the longitude and latitude of the vertex of the grid). The grid stores all user location data in the grid, and also stores some statistical information, such as the total number of users, the total number of unique users, the unique set of users, etc., and puts it into any KV storage;</li>
+<li>According to a given area, calculate which grids are within the area (grids within the area do not need to be calculated), and which grids are on the edge of the area (grids on the edge of the area need to be calculated, because some users in the grid are within the area and some users are outside the area). This is a pure graphics calculation;</li>
+<li>Read the unique user set data of the grids in all areas (used directly), read all user location data of the grids on the edge of all areas (used after calculation), and you can quickly get the number of users or user list in the area;</li>
+</ol>
+<h2>analyze</h2>
+<ul>
+<li><strong>advantage</strong>: Compared with the second option, it further reduces the amount of read data and the amount of calculated data, and can meet some fast response requirements. The amount of read data and the amount of calculated data can be further reduced by reducing the area of ​​the grid. When the area of ​​the grid is small enough, the grid on the edge of the area can also be considered to be within the error tolerance within the error tolerance, avoiding all calculations;</li>
+<li><strong>shortcoming</strong>: Requires preprocessing and additional KV storage;</li>
+</ul>
+<p> </p>
+<p>You can also take advantage of Elasticsearch's support for GIS <a class="external-link" href="https://www.elastic.co/blog/geo-location-and-search" rel="noopener nofollow">https://www.elastic.co/blog/geo-location-and-search</a></p>
+</div>
+</div>
+<!-- Post Footer -->
+<div class="post-footer">
+<div class="post-navigation">
+<a class="nav-button" href="../blog.html">← Back to Home</a>
+<a class="nav-button" href="0366.html">Next Post →</a>
+</div>
+</div>
+</article>
+</div>
+</body>
+</html>

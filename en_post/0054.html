@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>rxvt</title>
+<link href="../css/style3.css" rel="stylesheet"/>
+</head>
+<body>
+<div class="container">
+<!-- Header Navigation -->
+<div class="header">
+<h1><a href="../blog.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+</div>
+<!-- Post Container -->
+<article class="post">
+<!-- Post Header -->
+<div class="post-header">
+<h1>rxvt</h1>
+<div class="post-meta">
+<div class="post-meta-item">
+<span class="meta-icon">📅</span>
+<span>August 01, 2020</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">📖</span>
+<span>1 min read</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">👁️</span>
+<span>378 views</span>
+</div>
+</div>
+</div>
+<!-- Post Content -->
+<div class="post-content">
+<div class="blogpost-body cnblogs-markdown" id="cnblogs_post_body">
+<h1 id="section-0054-1">Add configuration</h1>
+<pre><code>cat ~/.Xresources
+URxvt.title: rxvt
+URxvt.preeditType: Root
+!! Input Method
+URxvt.inputMethod: fcitx
+!! Display
+URxvt.depth: 32
+URxvt.transparent: True
+URxvt.shading: 16
+!! Colors (Based on Tomorrow Night Bright)
+URxvt.foreground:   #EAEAEA
+URxvt.background:   rgba:0000/0000/0000/cccc
+URxvt.colorBD:      #FFFFFF
+URxvt.colorUL:      #B9CA4A
+! Black / Grey
+URxvt.color0:       #000000
+URxvt.color8:       #666666
+! Red / Bright Red
+URxvt.color1:       #D54E53
+URxvt.color9:       #FF3334
+! Green + Bright Green
+URxvt.color2:       #B9CA4A
+URxvt.color10:      #9EC400
+! Yellow (Orange) + Bright Yellow (Yellow)
+URxvt.color3:       #E78C45
+URxvt.color11:      #E7C547
+! Blue + Bright Blue
+URxvt.color4:       #7AA6DA
+URxvt.color12:      #7AA6DA
+! MAGENTA (PURPLE) + BRIGHT MAGENTA
+URxvt.color5:       #C397D8
+URxvt.color13:      #B777E0
+! Cyan (Aqua) + Bright Cyan
+URxvt.color6:       #70C0B1
+URxvt.color14:      #54CED6
+! Light Grey (Selection) + White (Current Line)
+URxvt.color7:       #424242
+URxvt.color15:      #2A2A2A
+!! URL Operations
+URxvt.url-launcher: firefox
+URxvt.matcher.button: 1
+URxvt.perl-ext-common: default,tabbed,fullscreen,matcher
+URxvt.keysym.F11: perl:fullscreen:switch
+!! Scollbar
+URxvt.scrollBar: True
+URxvt.scrollBar_right: True
+URxvt.scrollBar_floating: True
+!! Scoll
+URxvt.mouseWheelScrollPage: True
+URxvt.scrollstyle: plain
+URxvt.scrollTtyKeypress: True
+URxvt.scrollTtyOutput: False
+URxvt.scrollWithBuffer: True
+URxvt.saveLines: 30000
+!! Cursor
+URxvt.cursorBlink: True
+!! Border
+URxvt.borderLess: False
+!! Fonts
+Xft.dpi: 96
+!URxvt.letterSpace: - 1
+URxvt.font: xft:DejaVu Sans Mono:style=Regular:antialias=True:pixelsize=12,xft:WenQuanYi Micro Hei Mono:style=Regular:pixelsize=12
+URxvt.boldFont: xft:DejaVu Sans Mono:style=Bold:antialias=True:pixelsize=12,xft:WenQuanYi Micro Hei Mono:style=Bold:pixelsize=12
+!! copy &amp; paste
+URxvt.keysym.Shift-Control-V: eval:paste_clipboard
+URxvt.keysym.Shift-Control-C: eval:selection_to_clipboard
+URxvt.keysym.Control-Meta-c: builtin-string:
+URxvt.keysym.Control-Meta-v: builtin-string:
+</code></pre>
+<h1 id="section-0054-2">Configuration takes effect</h1>
+<pre><code>xrdb ~/.Xresources
+</code></pre>
+<p>Reference:<br/>
+<a href="https://linux.die.net/man/1/urxvt" rel="noopener nofollow" target="_blank">https://linux.die.net/man/1/urxvt</a><br/>
+<a href="https://wiki.archlinux.org/index.php/Rxvt-unicode" rel="noopener nofollow" target="_blank">https://wiki.archlinux.org/index.php/Rxvt-unicode</a></p>
+</div>
+</div>
+<!-- Post Footer -->
+<div class="post-footer">
+<div class="post-navigation">
+<a class="nav-button" href="../blog.html">← Back to Home</a>
+<a class="nav-button" href="0055.html">Next Post →</a>
+</div>
+</div>
+</article>
+</div>
+</body>
+</html>

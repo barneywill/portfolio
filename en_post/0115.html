@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>ETL vs ELT or DataWarehouse vs DataLake</title>
+<link href="../css/style3.css" rel="stylesheet"/>
+</head>
+<body>
+<div class="container">
+<!-- Header Navigation -->
+<div class="header">
+<h1><a href="../blog.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+</div>
+<!-- Post Container -->
+<article class="post">
+<!-- Post Header -->
+<div class="post-header">
+<h1>ETL vs ELT or DataWarehouse vs DataLake</h1>
+<div class="post-meta">
+<div class="post-meta-item">
+<span class="meta-icon">📅</span>
+<span>June 16, 2019</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">📖</span>
+<span>1 min read</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">👁️</span>
+<span>1258 views</span>
+</div>
+</div>
+</div>
+<!-- Post Content -->
+<div class="post-content">
+<div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<h1>ETL</h1>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201906/1509647-20190616213945857-1475175479.png"/></p>
+<p>ETL is an abbreviation of Extract, Transform and Load. In this process, an ETL tool extracts the data from different RDBMS source systems then transforms the data like applying calculations, concatenations, etc. and then load the data into the Data Warehouse system.</p>
+<p>In ETL data is flows from the source to the target. In ETL process transformation engine takes care of any data changes.</p>
+<h1>ELT</h1>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201906/1509647-20190616214012552-660981336.png"/></p>
+<p>ELT is a different method of looking at the tool approach to data movement. Instead of transforming the data before it's written, ELT lets the target system to do the transformation. The data first copied to the target and then transformed in place.</p>
+<p>ELT usually used with no-Sql databases like Hadoop cluster, data appliance or cloud installation.</p>
+<p> </p>
+<h1>Data Warehouse vs Data Lake</h1>
+<p>ETL corresponds to Data Warehouse, and ELT corresponds to Data Lake. So what is Data Lake?</p>
+<p> </p>
+<p>A data lake is a system or repository of data stored in its natural format, usually object blobs or files. A data lake is usually a single store of all enterprise data including raw copies of source system data and transformed data used for tasks such as reporting, visualization, analytics and machine learning. A data lake can include structured data from relational databases (rows and columns), semi-structured data (CSV, logs, XML, JSON), unstructured data (emails, documents, PDFs) and binary data (images, audio, video).</p>
+<p>Pentaho CTO James Dixon has generally been credited with coining the term “data lake”. He describes a data mart (a subset of a data warehouse) as akin to a bottle of water…”cleansed, packaged and structured for easy consumption” while a data lake is more like a body of water in its natural state. Data flows from the streams (the source systems) to the lake. Users have access to the lake to examine, take samples or dive in.</p>
+<p> </p>
+<p>refer to:<br/>https://www.guru99.com/etl-vs-elt.html<br/>https://aws.amazon.com/cn/big-data/datalakes-and-analytics/what-is-a-data-lake/<br/>https://www.blue-granite.com/blog/bid/402596/top-five-differences-between-data-lakes-and-data-warehouses<br/>https://www.forbes.com/sites/bernardmarr/2018/08/27/what-is-a-data-lake-a-super-simple-explanation-for-anyone/#672125e776e0<br/>https://blog.panoply.io/etl-vs-elt-the-difference-is-in-the-how<br/>https://www.xplenty.com/blog/etl-vs-elt/</p>
+</div>
+</div>
+<!-- Post Footer -->
+<div class="post-footer">
+<div class="post-navigation">
+<a class="nav-button" href="../blog.html">← Back to Home</a>
+<a class="nav-button" href="0116.html">Next Post →</a>
+</div>
+</div>
+</article>
+</div>
+</body>
+</html>

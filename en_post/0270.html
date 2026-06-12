@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Ambari 1 - Introduction, compilation, installation, and use</title>
+<link href="../css/style3.css" rel="stylesheet"/>
+</head>
+<body>
+<div class="container">
+<!-- Header Navigation -->
+<div class="header">
+<h1><a href="../blog.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+</div>
+<!-- Post Container -->
+<article class="post">
+<!-- Post Header -->
+<div class="post-header">
+<h1>Ambari 1 - Introduction, compilation, installation, and use</h1>
+<div class="post-meta">
+<div class="post-meta-item">
+<span class="meta-icon">📅</span>
+<span>January 15, 2019</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">📖</span>
+<span>12 min read</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">👁️</span>
+<span>5971 views</span>
+</div>
+</div>
+</div>
+<!-- Post Content -->
+<div class="post-content">
+<div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201901/1509647-20190113212615481-637872391.png"/></p>
+<p>Official: http://Ambari.apache.org/</p>
+<p>The Apache Ambari project is aimed at making Hadoop management simpler by developing software for provisioning, managing, and monitoring Apache Hadoop clusters. Ambari provides an intuitive, easy-to-use Hadoop management web UI backed by its RESTful APIs.</p>
+<p>Ambari makes Hadoop management simpler through web UI, covering installation, management and monitoring;</p>
+<p>Ambari enables System Administrators to:</p>
+<ul>
+<li>Provision a Hadoop Cluster
+<ul>
+<li>　　Ambari provides a step-by-step wizard for installing Hadoop services across any number of hosts.</li>
+<li>　　Ambari handles configuration of Hadoop services for the cluster.</li>
+</ul>
+</li>
+<li>Manage a Hadoop Cluster
+<ul>
+<li>　　Ambari provides central management for starting, stopping, and reconfiguring Hadoop services across the entire cluster.</li>
+</ul>
+</li>
+<li>Monitor a Hadoop Cluster
+<ul>
+<li>　　Ambari provides a dashboard for monitoring health and status of the Hadoop cluster.</li>
+<li>　　Ambari leverages Ambari Metrics System for metrics collection.</li>
+<li>　　Ambari leverages Ambari Alert Framework for system alerting and will notify you when your attention is needed (e.g., a node goes down, remaining disk space is low, etc).</li>
+</ul>
+</li>
+</ul>
+<p>Functions include: installation wizard, cluster configuration, start and stop of each component and configuration update, monitoring page, indicator collection, alarm, etc.;</p>
+<p>Ambari enables Application Developers and System Integrators to:</p>
+<ul>
+<li>Easily integrate Hadoop provisioning, management, and monitoring capabilities to their own applications with the Ambari REST APIs.</li>
+</ul>
+<p>For details of Ambari’s support for HDP or Mpack, please see: https://supportmatrix.hortonworks.com/ </p>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201901/1509647-20190121165322066-818774697.png"/></p>
+<p>It can be seen that Ambari 2.7.3 only supports HDP 3.0 and above;</p>
+<p> </p>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201901/1509647-20190117215629520-1532953067.png"/></p>
+<p> </p>
+<h1>1 installation</h1>
+<p>Official installation guide: https://cwiki.apache.org/confluence/display/Ambari/Installation+Guide+for+Ambari+2.7.3</p>
+<h2>1 Download, compile and package</h2>
+<blockquote>
+<p># wget http://www.apache.org/dist/ambari/ambari-2.7.3/apache-ambari-2.7.3-src.tar.gz<br/># tar xfvz apache-ambari-2.7.3-src.tar.gz<br/># cd apache-ambari-2.7.3-src<br/># mvn versions:set -DnewVersion=2.7.3.0.0</p>
+<p> </p>
+<p># pushd ambari-metrics<br/># mvn versions:set -DnewVersion=2.7.3.0.0<br/># popd</p>
+<p> </p>
+<p># mvn -B clean install rpm:rpm -DnewVersion=2.7.3.0.0 -DbuildNumber=4295bb16c439cbc8fb0e7362f19768dde1477868 -DskipTests -Dpython.ver="python &gt;= 2.6"</p>
+</blockquote>
+<p>The last step takes a long time to build (there are many pitfalls, and it is also related to the network condition. It needs to be executed multiple times. It is recommended to remove clean for subsequent execution to save time, which is estimated to take a few days), and there may be a variety of errors. See the appendix for details;</p>
+<p>After a successful build, it looks like this:</p>
+<blockquote>
+<p>[INFO] Ambari Main 2.7.3.0.0 .............................. SUCCESS [ 0.738 s]<br/>[INFO] Apache Ambari Project POM 2.7.3.0.0 ................ SUCCESS [  0.115 s]<br/>[INFO] Ambari Web 2.7.3.0.0 ............................... SUCCESS [ 44.403 s]<br/>[INFO] Ambari Views 2.7.3.0.0 ............................. SUCCESS [  0.359 s]<br/>[INFO] Ambari Admin View 2.7.3.0.0 ........................ SUCCESS [  5.570 s]<br/>[INFO] ambari-utility 1.0.0.0-SNAPSHOT .................... SUCCESS [  0.541 s]<br/>[INFO] ambari-metrics 2.7.3.0.0 ........................... SUCCESS [  0.381 s]<br/>[INFO] Ambari Metrics Common 2.7.3.0.0 .................... SUCCESS [  4.635 s]<br/>[INFO] Ambari Metrics Hadoop Sink 2.7.3.0.0 ............... SUCCESS [  2.082 s]<br/>[INFO] Ambari Metrics Flume Sink 2.7.3.0.0 ................ SUCCESS [  1.214 s]<br/>[INFO] Ambari Metrics Kafka Sink 2.7.3.0.0 ................ SUCCESS [  1.307 s]<br/>[INFO] Ambari Metrics Storm Sink 2.7.3.0.0 ................ SUCCESS [  1.775 s]<br/>[INFO] Ambari Metrics Storm Sink (Legacy) 2.7.3.0.0 ....... SUCCESS [  1.546 s]<br/>[INFO] Ambari Metrics Collector 2.7.3.0.0 ................. SUCCESS [02:03 min]<br/>[INFO] Ambari Metrics Monitor 2.7.3.0.0 ................... SUCCESS [  0.612 s]<br/>[INFO] Ambari Metrics Grafana 2.1.0.0.0 ................... SUCCESS [  2.052 s]<br/>[INFO] Ambari Metrics Host Aggregator 2.7.3.0.0 ........... SUCCESS [ 44.355 s]<br/>[INFO] Ambari Metrics Assembly 2.7.3.0.0 .................. SUCCESS [01:18 min]<br/>[INFO] Ambari Service Advisor 1.0.0.0-SNAPSHOT ............ SUCCESS [  0.175 s]<br/>[INFO] Ambari Server 2.7.3.0.0 ............................ SUCCESS [11:39 min]<br/>[INFO] Ambari Functional Tests 2.7.3.0.0 .................. SUCCESS [  0.818 s]<br/>[INFO] Ambari Agent 2.7.3.0.0 ............................. SUCCESS [04:35 min]<br/>[INFO] ambari-logsearch 2.7.3.0.0 ......................... SUCCESS [  1.587 s]<br/>[INFO] Ambari Logsearch Appender 2.7.3.0.0 ................ SUCCESS [  4.570 s]<br/>[INFO] Ambari Logsearch Config Api 2.7.3.0.0 .............. SUCCESS [  0.196 s]<br/>[INFO] Ambari Logsearch Config JSON 2.7.3.0.0 ............. SUCCESS [  0.209 s]<br/>[INFO] Ambari Logsearch Config Solr 2.7.3.0.0 ............. SUCCESS [ 20.562 s]<br/>[INFO] Ambari Logsearch Config Zookeeper 2.7.3.0.0 ........ SUCCESS [  1.872 s]<br/>[INFO] Ambari Logsearch Config Local 2.7.3.0.0 ............ SUCCESS [  0.182 s]<br/>[INFO] Ambari Logsearch Log Feeder Plugin Api 2.7.3.0.0 ... SUCCESS [02:45 min]<br/>[INFO] Ambari Logsearch Log Feeder Container Registry 2.7.3.0.0 SUCCESS [ 22.523 s]<br/>[INFO] Ambari Logsearch Log Feeder 2.7.3.0.0 .............. SUCCESS [01:45 min]<br/>[INFO] Ambari Logsearch Web 2.7.3.0.0 ..................... SUCCESS [02:24 min]<br/>[INFO] Ambari Logsearch Server 2.7.3.0.0 .................. SUCCESS [03:55 min]<br/>[INFO] Ambari Logsearch Assembly 2.7.3.0.0 ................ SUCCESS [  2.389 s]<br/>[INFO] Ambari Logsearch Integration Test 2.7.3.0.0 ........ SUCCESS [01:20 min]<br/>[INFO] ambari-infra 2.7.3.0.0 ............................. SUCCESS [  4.214 s]<br/>[INFO] Ambari Infra Solr Client 2.7.3.0.0 ................. SUCCESS [ 18.131 s]<br/>[INFO] Ambari Infra Solr Plugin 2.7.3.0.0 ................. SUCCESS [05:11 min]<br/>[INFO] Ambari Infra Manager 2.7.3.0.0 ..................... SUCCESS [02:14 min]<br/>[INFO] Ambari Infra Assembly 2.7.3.0.0 .................... SUCCESS [  7.399 s]<br/>[INFO] Ambari Infra Manager Integration Tests 2.7.3.0.0 ... SUCCESS [ 13.159 s]<br/>[INFO] ------------------------------------------------------------------------<br/>[INFO] BUILD SUCCESS<br/>[INFO] ------------------------------------------------------------------------</p>
+</blockquote>
+<p> The generated rpm is here</p>
+<blockquote>
+<p># ls ambari-server/target/rpm/ambari-server/RPMS/x86_64/<br/>ambari-server-2.7.3.0-0.x86_64.rpm</p>
+<p>ls ambari-agent/target/rpm/ambari-agent/RPMS/x86_64/<br/>ambari-agent-2.7.3.0-0.x86_64.rpm</p>
+</blockquote>
+<p> </p>
+<h2>2 distribution</h2>
+<p>Copy the built Ambari-server-2.7.3.0-0.x86_64.rpm and Ambari-agent-2.7.3.0-0.x86_64.rpm directories to the corresponding server of the cluster, such as ansible. For details, see <a href="https://www.cnblogs.com/barneywill/p/10263278.html" target="_blank">https://www.cnblogs.com/barneywill/p/10263278.html</a></p>
+<h2>3 start</h2>
+<h3>3.1 server</h3>
+<p>Install</p>
+<blockquote>
+<p>yum install ambari-server*.rpm</p>
+</blockquote>
+<p>Run the setup command to configure your Ambari Server, Database, JDK, LDAP, and other options:</p>
+<blockquote>
+<p>ambari-server setup</p>
+</blockquote>
+<p>The specific process is:</p>
+<blockquote>
+<p># ambari-server setup<br/>Using python  /usr/bin/python<br/>Setup ambari-server<br/>Checking SELinux...<br/>SELinux status is 'disabled'<br/>Customize user account for ambari-server daemon [y/n] (n)? y<br/>Enter user account for ambari-server daemon (root):<br/>Adjusting ambari-server permissions and ownership...<br/>Checking firewall status...<br/>Checking JDK...<br/>[1] Oracle JDK 1.8 + Java Cryptography Extension (JCE) Policy Files 8<br/>[2] Custom JDK<br/>==============================================================================<br/>Enter choice (1): 2<br/>WARNING: JDK must be installed on all hosts and JAVA_HOME must be valid on all hosts.<br/>WARNING: JCE Policy files are required for configuring Kerberos security. If you plan to use Kerberos,please make sure JCE Unlimited Strength Jurisdiction Policy Files are valid on all hosts.<br/>Path to JAVA_HOME: /data/jdk1.8.0_191/<br/>Validating JDK on Ambari Server...done.<br/>Check JDK version for Ambari Server...<br/>JDK version found: 8<br/>Minimum JDK version is 8 for Ambari. Skipping to setup different JDK for Ambari Server.<br/>Checking GPL software agreement...<br/>GPL License for LZO: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html<br/>Enable Ambari Server to download and install GPL Licensed LZO packages [y/n] (n)? y<br/>Completing setup...<br/>Configuring database...<br/>Enter advanced database configuration [y/n] (n)? y<br/>Configuring database...<br/>==============================================================================<br/>Choose one of the following options:<br/>[1] - PostgreSQL (Embedded)<br/>[2] - Oracle<br/>[3] - MySQL / MariaDB<br/>[4] - PostgreSQL<br/>[5] - Microsoft SQL Server (Tech Preview)<br/>[6] - SQL Anywhere<br/>[7] - BDB<br/>==============================================================================<br/>Enter choice (1): 3<br/>Hostname (localhost): $mysql_host<br/>Port (3306): <br/>Database name (ambari): <br/>Username (ambari): <br/>Enter Database Password (bigdata): <br/>Re-enter password: <br/>Configuring ambari database...<br/>Should ambari use existing default jdbc /usr/share/java/mysql-connector-java.jar [y/n] (y)? y<br/>Configuring remote database connection properties...<br/>WARNING: Before starting Ambari Server, you must run the following DDL directly from the database shell to create the schema: /var/lib/ambari-server/resources/Ambari-DDL-MySQL-CREATE.sql<br/>Proceed with configuring remote database connection properties [y/n] (y)? y<br/>Extracting system views...<br/>ambari-admin-2.7.3.0.0.jar</p>
+<p>Ambari repo file doesn't contain latest json url, skipping repoinfos modification<br/>Adjusting ambari-server permissions and ownership...<br/>Ambari Server 'setup' completed successfully.</p>
+</blockquote>
+<p>The database needs to be initialized manually: /var/lib/Ambari-server/resources/Ambari-DDL-MySQL-CREATE.SQL. After importing, the table structure is as follows. For details on importing, see:<a href="https://www.cnblogs.com/barneywill/p/10271024.html" target="_blank">https://www.cnblogs.com/barneywill/p/10271024.html</a></p>
+<blockquote>
+<p>mysql&gt; show tables;<br/>+-------------------------------+<br/>| Tables_in_ambari              |<br/>+-------------------------------+<br/>| ClusterHostMapping            |<br/>| QRTZ_BLOB_TRIGGERS            |<br/>| QRTZ_CALENDARS                |<br/>| QRTZ_CRON_TRIGGERS            |<br/>| QRTZ_FIRED_TRIGGERS           |<br/>| QRTZ_JOB_DETAILS              |<br/>| QRTZ_LOCKS                    |<br/>| QRTZ_PAUSED_TRIGGER_GRPS      |<br/>| QRTZ_SCHEDULER_STATE          |<br/>| QRTZ_SIMPLE_TRIGGERS          |<br/>| QRTZ_SIMPROP_TRIGGERS         |<br/>| QRTZ_TRIGGERS                 |<br/>| adminpermission               |<br/>| adminprincipal                |<br/>| adminprincipaltype            |<br/>| adminprivilege                |<br/>| adminresource                 |<br/>| adminresourcetype             |<br/>| alert_current                 |<br/>| alert_definition              |<br/>| alert_group                   |<br/>| alert_group_target            |<br/>| alert_grouping                |<br/>| alert_history                 |<br/>| alert_notice                  |<br/>| alert_target                  |<br/>| alert_target_states           |<br/>| ambari_configuration          |<br/>| ambari_operation_history      |<br/>| ambari_sequences              |<br/>| artifact                      |<br/>| blueprint                     |<br/>| blueprint_configuration       |<br/>| blueprint_setting             |<br/>| clusterconfig                 |<br/>| clusters                      |<br/>| clusterservices               |<br/>| clusterstate                  |<br/>| confgroupclusterconfigmapping |<br/>| configgroup                   |<br/>| configgrouphostmapping        |<br/>| execution_command             |<br/>| extension                     |<br/>| extensionlink                 |<br/>| groups                        |<br/>| host_role_command             |<br/>| host_version                  |<br/>| hostcomponentdesiredstate     |<br/>| hostcomponentstate            |<br/>| hostconfigmapping             |<br/>| hostgroup                     |<br/>| hostgroup_component           |<br/>| hostgroup_configuration       |<br/>| hosts                         |<br/>| hoststate                     |<br/>| kerberos_descriptor           |<br/>| kerberos_keytab               |<br/>| kerberos_keytab_principal     |<br/>| kerberos_principal            |<br/>| key_value_store               |<br/>| kkp_mapping_service           |<br/>| members                       |<br/>| metainfo                      |<br/>| permission_roleauthorization  |<br/>| remoteambaricluster           |<br/>| remoteambariclusterservice    |<br/>| repo_applicable_services      |<br/>| repo_definition               |<br/>| repo_os                       |<br/>| repo_tags                     |<br/>| repo_version                  |<br/>| request                       |<br/>| requestoperationlevel         |<br/>| requestresourcefilter         |<br/>| requestschedule               |<br/>| requestschedulebatchrequest   |<br/>| role_success_criteria         |<br/>| roleauthorization             |<br/>| servicecomponent_version      |<br/>| servicecomponentdesiredstate  |<br/>| serviceconfig                 |<br/>| serviceconfighosts            |<br/>| serviceconfigmapping          |<br/>| servicedesiredstate           |<br/>| setting                       |<br/>| stack                         |<br/>| stage                         |<br/>| topology_host_info            |<br/>| topology_host_request         |<br/>| topology_host_task            |<br/>| topology_hostgroup            |<br/>| topology_logical_request      |<br/>| topology_logical_task         |<br/>| topology_request              |<br/>| upgrade                       |<br/>| upgrade_group                 |<br/>| upgrade_history               |<br/>| upgrade_item                  |<br/>| user_authentication           |<br/>| users                         |<br/>| viewentity                    |<br/>| viewinstance                  |<br/>| viewinstancedata              |<br/>| viewinstanceproperty          |<br/>| viewmain                      |<br/>| viewparameter                 |<br/>| viewresource                  |<br/>| viewurl                       |<br/>| widget                        |<br/>| widget_layout                 |<br/>| widget_layout_user_widget     |<br/>+-------------------------------+<br/>111 rows in set (0.00 sec)</p>
+</blockquote>
+<p>If you want to modify the database later, you can read here</p>
+<blockquote>
+<p>/etc/ambari-server/conf/ambari.properties</p>
+</blockquote>
+<p>start up</p>
+<blockquote>
+<p>ambari-server start</p>
+</blockquote>
+<p>output</p>
+<blockquote>
+<p>Using python /usr/bin/python<br/>Starting ambari-server<br/>Ambari Server running with administrator privileges.<br/>Organizing resource files at /var/lib/ambari-server/resources...<br/>Ambari database consistency check started...<br/>Server PID at: /var/run/ambari-server/ambari-server.pid<br/>Server out at: /var/log/ambari-server/ambari-server.out<br/>Server log at: /var/log/ambari-server/ambari-server.log<br/>Waiting for server start................<br/>Server started listening on 8080</p>
+</blockquote>
+<h3>3.2 agent</h3>
+<p>Install</p>
+<blockquote>
+<p>yum install ambari-agent*.rpm</p>
+</blockquote>
+<p>Configuration</p>
+<blockquote>
+<p>/etc/ambari-agent/conf/ambari-agent.ini</p>
+</blockquote>
+<p>Change the hostname to the master’s host or IP</p>
+<blockquote>
+<p>[server]<br/>hostname=localhost</p>
+</blockquote>
+<p>start up</p>
+<blockquote>
+<p>ambari-agent start</p>
+</blockquote>
+<p>output</p>
+<blockquote>
+<p>Verifying Python version compatibility...<br/>Using python  /usr/bin/python<br/>Checking for previously running Ambari Agent...<br/>Checking ambari-common dir...<br/>Starting ambari-agent<br/>Verifying ambari-agent process status...<br/>Ambari Agent successfully started<br/>Agent PID at: /run/ambari-agent/ambari-agent.pid<br/>Agent out at: /var/log/ambari-agent/ambari-agent.out<br/>Agent log at: /var/log/ambari-agent/ambari-agent.log</p>
+</blockquote>
+<h2>4 Open the Web</h2>
+<p>http://&lt;ambari-server-host&gt;:8080</p>
+<p>Log in with username <strong>admin</strong> and password <strong>admin</strong> and follow on-screen instructions. </p>
+<p>When you see the following page, it means you are half successful</p>
+<p> <img alt="" src="https://img2018.cnblogs.com/blog/1509647/201901/1509647-20190115115317278-575727192.png"/></p>
+<p>Installation page:</p>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201901/1509647-20190115181858708-408658137.png"/></p>
+<p>You may also encounter problems during use, see here for details:<a href="https://www.cnblogs.com/barneywill/p/10273687.html" target="_blank">https://www.cnblogs.com/barneywill/p/10273687.html</a></p>
+<p> </p>
+<p>If a node hangs and reinstalls the system, manual operations are required:</p>
+<blockquote>
+<p># yum install ambari-agent<br/># ambari-agent restart &lt;master hostname&gt;</p>
+</blockquote>
+<p>Then perform the Recover Host operation on the Ambari server;</p>
+<p> </p>
+<p>Attachment: Build process error</p>
+<p>1）MojoExecutionException</p>
+<blockquote>
+<p>[ERROR] Failed to execute goal org.codehaus.mojo:rpm-maven-plugin:2.0.1:rpm (default-cli) on project ambari: RPM build execution returned: '127' executing '/bin/sh -c cd /data/apache-ambari-2.7.3-src/target/rpm/ambari/SPECS &amp;&amp; rpmbuild -bb --buildroot /data/apache-ambari-2.7.3-src/target/rpm/ambari/buildroot --define '_topdir /data/apache-ambari-2.7.3-src/target/rpm/ambari' --target noarch-redhat-linux ambari.spec' -&gt; [Help 1]</p>
+<p>org.apache.maven.lifecycle.LifecycleExecutionException: Failed to execute goal org.codehaus.mojo:rpm-maven-plugin:2.0.1:rpm (default-cli) on project ambari: RPM build execution returned: '127' executing '/bin/sh -c cd /data/apache-ambari-2.7.3-src/target/rpm/ambari/SPECS &amp;&amp; rpmbuild -bb --buildroot /data/apache-ambari-2.7.3-src/target/rpm/ambari/buildroot --define '_topdir /data/apache-ambari-2.7.3-src/target/rpm/ambari' --target noarch-redhat-linux ambari.spec'</p>
+<p>    at org.apache.maven.lifecycle.internal.MojoExecutor.execute (MojoExecutor.java:215)</p>
+<p>    at org.apache.maven.lifecycle.internal.MojoExecutor.execute (MojoExecutor.java:156)</p>
+<p>    at org.apache.maven.lifecycle.internal.MojoExecutor.execute (MojoExecutor.java:148)</p>
+<p>    at org.apache.maven.lifecycle.internal.LifecycleModuleBuilder.buildProject (LifecycleModuleBuilder.java:117)</p>
+<p>    at org.apache.maven.lifecycle.internal.LifecycleModuleBuilder.buildProject (LifecycleModuleBuilder.java:81)</p>
+<p>    at org.apache.maven.lifecycle.internal.builder.singlethreaded.SingleThreadedBuilder.build (SingleThreadedBuilder.java:56)</p>
+<p>    at org.apache.maven.lifecycle.internal.LifecycleStarter.execute (LifecycleStarter.java:128)</p>
+<p>    at org.apache.maven.DefaultMaven.doExecute (DefaultMaven.java:305)</p>
+<p>    at org.apache.maven.DefaultMaven.doExecute (DefaultMaven.java:192)</p>
+<p>    at org.apache.maven.DefaultMaven.execute (DefaultMaven.java:105)</p>
+<p>    at org.apache.maven.cli.MavenCli.execute (MavenCli.java:956)</p>
+<p>    at org.apache.maven.cli.MavenCli.doMain (MavenCli.java:288)</p>
+<p>    at org.apache.maven.cli.MavenCli.main (MavenCli.java:192)</p>
+<p>    at jdk.internal.reflect.NativeMethodAccessorImpl.invoke0 (Native Method)</p>
+<p>    at jdk.internal.reflect.NativeMethodAccessorImpl.invoke (NativeMethodAccessorImpl.java:62)</p>
+<p>    at jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke (DelegatingMethodAccessorImpl.java:43)</p>
+<p>    at java.lang.reflect.Method.invoke (Method.java:566)</p>
+<p>    at org.codehaus.plexus.classworlds.launcher.Launcher.launchEnhanced (Launcher.java:289)</p>
+<p>    at org.codehaus.plexus.classworlds.launcher.Launcher.launch (Launcher.java:229)</p>
+<p>    at org.codehaus.plexus.classworlds.launcher.Launcher.mainWithExitCode (Launcher.java:415)</p>
+<p>    at org.codehaus.plexus.classworlds.launcher.Launcher.main (Launcher.java:356)</p>
+<p>Caused by: org.apache.maven.plugin.MojoExecutionException: RPM build execution returned: '127' executing '/bin/sh -c cd /data/apache-ambari-2.7.3-src/target/rpm/ambari/SPECS &amp;&amp; rpmbuild -bb --buildroot /data/apache-ambari-2.7.3-src/target/rpm/ambari/buildroot --define '_topdir /data/apache-ambari-2.7.3-src/target/rpm/ambari' --target noarch-redhat-linux ambari.spec'</p>
+<p>    at org.codehaus.mojo.rpm.RPMHelper.buildPackage (RPMHelper.java:150)</p>
+<p>    at org.codehaus.mojo.rpm.AbstractRPMMojo.execute (AbstractRPMMojo.java:736)</p>
+<p>    at org.apache.maven.plugin.DefaultBuildPluginManager.executeMojo (DefaultBuildPluginManager.java:137)</p>
+<p>    at org.apache.maven.lifecycle.internal.MojoExecutor.execute (MojoExecutor.java:210)</p>
+<p>    at org.apache.maven.lifecycle.internal.MojoExecutor.execute (MojoExecutor.java:156)</p>
+<p>    at org.apache.maven.lifecycle.internal.MojoExecutor.execute (MojoExecutor.java:148)</p>
+<p>    at org.apache.maven.lifecycle.internal.LifecycleModuleBuilder.buildProject (LifecycleModuleBuilder.java:117)</p>
+<p>    at org.apache.maven.lifecycle.internal.LifecycleModuleBuilder.buildProject (LifecycleModuleBuilder.java:81)</p>
+<p>    at org.apache.maven.lifecycle.internal.builder.singlethreaded.SingleThreadedBuilder.build (SingleThreadedBuilder.java:56)</p>
+<p>    at org.apache.maven.lifecycle.internal.LifecycleStarter.execute (LifecycleStarter.java:128)</p>
+<p>    at org.apache.maven.DefaultMaven.doExecute (DefaultMaven.java:305)</p>
+<p>    at org.apache.maven.DefaultMaven.doExecute (DefaultMaven.java:192)</p>
+<p>    at org.apache.maven.DefaultMaven.execute (DefaultMaven.java:105)</p>
+<p>    at org.apache.maven.cli.MavenCli.execute (MavenCli.java:956)</p>
+<p>    at org.apache.maven.cli.MavenCli.doMain (MavenCli.java:288)</p>
+<p>    at org.apache.maven.cli.MavenCli.main (MavenCli.java:192)</p>
+<p>    at jdk.internal.reflect.NativeMethodAccessorImpl.invoke0 (Native Method)</p>
+<p>    at jdk.internal.reflect.NativeMethodAccessorImpl.invoke (NativeMethodAccessorImpl.java:62)</p>
+<p>    at jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke (DelegatingMethodAccessorImpl.java:43)</p>
+<p>    at java.lang.reflect.Method.invoke (Method.java:566)</p>
+<p>    at org.codehaus.plexus.classworlds.launcher.Launcher.launchEnhanced (Launcher.java:289)</p>
+<p>    at org.codehaus.plexus.classworlds.launcher.Launcher.launch (Launcher.java:229)</p>
+<p>    at org.codehaus.plexus.classworlds.launcher.Launcher.mainWithExitCode (Launcher.java:415)</p>
+<p>    at org.codehaus.plexus.classworlds.launcher.Launcher.main (Launcher.java:356)</p>
+</blockquote>
+<p>The reason is missing rpm-build</p>
+<blockquote>
+<p>yum install -y rpm-build</p>
+</blockquote>
+<p>2) Timeout</p>
+<blockquote>
+<p>[INFO] Downloading https://github.com/yarnpkg/yarn/releases/download/v0.23.2/yarn-v0.23.2.tar.gz to /root/.m2/repository/com/github/eirslett/yarn/0.23.2/yarn-0.23.2./yarn-v0.23.2.tar.gz</p>
+<p> </p>
+<p> [get] Getting: http://dev.hortonworks.com.s3.amazonaws.com/HDP/centos7/3.x/BUILDS/3.0.0.0-1634/tars/hbase/hbase-2.0.0.3.0.0.0-1634-bin.tar.gz<br/>      [get] To: /data/apache-ambari-2.7.3-src/ambari-metrics/ambari-metrics-timelineservice/target/embedded/hbase.tar.gz</p>
+</blockquote>
+<p>The download process of several jars may be very slow or report a timeout error and the connection is reset. In this case, you must either change the environment and manually download it and put it in the maven local repository, or try again directly;</p>
+<p>3) Compilation error</p>
+<blockquote>
+<p>[ERROR] Failed to execute goal org.apache.maven.plugins:maven-compiler-plugin:3.0:compile (default-compile) on project ambari-metrics-common: Compilation failure: Compilation failure: <br/>[ERROR] /data/apache-ambari-2.7.3-src/ambari-metrics/ambari-metrics-common/src/main/java/org/apache/hadoop/metrics2/sink/timeline/TimelineMetrics.java:[24,33] package javax.xml.bind.annotation does not exist</p>
+</blockquote>
+<p>This is because you are using jdk11, because Java.XML.bind (JAXB) is REMOVED in 11, just use the jdk version before 11;</p>
+<blockquote>
+<p>Java 8 - OK<br/>Java 9 - DEPRECATED<br/>Java 10 - DEPRECATED<br/>Java 11 - REMOVED</p>
+</blockquote>
+<p>4）RatCheckException</p>
+<blockquote>
+<p>[ERROR] Failed to execute goal org.apache.rat:apache-rat-plugin:0.12:check (default) on project ambari: Too many files with unapproved license: 1 See RAT report in: /data/apache-ambari-2.7.3-src/target/rat.txt -&gt; [Help 1]</p>
+<p>org.apache.maven.lifecycle.LifecycleExecutionException: Failed to execute goal org.apache.rat:apache-rat-plugin:0.12:check (default) on project ambari: Too many files with unapproved license: 1 See RAT report in: /data/apache-ambari-2.7.3-src/target/rat.txt</p>
+<p>    at org.apache.maven.lifecycle.internal.MojoExecutor.execute (MojoExecutor.java:215)</p>
+<p>    at org.apache.maven.lifecycle.internal.MojoExecutor.execute (MojoExecutor.java:156)</p>
+<p>    at org.apache.maven.lifecycle.internal.MojoExecutor.execute (MojoExecutor.java:148)</p>
+<p>    at org.apache.maven.lifecycle.internal.LifecycleModuleBuilder.buildProject (LifecycleModuleBuilder.java:117)</p>
+<p>    at org.apache.maven.lifecycle.internal.LifecycleModuleBuilder.buildProject (LifecycleModuleBuilder.java:81)</p>
+<p>    at org.apache.maven.lifecycle.internal.builder.singlethreaded.SingleThreadedBuilder.build (SingleThreadedBuilder.java:56)</p>
+<p>    at org.apache.maven.lifecycle.internal.LifecycleStarter.execute (LifecycleStarter.java:128)</p>
+<p>    at org.apache.maven.DefaultMaven.doExecute (DefaultMaven.java:305)</p>
+<p>    at org.apache.maven.DefaultMaven.doExecute (DefaultMaven.java:192)</p>
+<p>    at org.apache.maven.DefaultMaven.execute (DefaultMaven.java:105)</p>
+<p>    at org.apache.maven.cli.MavenCli.execute (MavenCli.java:956)</p>
+<p>    at org.apache.maven.cli.MavenCli.doMain (MavenCli.java:288)</p>
+<p>    at org.apache.maven.cli.MavenCli.main (MavenCli.java:192)</p>
+<p>    at sun.reflect.NativeMethodAccessorImpl.invoke0 (Native Method)</p>
+<p>    at sun.reflect.NativeMethodAccessorImpl.invoke (NativeMethodAccessorImpl.java:62)</p>
+<p>    at sun.reflect.DelegatingMethodAccessorImpl.invoke (DelegatingMethodAccessorImpl.java:43)</p>
+<p>    at java.lang.reflect.Method.invoke (Method.java:498)</p>
+<p>    at org.codehaus.plexus.classworlds.launcher.Launcher.launchEnhanced (Launcher.java:289)</p>
+<p>    at org.codehaus.plexus.classworlds.launcher.Launcher.launch (Launcher.java:229)</p>
+<p>    at org.codehaus.plexus.classworlds.launcher.Launcher.mainWithExitCode (Launcher.java:415)</p>
+<p>    at org.codehaus.plexus.classworlds.launcher.Launcher.main (Launcher.java:356)</p>
+<p>Caused by: org.apache.rat.mp.RatCheckException: Too many files with unapproved license: 1 See RAT report in: /data/apache-ambari-2.7.3-src/target/rat.txt</p>
+<p>    at org.apache.rat.mp.RatCheckMojo.check (RatCheckMojo.java:183)</p>
+<p>    at org.apache.rat.mp.RatCheckMojo.execute (RatCheckMojo.java:156)</p>
+<p>    at org.apache.maven.plugin.DefaultBuildPluginManager.executeMojo (DefaultBuildPluginManager.java:137)</p>
+<p>    at org.apache.maven.lifecycle.internal.MojoExecutor.execute (MojoExecutor.java:210)</p>
+<p>    at org.apache.maven.lifecycle.internal.MojoExecutor.execute (MojoExecutor.java:156)</p>
+<p>    at org.apache.maven.lifecycle.internal.MojoExecutor.execute (MojoExecutor.java:148)</p>
+<p>    at org.apache.maven.lifecycle.internal.LifecycleModuleBuilder.buildProject (LifecycleModuleBuilder.java:117)</p>
+<p>    at org.apache.maven.lifecycle.internal.LifecycleModuleBuilder.buildProject (LifecycleModuleBuilder.java:81)</p>
+<p>    at org.apache.maven.lifecycle.internal.builder.singlethreaded.SingleThreadedBuilder.build (SingleThreadedBuilder.java:56)</p>
+<p>    at org.apache.maven.lifecycle.internal.LifecycleStarter.execute (LifecycleStarter.java:128)</p>
+<p>    at org.apache.maven.DefaultMaven.doExecute (DefaultMaven.java:305)</p>
+<p>    at org.apache.maven.DefaultMaven.doExecute (DefaultMaven.java:192)</p>
+<p>    at org.apache.maven.DefaultMaven.execute (DefaultMaven.java:105)</p>
+<p>    at org.apache.maven.cli.MavenCli.execute (MavenCli.java:956)</p>
+<p>    at org.apache.maven.cli.MavenCli.doMain (MavenCli.java:288)</p>
+<p>    at org.apache.maven.cli.MavenCli.main (MavenCli.java:192)</p>
+<p>    at sun.reflect.NativeMethodAccessorImpl.invoke0 (Native Method)</p>
+<p>    at sun.reflect.NativeMethodAccessorImpl.invoke (NativeMethodAccessorImpl.java:62)</p>
+<p>    at sun.reflect.DelegatingMethodAccessorImpl.invoke (DelegatingMethodAccessorImpl.java:43)</p>
+<p>    at java.lang.reflect.Method.invoke (Method.java:498)</p>
+<p>    at org.codehaus.plexus.classworlds.launcher.Launcher.launchEnhanced (Launcher.java:289)</p>
+<p>    at org.codehaus.plexus.classworlds.launcher.Launcher.launch (Launcher.java:229)</p>
+<p>    at org.codehaus.plexus.classworlds.launcher.Launcher.mainWithExitCode (Launcher.java:415)</p>
+<p>    at org.codehaus.plexus.classworlds.launcher.Launcher.main (Launcher.java:356)</p>
+</blockquote>
+<p>Added in mvn command </p>
+<blockquote>
+<p>-Drat.skip=true</p>
+</blockquote>
+<p>5）MojoExecutionException</p>
+<blockquote>
+<p>[ERROR] Failed to execute goal org.apache.maven.plugins:maven-antrun-plugin:1.7:run (psutils-compile) on project ambari-metrics-host-monitoring: An Ant BuildException has occured: exec returned: 1</p>
+<p>[ERROR] around Ant part ...&lt;exec failonerror="true" dir="/data/apache-ambari-2.7.3-src/ambari-metrics/ambari-metrics-host-monitoring/src/main/python/psutil" executable="/data/apache-ambari-2.7.3-src/ambari-metrics/ambari-metrics-host-monitoring/../../ambari-common/src/main/unix/ambari-python-wrap"&gt;... @ 4:275 in /data/apache-ambari-2.7.3-src/ambari-metrics/ambari-metrics-host-monitoring/target/antrun/build-psutils-compile.xml</p>
+<p>[ERROR] -&gt; [Help 1]</p>
+<p>org.apache.maven.lifecycle.LifecycleExecutionException: Failed to execute goal org.apache.maven.plugins:maven-antrun-plugin:1.7:run (psutils-compile) on project ambari-metrics-host-monitoring: An Ant BuildException has occured: exec returned: 1</p>
+<p>around Ant part ...&lt;exec failonerror="true" dir="/data/apache-ambari-2.7.3-src/ambari-metrics/ambari-metrics-host-monitoring/src/main/python/psutil" executable="/data/apache-ambari-2.7.3-src/ambari-metrics/ambari-metrics-host-monitoring/../../ambari-common/src/main/unix/ambari-python-wrap"&gt;... @ 4:275 in /data/apache-ambari-2.7.3-src/ambari-metrics/ambari-metrics-host-monitoring/target/antrun/build-psutils-compile.xml</p>
+<p>    at org.apache.maven.lifecycle.internal.MojoExecutor.execute (MojoExecutor.java:215)</p>
+<p>    at org.apache.maven.lifecycle.internal.MojoExecutor.execute (MojoExecutor.java:156)</p>
+<p>    at org.apache.maven.lifecycle.internal.MojoExecutor.execute (MojoExecutor.java:148)</p>
+<p>    at org.apache.maven.lifecycle.internal.LifecycleModuleBuilder.buildProject (LifecycleModuleBuilder.java:117)</p>
+<p>    at org.apache.maven.lifecycle.internal.LifecycleModuleBuilder.buildProject (LifecycleModuleBuilder.java:81)</p>
+<p>    at org.apache.maven.lifecycle.internal.builder.singlethreaded.SingleThreadedBuilder.build (SingleThreadedBuilder.java:56)</p>
+<p>    at org.apache.maven.lifecycle.internal.LifecycleStarter.execute (LifecycleStarter.java:128)</p>
+<p>    at org.apache.maven.DefaultMaven.doExecute (DefaultMaven.java:305)</p>
+<p>    at org.apache.maven.DefaultMaven.doExecute (DefaultMaven.java:192)</p>
+<p>    at org.apache.maven.DefaultMaven.execute (DefaultMaven.java:105)</p>
+<p>    at org.apache.maven.cli.MavenCli.execute (MavenCli.java:956)</p>
+<p>    at org.apache.maven.cli.MavenCli.doMain (MavenCli.java:288)</p>
+<p>    at org.apache.maven.cli.MavenCli.main (MavenCli.java:192)</p>
+<p>    at sun.reflect.NativeMethodAccessorImpl.invoke0 (Native Method)</p>
+<p>    at sun.reflect.NativeMethodAccessorImpl.invoke (NativeMethodAccessorImpl.java:62)</p>
+<p>    at sun.reflect.DelegatingMethodAccessorImpl.invoke (DelegatingMethodAccessorImpl.java:43)</p>
+<p>    at java.lang.reflect.Method.invoke (Method.java:498)</p>
+<p>    at org.codehaus.plexus.classworlds.launcher.Launcher.launchEnhanced (Launcher.java:289)</p>
+<p>    at org.codehaus.plexus.classworlds.launcher.Launcher.launch (Launcher.java:229)</p>
+<p>    at org.codehaus.plexus.classworlds.launcher.Launcher.mainWithExitCode (Launcher.java:415)</p>
+<p>    at org.codehaus.plexus.classworlds.launcher.Launcher.main (Launcher.java:356)</p>
+<p>Caused by: org.apache.maven.plugin.MojoExecutionException: An Ant BuildException has occured: exec returned: 1</p>
+<p>around Ant part ...&lt;exec failonerror="true" dir="/data/apache-ambari-2.7.3-src/ambari-metrics/ambari-metrics-host-monitoring/src/main/python/psutil" executable="/data/apache-ambari-2.7.3-src/ambari-metrics/ambari-metrics-host-monitoring/../../ambari-common/src/main/unix/ambari-python-wrap"&gt;... @ 4:275 in /data/apache-ambari-2.7.3-src/ambari-metrics/ambari-metrics-host-monitoring/target/antrun/build-psutils-compile.xml</p>
+<p>    at org.apache.maven.plugin.antrun.AntRunMojo.execute (AntRunMojo.java:355)</p>
+<p>    at org.apache.maven.plugin.DefaultBuildPluginManager.executeMojo (DefaultBuildPluginManager.java:137)</p>
+<p>    at org.apache.maven.lifecycle.internal.MojoExecutor.execute (MojoExecutor.java:210)</p>
+<p>    at org.apache.maven.lifecycle.internal.MojoExecutor.execute (MojoExecutor.java:156)</p>
+<p>    at org.apache.maven.lifecycle.internal.MojoExecutor.execute (MojoExecutor.java:148)</p>
+<p>    at org.apache.maven.lifecycle.internal.LifecycleModuleBuilder.buildProject (LifecycleModuleBuilder.java:117)</p>
+<p>    at org.apache.maven.lifecycle.internal.LifecycleModuleBuilder.buildProject (LifecycleModuleBuilder.java:81)</p>
+<p>    at org.apache.maven.lifecycle.internal.builder.singlethreaded.SingleThreadedBuilder.build (SingleThreadedBuilder.java:56)</p>
+<p>    at org.apache.maven.lifecycle.internal.LifecycleStarter.execute (LifecycleStarter.java:128)</p>
+<p>    at org.apache.maven.DefaultMaven.doExecute (DefaultMaven.java:305)</p>
+<p>    at org.apache.maven.DefaultMaven.doExecute (DefaultMaven.java:192)</p>
+<p>    at org.apache.maven.DefaultMaven.execute (DefaultMaven.java:105)</p>
+<p>    at org.apache.maven.cli.MavenCli.execute (MavenCli.java:956)</p>
+<p>    at org.apache.maven.cli.MavenCli.doMain (MavenCli.java:288)</p>
+<p>    at org.apache.maven.cli.MavenCli.main (MavenCli.java:192)</p>
+<p>    at sun.reflect.NativeMethodAccessorImpl.invoke0 (Native Method)</p>
+<p>    at sun.reflect.NativeMethodAccessorImpl.invoke (NativeMethodAccessorImpl.java:62)</p>
+<p>    at sun.reflect.DelegatingMethodAccessorImpl.invoke (DelegatingMethodAccessorImpl.java:43)</p>
+<p>    at java.lang.reflect.Method.invoke (Method.java:498)</p>
+<p>    at org.codehaus.plexus.classworlds.launcher.Launcher.launchEnhanced (Launcher.java:289)</p>
+<p>    at org.codehaus.plexus.classworlds.launcher.Launcher.launch (Launcher.java:229)</p>
+<p>    at org.codehaus.plexus.classworlds.launcher.Launcher.mainWithExitCode (Launcher.java:415)</p>
+<p>    at org.codehaus.plexus.classworlds.launcher.Launcher.main (Launcher.java:356)</p>
+<p>Caused by: org.apache.tools.ant.BuildException: exec returned: 1</p>
+<p>    at org.apache.tools.ant.taskdefs.ExecTask.runExecute (ExecTask.java:646)</p>
+<p>    at org.apache.tools.ant.taskdefs.ExecTask.runExec (ExecTask.java:672)</p>
+<p>    at org.apache.tools.ant.taskdefs.ExecTask.execute (ExecTask.java:498)</p>
+<p>    at org.apache.tools.ant.UnknownElement.execute (UnknownElement.java:291)</p>
+<p>    at sun.reflect.NativeMethodAccessorImpl.invoke0 (Native Method)</p>
+<p>    at sun.reflect.NativeMethodAccessorImpl.invoke (NativeMethodAccessorImpl.java:62)</p>
+<p>    at sun.reflect.DelegatingMethodAccessorImpl.invoke (DelegatingMethodAccessorImpl.java:43)</p>
+<p>    at java.lang.reflect.Method.invoke (Method.java:498)</p>
+<p>    at org.apache.tools.ant.dispatch.DispatchUtils.execute (DispatchUtils.java:106)</p>
+<p>    at org.apache.tools.ant.Task.perform (Task.java:348)</p>
+<p>    at org.apache.tools.ant.Target.execute (Target.java:390)</p>
+<p>    at org.apache.tools.ant.Target.performTasks (Target.java:411)</p>
+<p>    at org.apache.tools.ant.Project.executeSortedTargets (Project.java:1399)</p>
+<p>    at org.apache.tools.ant.Project.executeTarget (Project.java:1368)</p>
+<p>    at org.apache.maven.plugin.antrun.AntRunMojo.execute (AntRunMojo.java:327)</p>
+<p>    at org.apache.maven.plugin.DefaultBuildPluginManager.executeMojo (DefaultBuildPluginManager.java:137)</p>
+<p>    at org.apache.maven.lifecycle.internal.MojoExecutor.execute (MojoExecutor.java:210)</p>
+<p>    at org.apache.maven.lifecycle.internal.MojoExecutor.execute (MojoExecutor.java:156)</p>
+<p>    at org.apache.maven.lifecycle.internal.MojoExecutor.execute (MojoExecutor.java:148)</p>
+<p>    at org.apache.maven.lifecycle.internal.LifecycleModuleBuilder.buildProject (LifecycleModuleBuilder.java:117)</p>
+<p>    at org.apache.maven.lifecycle.internal.LifecycleModuleBuilder.buildProject (LifecycleModuleBuilder.java:81)</p>
+<p>    at org.apache.maven.lifecycle.internal.builder.singlethreaded.SingleThreadedBuilder.build (SingleThreadedBuilder.java:56)</p>
+<p>    at org.apache.maven.lifecycle.internal.LifecycleStarter.execute (LifecycleStarter.java:128)</p>
+<p>    at org.apache.maven.DefaultMaven.doExecute (DefaultMaven.java:305)</p>
+<p>    at org.apache.maven.DefaultMaven.doExecute (DefaultMaven.java:192)</p>
+<p>    at org.apache.maven.DefaultMaven.execute (DefaultMaven.java:105)</p>
+<p>    at org.apache.maven.cli.MavenCli.execute (MavenCli.java:956)</p>
+<p>    at org.apache.maven.cli.MavenCli.doMain (MavenCli.java:288)</p>
+<p>    at org.apache.maven.cli.MavenCli.main (MavenCli.java:192)</p>
+<p>    at sun.reflect.NativeMethodAccessorImpl.invoke0 (Native Method)</p>
+<p>    at sun.reflect.NativeMethodAccessorImpl.invoke (NativeMethodAccessorImpl.java:62)</p>
+<p>    at sun.reflect.DelegatingMethodAccessorImpl.invoke (DelegatingMethodAccessorImpl.java:43)</p>
+<p>    at java.lang.reflect.Method.invoke (Method.java:498)</p>
+<p>    at org.codehaus.plexus.classworlds.launcher.Launcher.launchEnhanced (Launcher.java:289)</p>
+<p>    at org.codehaus.plexus.classworlds.launcher.Launcher.launch (Launcher.java:229)</p>
+<p>    at org.codehaus.plexus.classworlds.launcher.Launcher.mainWithExitCode (Launcher.java:415)</p>
+<p>    at org.codehaus.plexus.classworlds.launcher.Launcher.main (Launcher.java:356)</p>
+</blockquote>
+<p>There is no direct reason for this. The error is because executing Python returns 1. The specific error is not reported, so the problem can only be reproduced manually;</p>
+<p>First look at the error reporting script:</p>
+<blockquote>
+<p># cat /data/apache-ambari-2.7.3-src/ambari-metrics/ambari-metrics-host-monitoring/target/antrun/build-psutils-compile.xml</p>
+<p>&lt;?xml version="1.0" encoding="UTF-8" ?&gt;</p>
+<p>&lt;project name="maven-antrun-" default="psutils-compile"  &gt;</p>
+<p>&lt;target name="psutils-compile"&gt;</p>
+<p>  &lt;exec failonerror="true" dir="/data/apache-ambari-2.7.3-src/ambari-metrics/ambari-metrics-host-monitoring/src/main/python/psutil" executable="/data/apache-ambari-2.7.3-src/ambari-metrics/ambari-metrics-host-monitoring/../../ambari-common/src/main/unix/ambari-python-wrap"&gt;</p>
+<p>    &lt;arg value="setup.py"/&gt;</p>
+<p>    &lt;arg value="build"/&gt;</p>
+<p>    &lt;arg value="--build-platlib"/&gt;</p>
+<p>    &lt;arg value="/data/apache-ambari-2.7.3-src/ambari-metrics/ambari-metrics-host-monitoring/target/psutil_build"/&gt;</p>
+<p>  &lt;/exec&gt;</p>
+<p>&lt;/target&gt;</p>
+<p>&lt;/project&gt;</p>
+</blockquote>
+<p>Then reproduce it manually:</p>
+<blockquote>
+<p># cd /data/apache-ambari-2.7.3-src/ambari-metrics/ambari-metrics-host-monitoring/src/main/python/psutil</p>
+<p># /data/apache-ambari-2.7.3-src/ambari-metrics/ambari-metrics-host-monitoring/../../ambari-common/src/main/unix/ambari-python-wrap setup.py build --build-platlib /data/apache-ambari-2.7.3-src/ambari-metrics/ambari-metrics-host-monitoring/target/psutil_build<br/>running build<br/>running build_py<br/>running build_ext<br/>building '_psutil_linux' extension<br/>gcc -pthread -fno-strict-aliasing -O2 -g -pipe -Wall -Wp,-D_FORTIFY_SOURCE=2 -fexceptions -fstack-protector-strong --param=ssp-buffer-size=4 -grecord-gcc-switches -m64 -mtune=generic -D_GNU_SOURCE -fPIC -fwrapv -DNDEBUG -O2 -g -pipe -Wall -Wp,-D_FORTIFY_SOURCE=2 -fexceptions -fstack-protector-strong --param=ssp-buffer-size=4 -grecord-gcc-switches -m64 -mtune=generic -D_GNU_SOURCE -fPIC -fwrapv -fPIC -I/usr/include/python2.7 -c psutil/_psutil_linux.c -o build/temp.linux-x86_64-2.7/psutil/_psutil_linux.o<br/>unable to execute gcc: No such file or directory<br/>error: command 'gcc' failed with exit status 1</p>
+</blockquote>
+<p>Finally I saw the direct cause, lack of gcc (your reasons may be different, you can see it by manual execution)</p>
+<blockquote>
+<p>yum install gcc</p>
+</blockquote>
+<p>6）RuntimeError</p>
+<p>If an error is reported when deploying Ambari-metrics-collector later</p>
+<blockquote>
+<p>RuntimeError: Failed to execute command '/usr/bin/yum -y install ambari-metrics-collector', exited with code '1', message: 'Error: Nothing to do'</p>
+</blockquote>
+<p> This is because Ambari.repo is not added to yum</p>
+<blockquote>
+<p># wget http://s3.amazonaws.com/public-repo-1.hortonworks.com/ambari/centos7/2.x/updates/2.7.3.0/ambari.repo</p>
+<p># mv ambari.repo /etc/yum.repos.d/</p>
+</blockquote>
+<p>You can change it to the version you need;</p>
+<p> </p>
+</div>
+</div>
+<!-- Post Footer -->
+<div class="post-footer">
+<div class="post-navigation">
+<a class="nav-button" href="../blog.html">← Back to Home</a>
+<a class="nav-button" href="0271.html">Next Post →</a>
+</div>
+</div>
+</article>
+</div>
+</body>
+</html>

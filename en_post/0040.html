@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Periodic Full GC in Azkaban</title>
+<link href="../css/style3.css" rel="stylesheet"/>
+</head>
+<body>
+<div class="container">
+<!-- Header Navigation -->
+<div class="header">
+<h1><a href="../blog.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+</div>
+<!-- Post Container -->
+<article class="post">
+<!-- Post Header -->
+<div class="post-header">
+<h1>Periodic Full GC in Azkaban</h1>
+<div class="post-meta">
+<div class="post-meta-item">
+<span class="meta-icon">📅</span>
+<span>June 10, 2021</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">📖</span>
+<span>1 min read</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">👁️</span>
+<span>262 views</span>
+</div>
+</div>
+</div>
+<!-- Post Content -->
+<div class="post-content">
+<div class="blogpost-body cnblogs-markdown" id="cnblogs_post_body">
+<p>azkaban 3.80.1</p>
+<h1 id="section-0040-1">Phenomenon</h1>
+<p>Nodes in the azkaban cluster will have Full GC every few months</p>
+<h1 id="section-0040-2">troubleshooting</h1>
+<h2 id="1-jmap--histo">1 jmap - histo</h2>
+<p>It was found that there are a large number of log4j objects and Hashtable objects. The following are objects larger than 1M.</p>
+<pre><code>num       #instances    #bytes  Class description
+--------------------------------------------------------------------------
+1:              10681368        765816608       char[]
+2:              10646214        466505328       java.lang.Object[]
+3:              10642650        340564800       java.util.Hashtable$Entry
+4:              10678719        256289256       java.lang.String
+5:              10640889        255381336       org.apache.log4j.CategoryKey
+6:              6588073 210818336       org.apache.log4j.ProvisionNode
+7:              4052816 162112640       org.apache.log4j.Logger
+8:              4052848 129691136       java.util.Vector
+9:              91      100682832       java.util.Hashtable$Entry[]
+10:             4052738 64843808        org.apache.log4j.helpers.AppenderAttachableImpl
+11:             3675    1633592 int[]
+12:             3733    1364304 byte[]
+</code></pre>
+<h2 id="section-0040-3">2 MAT analysis dump file</h2>
+<p>It was found that the org.apache.log4j.Hierarchy object occupies 2.7G, accounting for 99.74%. There is a Hashtable object in the Hierarchy object, a Hashtable$Entry array in the Hashtable object, and there are 25165823 Entries in the array.<br/>
+<picture>
+<source srcset="../img/1509647-20210610104831497-2043256606.webp" type="image/webp"/>
+<img alt="" src="../img/1509647-20210610104831497-2043256606.png"/>
+</picture></p>
+<h2 id="section-0040-4">3 Analyze log4j code</h2>
+<h3 id="orgapachelog4jhierarchy">org.apache.log4j.Hierarchy</h3>
+<pre><code>public class Hierarchy implements LoggerRepository, RendererSupport, ThrowableRendererSupport {
+    private LoggerFactory defaultFactory;
+    private Vector listeners = new Vector(1);
+    Hashtable ht = new Hashtable();
+	...
+public Logger getLogger(String name, LoggerFactory factory) {
+    CategoryKey key = new CategoryKey(name);
+    synchronized(this.ht) {
+        Object o = this.ht.get(key);
+        Logger logger;
+        if (o == null) {
+            logger = factory.makeNewLoggerInstance(name);
+            logger.setHierarchy(this);
+            this.ht.put(key, logger);
+            this.updateParents(logger);
+            return logger;
+        } else if (o instanceof Logger) {
+            return (Logger)o;
+        } else if (o instanceof ProvisionNode) {
+            logger = factory.makeNewLoggerInstance(name);
+            logger.setHierarchy(this);
+            this.ht.put(key, logger);
+            this.updateChildren((ProvisionNode)o, logger);
+            this.updateParents(logger);
+            return logger;
+        } else {
+            return null;
+        }
+    }
+}
+</code></pre>
+<h3 id="section-0040-5">Code analysis</h3>
+<ul>
+<li>There is a Hashtable type variable ht in the Hierarchy object, which is used to save the logger. Whenever getLogger is called, it first tries to get the logger from ht according to the name. If it cannot find it, a new logger will be created and placed in ht.</li>
+</ul>
+<h2 id="section-0040-6">4 Analyze azkaban code</h2>
+<h3 id="azkabanexecappjobrunner">azkaban.execapp.JobRunner</h3>
+<pre><code>private void createLogger() {
+  // Create logger
+  synchronized (logCreatorLock) {
+    final String loggerName =
+        System.currentTimeMillis() + "." + this.executionId + "."
+            + this.jobId;
+    this.logger = Logger.getLogger(loggerName);
+
+    try {
+      attachFileAppender(createFileAppender());
+    } catch (final IOException e) {
+      removeAppender(this.jobAppender);
+      this.flowLogger.error("Could not open log file in " + this.workingDir
+          + " for job " + this.jobId, e);
+    }
+...
+
+
+private void closeLogger() {
+  if (this.jobAppender != null) {
+    removeAppender(this.jobAppender);
+  }
+  if (this.kafkaAppender.isPresent()) {
+    removeAppender(this.kafkaAppender);
+  }
+}
+</code></pre>
+<h3 id="section-0040-7">Code analysis</h3>
+<ul>
+<li>JobRunner in azkaban has a createLogger method. The loggerName here is composed of: current timestamp + executionId + jobId, and closeLogger does not release the logger from log4j.</li>
+<li>The above code will cause a problem. The loggerName of createLogger is different every time. As the server runs, the number of loggers will continue to increase. That is, the ht in the Hierarchy will continue to expand until the memory is full. This is a typical memory leak problem.</li>
+</ul>
+<h2 id="section-0040-8">5 The latest code seems to still have the problem</h2>
+<p><a href="https://github.com/azkaban/azkaban/blob/master/azkaban-exec-server/src/main/java/azkaban/execapp/JobRunner.java" rel="noopener nofollow" target="_blank">https://github.com/azkaban/azkaban/blob/master/azkaban-exec-server/src/main/java/azkaban/execapp/JobRunner.java</a></p>
+</div>
+</div>
+<!-- Post Footer -->
+<div class="post-footer">
+<div class="post-navigation">
+<a class="nav-button" href="../blog.html">← Back to Home</a>
+<a class="nav-button" href="0041.html">Next Post →</a>
+</div>
+</div>
+</article>
+</div>
+</body>
+</html>

@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Mesos+Marathon+Docker deploy Nginx</title>
+<link href="../css/style3.css" rel="stylesheet"/>
+</head>
+<body>
+<div class="container">
+<!-- Header Navigation -->
+<div class="header">
+<h1><a href="../blog.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+</div>
+<!-- Post Container -->
+<article class="post">
+<!-- Post Header -->
+<div class="post-header">
+<h1>Mesos+Marathon+Docker deploy Nginx</h1>
+<div class="post-meta">
+<div class="post-meta-item">
+<span class="meta-icon">📅</span>
+<span>February 16, 2019</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">📖</span>
+<span>2 min read</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">👁️</span>
+<span>947 views</span>
+</div>
+</div>
+</div>
+<!-- Post Content -->
+<div class="post-content">
+<div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<h1>1 installation</h1>
+<p>Install Docker:<a href="https://www.cnblogs.com/barneywill/p/10343091.html" target="_blank">https://www.cnblogs.com/barneywill/p/10343091.html</a><br/>Install mesos:<a href="https://www.cnblogs.com/barneywill/p/10324348.html" target="_blank">https://www.cnblogs.com/barneywill/p/10324348.html</a><br/>Install marathon:<a href="https://www.cnblogs.com/barneywill/p/10366688.html" target="_blank">https://www.cnblogs.com/barneywill/p/10366688.html</a></p>
+<h1>2. Deploy Nginx</h1>
+<p>Use Docker's official Nginx image. If you want to use a private Docker registry, you can refer to:<a href="https://www.cnblogs.com/barneywill/p/10367341.html" target="_blank">https://www.cnblogs.com/barneywill/p/10367341.html</a></p>
+<p>Open the marathon page and use Docker image to create the app</p>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201902/1509647-20190216024806651-801709131.png"/></p>
+<p> </p>
+<p>1 Enable mesos support for Docker</p>
+<blockquote>
+<p># echo 'docker,mesos' &gt; /ec/mesos-slave/containerizers<br/># service mesos-slave restart</p>
+</blockquote>
+<p>2 After creating the app, Nginx runs normally, but after adding port mapping (i.e. --network bridge - p 80:80), the app is stuck and cannot run. Check the mesos master log as follows:</p>
+<blockquote>
+<p># tail - f /var/log/mesos/mesos-master.log.INFO<br/>I0216 01:01:35.815131 25339 master.cpp:9533] Sending offers [ e11dfbd1-316e-4635-9267-8d5089f5ecfa-O171, e11dfbd1-316e-4635-9267-8d5089f5ecfa-O172, e11dfbd1-316e-4635-9267-8d5089f5ecfa-O173, e11dfbd1-316e-4635-9267-8d5089f5ecfa-O174 ] to framework 46ef421b-55ad-4b9f-876c-5d454abd2e6b-0000 (marathon) at scheduler-2655dbf9-0e11-4d1a-934f-5012c504ab07@192.168.0.54:38562<br/>I0216 01:01:35.821087 25338 master.cpp:5886] Processing DECLINE call for offers: [ e11dfbd1-316e-4635-9267-8d5089f5ecfa-O171 ] for framework 46ef421b-55ad-4b9f-876c-5d454abd2e6b-0000 (marathon) at scheduler-2655dbf9-0e11-4d1a-934f-5012c504ab07@192.168.0.54:38562<br/>I0216 01:01:35.821200 25338 master.cpp:11531] Removing offer e11dfbd1-316e-4635-9267-8d5089f5ecfa-O171<br/>I0216 01:01:35.821494 25335 master.cpp:5886] Processing DECLINE call for offers: [ e11dfbd1-316e-4635-9267-8d5089f5ecfa-O173 ] for framework 46ef421b-55ad-4b9f-876c-5d454abd2e6b-0000 (marathon) at scheduler-2655dbf9-0e11-4d1a-934f-5012c504ab07@192.168.0.54:38562<br/>I0216 01:01:35.821557 25335 master.cpp:11531] Removing offer e11dfbd1-316e-4635-9267-8d5089f5ecfa-O173<br/>I0216 01:01:35.821578 25335 master.cpp:5886] Processing DECLINE call for offers: [ e11dfbd1-316e-4635-9267-8d5089f5ecfa-O174 ] for framework 46ef421b-55ad-4b9f-876c-5d454abd2e6b-0000 (marathon) at scheduler-2655dbf9-0e11-4d1a-934f-5012c504ab07@192.168.0.54:38562<br/>I0216 01:01:35.821614 25335 master.cpp:11531] Removing offer e11dfbd1-316e-4635-9267-8d5089f5ecfa-O174<br/>I0216 01:01:35.823659 25334 master.cpp:5886] Processing DECLINE call for offers: [ e11dfbd1-316e-4635-9267-8d5089f5ecfa-O172 ] for framework 46ef421b-55ad-4b9f-876c-5d454abd2e6b-0000 (marathon) at scheduler-2655dbf9-0e11-4d1a-934f-5012c504ab07@192.168.0.54:38562<br/>I0216 01:01:35.823747 25334 master.cpp:11531] Removing offer e11dfbd1-316e-4635-9267-8d5089f5ecfa-O172</p>
+</blockquote>
+<p>It can be seen that mesos-master has been providing resource offers to marathon, but has been rejected. After carefully checking the logs, we found that</p>
+<blockquote>
+<p>I0216 01:01:12.527853 25338 master.cpp:7503] Re-registered agent 0548c9c0-dd5f-4b3a-8aca-4668f8aacb69-S9 at slave(1)@192.168.0.1:5051 (server1.bj) with cpus:8; mem:14861; disk:35829; ports:[31000-32000]</p>
+</blockquote>
+<p>It was found that there is a problem with the resource range of mesos-slave, ports:[31000-32000], Nginx requires port 80, so it has been rejected. The official document about resources is described as follows:</p>
+<blockquote>
+<p>--resources=VALUE	</p>
+<p>Total consumable resources per agent. Can be provided in JSON format or as a semicolon-delimited list of key:value pairs, with the role optionally specified.<br/>As a key:value list: name(role):value;name:value...<br/>To use JSON, pass a JSON-formatted string or use --resources=filepath to specify the resources via a file containing a JSON-formatted string. 'filepath' can be of the form file:///path/to/file or /path/to/file.<br/>Example JSON:<br/>[<br/>  {<br/>    "name": "cpus",<br/>    "type": "SCALAR",<br/>    "scalar": {<br/>      "value": 24<br/>    }<br/>  },<br/>  {<br/>    "name": "mem",<br/>    "type": "SCALAR",<br/>    "scalar": {<br/>      "value": 24576<br/>    }<br/>  }<br/>]</p>
+</blockquote>
+<p>Reference: http://mesos.apache.org/documentation/latest/configuration/agent/</p>
+<p> </p>
+<p>Modify port range</p>
+<blockquote>
+<p># echo 'ports(*):[80-80000]' &gt; /etc/mesos-slave/resources<br/># service mesos-slave restart</p>
+</blockquote>
+<p>The previous error is gone, but a new one appears</p>
+<blockquote>
+<p>Feb 16 01:37:17 cdp-test-server-04.bj mesos-slave[21714]: E0216 01:37:17.314812 21733 slave.cpp:7311] EXIT with status 1: Failed to perform recovery: Incompatible agent info detected.<br/>Feb 16 01:37:17 cdp-test-server-04.bj mesos-slave[21714]: resources {<br/>Feb 16 01:37:17 cdp-test-server-04.bj mesos-slave[21714]:   name: "ports"<br/>Feb 16 01:37:17 cdp-test-server-04.bj mesos-slave[21714]:   type: RANGES<br/>Feb 16 01:37:17 cdp-test-server-04.bj mesos-slave[21714]:   ranges {<br/>Feb 16 01:37:17 cdp-test-server-04.bj mesos-slave[21714]:     range {<br/>Feb 16 01:37:17 cdp-test-server-04.bj mesos-slave[21714]:       begin: 31000<br/>Feb 16 01:37:17 cdp-test-server-04.bj mesos-slave[21714]:       end: 32000<br/>Feb 16 01:37:17 cdp-test-server-04.bj mesos-slave[21714]:     }<br/>Feb 16 01:37:17 cdp-test-server-04.bj mesos-slave[21714]:   }<br/>Feb 16 01:37:17 cdp-test-server-04.bj mesos-slave[21714]: }</p>
+</blockquote>
+<p>This error is because after modifying resources, you need to recharge the agent and restart it. For details, see:<a href="https://www.cnblogs.com/barneywill/p/10386239.html" target="_blank">https://www.cnblogs.com/barneywill/p/10386239.html</a></p>
+<blockquote>
+<p># rm - f /var/lib/mesos/meta/slaves/latest<br/># service mesos-slave start</p>
+</blockquote>
+<p>3 If you need to specify which machine to execute on, you can set constraints</p>
+<p>Only allowed to execute on one machine</p>
+<blockquote>
+<p>  "constraints": [<br/>    [<br/>      "hostname",<br/>      "CLUSTER",<br/>      "server2.bj"<br/>    ]<br/>  ],</p>
+</blockquote>
+<p>Allows execution on two machines, but only one can be started on each machine</p>
+<blockquote>
+<p> "constraints": [<br/>    [<br/>      "hostname",<br/>      "UNIQUE"<br/>    ],<br/>    [<br/>      "hostname",<br/>      "LIKE",<br/>      "server[1-2].bj"<br/>    ]<br/>  ],</p>
+</blockquote>
+<p>Reference: https://mesosphere.github.io/marathon/docs/constraints.html</p>
+<p> </p>
+<p>After deployment is complete</p>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201902/1509647-20190216025013318-755470009.png"/></p>
+<p> </p>
+<p>One more thing, I noticed that the status in the screenshot above is waiting, because I did a restart operation, but each of my apps was designated to be deployed on only one server. At this time, it will actually be stuck in waiting, because marathon will not stop the app first and then start it when restarting, but will continue to wait for resources from mesos-master. offer, the old app will be stopped only when there are available resources to start a new app. The app here will occupy port 80, so it is an infinite loop. At this time, the container can only be stopped manually from Docker;</p>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201902/1509647-20190216030747323-2119440336.png"/></p>
+<p> </p>
+<p>That's ok</p>
+<p> </p>
+</div>
+</div>
+<!-- Post Footer -->
+<div class="post-footer">
+<div class="post-navigation">
+<a class="nav-button" href="../blog.html">← Back to Home</a>
+<a class="nav-button" href="0222.html">Next Post →</a>
+</div>
+</div>
+</article>
+</div>
+</body>
+</html>

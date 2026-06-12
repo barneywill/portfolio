@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>MongoDB 2 - Common query commands</title>
+<link href="../css/style3.css" rel="stylesheet"/>
+</head>
+<body>
+<div class="container">
+<!-- Header Navigation -->
+<div class="header">
+<h1><a href="../blog.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+</div>
+<!-- Post Container -->
+<article class="post">
+<!-- Post Header -->
+<div class="post-header">
+<h1>MongoDB 2 - Common query commands</h1>
+<div class="post-meta">
+<div class="post-meta-item">
+<span class="meta-icon">📅</span>
+<span>May 16, 2019</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">📖</span>
+<span>1 min read</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">👁️</span>
+<span>457 views</span>
+</div>
+</div>
+</div>
+<!-- Post Content -->
+<div class="post-content">
+<div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<h1>1 download</h1>
+<p><a href="https://www.mongodb.com/download-center/community" rel="noopener nofollow" target="_blank">https://www.mongodb.com/download-center/community</a></p>
+<p>for example:</p>
+<blockquote>
+<p>https://fastdl.mongodb.org/linux/mongodb-linux-x86_64-4.0.9.tgz</p>
+</blockquote>
+<h1>2 connections</h1>
+<blockquote>
+<p># cd $MONGODB_HOME<br/># bin/mongo master:27017/database_name</p>
+</blockquote>
+<h1>3 Query</h1>
+<p>1 count</p>
+<blockquote>
+<p>&gt;db.getCollection('table_name').find({}).count()</p>
+</blockquote>
+<p>2 group by</p>
+<blockquote>
+<p>&gt;db.getCollection('table_name').aggregate([{"$group": {_id: "$column_name", count: {"$sum": 1}}}])</p>
+</blockquote>
+<p>3 select by limit</p>
+<blockquote>
+<p>&gt;db.getCollection('table_name').find({}).limit(1).pretty()</p>
+</blockquote>
+<p>4 select by condition ‘=’</p>
+<blockquote>
+<p>&gt;db.getCollection('table_name').find({"column_name": "column_value"})</p>
+</blockquote>
+<p>5 select by condition ‘&gt;’</p>
+<blockquote>
+<p>&gt;db.getCollection('table_name').find({"column_name":{$gt:"column_value"}}).pretty()</p>
+</blockquote>
+<p>6 select by condition ‘or’</p>
+<blockquote>
+<p>&gt;db.getCollection('table_name').find({$or: [ {"column_name1":"column_value1"},{"column_name2":{$gt:"column_value2"}}]}).pretty()</p>
+</blockquote>
+<p>7 select by date range</p>
+<blockquote>
+<p>&gt;db.getCollection('table_name').find({"create_time":{$gte:ISODate("2019-05-18T00:00:00Z"),$lt:ISODate("2019-05-19T00:00:00Z")}})</p>
+</blockquote>
+<p>8 map reduce - word frequency statistics</p>
+<p>Statistics</p>
+<blockquote>
+<p>&gt;db.table_name.mapReduce(function(){ emit(this.column,1);}, function(key, values){return Array.sum(values);}, {out:"post_total"})</p>
+</blockquote>
+<p>Output results</p>
+<blockquote>
+<p>&gt;db.table_name.mapReduce(function(){ emit(this.column,1);}, function(key, values){return Array.sum(values);}, {out:"post_total"}).find() </p>
+</blockquote>
+<p>By default, only 20 lines of results are output. Then you need to continuously enter it to output more results. If you want to output all the results at once, you can execute it first.</p>
+<blockquote>
+<p>&gt;DBQuery.shellBatchSize = 100000;</p>
+</blockquote>
+<p> </p>
+</div>
+</div>
+<!-- Post Footer -->
+<div class="post-footer">
+<div class="post-navigation">
+<a class="nav-button" href="../blog.html">← Back to Home</a>
+<a class="nav-button" href="0137.html">Next Post →</a>
+</div>
+</div>
+</article>
+</div>
+</body>
+</html>

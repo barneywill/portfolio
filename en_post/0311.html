@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Spark 3 - Spark Thrift implementation principle and code implementation</title>
+<link href="../css/style3.css" rel="stylesheet"/>
+</head>
+<body>
+<div class="container">
+<!-- Header Navigation -->
+<div class="header">
+<h1><a href="../blog.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+</div>
+<!-- Post Container -->
+<article class="post">
+<!-- Post Header -->
+<div class="post-header">
+<h1>Spark 3 - Spark Thrift implementation principle and code implementation</h1>
+<div class="post-meta">
+<div class="post-meta-item">
+<span class="meta-icon">📅</span>
+<span>December 18, 2018</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">📖</span>
+<span>5 min read</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">👁️</span>
+<span>3589 views</span>
+</div>
+</div>
+</div>
+<!-- Post Content -->
+<div class="post-content">
+<div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<p>spark 2.1.1</p>
+<h1>1 Start command</h1>
+<p>Start Spark thrift command</p>
+<blockquote>
+<p>$SPARK_HOME/sbin/start-thriftserver.sh</p>
+</blockquote>
+<p>Then it will be executed</p>
+<blockquote>
+<p>org.apache.spark.deploy.SparkSubmit --class org.apache.spark.sql.hive.thriftserver.HiveThriftServer2</p>
+</blockquote>
+<h1>2. Startup process and code analysis</h1>
+<p>For details on Hive thrift code, see:<a href="https://www.cnblogs.com/barneywill/p/10185168.html" target="_blank">https://www.cnblogs.com/barneywill/p/10185168.html</a></p>
+<p>HiveThriftServer2 is the Spark thrift core class, inherited from Hive's HiveServer2</p>
+<blockquote>
+<p>org.apache.spark.sql.hive.thriftserver.HiveThriftServer2 extends org.apache.hive.service.server.HiveServer2</p>
+</blockquote>
+<p> </p>
+<p>Startup process:</p>
+<blockquote>
+<p>HiveThriftServer2.main</p>
+<p>         SparkSQLEnv.init (sparkConf sparkSession sparkContext sqlContext)</p>
+<p>         HiveThriftServer2.init</p>
+<p>                  addService(ThriftBinaryCLIService)</p>
+<p>         HiveThriftServer2.start</p>
+<p>                  ThriftBinaryCLIService.run</p>
+<p>                          TServer.serve</p>
+</blockquote>
+<p> </p>
+<p>Class structure: [Interface or parent class -&gt; subclass]</p>
+<blockquote>
+<p>TServer-&gt;TThreadPoolServer</p>
+<p>         TProcessorFactory-&gt;SQLPlainProcessorFactory</p>
+<p>                  TProcessor-&gt;TSetIpAddressProcessor</p>
+<p>                          ThriftCLIService-&gt;ThriftBinaryCLIService</p>
+<p>                                   CLIService-&gt;SparkSQLCLIService (core subclass)</p>
+</blockquote>
+<p> </p>
+<p>Service initialization process:</p>
+<blockquote>
+<p>CLIService.init</p>
+<p>         SparkSQLCLIService.init</p>
+<p>                  addService(SparkSQLSessionManager)</p>
+<p>                  initCompositeService</p>
+<p>                          SparkSQLSessionManager.init</p>
+<p>                                   addService(SparkSQLOperationManager)</p>
+<p>                                   initCompositeService</p>
+<p>                                            SparkSQLOperationManager.init</p>
+</blockquote>
+<h1>3. DDL execution process</h1>
+<p>The ddl execution process needs to interact with Hive metastore</p>
+<p>Start with the execution plan:</p>
+<blockquote>
+<p>spark-sql&gt; explain create table test_table(id string);<br/>== Physical Plan ==<br/>ExecutedCommand<br/>   +- CreateTableCommand CatalogTable(<br/>        Table: `test_table`<br/>        Created: Wed Dec 19 18:04:15 CST 2018<br/>        Last Access: Thu Jan 01 07:59:59 CST 1970<br/>        Type: MANAGED<br/>        Schema: [StructField(id,StringType,true)]<br/>        Provider: hive<br/>        Storage(InputFormat: org.apache.hadoop.mapred.TextInputFormat, OutputFormat: org.apache.hadoop.hive.ql.io.HiveIgnoreKeyTextOutputFormat)), false<br/>Time taken: 0.28 seconds, Fetched 1 row(s)</p>
+</blockquote>
+<p>You can find the specific Command from the execution plan, here is CreateTableCommand </p>
+<p> </p>
+<p>org.apache.spark.sql.execution.command.tables</p>
+<div class="cnblogs_code">
+<pre><span style="color: rgba(0, 0, 255, 1)">case</span> <span style="color: rgba(0, 0, 255, 1)">class</span> CreateTableCommand(table: CatalogTable, ifNotExists: Boolean) <span style="color: rgba(0, 0, 255, 1)">extends</span><span style="color: rgba(0, 0, 0, 1)"> RunnableCommand {
+
+  override def run(sparkSession: SparkSession): Seq[Row] </span>=<span style="color: rgba(0, 0, 0, 1)"> {
+    sparkSession.sessionState.catalog.createTable(table, ifNotExists)
+    Seq.empty[Row]
+  }
+}</span></pre>
+</div>
+<p>Here you can see that the request is distributed directly to sparkSession.sessionState.catalog</p>
+<p> </p>
+<p>org.apache.spark.sql.internal.SessionState</p>
+<div class="cnblogs_code">
+<pre>  <span style="color: rgba(0, 128, 0, 1)">/**</span><span style="color: rgba(0, 128, 0, 1)">
+   * Internal catalog for managing table and database states.
+   </span><span style="color: rgba(0, 128, 0, 1)">*/</span><span style="color: rgba(0, 0, 0, 1)">
+  lazy val catalog </span>= <span style="color: rgba(0, 0, 255, 1)">new</span><span style="color: rgba(0, 0, 0, 1)"> SessionCatalog(
+    sparkSession.sharedState.externalCatalog,
+    sparkSession.sharedState.globalTempViewManager,
+    functionResourceLoader,
+    functionRegistry,
+    conf,
+    newHadoopConf())</span></pre>
+</div>
+<p>Take sparkSession.sharedState.externalCatalog</p>
+<p> </p>
+<p>org.apache.spark.sql.internal.SharedState</p>
+<div class="cnblogs_code">
+<pre>  <span style="color: rgba(0, 128, 0, 1)">/**</span><span style="color: rgba(0, 128, 0, 1)">
+   * A catalog that interacts with external systems.
+   </span><span style="color: rgba(0, 128, 0, 1)">*/</span><span style="color: rgba(0, 0, 0, 1)">
+  val externalCatalog: ExternalCatalog </span>=<span style="color: rgba(0, 0, 0, 1)">
+    SharedState.reflect[ExternalCatalog, SparkConf, Configuration](
+      SharedState.externalCatalogClassName(sparkContext.conf),
+      sparkContext.conf,
+      sparkContext.hadoopConfiguration)
+...
+  </span><span style="color: rgba(0, 0, 255, 1)">private</span> val HIVE_EXTERNAL_CATALOG_CLASS_NAME = "org.apache.spark.sql.hive.HiveExternalCatalog"
+
+  <span style="color: rgba(0, 0, 255, 1)">private</span> def externalCatalogClassName(conf: SparkConf): String =<span style="color: rgba(0, 0, 0, 1)"> {
+    conf.get(CATALOG_IMPLEMENTATION) match {
+      </span><span style="color: rgba(0, 0, 255, 1)">case</span> "hive" =&gt;<span style="color: rgba(0, 0, 0, 1)"> HIVE_EXTERNAL_CATALOG_CLASS_NAME
+      </span><span style="color: rgba(0, 0, 255, 1)">case</span> "in-memory" =&gt;<span style="color: rgba(0, 0, 0, 1)"> classOf[InMemoryCatalog].getCanonicalName
+    }
+  }</span></pre>
+</div>
+<p>Here you can see that it is instantiated through externalCatalogClassName reflection, and the code is hard-coded to use org.apache.Spark.SQL.Hive.HiveExternalCatalog</p>
+<p> </p>
+<p>org.apache.spark.sql.hive.HiveExternalCatalog</p>
+<div class="cnblogs_code">
+<pre>  <span style="color: rgba(0, 128, 0, 1)">/**</span><span style="color: rgba(0, 128, 0, 1)">
+   * A Hive client used to interact with the metastore.
+   </span><span style="color: rgba(0, 128, 0, 1)">*/</span><span style="color: rgba(0, 0, 0, 1)">
+  val client: HiveClient </span>=<span style="color: rgba(0, 0, 0, 1)"> {
+    HiveUtils.newClientForMetadata(conf, hadoopConf)
+  }
+
+  </span><span style="color: rgba(0, 0, 255, 1)">private</span> def withClient[T](body: =&gt; T): T = <span style="color: rgba(0, 0, 255, 1)">synchronized</span><span style="color: rgba(0, 0, 0, 1)"> {
+    </span><span style="color: rgba(0, 0, 255, 1)">try</span><span style="color: rgba(0, 0, 0, 1)"> {
+      body
+    } </span><span style="color: rgba(0, 0, 255, 1)">catch</span><span style="color: rgba(0, 0, 0, 1)"> {
+      </span><span style="color: rgba(0, 0, 255, 1)">case</span> NonFatal(exception) <span style="color: rgba(0, 0, 255, 1)">if</span> isClientException(exception) =&gt;<span style="color: rgba(0, 0, 0, 1)">
+        val e </span>=<span style="color: rgba(0, 0, 0, 1)"> exception match {
+          </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> Since we are using shim, the exceptions thrown by the underlying method of
+          </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> Method.invoke() are wrapped by InvocationTargetException</span>
+          <span style="color: rgba(0, 0, 255, 1)">case</span> i: InvocationTargetException =&gt;<span style="color: rgba(0, 0, 0, 1)"> i.getCause
+          </span><span style="color: rgba(0, 0, 255, 1)">case</span> o =&gt;<span style="color: rgba(0, 0, 0, 1)"> o
+        }
+        </span><span style="color: rgba(0, 0, 255, 1)">throw</span> <span style="color: rgba(0, 0, 255, 1)">new</span><span style="color: rgba(0, 0, 0, 1)"> AnalysisException(
+          e.getClass.getCanonicalName </span>+ ": " + e.getMessage, cause =<span style="color: rgba(0, 0, 0, 1)"> Some(e))
+    }
+  }
+
+  override def createDatabase(
+      dbDefinition: CatalogDatabase,
+      ignoreIfExists: Boolean): Unit </span>=<span style="color: rgba(0, 0, 0, 1)"> withClient {
+    client.createDatabase(dbDefinition, ignoreIfExists)
+  }</span></pre>
+</div>
+<p>Any ddl method executed in this class will execute withClient, and withClient is synchronized. The execution process is to directly distribute the request to the client. Let’s see what the client is.</p>
+<p> </p>
+<p>org.apache.spark.sql.hive.client.IsolatedClientLoader</p>
+<div class="cnblogs_code">
+<pre>  <span style="color: rgba(0, 128, 0, 1)">/**</span><span style="color: rgba(0, 128, 0, 1)"> The isolated client interface to Hive. </span><span style="color: rgba(0, 128, 0, 1)">*/</span>
+  <span style="color: rgba(0, 0, 255, 1)">private</span>[hive] def createClient(): HiveClient =<span style="color: rgba(0, 0, 0, 1)"> {
+    </span><span style="color: rgba(0, 0, 255, 1)">if</span> (!<span style="color: rgba(0, 0, 0, 1)">isolationOn) {
+      </span><span style="color: rgba(0, 0, 255, 1)">return</span> <span style="color: rgba(0, 0, 255, 1)">new</span> HiveClientImpl(version, sparkConf, hadoopConf, config, baseClassLoader, <span style="color: rgba(0, 0, 255, 1)">this</span><span style="color: rgba(0, 0, 0, 1)">)
+    }
+    </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> Pre-reflective instantiation setup.</span>
+    logDebug("Initializing the logger to avoid disaster..."<span style="color: rgba(0, 0, 0, 1)">)
+    val origLoader </span>=<span style="color: rgba(0, 0, 0, 1)"> Thread.currentThread().getContextClassLoader
+    Thread.currentThread.setContextClassLoader(classLoader)
+
+    </span><span style="color: rgba(0, 0, 255, 1)">try</span><span style="color: rgba(0, 0, 0, 1)"> {
+      classLoader
+        .loadClass(classOf[HiveClientImpl].getName)
+        .getConstructors.head
+        .newInstance(version, sparkConf, hadoopConf, config, classLoader, </span><span style="color: rgba(0, 0, 255, 1)">this</span><span style="color: rgba(0, 0, 0, 1)">)
+        .asInstanceOf[HiveClient]
+    } </span><span style="color: rgba(0, 0, 255, 1)">catch</span> {</pre>
+</div>
+<p>It can be seen that the client directly uses org.apache.Spark.SQL.Hive.client.HiveClientImpl</p>
+<p> </p>
+<p>org.apache.spark.sql.hive.client.HiveClientImpl</p>
+<div class="cnblogs_code">
+<pre>  def withHiveState[A](f: =&gt; A): A =<span style="color: rgba(0, 0, 0, 1)"> retryLocked {
+    val original </span>=<span style="color: rgba(0, 0, 0, 1)"> Thread.currentThread().getContextClassLoader
+    </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> Set the thread local metastore client to the client associated with this HiveClientImpl.</span>
+<span style="color: rgba(0, 0, 0, 1)">    Hive.set(client)
+    </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> The classloader in clientLoader could be changed after addJar, always use the latest
+    </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> classloader</span>
+<span style="color: rgba(0, 0, 0, 1)">    state.getConf.setClassLoader(clientLoader.classLoader)
+    </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> setCurrentSessionState will use the classLoader associated
+    </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> with the HiveConf in `state` to override the context class loader of the current
+    </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> thread.</span>
+<span style="color: rgba(0, 0, 0, 1)">    shim.setCurrentSessionState(state)
+    val ret </span>= <span style="color: rgba(0, 0, 255, 1)">try</span> f <span style="color: rgba(0, 0, 255, 1)">finally</span><span style="color: rgba(0, 0, 0, 1)"> {
+      Thread.currentThread().setContextClassLoader(original)
+      HiveCatalogMetrics.incrementHiveClientCalls(</span>1<span style="color: rgba(0, 0, 0, 1)">)
+    }
+    ret
+  }
+  </span><span style="color: rgba(0, 0, 255, 1)">private</span> def retryLocked[A](f: =&gt; A): A = clientLoader.<span style="color: rgba(0, 0, 255, 1)">synchronized</span><span style="color: rgba(0, 0, 0, 1)"> {
+...
+
+  override def createDatabase(
+      database: CatalogDatabase,
+      ignoreIfExists: Boolean): Unit </span>=<span style="color: rgba(0, 0, 0, 1)"> withHiveState {
+    client.createDatabase(
+      </span><span style="color: rgba(0, 0, 255, 1)">new</span><span style="color: rgba(0, 0, 0, 1)"> HiveDatabase(
+        database.name,
+        database.description,
+        database.locationUri,
+        Option(database.properties).map(_.asJava).orNull),
+        ignoreIfExists)
+  }</span></pre>
+</div>
+<p>This class will execute withHiveState when executing any ddl method, and withHiveState will execute retryLocked, which has synchronized on retryLocked; and the request is also directly distributed to the client, and the client here is the Hive class org.apache.hadoop.Hive.ql.metadata.Hive</p>
+<p> </p>
+<h1>Four DML execution processes</h1>
+<p>The dml execution process will eventually be executed to Spark.SQL</p>
+<p>SQL execution process:</p>
+<blockquote>
+<p>CLIService.executeStatement (return OperationHandle)</p>
+<p>         SessionManager.getSession</p>
+<p>         SessionManager.openSession</p>
+<p>                  SparkSQLSessionManager.openSession</p>
+<p>                          SparkSQLOperationManager.sessionToContexts.set (when openSession: session and sqlContext establish mapping)</p>
+<p>         HiveSession.executeStatement</p>
+<p>                  HiveSessionImpl.executeStatementInternal</p>
+<p>                          OperationManager.newExecuteStatementOperation</p>
+<p>                                   SparkSQLOperationManager.newExecuteStatementOperation</p>
+<p>                                            SparkSQLOperationManager.sessionToContexts.get (get sqlContext through session)</p>
+<p>                          ExecuteStatementOperation.run</p>
+<p>                                   SparkExecuteStatementOperation.run</p>
+<p>                                            SparkExecuteStatementOperation.execute</p>
+<p>                                                     SQLContext.SQL (familiar Spark SQL)</p>
+</blockquote>
+<p>It can be seen that starting from the initialization of SparkSQLCLIService, the implementation classes of each class are changed to Spark subclasses one by one, such as:</p>
+<blockquote>
+<p>org.apache.spark.sql.hive.thriftserver.SparkSQLSessionManager extends org.apache.hive.service.cli.session.SessionManager<br/>org.apache.spark.sql.hive.thriftserver.server.SparkSQLOperationManager extends org.apache.hive.service.cli.operation.OperationManager<br/>org.apache.spark.sql.hive.thriftserver.SparkExecuteStatementOperation extends org.apache.hive.service.cli.operation.ExecuteStatementOperation</p>
+</blockquote>
+<p>Thus realizing the replacement of the underlying implementation;</p>
+<p> </p>
+<p>Why Hive's HiveServer2 can be extended so easily? For details, see SQL/Hive-thriftserver of the Spark code. It should be that the hive1.2 code has been modified a lot, and it will not be so easy to upgrade in the future;<br/>As for why Spark spends so much effort to extend HiveServer2 instead of re-implementing it, it may be to keep the interface consistent, which will help users who originally used Hive thrift to smoothly migrate to Spark thrift, because the only change is to switch the URL. In fact, the performance of Spark thrift and Hive thrift under the same SQL is still very different.</p>
+<p> </p>
+</div>
+</div>
+<!-- Post Footer -->
+<div class="post-footer">
+<div class="post-navigation">
+<a class="nav-button" href="../blog.html">← Back to Home</a>
+<a class="nav-button" href="0312.html">Next Post →</a>
+</div>
+</div>
+</article>
+</div>
+</body>
+</html>

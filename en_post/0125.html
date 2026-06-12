@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Kudu 6 - Kudu tserver memory usage statistical analysis</title>
+<link href="../css/style3.css" rel="stylesheet"/>
+</head>
+<body>
+<div class="container">
+<!-- Header Navigation -->
+<div class="header">
+<h1><a href="../blog.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+</div>
+<!-- Post Container -->
+<article class="post">
+<!-- Post Header -->
+<div class="post-header">
+<h1>Kudu 6 - Kudu tserver memory usage statistical analysis</h1>
+<div class="post-meta">
+<div class="post-meta-item">
+<span class="meta-icon">📅</span>
+<span>June 01, 2019</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">📖</span>
+<span>1 min read</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">👁️</span>
+<span>3592 views</span>
+</div>
+</div>
+</div>
+<!-- Post Content -->
+<div class="post-content">
+<div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<p>When Kudu tserver takes up too much memory, it will reject some write requests. The log is as follows:</p>
+<blockquote>
+<p>19/06/01 13:34:12 INFO AsyncKuduClient: Invalidating location 34b1c13d04664cc8bae6689d39b08b77($kudu_tserver:7050) for tablet 858c055c456549569af77d14eaf997e5: Service unavailable: Soft memory limit exceeded (at 92.36% of capacity). See https://kudu.apache.org/releases/1.7.0-cdh5.16.1/docs/troubleshooting.html</p>
+</blockquote>
+<h1>1 Check the detailed memory usage of tserver</h1>
+<p>http://$kudu_tserver:8050/mem-trackers</p>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201906/1509647-20190601133929084-2095004077.png"/></p>
+<p>The page is divided into two parts:</p>
+<p>Process memory usage is the overall usage</p>
+<p>Memory usage by subsystem is a detailed ratio, which may seem complicated at first glance, but is actually a tree structure that is cascaded through parent.</p>
+<p>For example, the total occupancy of root is 1.6G, and the logcache under root occupies 277K. Let’s look down.</p>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201906/1509647-20190601134259931-587433739.png"/></p>
+<p>block_cache-sharded_lru_cache occupies 246M, and the server occupies 1.4G. The server is divided into many tablets. In addition to tablets, there are</p>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201906/1509647-20190601134457065-1354629864.png"/></p>
+<p>log_block_manager occupies 438M;</p>
+<p> </p>
+<p>If you find that some tablets occupy a lot of memory and want to see which table they are in, you can run the following command:</p>
+<p> </p>
+<h1>2 View all tablets on tserver</h1>
+<blockquote>
+<p>sudo - u kudu kudu remote_replica list $kudu_tserver</p>
+</blockquote>
+<p>for example:</p>
+<div class="cnblogs_code">
+<pre><span style="color: rgba(0, 0, 0, 1)">Tablet id: e064f41775084680ab269b3cb3c21c76
+State: RUNNING
+Table name: impala::test_db.test_table1
+Partition: RANGE (dt) PARTITION </span>20190531 &lt;= VALUES &lt; 20190532<span style="color: rgba(0, 0, 0, 1)">
+Estimated on disk size: </span>30<span style="color: rgba(0, 0, 0, 1)">.71M
+Schema: Schema [
+        0:co1[int32 NOT NULL],
+        </span>1<span style="color: rgba(0, 0, 0, 1)">:co2[string NOT NULL],
+        </span>2<span style="color: rgba(0, 0, 0, 1)">:co3[string NOT NULL],
+        </span>3<span style="color: rgba(0, 0, 0, 1)">:co4[string NOT NULL],
+        </span>4<span style="color: rgba(0, 0, 0, 1)">:co5[string NULLABLE]
+]
+...</span></pre>
+</div>
+<p> </p>
+<p>Regarding the memory estimation of Kudu, it is related to the size of the data, the number of tablets and the number of active replicas. For details, see:</p>
+<p>https://kudu.apache.org/docs/scaling_guide.html#memory</p>
+<p> </p>
+</div>
+</div>
+<!-- Post Footer -->
+<div class="post-footer">
+<div class="post-navigation">
+<a class="nav-button" href="../blog.html">← Back to Home</a>
+<a class="nav-button" href="0126.html">Next Post →</a>
+</div>
+</div>
+</article>
+</div>
+</body>
+</html>

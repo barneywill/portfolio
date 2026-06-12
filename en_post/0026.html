@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>YARN Exploited to Submit get-shell Mining Jobs</title>
+<link href="../css/style3.css" rel="stylesheet"/>
+</head>
+<body>
+<div class="container">
+<!-- Header Navigation -->
+<div class="header">
+<h1><a href="../blog.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+</div>
+<!-- Post Container -->
+<article class="post">
+<!-- Post Header -->
+<div class="post-header">
+<h1>YARN Exploited to Submit get-shell Mining Jobs</h1>
+<div class="post-meta">
+<div class="post-meta-item">
+<span class="meta-icon">📅</span>
+<span>May 19, 2022</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">📖</span>
+<span>1 min read</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">👁️</span>
+<span>391 views</span>
+</div>
+</div>
+</div>
+<!-- Post Content -->
+<div class="post-content">
+<div class="blogpost-body cnblogs-markdown" id="cnblogs_post_body">
+<h1 id="section-0026-1">background</h1>
+<p>One day, the cluster network bandwidth became full.</p>
+<p><picture>
+<source srcset="../img/1509647-20220519105400719-60291449.webp" type="image/webp"/>
+<img alt="" src="../img/1509647-20220519105400719-60291449.png"/>
+</picture></p>
+<p>Log in to the node with the problem and find through iftop that there is a large amount of outbound traffic.</p>
+<blockquote>
+<p>hadoop-*                                                                                                                  =&gt; c-73-29-172-82.hsd1.nj.comcast.net                                                                                         422Mb   433Mb   236Mb<br/>
+&lt;=                                                                                                                              0b   0b      0b<br/>
+hadoop-*                                                                                                                  =&gt; cpe-75-187-235-200.neo.res.rr.com                                                                                          358Mb   391Mb   440Mb</p>
+</blockquote>
+<p>At the same time, it was found that there were a large number of abnormal processes on the problem node, and the startup user was YARN.</p>
+<p><picture>
+<source srcset="../img/1509647-20220519105447839-1257027283.webp" type="image/webp"/>
+<img alt="" src="../img/1509647-20220519105447839-1257027283.png"/>
+</picture></p>
+<p>I found an abnormal application on YARN, named get-shell.</p>
+<p><picture>
+<source srcset="../img/1509647-20220519105549908-1325294146.webp" type="image/webp"/>
+<img alt="" src="../img/1509647-20220519105549908-1325294146.png"/>
+</picture></p>
+<p>The 8088 port of YARN's ResourceManager can submit a get-shell task to this port. This task will start two processes and then start other processes with the same name. These processes transmit data to the external network.</p>
+<h2 id="section-0026-2">Cleanup process</h2>
+<blockquote>
+<p>ps aux|grep Vm6RUIoCjV7jGf5</p>
+</blockquote>
+<h2 id="section-0026-3">Trace the source</h2>
+<p>After cleaning up the get-shell task, I was not sure whether to submit the get-shell task from the internal network or the external network. I changed the 8088 port to the nginx port, recorded the task submission record, and waited for the next task submission. I found</p>
+<blockquote>
+<p>172.245.81.123 - - [08/Feb/2022:19:08:48 +0800] "POST /ws/v1/cluster/apps/new-application HTTP/1.1" 200 243 "-" "python-requests/2.6.0 CPython/2.7.5 Linux/3.10.0-1160.53.1.el7.x86_64" "-"</p>
+</blockquote>
+<p>The ip is an American IP and comes from the external network. Further investigation revealed that there was a loophole in the security policy. The internal network segment was originally released, but this external network IP happened to be matched, causing malicious users to directly penetrate the YARN of the internal network.</p>
+<p>Similar case references:<a href="https://www.jianshu.com/p/a2d6b0d827ab" rel="noopener nofollow" target="_blank">Yarn cluster port 8088 was attacked for mining</a></p>
+</div>
+</div>
+<!-- Post Footer -->
+<div class="post-footer">
+<div class="post-navigation">
+<a class="nav-button" href="../blog.html">← Back to Home</a>
+<a class="nav-button" href="0027.html">Next Post →</a>
+</div>
+</div>
+</article>
+</div>
+</body>
+</html>

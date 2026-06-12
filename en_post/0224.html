@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>DataNode startup error: port 50020 is occupied</title>
+<link href="../css/style3.css" rel="stylesheet"/>
+</head>
+<body>
+<div class="container">
+<!-- Header Navigation -->
+<div class="header">
+<h1><a href="../blog.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+</div>
+<!-- Post Container -->
+<article class="post">
+<!-- Post Header -->
+<div class="post-header">
+<h1>DataNode startup error: port 50020 is occupied</h1>
+<div class="post-meta">
+<div class="post-meta-item">
+<span class="meta-icon">📅</span>
+<span>February 15, 2019</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">📖</span>
+<span>1 min read</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">👁️</span>
+<span>1109 views</span>
+</div>
+</div>
+</div>
+<!-- Post Content -->
+<div class="post-content">
+<div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<p>There is a DataNode in the cluster that keeps starting and reports the following error:</p>
+<blockquote>
+<p>java.net.BindException: Problem binding to [$server1:50020] java.net.BindException: Address already in use; For more details see: http://wiki.apache.org/hadoop/BindException</p>
+</blockquote>
+<p>Check whether the port is occupied</p>
+<blockquote>
+<p># netstat - tnlp|grep 50020</p>
+</blockquote>
+<p>It is found that there is no process listening on port 50020. It is strange. It may also be connected to other servers from port 50020 of this machine. Check again (either through netstat or lsof).</p>
+<blockquote>
+<p># netstat - nat|grep 50020<br/>tcp        0      0 $server1:50020      $server2:7050       ESTABLISHED 8578/kudu-tserver</p>
+</blockquote>
+<p>or</p>
+<blockquote>
+<p># lsof - i:50020<br/>COMMAND    PID USER   FD   TYPE  DEVICE SIZE/OFF NODE NAME<br/>kudu-tser 8578 kudu   22u  IPv4 4295504      0t0  TCP cdp-test-server-02.bj:50020-&gt;cdp-test-server-04.bj:7050 (ESTABLISHED)</p>
+</blockquote>
+<p>It turns out that it was caused by a random port occupation by Kudu. Just restart the tserver;</p>
+<p> </p>
+</div>
+</div>
+<!-- Post Footer -->
+<div class="post-footer">
+<div class="post-navigation">
+<a class="nav-button" href="../blog.html">← Back to Home</a>
+<a class="nav-button" href="0225.html">Next Post →</a>
+</div>
+</div>
+</article>
+</div>
+</body>
+</html>

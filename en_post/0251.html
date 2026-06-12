@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Alluxio 1 - Introduction, installation, use</title>
+<link href="../css/style3.css" rel="stylesheet"/>
+</head>
+<body>
+<div class="container">
+<!-- Header Navigation -->
+<div class="header">
+<h1><a href="../blog.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+</div>
+<!-- Post Container -->
+<article class="post">
+<!-- Post Header -->
+<div class="post-header">
+<h1>Alluxio 1 - Introduction, installation, use</h1>
+<div class="post-meta">
+<div class="post-meta-item">
+<span class="meta-icon">📅</span>
+<span>January 23, 2019</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">📖</span>
+<span>5 min read</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">👁️</span>
+<span>4712 views</span>
+</div>
+</div>
+</div>
+<!-- Post Content -->
+<div class="post-content">
+<div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<p>Alluxio 1.8.1</p>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201901/1509647-20190123110402181-900448009.png"/></p>
+<p>Official: http://www.alluxio.org/</p>
+<p> </p>
+<h1>1 Introduction</h1>
+<p>Open Source Memory Speed Virtual Distributed Storage<br/>Alluxio, formerly Tachyon, enables any application to interact with any data from any storage system at memory speed.</p>
+<p><em>alluxio is an open source virtual distributed storage with memory access speed; formerly known as Tachyon, it allows applications to access data in any storage system like accessing memory data.</em></p>
+<h2>1 Advantage</h2>
+<h3>Storage Unification and Abstraction</h3>
+<p>Alluxio unifies data access to different systems, and seamlessly bridges computation frameworks and underlying storage.</p>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201901/1509647-20190123110739084-2081236789.png"/></p>
+<h3>Remote Data Acceleration</h3>
+<p>Decouple compute and storage without any loss in performance.</p>
+<p><em>Separate computing and storage without losing performance;</em></p>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201901/1509647-20190123110801140-1096257359.png"/></p>
+<h2>2 Deployment structure</h2>
+<p>Alluxio can be divided into three components: masters, workers, and clients. A typical setup consists of a single leading master, multiple standby masters, and multiple workers. The master and worker processes constitute the Alluxio servers, which are the components a system administrator would maintain. The clients are used to communicate with the Alluxio servers by applications such as Spark or MapReduce jobs, Alluxio command-line, or the FUSE layer.</p>
+<p><em>alluxio is composed of master and workers. If there are multiple masters, only one is the leading master, and the others are standby masters;</em></p>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201901/1509647-20190123145106638-1643193200.png"/></p>
+<h2>3 roles</h2>
+<h3>Master</h3>
+<p>The Alluxio master service can be deployed as one leading master and several standby masters for fault tolerance. When the leading master goes down, a standby master is elected to become the new leading master.</p>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201901/1509647-20190123150432827-83483681.png"/></p>
+<h4>1）Leading Master</h4>
+<p>Only one master process can be the leading master in an Alluxio cluster. The leading master is responsible for managing the global metadata of the system. This includes file system metadata (e.g. the file system inode tree), block metadata (e.g. block locations), and worker capacity metadata (free and used space). Alluxio clients interact with the leading master to read or modify this metadata. All workers periodically send heartbeat information to the leading master to maintain their participation in the cluster. The leading master does not initiate communication with other components; it only responds to requests via RPC services. The leading master records all file system transactions to a distributed persistent storage to allow for recovery of master state information; the set of records is referred to as the journal.</p>
+<p><em>There is only one leading master in alluxio, and the leading master is responsible for managing all metadata, including file system metadata, block metadata, and worker metadata; workers will regularly send heartbeats to the leading master; the leading master will record all file operations in the log;</em></p>
+<h4>2）Standby Masters</h4>
+<p>Standby masters read journals written by the leading master to keep their own copies of the master state up-to-date. They also write journal checkpoints for faster recovery in the future. They do not process any requests from other Alluxio components.</p>
+<p><em>The standby master will read the leader master's log synchronously in a timely manner;</em></p>
+<h3>Worker</h3>
+<p>Alluxio workers are responsible for managing user-configurable local resources allocated to Alluxio (e.g. memory, SSDs, HDDs). Alluxio workers store data as blocks and serve client requests that read or write data by reading or creating new blocks within their local resources. Workers are only responsible for managing blocks; the actual mapping from files to blocks is only stored by the master.</p>
+<p><em>The worker is responsible for managing resources, such as memory, SSD, etc.; the worker is responsible for storing data as blocks and responding to client read and write requests; the actual mapping relationship between files and blocks is saved in the master;</em></p>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201901/1509647-20190123150608165-39475982.png"/></p>
+<p>Because RAM usually offers limited capacity, blocks in a worker can be evicted when space is full. Workers employ eviction policies to decide which data to keep in the Alluxio space.</p>
+<h3>Client</h3>
+<p>The Alluxio client provides users a gateway to interact with the Alluxio servers. It initiates communication with the leading master to carry out metadata operations and with workers to read and write data that is stored in Alluxio.</p>
+<p><em>The client first requests metadata information from the leading master, and then sends read and write requests to the worker;</em></p>
+<h1>2. Installation</h1>
+<h2>1 download</h2>
+<blockquote>
+<p>$ wget http://downloads.alluxio.org/downloads/files//1.8.1/alluxio-1.8.1-hadoop-2.6-bin.tar.gz<br/>$ tar xvf alluxio-1.8.1-hadoop-2.6-bin.tar.gz<br/>$ cd alluxio-1.8.1-hadoop-2.6</p>
+</blockquote>
+<h2>2 Configure local ssh login</h2>
+<p>That is, you can ssh localhost<br/>For details, see:<a href="https://www.cnblogs.com/barneywill/p/10271679.html" target="_blank">https://www.cnblogs.com/barneywill/p/10271679.html</a></p>
+<h2>3 configuration</h2>
+<blockquote>
+<p>$ cp conf/alluxio-site.properties.template conf/alluxio-site.properties<br/>$ vi conf/alluxio-site.properties<br/>alluxio.master.hostname=localhost</p>
+</blockquote>
+<h2>4 initialization</h2>
+<blockquote>
+<p>$ ./bin/alluxio validateEnv local<br/>$ ./bin/alluxio format</p>
+</blockquote>
+<h2>5 start</h2>
+<blockquote>
+<p>$ ./bin/alluxio-start.sh local SudoMount</p>
+</blockquote>
+<p>If an error is reported:</p>
+<blockquote>
+<p>Formatting RamFS: /mnt/ramdisk (44849277610)<br/>ERROR: mkdir /mnt/ramdisk failed</p>
+</blockquote>
+<p>Need to add sudo permissions</p>
+<blockquote>
+<p># visudo - f /etc/sudoers<br/>$user ALL=(ALL) NOPASSWD: /bin/mount * /mnt/ramdisk, /bin/umount * /mnt/ramdisk, /bin/mkdir * /mnt/ramdisk, /bin/chmod * /mnt/ramdisk</p>
+</blockquote>
+<h1>Three uses</h1>
+<h2>1 command line</h2>
+<h3>File system operations</h3>
+<blockquote>
+<p>$ ./bin/alluxio fs<br/>$ ./bin/alluxio fs ls /<br/>$ ./bin/alluxio fs copyFromLocal LICENSE /LICENSE<br/>$ ./bin/alluxio fs cat /LICENSE</p>
+</blockquote>
+<p>It looks very similar to the HDFS command</p>
+<h3>admin operation</h3>
+<blockquote>
+<p>$ bin/alluxio fsadmin report</p>
+<p>Alluxio cluster summary:</p>
+<p>    Master Address: localhost/127.0.0.1:19998</p>
+<p>    Web Port: 19999</p>
+<p>    Rpc Port: 19998</p>
+<p>    Started: 01-24-2019 10:28:59:433</p>
+<p>    Uptime: 0 day(s), 1 hour(s), 24 minute(s), and 42 second(s)</p>
+<p>    Version: 1.8.1</p>
+<p>    Safe Mode: false</p>
+<p>    Zookeeper Enabled: false</p>
+<p>    Live Workers: 1</p>
+<p>    Lost Workers: 0</p>
+<p>    Total Capacity: 10.00GB</p>
+<p>        Tier: MEM  Size: 10.00GB</p>
+<p>    Used Capacity: 9.36GB</p>
+<p>        Tier: MEM  Size: 9.36GB</p>
+<p>    Free Capacity: 651.55MB</p>
+</blockquote>
+<h3>View statistics</h3>
+<blockquote>
+<p>$ curl http://$master:19999/metrics/json</p>
+</blockquote>
+<h2>2 UFS（Under File Storage）</h2>
+<h3>UFS=LocalFileSystem</h3>
+<p>1 Default configuration</p>
+<blockquote>
+<p>$ cat conf/alluxio-site.properties<br/>alluxio.underfs.address=${alluxio.work.dir}/underFSStorage</p>
+</blockquote>
+<p>2 Command examples</p>
+<blockquote>
+<p>$ ls ./underFSStorage/<br/>$ ./bin/alluxio fs persist /LICENSE<br/>$ ls ./underFSStorage<br/>LICENSE</p>
+</blockquote>
+<p>With the default configuration, Alluxio uses the local file system as its under file storage (UFS). The default path for the UFS is ./underFSStorage.</p>
+<p>Alluxio is currently writing data only into Alluxio space, not to the UFS.Configure Alluxio to persist the file from Alluxio space to the UFS by using the persist command.</p>
+<p>Alluxio uses the local file system as UFS by default. Only after executing the persist command will the file be persisted to UFS;</p>
+<h3>UFS=HDFS </h3>
+<p>1 configuration</p>
+<blockquote>
+<p>$ cat conf/alluxio-site.properties<br/>alluxio.underfs.address=hdfs://&lt;NAMENODE&gt;:&lt;PORT&gt;/alluxio/data</p>
+</blockquote>
+<p>If you want to accelerate all data on HDFS and keep the path unchanged, you can configure it as the root directory of HDFS.</p>
+<p>2 Configure hadoop</p>
+<p>1) Link</p>
+<blockquote>
+<p>$ ln - s $HADOOP_CONF_DIR/core-site.xml conf/core-site.xml<br/>$ ln - s $HADOOP_CONF_DIR/hdfs-site.xml conf/hdfs-site.xml</p>
+</blockquote>
+<p>Copy or make symbolic links from hdfs-site.xml and core-site.xml from your Hadoop installation into ${ALLUXIO_HOME}/conf</p>
+<p>2) Directly configure the path</p>
+<blockquote>
+<p>alluxio.underfs.hdfs.configuration=/path/to/hdfs/conf/core-site.xml:/path/to/hdfs/conf/hdfs-site.xml</p>
+</blockquote>
+<p>3 commands</p>
+<blockquote>
+<p>$ bin/alluxio fs ls /</p>
+</blockquote>
+<p>You can see all directories on HDFS</p>
+<p>4 file mapping</p>
+<p>This can be accessed via</p>
+<blockquote>
+<p>alluxio://$alluxio_server:19998/test.log</p>
+</blockquote>
+<p>to access the underlying storage</p>
+<blockquote>
+<p>hdfs://$namenode_server/alluxio/data/test.log</p>
+</blockquote>
+<p>Note: $alluxio_server and port need to be specified here. There is a single point problem. This problem can be solved after subsequent ha mode deployment.</p>
+<h2>3 Spark access</h2>
+<p>1 Preparation: (Choose one of the two)</p>
+<p>1) Configuration</p>
+<blockquote>
+<p>spark.driver.extraClassPath /&lt;PATH_TO_ALLUXIO&gt;/client/alluxio-1.8.1-client.jar<br/>spark.executor.extraClassPath /&lt;PATH_TO_ALLUXIO&gt;/client/alluxio-1.8.1-client.jar</p>
+</blockquote>
+<p>This Alluxio client jar file can be found at /&lt;PATH_TO_ALLUXIO&gt;/client/alluxio-1.8.1-client.jar </p>
+<p>2) Copy jar</p>
+<blockquote>
+<p>$ cp client/alluxio-1.8.1-client.jar $SPARK_HOME/jars/</p>
+</blockquote>
+<p>2 visits</p>
+<blockquote>
+<p>$ spark-shell<br/>scala&gt; val s = sc.textFile("alluxio://localhost:19998/derby.log")<br/>s: org.apache.spark.rdd.RDD[String] = alluxio://localhost:19998/derby.log MapPartitionsRDD[1] at textFile at &lt;console&gt;:24</p>
+<p>scala&gt; s.foreach(println)<br/>----------------------------------------------------------------<br/>Thu Jan 10 11:05:45 CST 2019:</p>
+</blockquote>
+<p>Reference: http://www.alluxio.org/docs/1.8/en/compute/Spark.html</p>
+<h2>4 Hive access</h2>
+<p>copy jar</p>
+<blockquote>
+<p>$ cp client/alluxio-1.8.1-client.jar $HIVE_HOME/lib/</p>
+<p>$ cp client/alluxio-1.8.1-client.jar $HADOOP_HOME/share/hadoop/common/lib/</p>
+</blockquote>
+<p>Restart metastore and hiveserver2</p>
+<h2>5 Deployment methods</h2>
+<h3>1 Cluster ha deployment</h3>
+<p>That is, multiple workers + multiple masters + ZooKeeper</p>
+<p>1 Configure SSH reachability between cluster servers</p>
+<p>Same as above</p>
+<p>2 configuration</p>
+<blockquote>
+<p>$ cat conf/alluxio-site.properties<br/>#alluxio.master.hostname=&lt;MASTER_HOSTNAME&gt;<br/>alluxio.zookeeper.enabled=true<br/>alluxio.zookeeper.address=&lt;ZOOKEEPER_ADDRESS&gt;<br/>alluxio.master.journal.folder=hdfs://$namenode_server/alluxio/journal/<br/>alluxio.worker.memory.size=20GB</p>
+</blockquote>
+<p>Synchronize configuration to all servers in the cluster</p>
+<p>3 Configure masters and workers</p>
+<blockquote>
+<p>$ conf/masters<br/>$master1<br/>$master2</p>
+<p>$ conf/workers<br/>$worker1<br/>$worker2<br/>$worker3</p>
+</blockquote>
+<p>4 start</p>
+<blockquote>
+<p>$ ./bin/alluxio-start.sh all SudoMount</p>
+</blockquote>
+<p>5 Access methods</p>
+<blockquote>
+<p>alluxio://zkHost1:2181;zkHost2:2181;zkHost3:2181/path</p>
+</blockquote>
+<p>If the environment variable is added when the client starts</p>
+<blockquote>
+<p>-Dalluxio.zookeeper.address=zkHost1:2181,zkHost2:2181,zkHost3:2181 - Dalluxio.zookeeper.enabled=true</p>
+</blockquote>
+<p>You can access it directly like this</p>
+<blockquote>
+<p>alluxio:///path</p>
+</blockquote>
+<p>6 Interoperability with HDFS</p>
+<p>copy jar</p>
+<blockquote>
+<p>$ cp client/alluxio-1.8.1-client.jar $HADOOP_HOME/share/hadoop/common/lib/</p>
+</blockquote>
+<p>Add the following configuration to $HADOOP_CONF_DIR/core-site.XML</p>
+<blockquote>
+<p>alluxio.zookeeper.enabled<br/>alluxio.zookeeper.address</p>
+</blockquote>
+<p>and</p>
+<blockquote>
+<p>  &lt;property&gt;</p>
+<p>    &lt;name&gt;fs.alluxio.impl&lt;/name&gt;</p>
+<p>    &lt;value&gt;alluxio.hadoop.FileSystem&lt;/value&gt;</p>
+<p>  &lt;/property&gt;</p>
+</blockquote>
+<p>You can access alluxio through HDFS client</p>
+<blockquote>
+<p>$ hadoop fs - ls alluxio:///directory</p>
+</blockquote>
+<p>Reference: http://www.alluxio.org/docs/1.8/en/deploy/Running-Alluxio-On-a-Cluster.html</p>
+<h3>2 Alluxio on YARN deployment</h3>
+<p>Alluxio also has many deployment methods, one of which is Alluxio on YARN. For users like Spark on YARN, it is very easy to use Alluxio to accelerate Spark.</p>
+<p>For details, see:</p>
+<p>http://www.alluxio.org/docs/1.8/en/deploy/Running-Alluxio-On-Yarn.html</p>
+<p> </p>
+</div>
+</div>
+<!-- Post Footer -->
+<div class="post-footer">
+<div class="post-navigation">
+<a class="nav-button" href="../blog.html">← Back to Home</a>
+<a class="nav-button" href="0252.html">Next Post →</a>
+</div>
+</div>
+</article>
+</div>
+</body>
+</html>

@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Compiling and Installing Impala 3.4</title>
+<link href="../css/style3.css" rel="stylesheet"/>
+</head>
+<body>
+<div class="container">
+<!-- Header Navigation -->
+<div class="header">
+<h1><a href="../blog.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+</div>
+<!-- Post Container -->
+<article class="post">
+<!-- Post Header -->
+<div class="post-header">
+<h1>Compiling and Installing Impala 3.4</h1>
+<div class="post-meta">
+<div class="post-meta-item">
+<span class="meta-icon">📅</span>
+<span>May 13, 2021</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">📖</span>
+<span>1 min read</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">👁️</span>
+<span>1995 views</span>
+</div>
+</div>
+</div>
+<!-- Post Content -->
+<div class="post-content">
+<div class="blogpost-body cnblogs-markdown" id="cnblogs_post_body">
+<h2 id="section-0044-1">Prepare</h2>
+<p>maven</p>
+<h2 id="section-0044-2">download</h2>
+<p><a href="https://downloads.apache.org/impala/3.4.0/apache-impala-3.4.0.tar.gz" rel="noopener nofollow" target="_blank">https://downloads.apache.org/impala/3.4.0/apache-impala-3.4.0.tar.gz</a></p>
+<h2 id="section-0044-3">compile</h2>
+<pre><code># tar xvf apache-impala-3.4.0.tar.gz
+# cd apache-impala-3.4.0
+# bin/bootstrap_system.sh
+# ./buildall.sh - noclean - notests
+</code></pre>
+<h2 id="section-0044-4">Error handling</h2>
+<blockquote>
+<p>[ERROR] Failed to execute goal on project<br/>
+impala-minimal-hive-exec: Could not resolve dependencies for project<br/>
+org.apache.impala:impala-minimal-hive-exec:jar:0.1-SNAPSHOT: Failed to<br/>
+collect dependencies at<br/>
+org.apache.hive:hive-exec:jar:2.1.1-cdh6.x-SNAPSHOT - &gt;<br/>
+org.cloudera.logredactor:logredactor:jar:2.0.7: Failed to read<br/>
+artifact descriptor for<br/>
+org.cloudera.logredactor:logredactor:jar:2.0.7: Could not transfer<br/>
+artifact org.cloudera.logredactor:logredactor:pom:2.0.7 from/to<br/>
+glassfish-repo-archive.repo<br/>
+(<a href="https://mvnrepository.com/artifact/org.glassfish/javax.el/" rel="noopener nofollow" target="_blank">https://mvnrepository.com/artifact/org.glassfish/javax.el/</a>):<br/>
+Authorization failed for<br/>
+<a href="https://mvnrepository.com/artifact/org.glassfish/javax.el/org/cloudera/logredactor/logredactor/2.0.7/logredactor-2.0.7.pom" rel="noopener nofollow" target="_blank">https://mvnrepository.com/artifact/org.glassfish/javax.el/org/cloudera/logredactor/logredactor/2.0.7/logredactor-2.0.7.pom</a><br/>
+403 Forbidden - &gt; [Help 1]</p>
+</blockquote>
+<p>The changes are as follows:</p>
+<pre><code># vim impala-parent/pom.xml
+1 Modify
+&lt;id&gt;cdh.rcs.releases.repo&lt;/id&gt;
+- &lt;url&gt;https://repository.cloudera.com/content/groups/cdh-releases-rcs&lt;/url&gt;
++ &lt;url&gt;https://repository.cloudera.com/artifactory/cdh-releases-rcs&lt;/url&gt;
+&lt;name&gt;CDH Releases Repository&lt;/name&gt;
+2 Delete
+- &lt;repository&gt;
+- &lt;id&gt;cloudera.thirdparty.repo&lt;/id&gt;
+- &lt;url&gt;https://repository.cloudera.com/content/repositories/third-party&lt;/url&gt;
+- &lt;name&gt;Cloudera Third Party Repository&lt;/name&gt;
+- &lt;snapshots&gt;
+- &lt;enabled&gt;false&lt;/enabled&gt;
+- &lt;/snapshots&gt;
+- &lt;/repository&gt;
+- &lt;repository&gt;
+3 Modify
+&lt;pluginRepository&gt;
+- &lt;id&gt;cloudera.thirdparty.repo&lt;/id&gt;
+- &lt;url&gt;https://repository.cloudera.com/content/repositories/third-party&lt;/url&gt;
+- &lt;name&gt;Cloudera Third Party Repository&lt;/name&gt;
++ &lt;id&gt;cdh.rcs.releases.repo&lt;/id&gt;
++ &lt;url&gt;https://repository.cloudera.com/artifactory/cdh-releases-rcs&lt;/url&gt;
++ &lt;name&gt;CDH Releases Repository&lt;/name&gt;
+&lt;snapshots&gt;
+</code></pre>
+<p>After successful compilation, the executable file is located at be/build/debug/service/</p>
+<p>Reference:<a href="https://lists.apache.org/x/thread.html/rdaac8f1ba19e8b584b32fa4eb5e90fd650d3a5f162da0908fe55b4c9@%3Cuser.impala.apache.org%3E" rel="noopener nofollow" target="_blank">https://lists.apache.org/x/thread.html/rdaac8f1ba19e8b584b32fa4eb5e90fd650d3a5f162da0908fe55b4c9@&lt;user.impala.apache.org&gt;</a></p>
+</div>
+</div>
+<!-- Post Footer -->
+<div class="post-footer">
+<div class="post-navigation">
+<a class="nav-button" href="../blog.html">← Back to Home</a>
+<a class="nav-button" href="0045.html">Next Post →</a>
+</div>
+</div>
+</article>
+</div>
+</body>
+</html>

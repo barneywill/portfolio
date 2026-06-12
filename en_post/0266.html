@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>curl</title>
+<link href="../css/style3.css" rel="stylesheet"/>
+</head>
+<body>
+<div class="container">
+<!-- Header Navigation -->
+<div class="header">
+<h1><a href="../blog.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+</div>
+<!-- Post Container -->
+<article class="post">
+<!-- Post Header -->
+<div class="post-header">
+<h1>curl</h1>
+<div class="post-meta">
+<div class="post-meta-item">
+<span class="meta-icon">📅</span>
+<span>January 16, 2019</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">📖</span>
+<span>1 min read</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">👁️</span>
+<span>553 views</span>
+</div>
+</div>
+</div>
+<!-- Post Content -->
+<div class="post-content">
+<div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<p>The http request process is as follows:</p>
+<blockquote>
+</blockquote>
+<p>At work, we often need to simulate http requests (such as modifying the header and body arbitrarily). curl is very easy to use. You can use</p>
+<blockquote>
+<p>curl - h</p>
+</blockquote>
+<p>Please refer to the detailed parameter list. Here are some commonly used parameters:</p>
+<blockquote>
+<p>-v, --verbose Make the operation more talkative</p>
+</blockquote>
+<p><em>Display detailed request and response information, mainly headers, status codes, etc.</em></p>
+<blockquote>
+<p>-u, --user USER[:PASSWORD] Server user and password</p>
+</blockquote>
+<p><em>Specify login account and password, -u user:password</em></p>
+<blockquote>
+<p>-X, --request COMMAND Specify request command to use</p>
+</blockquote>
+<p><em>Specify Method, such as Get, Post, Put, Delete, etc., -X GET</em></p>
+<blockquote>
+<p>-x, --proxy [PROTOCOL://]HOST[:PORT] Use proxy on given port</p>
+</blockquote>
+<p><em>Specify proxy server and port</em></p>
+<blockquote>
+<p>-o, --output FILE Write output to &lt;file&gt; instead of stdout</p>
+</blockquote>
+<p><em>Output the content to the specified file and use it when downloading</em></p>
+<blockquote>
+<p>-H, --header LINE Custom header to pass to server (H)</p>
+</blockquote>
+<p><em>Specify any header, -H 'Cookie: anything'</em></p>
+<blockquote>
+<p>-d, --data DATA HTTP POST data (H)</p>
+</blockquote>
+<p><em>Specify the body of the post, -d '{"name":"value"}'</em></p>
+<p>You can also specify the contents of a file through -d, such as - d@/path/to/file</p>
+<blockquote>
+<p class="p1"><span class="s1">-F, --form &lt;name=content&gt; Specify multipart MIME data</span></p>
+</blockquote>
+<p><em> Support uploading files, such as - F <span class="hljs-string">"filename=@/</span><span class="hljs-string">test/test.tar.gz"</span></em></p>
+<p></p>
+</div>
+</div>
+<!-- Post Footer -->
+<div class="post-footer">
+<div class="post-navigation">
+<a class="nav-button" href="../blog.html">← Back to Home</a>
+<a class="nav-button" href="0267.html">Next Post →</a>
+</div>
+</div>
+</article>
+</div>
+</body>
+</html>

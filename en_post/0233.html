@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Docker 3 - Build a private warehouse</title>
+<link href="../css/style3.css" rel="stylesheet"/>
+</head>
+<body>
+<div class="container">
+<!-- Header Navigation -->
+<div class="header">
+<h1><a href="../blog.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+</div>
+<!-- Post Container -->
+<article class="post">
+<!-- Post Header -->
+<div class="post-header">
+<h1>Docker 3 - Build a private warehouse</h1>
+<div class="post-meta">
+<div class="post-meta-item">
+<span class="meta-icon">📅</span>
+<span>February 13, 2019</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">📖</span>
+<span>1 min read</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">👁️</span>
+<span>388 views</span>
+</div>
+</div>
+</div>
+<!-- Post Content -->
+<div class="post-content">
+<div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<p> </p>
+<p>Download and start the registry</p>
+<blockquote>
+<p>$ docker pull registry<br/>$ docker run --name my_registry - d - p 5000:5000 - v /var/lib/registry:/var/lib/registry registry</p>
+</blockquote>
+<p>Download Nginx from the official repository and push it to the private repository</p>
+<blockquote>
+<p>$ docker pull nginx<br/>$ docker tag nginx localhost:5000/mynginx<br/>$ docker push localhost:5000/mynginx</p>
+</blockquote>
+<p>push error</p>
+<blockquote>
+<p>The push refers to repository [localhost:5000/nginx]<br/>Get https://localhost:5000/v2/: http: server gave HTTP response to HTTPS client</p>
+</blockquote>
+<p>Solution</p>
+<blockquote>
+<p>$ echo '{ "insecure-registries":["localhost:5000"] }' &gt; /etc/docker/daemon.json<br/>$ service docker restart</p>
+</blockquote>
+<p>Early Docker versions (1.10 and before) do not support insecure-registries and need to be changed to</p>
+<blockquote>
+<p># vi /etc/sysconfig/docker<br/>OPTIONS='--selinux-enabled --insecure-registry=localhost:5000 --log-driver=journald'</p>
+</blockquote>
+<p>Just push again</p>
+<blockquote>
+<p>$ curl http://localhost:5000/v2/_catalog<br/>{"repositories":["mynginx"]}</p>
+</blockquote>
+<p> </p>
+</div>
+</div>
+<!-- Post Footer -->
+<div class="post-footer">
+<div class="post-navigation">
+<a class="nav-button" href="../blog.html">← Back to Home</a>
+<a class="nav-button" href="0234.html">Next Post →</a>
+</div>
+</div>
+</article>
+</div>
+</body>
+</html>

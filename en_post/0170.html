@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Logstash 6 - mongo input</title>
+<link href="../css/style3.css" rel="stylesheet"/>
+</head>
+<body>
+<div class="container">
+<!-- Header Navigation -->
+<div class="header">
+<h1><a href="../blog.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+</div>
+<!-- Post Container -->
+<article class="post">
+<!-- Post Header -->
+<div class="post-header">
+<h1>Logstash 6 - mongo input</h1>
+<div class="post-meta">
+<div class="post-meta-item">
+<span class="meta-icon">📅</span>
+<span>June 20, 2019</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">📖</span>
+<span>2 min read</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">👁️</span>
+<span>1476 views</span>
+</div>
+</div>
+</div>
+<!-- Post Content -->
+<div class="post-content">
+<div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<p>The MongoDB of the Logstash input plug-in is a third party, and the configuration is as follows:</p>
+<div class="cnblogs_code">
+<pre><span style="color: rgba(0, 0, 0, 1)">input {
+  mongodb {
+    uri </span>=&gt; <span style="color: rgba(128, 0, 0, 1)">'</span><span style="color: rgba(128, 0, 0, 1)">mongodb://mongo_server:27017/db</span><span style="color: rgba(128, 0, 0, 1)">'</span><span style="color: rgba(0, 0, 0, 1)">
+    placeholder_db_dir </span>=&gt; <span style="color: rgba(128, 0, 0, 1)">'</span><span style="color: rgba(128, 0, 0, 1)">/path/to/db_dir/</span><span style="color: rgba(128, 0, 0, 1)">'</span><span style="color: rgba(0, 0, 0, 1)">
+    placeholder_db_name </span>=&gt; <span style="color: rgba(128, 0, 0, 1)">'table</span><span style="color: rgba(128, 0, 0, 1)">.db</span><span style="color: rgba(128, 0, 0, 1)">'</span><span style="color: rgba(0, 0, 0, 1)">
+    collection </span>=&gt; <span style="color: rgba(128, 0, 0, 1)">'</span><span style="color: rgba(128, 0, 0, 1)">table</span><span style="color: rgba(128, 0, 0, 1)">'</span><span style="color: rgba(0, 0, 0, 1)">
+    batch_size </span>=&gt; 5000<span style="color: rgba(0, 0, 0, 1)">
+  }
+}</span></pre>
+</div>
+<p> </p>
+<p>Install</p>
+<blockquote>
+<p>./logstash-plugin install logstash-input-mongodb</p>
+</blockquote>
+<p> </p>
+<p>The plug-in implementation is very simple, just a Ruby ​​file.</p>
+<blockquote>
+<p>https://github.com/phutchins/logstash-input-mongodb/blob/master/lib/logstash/inputs/mongodb.rb</p>
+</blockquote>
+<p>Use SQLite to maintain status. The db file directory is in placeholder_db_dir, which can be viewed and modified directly through SQLite commands.</p>
+<blockquote>
+<p># sqlite3 /path/to/db_dir/table.db</p>
+</blockquote>
+<p>db structure</p>
+<div class="cnblogs_code">
+<pre>sqlite&gt;<span style="color: rgba(0, 0, 0, 1)"> .schema
+CREATE TABLE `since_table` (`table` varchar(</span>255<span style="color: rgba(0, 0, 0, 1)">), `place` Int);
+sqlite</span>&gt; select * <span style="color: rgba(0, 0, 255, 1)">from</span> since_table order by place desc limit 1<span style="color: rgba(0, 0, 0, 1)">;
+logstash_since_table</span>|5d0b2c2682b7d74de069ce4d</pre>
+</div>
+<p>Get place code from plug-in</p>
+<div class="cnblogs_code">
+<pre><span style="color: rgba(0, 0, 0, 1)">  public
+  </span><span style="color: rgba(0, 0, 255, 1)">def</span><span style="color: rgba(0, 0, 0, 1)"> get_placeholder(sqlitedb, since_table, mongodb, mongo_collection_name)
+    since </span>=<span style="color: rgba(0, 0, 0, 1)"> sqlitedb[SINCE_TABLE]
+    x </span>= since.where(:table =&gt; <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">#{since_table}_#{mongo_collection_name}</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">)
+    </span><span style="color: rgba(0, 0, 255, 1)">if</span> x[:place].nil? || x[:place] ==<span style="color: rgba(0, 0, 0, 1)"> 0
+      first_entry_id </span>=<span style="color: rgba(0, 0, 0, 1)"> init_placeholder(sqlitedb, since_table, mongodb, mongo_collection_name)
+      @logger.debug(</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">FIRST ENTRY ID for #{mongo_collection_name} is #{first_entry_id}</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">)
+      </span><span style="color: rgba(0, 0, 255, 1)">return</span><span style="color: rgba(0, 0, 0, 1)"> first_entry_id
+    </span><span style="color: rgba(0, 0, 255, 1)">else</span><span style="color: rgba(0, 0, 0, 1)">
+      @logger.debug(</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">placeholder already exists, it is #{x[:place]}</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">)
+      </span><span style="color: rgba(0, 0, 255, 1)">return</span><span style="color: rgba(0, 0, 0, 1)"> x[:place][:place]
+    end
+  end</span></pre>
+</div>
+<p>place is taken from mongo's _id</p>
+<div class="cnblogs_code">
+<pre>&gt; db.table.find().limit(1<span style="color: rgba(0, 0, 0, 1)">).pretty()
+{
+        </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">_id</span><span style="color: rgba(128, 0, 0, 1)">"</span> : ObjectId(<span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">5b48cd2382b7d752b802de31</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">),
+...</span></pre>
+</div>
+<p>You can manually operate the progress through the SQLite update command;</p>
+<p> </p>
+<p>Synchronization process log</p>
+<div class="cnblogs_code">
+<pre>D, [2019-06-20T16:21:31.938302 <span style="color: rgba(0, 128, 0, 1)">#</span><span style="color: rgba(0, 128, 0, 1)">28968] DEBUG -- : MONGODB | 47.92.149.159:27017 | db.find | STARTED | {"find"=&gt;"table", "filter"=&gt;{"_id"=&gt;{"$gt"=&gt;BSON::ObjectId('5d0b420782b7d74de069db7b')}}, "limit"=&gt;10000}</span>
+D, [2019-06-20T16:21:31.941658 <span style="color: rgba(0, 128, 0, 1)">#</span><span style="color: rgba(0, 128, 0, 1)">28968] DEBUG -- : MONGODB | 47.92.149.159:27017 | db.find | SUCCEEDED | 0.002s</span></pre>
+</div>
+<p>Read place, take 10,000 items starting from place, and then write place, and so on.</p>
+<p> </p>
+<p>Reference: https://github.com/phutchins/Logstash-input-MongoDB</p>
+</div>
+</div>
+<!-- Post Footer -->
+<div class="post-footer">
+<div class="post-navigation">
+<a class="nav-button" href="../blog.html">← Back to Home</a>
+<a class="nav-button" href="0171.html">Next Post →</a>
+</div>
+</div>
+</article>
+</div>
+</body>
+</html>

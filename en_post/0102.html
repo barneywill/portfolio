@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>There is a region in HBase that has been in rit state (timeout)</title>
+<link href="../css/style3.css" rel="stylesheet"/>
+</head>
+<body>
+<div class="container">
+<!-- Header Navigation -->
+<div class="header">
+<h1><a href="../blog.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+</div>
+<!-- Post Container -->
+<article class="post">
+<!-- Post Header -->
+<div class="post-header">
+<h1>There is a region in HBase that has been in rit state (timeout)</h1>
+<div class="post-meta">
+<div class="post-meta-item">
+<span class="meta-icon">📅</span>
+<span>June 16, 2022</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">📖</span>
+<span>2 min read</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">👁️</span>
+<span>1073 views</span>
+</div>
+</div>
+</div>
+<!-- Post Content -->
+<div class="post-content">
+<div class="blogpost-body cnblogs-markdown" id="cnblogs_post_body">
+<p>There is a region in HBase that has been in the rit state. There is no response to move/assign/unassign to the region. There is no response to assigns/unassigns using hbck2.</p>
+<p>Check the current lock status of HBase and find out</p>
+<pre><code>hbase(main):003:0&gt; list_locks
+NAMESPACE(default)                                                                                                                                                                                                                                      
+Lock type: SHARED, count: 1                                                                                                                                                                                                                             
+                                                                                                                                                                                                                                                        
+TABLE(apache_atlas_janus)                                                                                                                                                                                                                               
+Lock type: SHARED, count: 1                                                                                                                                                                                                                             
+                                                                                                                                                                                                                                                        
+REGION(05021681c404140ffcee58ea06f6c7d1)                                                                                                                                                                                                                
+Lock type: EXCLUSIVE, procedure: {"className"=&gt;"org.apache.hadoop.hbase.master.assignment.UnassignProcedure", "procId"=&gt;"2", "submittedTime"=&gt;"1655288642895", "owner"=&gt;"root", "state"=&gt;"WAITING_TIMEOUT", "stackId"=&gt;[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90, 91, 92, 93, 94, 95, 96, 97, 98, 99, 100, 101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111], "lastUpdate"=&gt;"1655350334877", "timeout"=&gt;600000, "stateMessage"=&gt;[{"transitionState"=&gt;"REGION_TRANSITION_DISPATCH", "regionInfo"=&gt;{"regionId"=&gt;"1611567786769", "tableName"=&gt;{"namespace"=&gt;"ZGVmYXVsdA==", "qualifier"=&gt;"YXBhY2hlX2F0bGFzX2phbnVz"}, "startKey"=&gt;"szMzLw==", "endKey"=&gt;"zMzMyA==", "offline"=&gt;false, "split"=&gt;false, "replicaId"=&gt;0}, "hostingServer"=&gt;{"hostName"=&gt;"hadoop-server1", "port"=&gt;16020, "startCode"=&gt;"1653675967711"}, "attempt"=&gt;112}], "locked"=&gt;true}
+                                                                                                                                                                                                                                                        
+Took 0.0737 seconds                                                                                                                                                                                                                                     
+=&gt; [{"resourceType"=&gt;"NAMESPACE", "resourceName"=&gt;"default", "lockType"=&gt;"SHARED", "sharedLockCount"=&gt;1}, {"resourceType"=&gt;"TABLE", "resourceName"=&gt;"apache_atlas_janus", "lockType"=&gt;"SHARED", "sharedLockCount"=&gt;1}, {"resourceType"=&gt;"REGION", "resourceName"=&gt;"05021681c404140ffcee58ea06f6c7d1", "lockType"=&gt;"EXCLUSIVE", "exclusiveLockOwnerProcedure"=&gt;{"className"=&gt;"org.apache.hadoop.hbase.master.assignment.UnassignProcedure", "procId"=&gt;"2", "submittedTime"=&gt;"1655288642895", "owner"=&gt;"root", "state"=&gt;"WAITING_TIMEOUT", "stackId"=&gt;[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90, 91, 92, 93, 94, 95, 96, 97, 98, 99, 100, 101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111], "lastUpdate"=&gt;"1655350334877", "timeout"=&gt;600000, "stateMessage"=&gt;[{"transitionState"=&gt;"REGION_TRANSITION_DISPATCH", "regionInfo"=&gt;{"regionId"=&gt;"1611567786769", "tableName"=&gt;{"namespace"=&gt;"ZGVmYXVsdA==", "qualifier"=&gt;"YXBhY2hlX2F0bGFzX2phbnVz"}, "startKey"=&gt;"szMzLw==", "endKey"=&gt;"zMzMyA==", "offline"=&gt;false, "split"=&gt;false, "replicaId"=&gt;0}, "hostingServer"=&gt;{"hostName"=&gt;"hadoop-server1", "port"=&gt;16020, "startCode"=&gt;"1653675967711"}, "attempt"=&gt;112}], "locked"=&gt;true}, "sharedLockCount"=&gt;0}]
+</code></pre>
+<p>There is a lock on the changed region, which was added by the procedure with procId=2. View all procedures.</p>
+<pre><code>hbase(main):001:0&gt; list_procedures
+ PID Name State Submitted Last_Update Parameters
+ 2 org.apache.hadoop.hbase.master.assignment.UnassignProcedure WAITING_TIMEOUT 2022-06-15 18:24:02 +0800 2022-06-16 11:32:14 +0800 [{"transitionState"=&gt;"REGION_TRANSITION_DISPATCH", "regionInfo"=&gt;{"regionId"=&gt;"1611567786769", "tableName"=&gt;{"namespace"=&gt;"ZGVmYXVsdA==", "qualifier"=&gt;"YXBhY2hlX2F0bGFzX2phbnVz"}, "startKey"=&gt;"szMzLw==", "endKey"=&gt;"zMzMyA==", "offline"=&gt;false, "split"=&gt;false, "replicaId"=&gt;0}, "hostingServer"=&gt;{"hostName"=&gt;"hadoop-server1", "port"=&gt;16020, "startCode"=&gt;"1653675967711"}, "attempt"=&gt;112}]
+ 3 org.apache.hadoop.hbase.master.assignment.UnassignProcedure RUNNABLE 2022-06-15 18:25:02 +0800 2022-06-15 18:25:02 +0800 [{"transitionState"=&gt;"REGION_TRANSITION_DISPATCH", "regionInfo"=&gt;{"regionId"=&gt;"1611567786769", "tableName"=&gt;{"namespace"=&gt;"ZGVmYXVsdA==", "qualifier"=&gt;"YXBhY2hlX2F0bGFzX2phbnVz"}, "startKey"=&gt;"szMzLw==", "endKey"=&gt;"zMzMyA==", "offline"=&gt;false, "split"=&gt;false, "replicaId"=&gt;0}, "hostingServer"=&gt;{"hostName"=&gt;"hadoop-server1", "port"=&gt;16020, "startCode"=&gt;"1653675967711"}}]
+ 4 org.apache.hadoop.hbase.master.assignment.UnassignProcedure RUNNABLE 2022-06-15 18:26:03 +0800 2022-06-15 18:26:03 +0800 [{"transitionState"=&gt;"REGION_TRANSITION_DISPATCH", "regionInfo"=&gt;{"regionId"=&gt;"1611567786769", "tableName"=&gt;{"namespace"=&gt;"ZGVmYXVsdA==", "qualifier"=&gt;"YXBhY2hlX2F0bGFzX2phbnVz"}, "startKey"=&gt;"szMzLw==", "endKey"=&gt;"zMzMyA==", "offline"=&gt;false, "split"=&gt;false, "replicaId"=&gt;0}, "hostingServer"=&gt;{"hostName"=&gt;"hadoop-server1", "port"=&gt;16020, "startCode"=&gt;"1653675967711"}}]
+ 37 org.apache.hadoop.hbase.master.assignment.UnassignProcedure RUNNABLE 2022-06-16 10:43:25 +0800 2022-06-16 10:43:25 +0800 [{"transitionState"=&gt;"REGION_TRANSITION_DISPATCH", "regionInfo"=&gt;{"regionId"=&gt;"1611567786769", "tableName"=&gt;{"namespace"=&gt;"ZGVmYXVsdA==", "qualifier"=&gt;"YXBhY2hlX2F0bGFzX2phbnVz"}, "startKey"=&gt;"szMzLw==", "endKey"=&gt;"zMzMyA==", "offline"=&gt;false, "split"=&gt;false, "replicaId"=&gt;0}, "hostingServer"=&gt;{"hostName"=&gt;"hadoop-server1", "port"=&gt;16020, "startCode"=&gt;"1653675967711"}}]
+ 38 org.apache.hadoop.hbase.master.assignment.UnassignProcedure RUNNABLE 2022-06-16 10:44:25 +0800 2022-06-16 10:44:25 +0800 [{"transitionState"=&gt;"REGION_TRANSITION_DISPATCH", "regionInfo"=&gt;{"regionId"=&gt;"1611567786769", "tableName"=&gt;{"namespace"=&gt;"ZGVmYXVsdA==", "qualifier"=&gt;"YXBhY2hlX2F0bGFzX2phbnVz"}, "startKey"=&gt;"szMzLw==", "endKey"=&gt;"zMzMyA==", "offline"=&gt;false, "split"=&gt;false, "replicaId"=&gt;0}, "hostingServer"=&gt;{"hostName"=&gt;"hadoop-server1", "port"=&gt;16020, "startCode"=&gt;"1653675967711"}}]
+ 39 org.apache.hadoop.hbase.master.assignment.UnassignProcedure RUNNABLE 2022-06-16 10:45:25 +0800 2022-06-16 10:45:25 +0800 [{"transitionState"=&gt;"REGION_TRANSITION_DISPATCH", "regionInfo"=&gt;{"regionId"=&gt;"1611567786769", "tableName"=&gt;{"namespace"=&gt;"ZGVmYXVsdA==", "qualifier"=&gt;"YXBhY2hlX2F0bGFzX2phbnVz"}, "startKey"=&gt;"szMzLw==", "endKey"=&gt;"zMzMyA==", "offline"=&gt;false, "split"=&gt;false, "replicaId"=&gt;0}, "hostingServer"=&gt;{"hostName"=&gt;"hadoop-server1", "port"=&gt;16020, "startCode"=&gt;"1653675967711"}}]
+ 40 org.apache.hadoop.hbase.master.assignment.AssignProcedure RUNNABLE 2022-06-16 10:45:48 +0800 2022-06-16 10:45:48 +0800 [{"transitionState"=&gt;"REGION_TRANSITION_QUEUE", "regionInfo"=&gt;{"regionId"=&gt;"1611567786769", "tableName"=&gt;{"namespace"=&gt;"ZGVmYXVsdA==", "qualifier"=&gt;"YXBhY2hlX2F0bGFzX2phbnVz"}, "startKey"=&gt;"szMzLw==", "endKey"=&gt;"zMzMyA==", "offline"=&gt;false, "split"=&gt;false, "replicaId"=&gt;0}}]
+ 41 org.apache.hadoop.hbase.master.assignment.UnassignProcedure RUNNABLE 2022-06-16 10:46:25 +0800 2022-06-16 10:46:25 +0800 [{"transitionState"=&gt;"REGION_TRANSITION_DISPATCH", "regionInfo"=&gt;{"regionId"=&gt;"1611567786769", "tableName"=&gt;{"namespace"=&gt;"ZGVmYXVsdA==", "qualifier"=&gt;"YXBhY2hlX2F0bGFzX2phbnVz"}, "startKey"=&gt;"szMzLw==", "endKey"=&gt;"zMzMyA==", "offline"=&gt;false, "split"=&gt;false, "replicaId"=&gt;0}, "hostingServer"=&gt;{"hostName"=&gt;"hadoop-server1", "port"=&gt;16020, "startCode"=&gt;"1653675967711"}}]
+ 42 org.apache.hadoop.hbase.master.assignment.UnassignProcedure RUNNABLE 2022-06-16 10:54:54 +0800 2022-06-16 10:54:54 +0800 [{"transitionState"=&gt;"REGION_TRANSITION_DISPATCH", "regionInfo"=&gt;{"regionId"=&gt;"1611567786769", "tableName"=&gt;{"namespace"=&gt;"ZGVmYXVsdA==", "qualifier"=&gt;"YXBhY2hlX2F0bGFzX2phbnVz"}, "startKey"=&gt;"szMzLw==", "endKey"=&gt;"zMzMyA==", "offline"=&gt;false, "split"=&gt;false, "replicaId"=&gt;0}, "hostingServer"=&gt;{"hostName"=&gt;"hadoop-server1", "port"=&gt;16020, "startCode"=&gt;"1653675967711"}}]
+ 43 org.apache.hadoop.hbase.master.assignment.AssignProcedure RUNNABLE 2022-06-16 11:11:45 +0800 2022-06-16 11:11:45 +0800 [{"transitionState"=&gt;"REGION_TRANSITION_QUEUE", "regionInfo"=&gt;{"regionId"=&gt;"1611567786769", "tableName"=&gt;{"namespace"=&gt;"ZGVmYXVsdA==", "qualifier"=&gt;"YXBhY2hlX2F0bGFzX2phbnVz"}, "startKey"=&gt;"szMzLw==", "endKey"=&gt;"zMzMyA==", "offline"=&gt;false, "split"=&gt;false, "replicaId"=&gt;0}}]
+ 44 org.apache.hadoop.hbase.master.assignment.AssignProcedure RUNNABLE 2022-06-16 11:13:14 +0800 2022-06-16 11:13:14 +0800 [{"transitionState"=&gt;"REGION_TRANSITION_QUEUE", "regionInfo"=&gt;{"regionId"=&gt;"1611567786769", "tableName"=&gt;{"namespace"=&gt;"ZGVmYXVsdA==", "qualifier"=&gt;"YXBhY2hlX2F0bGFzX2phbnVz"}, "startKey"=&gt;"szMzLw==", "endKey"=&gt;"zMzMyA==", "offline"=&gt;false, "split"=&gt;false, "replicaId"=&gt;0}, "override"=&gt;true}]
+ 45 org.apache.hadoop.hbase.master.procedure.DisableTableProcedure RUNNABLE 2022-06-16 11:17:20 +0800 2022-06-16 11:17:20 +0800 [{}, {"userInfo"=&gt;{"effectiveUser"=&gt;"root"}, "tableName"=&gt;{"namespace"=&gt;"ZGVmYXVsdA==", "qualifier"=&gt;"YXBhY2hlX2F0bGFzX2phbnVz"}, "skipTableStateCheck"=&gt;false}]
+ 1556 org.apache.hadoop.hbase.master.assignment.AssignProcedure RUNNABLE 2022-06-16 11:30:11 +0800 2022-06-16 11:30:11 +0800 [{"transitionState"=&gt;"REGION_TRANSITION_QUEUE", "regionInfo"=&gt;{"regionId"=&gt;"1611567786769", "tableName"=&gt;{"namespace"=&gt;"ZGVmYXVsdA==", "qualifier"=&gt;"YXBhY2hlX2F0bGFzX2phbnVz"}, "startKey"=&gt;"szMzLw==", "endKey"=&gt;"zMzMyA==", "offline"=&gt;false, "split"=&gt;false, "replicaId"=&gt;0}}]
+13 row(s)
+Took 0.6656 seconds
+</code></pre>
+<p>I found that the command just triggered had many procedures trying to operate the region, and then it got stuck on the first procedure because the first procedure held the lock.</p>
+<blockquote>
+<p>hbase hbck - j hbase-operator-tools-1.1.0/hbase-hbck2/hbase-hbck2-1.1.0.jar bypass - o - r $PROCEDURE_PID</p>
+</blockquote>
+<p>Use hbck2 to bypass these procedures and the problem is solved.</p>
+<p>refer to:<br/>
+<a href="https://stackoverflow.com/questions/56321514/how-to-abort-kill-a-procedure-in-hbase" rel="noopener nofollow" target="_blank">https://stackoverflow.com/questions/56321514/how-to-abort-kill-a-procedure-in-hbase</a></p>
+</div>
+</div>
+<!-- Post Footer -->
+<div class="post-footer">
+<div class="post-navigation">
+<a class="nav-button" href="../blog.html">← Back to Home</a>
+<a class="nav-button" href="0103.html">Next Post →</a>
+</div>
+</div>
+</article>
+</div>
+</body>
+</html>

@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Spark connection Kudu error report</title>
+<link href="../css/style3.css" rel="stylesheet"/>
+</head>
+<body>
+<div class="container">
+<!-- Header Navigation -->
+<div class="header">
+<h1><a href="../blog.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+</div>
+<!-- Post Container -->
+<article class="post">
+<!-- Post Header -->
+<div class="post-header">
+<h1>Spark connection Kudu error report</h1>
+<div class="post-meta">
+<div class="post-meta-item">
+<span class="meta-icon">📅</span>
+<span>May 09, 2019</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">📖</span>
+<span>3 min read</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">👁️</span>
+<span>3096 views</span>
+</div>
+</div>
+</div>
+<!-- Post Content -->
+<div class="post-content">
+<div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<p>spark-2.4.2<br/>kudu-1.7.0 </p>
+<p><br/>Start trying</p>
+<h1>1) Add the jar to the classpath manually</h1>
+<p>spark-2.4.2-bin-hadoop2.6<br/>+<br/>kudu-spark2_2.11-1.7.0-cdh5.16.1.jar</p>
+<div class="cnblogs_code">
+<pre><span style="color: rgba(0, 128, 0, 1)">#</span><span style="color: rgba(0, 128, 0, 1)"> bin/spark-shell</span>
+scala&gt; val df = spark.read.options(Map(<span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">kudu.master</span><span style="color: rgba(128, 0, 0, 1)">"</span> - &gt; <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">master:7051</span><span style="color: rgba(128, 0, 0, 1)">"</span>, <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">kudu.table</span><span style="color: rgba(128, 0, 0, 1)">"</span> - &gt; <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">impala::test.tbl_test</span><span style="color: rgba(128, 0, 0, 1)">"</span>)).format(<span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">kudu</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">).load
+java.lang.ClassNotFoundException: Failed to find data source: kudu. Please find packages at http:</span>//spark.apache.org/third-party-<span style="color: rgba(0, 0, 0, 1)">projects.html
+  at org.apache.spark.sql.execution.datasources.DataSource$.lookupDataSource(DataSource.scala:</span>660<span style="color: rgba(0, 0, 0, 1)">)
+  at org.apache.spark.sql.DataFrameReader.load(DataFrameReader.scala:</span>194<span style="color: rgba(0, 0, 0, 1)">)
+  at org.apache.spark.sql.DataFrameReader.load(DataFrameReader.scala:</span>167<span style="color: rgba(0, 0, 0, 1)">)
+  ... </span>49<span style="color: rgba(0, 0, 0, 1)"> elided
+Caused by: java.lang.ClassNotFoundException: kudu.DefaultSource
+  at scala.reflect.internal.util.AbstractFileClassLoader.findClass(AbstractFileClassLoader.scala:</span>72<span style="color: rgba(0, 0, 0, 1)">)
+  at java.lang.ClassLoader.loadClass(ClassLoader.java:</span>424<span style="color: rgba(0, 0, 0, 1)">)
+  at java.lang.ClassLoader.loadClass(ClassLoader.java:</span>357<span style="color: rgba(0, 0, 0, 1)">)
+  at org.apache.spark.sql.execution.datasources.DataSource$.$anonfun$lookupDataSource$</span>5(DataSource.scala:634<span style="color: rgba(0, 0, 0, 1)">)
+  at scala.util.Try$.apply(Try.scala:</span>213<span style="color: rgba(0, 0, 0, 1)">)
+  at org.apache.spark.sql.execution.datasources.DataSource$.$anonfun$lookupDataSource$</span>4(DataSource.scala:634<span style="color: rgba(0, 0, 0, 1)">)
+  at scala.util.Failure.orElse(Try.scala:</span>224<span style="color: rgba(0, 0, 0, 1)">)
+  at org.apache.spark.sql.execution.datasources.DataSource$.lookupDataSource(DataSource.scala:</span>634<span style="color: rgba(0, 0, 0, 1)">)
+  ... </span>51 more</pre>
+</div>
+<h1>2) Adopt the official method (change the Kudu version to 1.7.0)</h1>
+<p>spark-2.4.2-bin-hadoop2.6</p>
+<blockquote>
+<p># bin/spark-shell --packages org.apache.kudu:kudu-spark2_2.11:1.7.0</p>
+<p>same error</p>
+</blockquote>
+<h1>3) Use the official method (without modification)</h1>
+<p>spark-2.4.2-bin-hadoop2.6</p>
+<div class="cnblogs_code">
+<pre><span style="color: rgba(0, 128, 0, 1)">#</span><span style="color: rgba(0, 128, 0, 1)"> bin/spark-shell --packages org.apache.kudu:kudu-spark2_2.11:1.9.0</span>
+scala&gt; val df = spark.read.options(Map(<span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">kudu.master</span><span style="color: rgba(128, 0, 0, 1)">"</span> - &gt; <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">master:7051</span><span style="color: rgba(128, 0, 0, 1)">"</span>, <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">kudu.table</span><span style="color: rgba(128, 0, 0, 1)">"</span> - &gt; <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">impala::test.tbl_test</span><span style="color: rgba(128, 0, 0, 1)">"</span>)).format(<span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">kudu</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">).load
+java.lang.NoClassDefFoundError: scala</span>/Product$<span style="color: rgba(0, 0, 255, 1)">class</span><span style="color: rgba(0, 0, 0, 1)">
+  at org.apache.kudu.spark.kudu.Upsert$.</span>&lt;init&gt;(OperationType.scala:41<span style="color: rgba(0, 0, 0, 1)">)
+  at org.apache.kudu.spark.kudu.Upsert$.</span>&lt;clinit&gt;<span style="color: rgba(0, 0, 0, 1)">(OperationType.scala)
+  at org.apache.kudu.spark.kudu.DefaultSource$$anonfun$getOperationType$</span>2.apply(DefaultSource.scala:217<span style="color: rgba(0, 0, 0, 1)">)
+  at org.apache.kudu.spark.kudu.DefaultSource$$anonfun$getOperationType$</span>2.apply(DefaultSource.scala:217<span style="color: rgba(0, 0, 0, 1)">)
+  at scala.Option.getOrElse(Option.scala:</span>138<span style="color: rgba(0, 0, 0, 1)">)
+  at org.apache.kudu.spark.kudu.DefaultSource.getOperationType(DefaultSource.scala:</span>217<span style="color: rgba(0, 0, 0, 1)">)
+  at org.apache.kudu.spark.kudu.DefaultSource.createRelation(DefaultSource.scala:</span>104<span style="color: rgba(0, 0, 0, 1)">)
+  at org.apache.kudu.spark.kudu.DefaultSource.createRelation(DefaultSource.scala:</span>87<span style="color: rgba(0, 0, 0, 1)">)
+  at org.apache.spark.sql.execution.datasources.DataSource.resolveRelation(DataSource.scala:</span>318<span style="color: rgba(0, 0, 0, 1)">)
+  at org.apache.spark.sql.DataFrameReader.loadV1Source(DataFrameReader.scala:</span>223<span style="color: rgba(0, 0, 0, 1)">)
+  at org.apache.spark.sql.DataFrameReader.load(DataFrameReader.scala:</span>211<span style="color: rgba(0, 0, 0, 1)">)
+  at org.apache.spark.sql.DataFrameReader.load(DataFrameReader.scala:</span>167<span style="color: rgba(0, 0, 0, 1)">)
+  ... </span>49<span style="color: rgba(0, 0, 0, 1)"> elided
+Caused by: java.lang.ClassNotFoundException: scala.Product$</span><span style="color: rgba(0, 0, 255, 1)">class</span><span style="color: rgba(0, 0, 0, 1)">
+  at java.net.URLClassLoader.findClass(URLClassLoader.java:</span>381<span style="color: rgba(0, 0, 0, 1)">)
+  at java.lang.ClassLoader.loadClass(ClassLoader.java:</span>424<span style="color: rgba(0, 0, 0, 1)">)
+  at java.lang.ClassLoader.loadClass(ClassLoader.java:</span>357<span style="color: rgba(0, 0, 0, 1)">)
+  ... </span>61 more</pre>
+</div>
+<p>It seems to be a Scala version conflict. I went to the Spark download page and found this sentence:</p>
+<blockquote>
+<p>Note that, Spark is pre-built with Scala 2.11 except version 2.4.2, which is pre-built with Scala 2.12.</p>
+</blockquote>
+<h1>4) Kudu-Spark changed to scala2.12</h1>
+<p>spark-2.4.2-bin-hadoop2.6</p>
+<p># bin/spark-shell --packages org.apache.kudu:kudu-spark2_2.12:1.9.0</p>
+<div class="cnblogs_code">
+<pre><span style="color: rgba(0, 0, 0, 1)">        ::::::::::::::::::::::::::::::::::::::::::::::
+
+        ::          UNRESOLVED DEPENDENCIES         ::
+
+        ::::::::::::::::::::::::::::::::::::::::::::::
+
+        :: org.apache.kudu</span><span style="color: rgba(0, 128, 0, 1)">#</span><span style="color: rgba(0, 128, 0, 1)">kudu-spark2_2.12;1.9.0: not found</span>
+<span style="color: rgba(0, 0, 0, 1)">
+        ::::::::::::::::::::::::::::::::::::::::::::::</span></pre>
+</div>
+<p>Ok, download 2.4.3</p>
+<h1>5) Use the official method (continue)</h1>
+<p>spark-2.4.3-bin-hadoop2.6</p>
+<div class="cnblogs_code">
+<pre><span style="color: rgba(0, 128, 0, 1)">#</span><span style="color: rgba(0, 128, 0, 1)"> bin/spark-shell --packages org.apache.kudu:kudu-spark2_2.11:1.9.0</span>
+scala&gt; val df = spark.read.options(Map(<span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">kudu.master</span><span style="color: rgba(128, 0, 0, 1)">"</span> - &gt; <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">master:7051</span><span style="color: rgba(128, 0, 0, 1)">"</span>, <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">kudu.table</span><span style="color: rgba(128, 0, 0, 1)">"</span> - &gt; <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">impala::test.tbl_test</span><span style="color: rgba(128, 0, 0, 1)">"</span>)).format(<span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">kudu</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">).load
+df: org.apache.spark.sql.DataFrame </span>= [order_no: string, id: bigint ... 28 more fields]</pre>
+</div>
+<p>It's normal</p>
+<h1>6) Adopt the official method (change the Kudu version to 1.7.0)</h1>
+<p>spark-2.4.3-bin-hadoop2.6</p>
+<blockquote>
+<p># bin/spark-shell --packages org.apache.kudu:kudu-spark2_2.11:1.7.0</p>
+<p>same error</p>
+</blockquote>
+<p>It seems that Spark can only use scala2.11+Kudu-spark2_2.11:1.9.0 to connect to Kudu.</p>
+<p> </p>
+<p>refer to:<br/>https://kudu.apache.org/docs/developing.html<br/>http://spark.apache.org/downloads.html</p>
+<p> </p>
+</div>
+</div>
+<!-- Post Footer -->
+<div class="post-footer">
+<div class="post-navigation">
+<a class="nav-button" href="../blog.html">← Back to Home</a>
+<a class="nav-button" href="0141.html">Next Post →</a>
+</div>
+</div>
+</article>
+</div>
+</body>
+</html>

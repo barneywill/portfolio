@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Enabling Compression in Kafka</title>
+<link href="../css/style3.css" rel="stylesheet"/>
+</head>
+<body>
+<div class="container">
+<!-- Header Navigation -->
+<div class="header">
+<h1><a href="../blog.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+</div>
+<!-- Post Container -->
+<article class="post">
+<!-- Post Header -->
+<div class="post-header">
+<h1>Enabling Compression in Kafka</h1>
+<div class="post-meta">
+<div class="post-meta-item">
+<span class="meta-icon">📅</span>
+<span>May 20, 2022</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">📖</span>
+<span>1 min read</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">👁️</span>
+<span>1289 views</span>
+</div>
+</div>
+</div>
+<!-- Post Content -->
+<div class="post-content">
+<div class="blogpost-body cnblogs-markdown" id="cnblogs_post_body">
+<p>After Kafka turns on compression, it can greatly optimize disk usage and network transmission overhead, as well as CPU usage and gc time. The parameter to turn on compression is compression.type</p>
+<blockquote>
+<p>Specify the final compression type for a given topic. This configuration accepts the standard compression codecs ('gzip', 'snappy', 'lz4', 'zstd'). It additionally accepts 'uncompressed' which is equivalent to no compression; and 'producer' which means retain the original compression codec set by the producer.</p>
+</blockquote>
+<p><picture>
+<source srcset="../img/1509647-20220520175003372-551829999.webp" type="image/webp"/>
+<img alt="" src="../img/1509647-20220520175003372-551829999.png"/>
+</picture></p>
+<p>This parameter can be set in both broker and producer. It is recommended:</p>
+<ul>
+<li>Set in producer, then broker is set to producer;</li>
+<li>If it is not set on the producer, it will be set on the broker.</li>
+</ul>
+<p>ps: If set in both places, the two compression algorithms may be inconsistent. In this case, the broker needs to decompress the message first, then compress it and then place it on the disk, which increases CPU overhead.</p>
+<p>After turning on compression, you can confirm it with the following command:</p>
+<blockquote>
+<p>bin/kafka-run-class.sh kafka.tools.DumpLogSegments --files /data/kafka/test-0/00000000000000000000.log --print-data-log | grep compresscodec</p>
+</blockquote>
+<p>A comparison of various compression algorithms is as follows:</p>
+<p><picture>
+<source srcset="../img/1509647-20220520175228292-1450158113.webp" type="image/webp"/>
+<img alt="" src="../img/1509647-20220520175228292-1450158113.png"/>
+</picture></p>
+<p>Reference:<br/>
+<a href="https://blog.cloudflare.com/squeezing-the-firehose" rel="noopener nofollow" target="_blank">https://blog.cloudflare.com/squeezing-the-firehose</a><br/>
+<a href="https://stackoverflow.com/questions/67537111/how-do-i-decide-between-lz4-and-snappy-compression" rel="noopener nofollow" target="_blank">https://stackoverflow.com/questions/67537111/how-do-i-decide-between-lz4-and-snappy-compression</a></p>
+</div>
+</div>
+<!-- Post Footer -->
+<div class="post-footer">
+<div class="post-navigation">
+<a class="nav-button" href="../blog.html">← Back to Home</a>
+<a class="nav-button" href="0016.html">Next Post →</a>
+</div>
+</div>
+</article>
+</div>
+</body>
+</html>

@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Impala 2 - Implementation details</title>
+<link href="../css/style3.css" rel="stylesheet"/>
+</head>
+<body>
+<div class="container">
+<!-- Header Navigation -->
+<div class="header">
+<h1><a href="../blog.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+</div>
+<!-- Post Container -->
+<article class="post">
+<!-- Post Header -->
+<div class="post-header">
+<h1>Impala 2 - Implementation details</h1>
+<div class="post-meta">
+<div class="post-meta-item">
+<span class="meta-icon">📅</span>
+<span>January 30, 2019</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">📖</span>
+<span>12 min read</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">👁️</span>
+<span>2087 views</span>
+</div>
+</div>
+</div>
+<!-- Post Content -->
+<div class="post-content">
+<div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<h1>1 architecture</h1>
+<p>Impala is a massively-parallel query execution engine, which runs on hundreds of machines in existing Hadoop clusters. It is decoupled from the underlying storage engine, unlike traditional relational database management systems where the query processing and the underlying storage engine are components of a single tightly-coupled system.</p>
+<p><em>Impala is a large-scale parallel query engine that can be deployed and run on existing Hadoop clusters and is decoupled from the underlying storage engine;</em></p>
+<p>An Impala deployment is comprised of three services.</p>
+<p><em>An Impala cluster consists of three parts: impalad, statestored, and catalogd;</em></p>
+<h2>impalad</h2>
+<p>The Impala daemon (impalad) service is dually responsible for accepting queries from client processes and orchestrating their execution across the cluster, and for executing individual query fragments on behalf of other Impala daemons. When an Impala daemon operates in the First role by managing query execution, it is said to be the coordinator for that query. However, all Impala daemons are symmetric; they may all operate in all roles. This property helps with fault-tolerance, and with load-balancing.<br/>One Impala daemon is deployed on every machine in the cluster that is also running a datanode process - the block server for the underlying HDFS deployment - and therefore there is typically one Impala daemon on every machine. This allows Impala to take advantage of data locality, and to read blocks from the Filesystem without having to use the network.</p>
+<p><em>All impalads are peer-to-peer and do not have a master-slave structure. This naturally has the benefits of fault tolerance and load balancing. Impalad is responsible for:</em><br/><em>1) Receive the client’s query request (as the coordinator of the query) and decompose the query to the entire cluster for parallel execution;</em><br/><em>2) Cooperate with other impalad (that is, the coordinator of other queries) to execute part of the query;</em><br/><em>Impalad is usually deployed together with DataNode, which can take advantage of data locality and avoid network overhead;</em></p>
+<h2>statestored</h2>
+<p>The Statestore daemon (statestored) is Impala's meta-data publish-subscribe service, which disseminates cluster-wide metadata to all Impala processes. There is a single statestored instance</p>
+<p><em>Statestored is Impala's metadata publishing and subscription service, which will push metadata changes in the cluster to all impalas. Statestore is a single point;</em></p>
+<h2>catalogd</h2>
+<p>Finally, the Catalog daemon (catalogd), serves as Impala's catalog repository and metadata access gateway. Through the catalogd, Impala daemons may exe-cute DDL commands that are reected in external catalog stores such as the Hive Metastore. Changes to the system catalog are broadcast via the statestore.</p>
+<p><em>catalogd is Impala's catalog warehouse and metadata access gateway. When impalad performs ddl operations, it uses catalogd to synchronize external catalogs such as Hive metastore; all catalog changes are also notified to all impalad through statestored;</em></p>
+<h2>Implementation details</h2>
+<h3>1 state</h3>
+<p>A major challenge in the design of an MPP database that is intended to run on hundreds of nodes is the coordination and synchronization of cluster-wide metadata. Impala's symmetric-node architecture requires that all nodes must be able to accept and execute queries. Therefore all nodes must have, for example, up-to-date versions of the system catalog and a recent view of the Impala cluster's membership so that queries may be scheduled correctly.</p>
+<p><em>A major challenge in MPP (Massively Parallel Processing) database design is the coordination and synchronization of metadata in a cluster of hundreds of nodes; Impala's peer-to-peer structure requires that all nodes can receive and execute queries, so all nodes must have the latest catalog and the status of all nodes in the cluster;</em></p>
+<p>We might approach this problem by deploying a separate cluster-management service, with ground-truth versions of all cluster-wide metadata. Impala daemons could then query this store lazily (i.e. only when needed), which would ensure that all queries were given up-to-date responses. However, a fundamental tenet in Impala's design has been to avoid synchronous RPCs wherever possible on the critical path of any query. Without paying close attention to these costs, we have found that query latency is often compromised by the time taken to establish a TCP connection, or load on some remote service. Instead, we have designed Impala to push updates to all interested parties, and have designed a simple publish-subscribe service called the statestore to disseminate metadata changes to a set of subscribers.</p>
+<p><em>To solve this problem, you can deploy a separate service and actively call the service query (pull) every time metadata is needed. This can ensure that each query can get the latest version of metadata; however, the basic principle of Impala design is to avoid synchronous RPC calls on the critical path of the query (the time overhead of establishing connections and remote service calls); therefore, Impala uses a publish and subscribe service called statestore to push all metadata updates (push) during design;</em></p>
+<p>The statestore maintains a set of topics, which are arrays of (key, value, version) triplets called entries where 'key' and 'value' are byte arrays, and 'version' is a 64-bit integer. A topic is defined by an application, and so the statestore has no understanding of the contents of any topic entry. Topics are persistent through the lifetime of the statestore, but are not persisted across service restarts. Processes that wish to receive updates to any topic are called subscribers, and express their interest by registering with the statestore at start-up and providing a list of topics. The statestore responds to registration by sending the subscriber an initial topic update for each registered topic, which consists of all the entries currently in that topic.</p>
+<p><em>The statestore maintains a collection of topics. Each topic is actually an array of (key, value, version). The topic data is not persisted. After restarting the statestore, the previous topic data will be gone. After each impalad is started, it will register with statestored and provide a list of topics to be subscribed. Statestored will push all the data in the subscribed topics to the impalad;</em></p>
+<p>After registration, the statestore periodically sends two kinds of messages to each subscriber. The first kind of message is a topic update, and consists of all changes to a topic (new entries, modified entries and deletions) since the last update was successfully sent to the subscriber. Each subscriber maintains a per-topic most-recent-version identifier which allows the statestore to only send the delta between updates. In response to a topic update, each subscriber sends a list of changes it wishes to make to its subscribed topics. Those changes are guaranteed to have been applied by the time the next update is received.<br/>The second kind of statestore message is a keepalive. The statestore uses keepalive messages to maintain the connection to each subscriber, which would otherwise time-out its subscription and attempt to re-register. Previous versions of the statestore used topic update messages for both purposes, but as the size of topic updates grew it became difficult to ensure timely delivery of updates to each subscriber, leading to false-positives in the subscriber's failure-detection process.</p>
+<p><em>After impalad registers with statestored, statestored will periodically send two messages to impalad: 1) topic update message; 2) keepalive message (maintaining a long connection);</em></p>
+<p>If the statestore detects a failed subscriber (for example, by repeated failed keepalive deliveries), it will cease sending updates. Some topic entries may be marked as 'transient', meaning that if their 'owning' subscriber should fail, they will be removed. This is a natural primitive with which to maintain liveness information for the cluster in a dedicated topic, as well as per-node load statistics.<br/>The statestore provides very weak semantics: subscribers may be updated at diffierent rates (although the statestore tries to distribute topic updates fairly), and may therefore have very diffierent views of the content of a topic. However, Impala only uses topic metadata to make decisions locally, without any coordination across the cluster. For example, query planning is performed on a single node based on the catalog metadata topic, and once a full plan has been computed, all information required to execute that plan is distributed directly to the executing nodes. There is no requirement that an executing node should know about the same version of the catalog metadata topic.</p>
+<p><em>The statestore design allows metadata in different impalads to be updated at different times. However, after receiving the query, the impalad only uses local topic metadata to generate an execution plan. Once an execution plan is generated, all the information required for execution will be directly sent to the execution node, so the execution node and the node that generates the execution plan are not required to have the same metadata.</em></p>
+<p>Although there is only a single statestore process in existing Impala deployments, we have found that it scales well to medium sized clusters and, with some configuration, can serve our largest deployments. The statestore does not persist any metadata to disk: all current metadata is pushed to the statestore by live subscribers (e.g. load information).</p>
+<p><em>Although only one statestored is deployed, it is enough to support a medium-sized cluster;</em></p>
+<p>Therefore, should a statestore restart, its state can be recovered during the initial subscriber registration phase. Or if the machine that the statestore is running on fails, a new statestore process can be started elsewhere, and subscribers may fail over to it. There is no built-in failover mechanism in Impala, instead deployments commonly use a retargetable DNS entry to force subscribers to automatically move to the new process instance.</p>
+<p><em>The statestore does not persist metadata to the disk. When a statestore is restarted, the state is easily restored; even if the machine where the statestore is located hangs up, a new statestore can be easily started on other machines. However, Impala does not have a built-in failover mechanism that allows Impala to switch to a new statestore. DNS service is usually used here to implement statestore switching;</em></p>
+<h3>2 catalog</h3>
+<p>Impala's catalog service serves catalog metadata to Impala daemons via the statestore broadcast mechanism, and executes DDL operations on behalf of Impala daemons. The catalog service pulls information from third-party metadata stores (for example, the Hive Metastore or the HDFS Namenode), and aggregates that information into an Impala-compatible catalog structure. This architecture allows Impala to be relatively agnostic of the metadata stores for the storage engines it relies upon, which allows us to add new metadata stores to Impala relatively quickly (e.g. HBase support). Any changes to the system catalog (e.g. when a new table has been loaded) are disseminated via the statestore.</p>
+<p><em>catalogd pushes catalog metadata (including subsequent updates) to impalad through statestored, and performs DDL operations on behalf of impalad; catalogd will pull information from third-party metadata systems. This design makes Impala easily compatible with third-party metadata;</em></p>
+<p>The catalog service also allows us to augment the system catalog with Impala-specfic information. For example, we register user-defined-functions only with the catalog service (without replicating this to the Hive Metastore, for example), since they are specific to Impala.</p>
+<p><em>Impala udf is only registered in catalogd;</em></p>
+<p>Since catalogs are often very large, and access to tables is rarely uniform, the catalog service only loads a skeleton entry for each table it discovers on startup. More detailed table metadata can be loaded lazily in the background from its third-party stores. If a table is required before it has been fully loaded, an Impala daemon will detect this and issue a prioritization request to the catalog service. This request blocks until the table is fully loaded.</p>
+<p><em>The catalog is usually very large, so catalogd only loads the basic information of all library tables when it starts, and the detailed information will be loaded (lazily) when needed; if a table has not been loaded when it is queried, impalad will send a request to catalogd, and this request will be stuck until the table is loaded;</em></p>
+<h1>2. Query process</h1>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201901/1509647-20190130120841115-2077652352.png"/></p>
+<p>A query consists of 6 steps from start to finish</p>
+<h2>Implementation details</h2>
+<h3>frontend</h3>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201901/1509647-20190130160229543-1128333623.png"/></p>
+<p>The Impala frontend is responsible for compiling SQL text into query plans executable by the Impala backends. It is written in Java and consists of a fully-featured SQL parser and cost-based query optimizer, all implemented from scratch. In addition to the basic SQL features (select, project, join, group by, order by, limit), Impala supports inline views, uncorrelated and correlated subqueries (that are rewritten as joins), all variants of outer joins as well as explicit left/right semi- and anti-joins, and analytic window functions.</p>
+<p><em>The frontend is responsible for compiling SQL into a query plan that can be executed by the backend, written in Java, including a SQL parser and query optimizer;</em></p>
+<p>The query compilation process follows a traditional division of labor: Query parsing, semantic analysis, and query planning/optimization. We will focus on the latter, most challenging, part of query compilation. The Impala query planner is given as input a parse tree together with query-global information assembled during semantic analysis (table/column identifiers, equivalence classes, etc.). An executable query plan is constructed in two phases: (1) Single node planning and (2) plan parallelization and fragmentation.</p>
+<p><em>The query compilation process includes: query parsing, semantic analysis, query plan, and query optimization; the creation of an executable query plan has two stages: single-node plan and distributed plan;</em></p>
+<p>In the first phase, the parse tree is translated into a non-executable single-node plan tree, consisting of the following plan nodes: HDFS/HBase scan, hash join, cross join, union, hash aggregation, sort, top-n, and analytic evaluation. This step is responsible for assigning predicates at the lowest possible plan node, inferring predicates based on equivalence classes, pruning table partitions, setting limits/offsets, applying column projections, as well as performing some cost-based plan optimizations such as ordering and coalescing analytic window functions and join reordering to minimize the total evaluation cost. Cost estimation is based on table/partition cardinalities plus distinct value counts for each column; histograms are currently not part of the statistics. Impala uses simple heuristics to avoid exhaustively enumerating and costing the entire join-order space in common cases.</p>
+<p><em>In the first stage, SQL will be translated into a non-executable single-node plan tree; optimization factors include: predicate pushdown (predicate pushdown, based on partition, limit, column prediction, etc.) and cost estimate (cost estimate, based on the cardinality count of all columns);</em></p>
+<p>The second planning phase takes the single-node plan as input and produces a distributed execution plan. The general goal is to minimize data movement and maximize scan locality: in HDFS, remote reads are considerably slower than local ones. The plan is made distributed by adding exchange nodes between plan nodes as necessary, and by adding extra non-exchange plan nodes to minimize data movement across the network (e.g., local aggregation nodes). During this second phase, we decide the join strategy for every join node (the join order is fixed at this point). The supported join strategies are broadcast and partitioned. The former replicates the entire build side of a join to all cluster machines executing the probe, and the latter hash-redistributes both the build and probe side on the join expressions. Impala chooses whichever strategy is estimated to minimize the amount of data exchanged over the network, also exploiting existing data partitioning of the join inputs.</p>
+<p><em>In the second stage, the single-node plan tree will be used to generate a distributed execution plan; optimization factors include: minimizing data movement, maximizing the use of data locality, aggregating locally as much as possible to reduce subsequent data movement, and determining the join strategy (broadcast or partitioned);</em></p>
+<p>All aggregation is currently executed as a local pre-aggregation followed by a merge aggregation operation. For grouping aggregations, the pre-aggregation output is partitioned on the grouping expressions and the merge aggregation is done in parallel on all participating nodes. For non-grouping aggregations, the merge aggregation is done on a single node. Sort and top-n are parallelized in a similar fashion: a distributed local sort/top-n is followed by a single-node merge operation. Analytic expression evaluation is parallelized based on the partition-by expressions. It relies on its input being sorted on the partition-by/order-by expressions. Finally, the distributed plan tree is split up at exchange boundaries. Each such portion of the plan is placed inside a plan fragment, Impala's unit of backend execution. A plan fragment encapsulates a portion of the plan tree that operates on the same data partition on a single machine.</p>
+<p><em>All aggregations will be decomposed into local pre-aggregation and merge aggregation (requires shuffle) during execution;</em><br/><em>Finally, the distributed plan tree is split into multiple plan fragments based on exchange (shuffle) (a plan fragment is a backend execution unit);</em></p>
+<h3>backend</h3>
+<p>Impala's backend receives query fragments from the frontend and is responsible for their fast execution. It is designed to take advantage of modern hardware. The backend is written in C++ and uses code generation at runtime to produce efficient codepaths (with respect to instruction count) and small memory overhead, especially compared to other engines implemented in Java.</p>
+<p><em>The backend receives the query fragment from the frontend and is then responsible for the fast execution of the query fragment; it is designed to take advantage of modern hardware as much as possible; written in C++, using runtime code generation to produce an efficient code path (efficient as measured by the number of CPU instructions) and less memory usage;</em></p>
+<p>Impala leverages decades of research in parallel databases. The execution model is the traditional Volcano-style with Exchange operators. Processing is performed batch-at-a-time: each GetNext() call operates over batches of rows. With the exception of "stop-and-go" operators (e.g. sorting), the execution is fully pipeline-able, which minimizes the memory consumption for storing intermediate results. When processed in memory, the tuples have a canonical in-memory row-oriented format.</p>
+<p><em>The Impala execution model is Volcano; the processing is batch-at-a-time, and each call to GetNext() will operate on a batch of data; except for the 'stop-and-go' type operator, the execution process is pipelined (multiple operators are executed together), which avoids storing intermediate results and minimizes memory usage;</em></p>
+<p>Operators that may need to consume lots of memory are designed to be able to spill parts of their working set to disk if needed. The operators that are spillable are the hash join, (hash-based) aggregation, sorting, and analytic function evaluation.</p>
+<p><em>Some operators that may consume a lot of memory are designed to output some intermediate results to disk as needed;</em></p>
+<p>Impala employs a partitioning approach for the hash join and aggregation operators. That is, some bits of the hash value of each tuple determine the target partition and the remaining bits for the hash table probe. During normal operation, when all hash tables fit in memory, the overhead of the partitioning step is minimal, within 10% of the performance of a non-spillable non-partitioning-based implementation. When there is memory-pressure, a \victim" partition may be spilled to disk, thereby freeing memory for other partitions to complete their processing. When building the hash tables for the hash joins and there is reduction in cardinality of the build-side relation, we construct a Bloom filter which is then passed on to the probe side scanner, implementing a simple version of a semi-join.</p>
+<p><em>For hash join and aggregation operations, Impala uses a partitioning method: some bits in the hash value recorded in each row are used to determine the target partition, and other bits are used for hash table exploration; when the hash table data is all in memory, the overhead of partitioning is very small, about only 10%; when there is memory pressure, some partitions may be output to disk, thus freeing up memory so that other partitions can complete calculations;</em></p>
+<p> </p>
+<h4>1 Runtime Code Generation</h4>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201901/1509647-20190130173636952-1384623455.png"/></p>
+<p>Runtime code generation using LLVM is one of the techniques employed extensively by Impala's backend to improve execution times. Performance gains of 5x or more are typical for representative workloads.</p>
+<p><em>Runtime code generation based on LLVM can improve performance by 5 times;</em></p>
+<h4>2 I/O Management</h4>
+<p>Efficiently retrieving data from HDFS is a challenge for all SQL-on-Hadoop systems. In order to perform data scans from both disk and memory at or near hardware speed, Impala uses an HDFS feature called short-circuit local reads to bypass the DataNode protocol when reading from local disk. Impala can read at almost disk bandwidth (approx.100MB/s per disk) and is typically able to saturate all available disks. We have measured that with 12 disks, Impala is capable of sustaining I/O at 1.2GB/sec. Furthermore, HDFS caching allows Impala to access memory-resident data at memory bus speed and also saves CPU cycles as there is no need to copy data blocks and/or checksum them.<br/>The effectiveness of Impala's I/O manager was that Impala's read throughput is from 4x up to 8x higher than the other tested systems.</p>
+<p><em>Impala uses short-circuit local reads to bypass the DataNode and read the local disk directly, which allows Impala to use disk bandwidth (100M/s per disk) to read;</em><br/><em>Impala's efficient IO management can improve read performance by 4 to 8 times;</em></p>
+<h4>3 Storage Formats</h4>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201901/1509647-20190130173659695-491306844.png"/></p>
+<p>Impala supports most popular file formats: Avro, RC, Sequence, plain text, and Parquet. These formats can be combined with diffierent compression algorithms, such as snappy, gzip, bz2.<br/>In most use cases we recommend using Apache Parquet, a state-of-the-art, open-source columnar file format offering both high compression and high scan efficiency. It was co-developed by Twitter and Cloudera with contributions from Criteo, Stripe, Berkeley AMPlab, and LinkedIn. In addition to Impala, most Hadoop-based processing frameworks including Hive, Pig, MapReduce and Cascading are able to process Parquet.<br/>Parquet consistently outperforms by up to 5x all the other formats.</p>
+<p><em>Impala supports most common file formats and compression algorithms;</em><br/><em>Parquet can improve performance by 5 times;</em></p>
+<p> </p>
+<p>Comparison with other engines</p>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201901/1509647-20190130181543794-1064129682.png"/></p>
+<p> </p>
+<p>volcano：https://paperhub.s3.amazonaws.com/dace52a42c07f7f8348b08dc2b186061.pdf</p>
+<p> </p>
+<p>Reference: http://cidrdb.org/cidr2015/Papers/CIDR15_Paper28.pdf</p>
+<p> </p>
+</div>
+</div>
+<!-- Post Footer -->
+<div class="post-footer">
+<div class="post-navigation">
+<a class="nav-button" href="../blog.html">← Back to Home</a>
+<a class="nav-button" href="0238.html">Next Post →</a>
+</div>
+</div>
+</article>
+</div>
+</body>
+</html>

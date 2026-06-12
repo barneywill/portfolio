@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Remove \r in Windows</title>
+<link href="../css/style3.css" rel="stylesheet"/>
+</head>
+<body>
+<div class="container">
+<!-- Header Navigation -->
+<div class="header">
+<h1><a href="../blog.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+</div>
+<!-- Post Container -->
+<article class="post">
+<!-- Post Header -->
+<div class="post-header">
+<h1>Remove \r in Windows</h1>
+<div class="post-meta">
+<div class="post-meta-item">
+<span class="meta-icon">📅</span>
+<span>May 30, 2019</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">📖</span>
+<span>1 min read</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">👁️</span>
+<span>2727 views</span>
+</div>
+</div>
+</div>
+<!-- Post Content -->
+<div class="post-content">
+<div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<p>For Linux, change the line to \n, for Windows, change the line to \r\n. If the Shell script edited in the Windows environment is executed under Linux, an error will be reported:</p>
+<blockquote>
+<p>line 2: $'\r': command not found</p>
+</blockquote>
+<p>Check</p>
+<blockquote>
+<p># cat - A test.sh <br/>#!/bin/sh^M$<br/>^M$<br/>...</p>
+</blockquote>
+<p>Solution:</p>
+<p>vi</p>
+<p>1) Replacement</p>
+<blockquote>
+<p>:%s/^M//g</p>
+</blockquote>
+<p>2) Set file format</p>
+<blockquote>
+<p>:set fileformat=unix </p>
+</blockquote>
+<p> </p>
+</div>
+</div>
+<!-- Post Footer -->
+<div class="post-footer">
+<div class="post-navigation">
+<a class="nav-button" href="../blog.html">← Back to Home</a>
+<a class="nav-button" href="0127.html">Next Post →</a>
+</div>
+</div>
+</article>
+</div>
+</body>
+</html>

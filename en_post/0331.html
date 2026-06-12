@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>When creating a Hive table, should I use an internal table or an external table?</title>
+<link href="../css/style3.css" rel="stylesheet"/>
+</head>
+<body>
+<div class="container">
+<!-- Header Navigation -->
+<div class="header">
+<h1><a href="../blog.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+</div>
+<!-- Post Container -->
+<article class="post">
+<!-- Post Header -->
+<div class="post-header">
+<h1>When creating a Hive table, should I use an internal table or an external table?</h1>
+<div class="post-meta">
+<div class="post-meta-item">
+<span class="meta-icon">📅</span>
+<span>December 12, 2018</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">📖</span>
+<span>1 min read</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">👁️</span>
+<span>907 views</span>
+</div>
+</div>
+</div>
+<!-- Post Content -->
+<div class="post-content">
+<div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<p>One of the main differences between internal tables and external tables is whether the underlying files will be automatically deleted when deleting a table or partition. Internal tables will be automatically deleted, but external tables will not be automatically deleted. Therefore, the basic data table must use an external table. Even if the table or partition is accidentally deleted, it can be easily restored.</p>
+<p>Although external tables can be restored, it is tiring to restore partitions one by one. If you have many partitions or multiple levels of partitions,</p>
+<blockquote>
+<p>alter table test_table add partition (partition_key='partition_value')</p>
+</blockquote>
+<p>An easier way is to execute</p>
+<blockquote>
+<p>msck repair table test_table</p>
+</blockquote>
+<p>Restore all partitions with one click</p>
+<p> </p>
+</div>
+</div>
+<!-- Post Footer -->
+<div class="post-footer">
+<div class="post-navigation">
+<a class="nav-button" href="../blog.html">← Back to Home</a>
+<a class="nav-button" href="0332.html">Next Post →</a>
+</div>
+</div>
+</article>
+</div>
+</body>
+</html>

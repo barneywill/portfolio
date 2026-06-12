@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Logstash 4 - High Availability</title>
+<link href="../css/style3.css" rel="stylesheet"/>
+</head>
+<body>
+<div class="container">
+<!-- Header Navigation -->
+<div class="header">
+<h1><a href="../blog.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+</div>
+<!-- Post Container -->
+<article class="post">
+<!-- Post Header -->
+<div class="post-header">
+<h1>Logstash 4 - High Availability</h1>
+<div class="post-meta">
+<div class="post-meta-item">
+<span class="meta-icon">📅</span>
+<span>April 08, 2019</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">📖</span>
+<span>4 min read</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">👁️</span>
+<span>2857 views</span>
+</div>
+</div>
+</div>
+<!-- Post Content -->
+<div class="post-content">
+<div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<p>The high availability of Logstash means that no data is lost (the premise is that the server can be restored after being unavailable for a short period of time, such as restarting the server or restarting the process). There are two specific aspects:</p>
+<ul>
+<li>Process restart (server restart)</li>
+<li>Event message processing failed</li>
+</ul>
+<p>The corresponding solution in Logstash is:</p>
+<ul>
+<li>Persistent Queues</li>
+<li>Dead Letter Queues</li>
+</ul>
+<p>Not enabled by default;</p>
+<p>In addition, automatic restart of the process can be achieved through Docker, marathon or systemd;</p>
+<p>As data flows through the event processing pipeline, Logstash may encounter situations that prevent it from delivering events to the configured output. For example, the data might contain unexpected data types, or Logstash might terminate abnormally.<br/>To guard against data loss and ensure that events flow through the pipeline without interruption, Logstash provides the following data resiliency features.</p>
+<ul>
+<li>Persistent Queues protect against data loss by storing events in an internal queue on disk.</li>
+<li>Dead Letter Queues provide on-disk storage for events that Logstash is unable to process. You can easily reprocess events in the dead letter queue by using the dead_letter_queue input plugin.</li>
+</ul>
+<p>These resiliency features are disabled by default.</p>
+<h1>1 Persistent Queues</h1>
+<p>By default, Logstash uses in-memory bounded queues between pipeline stages (inputs → pipeline workers) to buffer events. The size of these in-memory queues is fixed and not configurable. If Logstash experiences a temporary machine failure, the contents of the in-memory queue will be lost. Temporary machine failures are scenarios where Logstash or its host machine are terminated abnormally but are capable of being restarted.<br/>In order to protect against data loss during abnormal termination, Logstash has a persistent queue feature which will store the message queue on disk. Persistent queues provide durability of data within Logstash.</p>
+<p>By default, Logstash uses a memory queue to buffer event messages. Once the process is restarted, all data in the memory queue will be lost;</p>
+<h2>benefit</h2>
+<ul>
+<li>Absorbs bursts of events without needing an external buffering mechanism like Redis or Apache Kafka.</li>
+<li>Provides an at-least-once delivery guarantee against message loss during a normal shutdown as well as when Logstash is terminated abnormally. </li>
+</ul>
+<h2>accomplish</h2>
+<p>The queue sits between the input and filter stages in the same process:</p>
+<blockquote>
+<p>input → queue → filter + output</p>
+</blockquote>
+<p>When an input has events ready to process, it writes them to the queue. When the write to the queue is successful, the input can send an acknowledgement to its data source.<br/>When processing events from the queue, Logstash acknowledges events as completed, within the queue, only after filters and outputs have completed. The queue keeps a record of events that have been processed by the pipeline. An event is recorded as processed (in this document, called "acknowledged" or "ACKed") if, and only if, the event has been processed completely by the Logstash pipeline.</p>
+<h2>Configuration</h2>
+<blockquote>
+<p>queue.type: persisted <br/>path.queue: "path/to/data/persistent_queue"</p>
+</blockquote>
+<h2>Other configurations</h2>
+<blockquote>
+<p>queue.page_capacity<br/>queue.drain<br/>queue.max_events<br/>queue.max_bytes</p>
+</blockquote>
+<h2>Go further</h2>
+<p>First, the queue itself is a set of pages. There are two kinds of pages: head pages and tail pages. The head page is where new events are written. There is only one head page. When the head page is of a certain size (see queue.page_capacity), it becomes a tail page, and a new head page is created. Tail pages are immutable, and the head page is append-only. Second, the queue records details about itself (pages, acknowledgements, etc) in a separate file called a checkpoint file.<br/>When recording a checkpoint, Logstash will:</p>
+<p>Call fsync on the head page.<br/>Atomically write to disk the current state of the queue.<br/>The process of checkpointing is atomic, which means any update to the file is saved if successful.</p>
+<p>If Logstash is terminated, or if there is a hardware-level failure, any data that is buffered in the persistent queue, but not yet checkpointed, is lost.<br/>You can force Logstash to checkpoint more frequently by setting queue.checkpoint.writes. This setting specifies the maximum number of events that may be written to disk before forcing a checkpoint. The default is 1024. To ensure maximum durability and avoid losing data in the persistent queue, you can set queue.checkpoint.writes: 1 to force a checkpoint after each event is written. Keep in mind that disk writes have a resource cost. Setting this value to 1 can severely impact performance.</p>
+<p>Even if the persistent queue is turned on, there may be data loss. The influencing factor is the flush interval (checkpoint). The default is to flush once for 1024 events. If set to 1, each event will be flushed once. Although no messages are lost, it will have a greater impact on performance;</p>
+<blockquote>
+<p>queue.checkpoint.writes: 1</p>
+</blockquote>
+<h1><br/>2 Dead Letter Queues</h1>
+<p>By default, when Logstash encounters an event that it cannot process because the data contains a mapping error or some other issue, the Logstash pipeline either hangs or drops the unsuccessful event. In order to protect against data loss in this situation, you can configure Logstash to write unsuccessful events to a dead letter queue instead of dropping them.<br/>Each event written to the dead letter queue includes the original event, along with metadata that describes the reason the event could not be processed, information about the plugin that wrote the event, and the timestamp for when the event entered the dead letter queue.<br/>To process events in the dead letter queue, you simply create a Logstash pipeline configuration that uses the dead_letter_queue input plugin to read from the queue.</p>
+<p>When Logstash encounters data that cannot be processed (mapping errors, etc.), Logstash will either get stuck or discard unsuccessful events; in order to avoid data loss in this case, Logstash can be configured to write unsuccessful events to a dead letter queue instead of discarding them directly;</p>
+<h2>Usage restrictions</h2>
+<p>The dead letter queue feature is currently supported for the elasticsearch output only. Additionally, The dead letter queue is only used where the response code is either 400 or 404, both of which indicate an event that cannot be retried. Support for additional outputs will be available in future releases of the Logstash plugins. Before configuring Logstash to use this feature, refer to the output plugin documentation to verify that the plugin supports the dead letter queue feature.</p>
+<p>Currently dead letter queue only supports Elasticsearch output; other outputs will be supported in the future;</p>
+<h2>Configuration</h2>
+<blockquote>
+<p>dead_letter_queue.enable: true<br/>path.dead_letter_queue: "path/to/data/dead_letter_queue"</p>
+</blockquote>
+<p> </p>
+<p>refer to:<br/>https://www.elastic.co/guide/en/logstash/current/resiliency.html<br/>https://www.elastic.co/guide/en/logstash/current/persistent-queues.html<br/>https://www.elastic.co/guide/en/logstash/current/dead-letter-queues.html</p>
+</div>
+</div>
+<!-- Post Footer -->
+<div class="post-footer">
+<div class="post-navigation">
+<a class="nav-button" href="../blog.html">← Back to Home</a>
+<a class="nav-button" href="0150.html">Next Post →</a>
+</div>
+</div>
+</article>
+</div>
+</body>
+</html>

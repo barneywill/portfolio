@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>scala akka actor</title>
+<link href="../css/style3.css" rel="stylesheet"/>
+</head>
+<body>
+<div class="container">
+<!-- Header Navigation -->
+<div class="header">
+<h1><a href="../blog.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+</div>
+<!-- Post Container -->
+<article class="post">
+<!-- Post Header -->
+<div class="post-header">
+<h1>scala akka actor</h1>
+<div class="post-meta">
+<div class="post-meta-item">
+<span class="meta-icon">📅</span>
+<span>June 22, 2019</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">📖</span>
+<span>2 min read</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">👁️</span>
+<span>424 views</span>
+</div>
+</div>
+</div>
+<!-- Post Content -->
+<div class="post-content">
+<div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<div class="cnblogs_code">
+<pre><span style="color: rgba(0, 0, 255, 1)">import</span><span style="color: rgba(0, 0, 0, 1)"> java.util.concurrent.{ExecutorService, Executors, TimeUnit}
+</span><span style="color: rgba(0, 0, 255, 1)">import</span><span style="color: rgba(0, 0, 0, 1)"> akka.actor.{Actor, ActorSystem, Props}
+</span><span style="color: rgba(0, 0, 255, 1)">import</span><span style="color: rgba(0, 0, 0, 1)"> akka.util.Timeout
+</span><span style="color: rgba(0, 0, 255, 1)">import</span><span style="color: rgba(0, 0, 0, 1)"> scala.concurrent.{Await, ExecutionContext}
+</span><span style="color: rgba(0, 0, 255, 1)">import</span> scala.concurrent.duration.Duration</pre>
+</div>
+<p> </p>
+<h1>Runnable</h1>
+<p>No return value</p>
+<div class="cnblogs_code">
+<pre>  <span style="color: rgba(0, 0, 255, 1)">class</span><span style="color: rgba(0, 0, 0, 1)"> TestActor extends Actor {
+    </span><span style="color: rgba(0, 0, 255, 1)">def</span> receive =<span style="color: rgba(0, 0, 0, 1)"> {
+      case arg </span>=&gt;<span style="color: rgba(0, 0, 0, 1)"> {
+        println(</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">got : </span><span style="color: rgba(128, 0, 0, 1)">"</span> +<span style="color: rgba(0, 0, 0, 1)"> arg)
+        Thread.sleep(</span>1000<span style="color: rgba(0, 0, 0, 1)">)
+      }
+    }
+  }</span></pre>
+</div>
+<h1>Synchronous call</h1>
+<div class="cnblogs_code">
+<pre>val system = ActorSystem("ActorSystem")<br/>val actor = system.actorOf(Props(new TestActor), "TestActor")</pre>
+<pre>actor ! "whatever"</pre>
+</div>
+<h1>Callable</h1>
+<p>There is a return value</p>
+<div class="cnblogs_code">
+<pre>  <span style="color: rgba(0, 0, 255, 1)">class</span><span style="color: rgba(0, 0, 0, 1)"> TestActor extends Actor {
+    </span><span style="color: rgba(0, 0, 255, 1)">def</span> receive =<span style="color: rgba(0, 0, 0, 1)"> {
+      case arg </span>=&gt;<span style="color: rgba(0, 0, 0, 1)"> {
+        println(</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">got : </span><span style="color: rgba(128, 0, 0, 1)">"</span> +<span style="color: rgba(0, 0, 0, 1)"> arg)
+        Thread.sleep(</span>1000<span style="color: rgba(0, 0, 0, 1)">)
+        sender ! </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">hello : </span><span style="color: rgba(128, 0, 0, 1)">"</span> +<span style="color: rgba(0, 0, 0, 1)"> arg
+      }
+    }
+  }</span></pre>
+</div>
+<h1>asynchronous call</h1>
+<div class="cnblogs_code">
+<pre>    val system = ActorSystem("ActorSystem")<br/>    val actor = system.actorOf(Props(new TestActor), "TestActor")</pre>
+<pre>    implicit val timeout = Timeout(10000<span style="color: rgba(0, 0, 0, 1)">, TimeUnit.SECONDS)
+    </span><span style="color: rgba(0, 0, 255, 1)">import</span><span style="color: rgba(0, 0, 0, 1)"> akka.pattern._
+<br/>    //1
+    val feature </span>=<span style="color: rgba(0, 0, 0, 1)"> actor ? "whatever"
+    </span><span style="color: rgba(0, 0, 255, 1)">while</span> (!feature.isCompleted) Thread.sleep(1000<span style="color: rgba(0, 0, 0, 1)">)
+    println(feature.isCompleted)
+    </span><span style="color: rgba(0, 0, 255, 1)">if</span> (feature.isCompleted) {println(feature.value.get.isSuccess + <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">, </span><span style="color: rgba(128, 0, 0, 1)">"</span> +<span style="color: rgba(0, 0, 0, 1)"> feature.value.get.get);}
+<br/>    //2
+    println(Await.result(feature, Duration.create(</span>1, TimeUnit.SECONDS)))</pre>
+</div>
+<h1>More</h1>
+<p>Concurrency control</p>
+<div class="cnblogs_code">
+<pre>  val ec = ExecutionContext.fromExecutorService(Executors.newFixedThreadPool(100<span style="color: rgba(0, 0, 0, 1)">))
+  val system </span>= ActorSystem(<span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">ActorSystem</span><span style="color: rgba(128, 0, 0, 1)">"</span>, None, None, Option(ec))</pre>
+</div>
+<p>timing</p>
+<div class="cnblogs_code">
+<pre>    val system = ActorSystem(<span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">ActorSystem</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">)
+    system.scheduler.schedule(Duration.create(</span>1, TimeUnit.SECONDS), Duration.create(1<span style="color: rgba(0, 0, 0, 1)">, TimeUnit.SECONDS))({
+      println(</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">trigger : </span><span style="color: rgba(128, 0, 0, 1)">"</span> +<span style="color: rgba(0, 0, 0, 1)"> System.currentTimeMillis)
+    })(ec)</span></pre>
+</div>
+<p> </p>
+<p>Note that Actor is equivalent to a single instance and single thread in Java, and concurrency can be controlled through multiple Actors.</p>
+</div>
+</div>
+<!-- Post Footer -->
+<div class="post-footer">
+<div class="post-navigation">
+<a class="nav-button" href="../blog.html">← Back to Home</a>
+<a class="nav-button" href="0107.html">Next Post →</a>
+</div>
+</div>
+</article>
+</div>
+</body>
+</html>

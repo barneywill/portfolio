@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Flume 2 - Sink code analysis</title>
+<link href="../css/style3.css" rel="stylesheet"/>
+</head>
+<body>
+<div class="container">
+<!-- Header Navigation -->
+<div class="header">
+<h1><a href="../blog.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+</div>
+<!-- Post Container -->
+<article class="post">
+<!-- Post Header -->
+<div class="post-header">
+<h1>Flume 2 - Sink code analysis</h1>
+<div class="post-meta">
+<div class="post-meta-item">
+<span class="meta-icon">📅</span>
+<span>March 21, 2019</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">📖</span>
+<span>5 min read</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">👁️</span>
+<span>1189 views</span>
+</div>
+</div>
+</div>
+<!-- Post Content -->
+<div class="post-content">
+<div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<p>Flume sink core class structure</p>
+<h1>1 Core interface Sink</h1>
+<p>org.apache.flume.Sink</p>
+<div class="cnblogs_code">
+<pre>  <span style="color: rgba(0, 128, 0, 1)">/**</span><span style="color: rgba(0, 128, 0, 1)">
+   * &lt;p&gt;Requests the sink to attempt to consume data from attached channel&lt;/p&gt;
+   * &lt;p&gt;&lt;strong&gt;Note&lt;/strong&gt;: This method should be consuming from the channel
+   * within the bounds of a Transaction. On successful delivery, the transaction
+   * should be committed, and on failure it should be rolled back.
+   * </span><span style="color: rgba(128, 128, 128, 1)">@return</span><span style="color: rgba(0, 128, 0, 1)"> READY if 1 or more Events were successfully delivered, BACKOFF if
+   * no data could be retrieved from the channel feeding this sink
+   * </span><span style="color: rgba(128, 128, 128, 1)">@throws</span><span style="color: rgba(0, 128, 0, 1)"> EventDeliveryException In case of any kind of failure to
+   * deliver data to the next hop destination.
+   </span><span style="color: rgba(0, 128, 0, 1)">*/</span>
+  <span style="color: rgba(0, 0, 255, 1)">public</span> Status process() <span style="color: rgba(0, 0, 255, 1)">throws</span><span style="color: rgba(0, 0, 0, 1)"> EventDeliveryException;
+
+  </span><span style="color: rgba(0, 0, 255, 1)">public</span> <span style="color: rgba(0, 0, 255, 1)">static</span> <span style="color: rgba(0, 0, 255, 1)">enum</span><span style="color: rgba(0, 0, 0, 1)"> Status {
+    READY, BACKOFF
+  }</span></pre>
+</div>
+<p>Process is the core interface, and the return value is status. There are only two: ready and backoff. The caller will handle it accordingly based on the return value, as you will see later;<br/>This interface is also the interface that needs to be implemented to extend Flume sink, such as KuduSink;</p>
+<p> </p>
+<h1>2 sink package</h1>
+<p>org.apache.flume.SinkProcessor</p>
+<div class="cnblogs_code">
+<pre><span style="color: rgba(0, 128, 0, 1)">/**</span><span style="color: rgba(0, 128, 0, 1)">
+ * &lt;p&gt;
+ * Interface for a device that allows abstraction of the behavior of multiple
+ * sinks, always assigned to a SinkRunner
+ * &lt;/p&gt;
+ * &lt;p&gt;
+ * A sink processors {</span><span style="color: rgba(128, 128, 128, 1)">@link</span><span style="color: rgba(0, 128, 0, 1)"> SinkProcessor#process()} method will only be
+ * accessed by a single runner thread. However configuration methods
+ * such as {</span><span style="color: rgba(128, 128, 128, 1)">@link</span><span style="color: rgba(0, 128, 0, 1)"> Configurable#configure} may be concurrently accessed.
+ *
+ * </span><span style="color: rgba(128, 128, 128, 1)">@see</span><span style="color: rgba(0, 128, 0, 1)"> org.apache.flume.Sink
+ * </span><span style="color: rgba(128, 128, 128, 1)">@see</span><span style="color: rgba(0, 128, 0, 1)"> org.apache.flume.SinkRunner
+ * </span><span style="color: rgba(128, 128, 128, 1)">@see</span><span style="color: rgba(0, 128, 0, 1)"> org.apache.flume.sink.SinkGroup
+ </span><span style="color: rgba(0, 128, 0, 1)">*/</span>
+<span style="color: rgba(0, 0, 255, 1)">public</span> <span style="color: rgba(0, 0, 255, 1)">interface</span> SinkProcessor <span style="color: rgba(0, 0, 255, 1)">extends</span><span style="color: rgba(0, 0, 0, 1)"> LifecycleAware, Configurable {
+  </span><span style="color: rgba(0, 128, 0, 1)">/**</span><span style="color: rgba(0, 128, 0, 1)">
+   * &lt;p&gt;Handle a request to poll the owned sinks.&lt;/p&gt;
+   *
+   * &lt;p&gt;The processor is expected to call {</span><span style="color: rgba(128, 128, 128, 1)">@linkplain</span><span style="color: rgba(0, 128, 0, 1)"> Sink#process()} on
+   *  whatever sink(s) appropriate, handling failures as appropriate and
+   *  throwing {</span><span style="color: rgba(128, 128, 128, 1)">@link</span><span style="color: rgba(0, 128, 0, 1)"> EventDeliveryException} when there is a failure to
+   *  deliver any events according to the delivery policy defined by the
+   *  sink processor implementation. See specific implementations of this
+   *  interface for delivery behavior and policies.&lt;/p&gt;
+   *
+   * </span><span style="color: rgba(128, 128, 128, 1)">@return</span><span style="color: rgba(0, 128, 0, 1)"> Returns {</span><span style="color: rgba(128, 128, 128, 1)">@code</span><span style="color: rgba(0, 128, 0, 1)"> READY} if events were successfully consumed,
+   * or {</span><span style="color: rgba(128, 128, 128, 1)">@code</span><span style="color: rgba(0, 128, 0, 1)"> BACKOFF} if no events were available in the channel to consume.
+   * </span><span style="color: rgba(128, 128, 128, 1)">@throws</span><span style="color: rgba(0, 128, 0, 1)"> EventDeliveryException if the behavior guaranteed by the processor
+   * couldn't be carried out.
+   </span><span style="color: rgba(0, 128, 0, 1)">*/</span><span style="color: rgba(0, 0, 0, 1)">
+  Status process() </span><span style="color: rgba(0, 0, 255, 1)">throws</span> EventDeliveryException;</pre>
+</div>
+<p>This class is responsible for encapsulating the processing of a single sink or sink group. Commonly used subclasses are:</p>
+<p>1) Single sink</p>
+<p>org.apache.flume.sink.DefaultSinkProcessor</p>
+<div class="cnblogs_code">
+<pre><span style="color: rgba(0, 0, 0, 1)">  @Override
+  </span><span style="color: rgba(0, 0, 255, 1)">public</span> Status process() <span style="color: rgba(0, 0, 255, 1)">throws</span><span style="color: rgba(0, 0, 0, 1)"> EventDeliveryException {
+    </span><span style="color: rgba(0, 0, 255, 1)">return</span><span style="color: rgba(0, 0, 0, 1)"> sink.process();
+  }</span></pre>
+</div>
+<p>The process of DefaultSinkProcessor will directly call the process of the internal sink;</p>
+<p>2）sink group</p>
+<p>org.apache.flume.sink.LoadBalancingSinkProcessor<br/>org.apache.flume.sink.FailoverSinkProcessor.FailedSink</p>
+<p> </p>
+<h1>3 The caller of sink is SinkRunner</h1>
+<p>org.apache.flume.SinkRunner</p>
+<div class="cnblogs_code">
+<pre><span style="color: rgba(0, 128, 0, 1)">/**</span><span style="color: rgba(0, 128, 0, 1)">
+ * &lt;p&gt;
+ * A driver for {</span><span style="color: rgba(128, 128, 128, 1)">@linkplain</span><span style="color: rgba(0, 128, 0, 1)"> Sink sinks} that polls them, attempting to
+ * {</span><span style="color: rgba(128, 128, 128, 1)">@linkplain</span><span style="color: rgba(0, 128, 0, 1)"> Sink#process() process} events if any are available in the
+ * {</span><span style="color: rgba(128, 128, 128, 1)">@link</span><span style="color: rgba(0, 128, 0, 1)"> Channel}.
+ * &lt;/p&gt;
+ *
+ * &lt;p&gt;
+ * Note that, unlike {</span><span style="color: rgba(128, 128, 128, 1)">@linkplain</span><span style="color: rgba(0, 128, 0, 1)"> Source sources}, all sinks are polled.
+ * &lt;/p&gt;
+ *
+ * </span><span style="color: rgba(128, 128, 128, 1)">@see</span><span style="color: rgba(0, 128, 0, 1)"> org.apache.flume.Sink
+ * </span><span style="color: rgba(128, 128, 128, 1)">@see</span><span style="color: rgba(0, 128, 0, 1)"> org.apache.flume.SourceRunner
+ </span><span style="color: rgba(0, 128, 0, 1)">*/</span>
+<span style="color: rgba(0, 0, 255, 1)">public</span> <span style="color: rgba(0, 0, 255, 1)">class</span> SinkRunner <span style="color: rgba(0, 0, 255, 1)">implements</span><span style="color: rgba(0, 0, 0, 1)"> LifecycleAware {
+...
+  </span><span style="color: rgba(0, 0, 255, 1)">private</span> <span style="color: rgba(0, 0, 255, 1)">static</span> <span style="color: rgba(0, 0, 255, 1)">final</span> <span style="color: rgba(0, 0, 255, 1)">long</span> backoffSleepIncrement = 1000<span style="color: rgba(0, 0, 0, 1)">;
+  </span><span style="color: rgba(0, 0, 255, 1)">private</span> <span style="color: rgba(0, 0, 255, 1)">static</span> <span style="color: rgba(0, 0, 255, 1)">final</span> <span style="color: rgba(0, 0, 255, 1)">long</span> maxBackoffSleep = 5000<span style="color: rgba(0, 0, 0, 1)">;
+
+org.apache.flume.SinkRunner.PollingRunner
+
+  </span><span style="color: rgba(0, 0, 255, 1)">public</span> <span style="color: rgba(0, 0, 255, 1)">static</span> <span style="color: rgba(0, 0, 255, 1)">class</span> PollingRunner <span style="color: rgba(0, 0, 255, 1)">implements</span><span style="color: rgba(0, 0, 0, 1)"> Runnable {
+
+    </span><span style="color: rgba(0, 0, 255, 1)">private</span><span style="color: rgba(0, 0, 0, 1)"> SinkProcessor policy;
+    </span><span style="color: rgba(0, 0, 255, 1)">private</span><span style="color: rgba(0, 0, 0, 1)"> AtomicBoolean shouldStop;
+    </span><span style="color: rgba(0, 0, 255, 1)">private</span><span style="color: rgba(0, 0, 0, 1)"> CounterGroup counterGroup;
+
+    @Override
+    </span><span style="color: rgba(0, 0, 255, 1)">public</span> <span style="color: rgba(0, 0, 255, 1)">void</span><span style="color: rgba(0, 0, 0, 1)"> run() {
+      logger.debug(</span>"Polling sink runner starting"<span style="color: rgba(0, 0, 0, 1)">);
+
+      </span><span style="color: rgba(0, 0, 255, 1)">while</span> (!<span style="color: rgba(0, 0, 0, 1)">shouldStop.get()) {
+        </span><span style="color: rgba(0, 0, 255, 1)">try</span><span style="color: rgba(0, 0, 0, 1)"> {
+          </span><span style="color: rgba(0, 0, 255, 1)">if</span><span style="color: rgba(0, 0, 0, 1)"> (policy.process().equals(Sink.Status.BACKOFF)) {
+            counterGroup.incrementAndGet(</span>"runner.backoffs"<span style="color: rgba(0, 0, 0, 1)">);
+
+            Thread.sleep(Math.min(
+                counterGroup.incrementAndGet(</span>"runner.backoffs.consecutive"<span style="color: rgba(0, 0, 0, 1)">)
+                </span>*<span style="color: rgba(0, 0, 0, 1)"> backoffSleepIncrement, maxBackoffSleep));
+          } </span><span style="color: rgba(0, 0, 255, 1)">else</span><span style="color: rgba(0, 0, 0, 1)"> {
+            counterGroup.set(</span>"runner.backoffs.consecutive", 0L<span style="color: rgba(0, 0, 0, 1)">);
+          }
+        } </span><span style="color: rgba(0, 0, 255, 1)">catch</span><span style="color: rgba(0, 0, 0, 1)"> (InterruptedException e) {
+          logger.debug(</span>"Interrupted while processing an event. Exiting."<span style="color: rgba(0, 0, 0, 1)">);
+          counterGroup.incrementAndGet(</span>"runner.interruptions"<span style="color: rgba(0, 0, 0, 1)">);
+        } </span><span style="color: rgba(0, 0, 255, 1)">catch</span><span style="color: rgba(0, 0, 0, 1)"> (Exception e) {
+          logger.error(</span>"Unable to deliver event. Exception follows."<span style="color: rgba(0, 0, 0, 1)">, e);
+          </span><span style="color: rgba(0, 0, 255, 1)">if</span> (e <span style="color: rgba(0, 0, 255, 1)">instanceof</span><span style="color: rgba(0, 0, 0, 1)"> EventDeliveryException) {
+            counterGroup.incrementAndGet(</span>"runner.deliveryErrors"<span style="color: rgba(0, 0, 0, 1)">);
+          } </span><span style="color: rgba(0, 0, 255, 1)">else</span><span style="color: rgba(0, 0, 0, 1)"> {
+            counterGroup.incrementAndGet(</span>"runner.errors"<span style="color: rgba(0, 0, 0, 1)">);
+          }
+          </span><span style="color: rgba(0, 0, 255, 1)">try</span><span style="color: rgba(0, 0, 0, 1)"> {
+            Thread.sleep(maxBackoffSleep);
+          } </span><span style="color: rgba(0, 0, 255, 1)">catch</span><span style="color: rgba(0, 0, 0, 1)"> (InterruptedException ex) {
+            Thread.currentThread().interrupt();
+          }
+        }
+      }
+      logger.debug(</span>"Polling runner exiting. Metrics:{}"<span style="color: rgba(0, 0, 0, 1)">, counterGroup);
+    }
+
+  }</span></pre>
+</div>
+<p>Regardless of whether the process returns backoff or throws an exception, it will sleep for a period of time, so once Flume's sink encounters a large amount of abnormal data or a custom sink returns backoff, it will be very slow;</p>
+<p> </p>
+</div>
+</div>
+<!-- Post Footer -->
+<div class="post-footer">
+<div class="post-navigation">
+<a class="nav-button" href="../blog.html">← Back to Home</a>
+<a class="nav-button" href="0167.html">Next Post →</a>
+</div>
+</div>
+</article>
+</div>
+</body>
+</html>

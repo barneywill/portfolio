@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Spark reports error ParquetEncodingException when writing Parquet data: empty fields are illegal, the field should be omited completely instead</title>
+<link href="../css/style3.css" rel="stylesheet"/>
+</head>
+<body>
+<div class="container">
+<!-- Header Navigation -->
+<div class="header">
+<h1><a href="../blog.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+</div>
+<!-- Post Container -->
+<article class="post">
+<!-- Post Header -->
+<div class="post-header">
+<h1>Spark reports error ParquetEncodingException when writing Parquet data: empty fields are illegal, the field should be omited completely instead</h1>
+<div class="post-meta">
+<div class="post-meta-item">
+<span class="meta-icon">📅</span>
+<span>December 18, 2018</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">📖</span>
+<span>10 min read</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">👁️</span>
+<span>4964 views</span>
+</div>
+</div>
+</div>
+<!-- Post Content -->
+<div class="post-content">
+<div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<p>spark 2.1.1</p>
+<p> </p>
+<p>Error when executing SQL in Spark</p>
+<blockquote>
+<p>insert overwrite table test_parquet_table select * from dummy</p>
+</blockquote>
+<p>The error is reported as follows:</p>
+<blockquote>
+<p>org.apache.spark.SparkException: Task failed while writing rows.<br/>        at org.apache.spark.sql.hive.SparkHiveDynamicPartitionWriterContainer.writeToFile(hiveWriterContainers.scala:333)<br/>        at org.apache.spark.sql.hive.execution.InsertIntoHiveTable$$anonfun$saveAsHiveFile$3.apply(InsertIntoHiveTable.scala:210)<br/>        at org.apache.spark.sql.hive.execution.InsertIntoHiveTable$$anonfun$saveAsHiveFile$3.apply(InsertIntoHiveTable.scala:210)<br/>        at org.apache.spark.scheduler.ResultTask.runTask(ResultTask.scala:87)<br/>        at org.apache.spark.scheduler.Task.run(Task.scala:99)<br/>        at org.apache.spark.executor.Executor$TaskRunner.run(Executor.scala:322)<br/>        at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1142)<br/>        at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:617)<br/>        at java.lang.Thread.run(Thread.java:745)<br/>Caused by: java.lang.RuntimeException: Parquet record is malformed: empty fields are illegal, the field should be ommited completely instead<br/>        at org.apache.hadoop.hive.ql.io.parquet.write.DataWritableWriter.write(DataWritableWriter.java:64)<br/>        at org.apache.hadoop.hive.ql.io.parquet.write.DataWritableWriteSupport.write(DataWritableWriteSupport.java:59)<br/>        at org.apache.hadoop.hive.ql.io.parquet.write.DataWritableWriteSupport.write(DataWritableWriteSupport.java:31)<br/>        at parquet.hadoop.InternalParquetRecordWriter.write(InternalParquetRecordWriter.java:121)<br/>        at parquet.hadoop.ParquetRecordWriter.write(ParquetRecordWriter.java:123)<br/>        at parquet.hadoop.ParquetRecordWriter.write(ParquetRecordWriter.java:42)<br/>        at org.apache.hadoop.hive.ql.io.parquet.write.ParquetRecordWriterWrapper.write(ParquetRecordWriterWrapper.java:111)<br/>        at org.apache.hadoop.hive.ql.io.parquet.write.ParquetRecordWriterWrapper.write(ParquetRecordWriterWrapper.java:124)<br/>        at org.apache.spark.sql.hive.SparkHiveDynamicPartitionWriterContainer.writeToFile(hiveWriterContainers.scala:321)<br/>        ... 8 more<br/>Caused by: parquet.io.ParquetEncodingException: empty fields are illegal, the field should be ommited completely instead<br/>        at parquet.io.MessageColumnIO$MessageColumnIORecordConsumer.endField(MessageColumnIO.java:244)<br/>        at org.apache.hadoop.hive.ql.io.parquet.write.DataWritableWriter.writeMap(DataWritableWriter.java:241)<br/>        at org.apache.hadoop.hive.ql.io.parquet.write.DataWritableWriter.writeValue(DataWritableWriter.java:116)<br/>        at org.apache.hadoop.hive.ql.io.parquet.write.DataWritableWriter.writeGroupFields(DataWritableWriter.java:89)<br/>        at org.apache.hadoop.hive.ql.io.parquet.write.DataWritableWriter.write(DataWritableWriter.java:60)<br/>        ... 16 more</p>
+</blockquote>
+<p>Follow up code<br/> <br/>org.apache.hadoop.hive.ql.io.parquet.write.DataWritableWriter</p>
+<div class="cnblogs_code">
+<pre>    <span style="color: rgba(0, 0, 255, 1)">private</span> <span style="color: rgba(0, 0, 255, 1)">void</span><span style="color: rgba(0, 0, 0, 1)"> writeMap(Object value, MapObjectInspector inspector, GroupType type) {
+        GroupType repeatedType </span>= type.getType(0<span style="color: rgba(0, 0, 0, 1)">).asGroupType();
+        </span><span style="color: rgba(0, 0, 255, 1)">this</span><span style="color: rgba(0, 0, 0, 1)">.recordConsumer.startGroup();
+        </span><span style="color: rgba(0, 0, 255, 1)">this</span>.recordConsumer.startField(repeatedType.getName(), 0<span style="color: rgba(0, 0, 0, 1)">);
+        Map</span>&lt;?, ?&gt; mapValues =<span style="color: rgba(0, 0, 0, 1)"> inspector.getMap(value);
+        Type keyType </span>= repeatedType.getType(0<span style="color: rgba(0, 0, 0, 1)">);
+        String keyName </span>=<span style="color: rgba(0, 0, 0, 1)"> keyType.getName();
+        ObjectInspector keyInspector </span>=<span style="color: rgba(0, 0, 0, 1)"> inspector.getMapKeyObjectInspector();
+        Type valuetype </span>= repeatedType.getType(1<span style="color: rgba(0, 0, 0, 1)">);
+        String valueName </span>=<span style="color: rgba(0, 0, 0, 1)"> valuetype.getName();
+        ObjectInspector valueInspector </span>=<span style="color: rgba(0, 0, 0, 1)"> inspector.getMapValueObjectInspector();
+
+        </span><span style="color: rgba(0, 0, 255, 1)">for</span>(Iterator i$ = mapValues.entrySet().iterator(); i$.hasNext(); <span style="color: rgba(0, 0, 255, 1)">this</span><span style="color: rgba(0, 0, 0, 1)">.recordConsumer.endGroup()) {
+            Entry</span>&lt;?, ?&gt; keyValue =<span style="color: rgba(0, 0, 0, 1)"> (Entry)i$.next();
+            </span><span style="color: rgba(0, 0, 255, 1)">this</span><span style="color: rgba(0, 0, 0, 1)">.recordConsumer.startGroup();
+            </span><span style="color: rgba(0, 0, 255, 1)">if</span> (keyValue != <span style="color: rgba(0, 0, 255, 1)">null</span><span style="color: rgba(0, 0, 0, 1)">) {
+                Object keyElement </span>=<span style="color: rgba(0, 0, 0, 1)"> keyValue.getKey();
+                </span><span style="color: rgba(0, 0, 255, 1)">this</span>.recordConsumer.startField(keyName, 0<span style="color: rgba(0, 0, 0, 1)">);
+                </span><span style="color: rgba(0, 0, 255, 1)">this</span><span style="color: rgba(0, 0, 0, 1)">.writeValue(keyElement, keyInspector, keyType);
+                </span><span style="color: rgba(0, 0, 255, 1)">this</span>.recordConsumer.endField(keyName, 0<span style="color: rgba(0, 0, 0, 1)">);
+                Object valueElement </span>=<span style="color: rgba(0, 0, 0, 1)"> keyValue.getValue();
+                </span><span style="color: rgba(0, 0, 255, 1)">if</span> (valueElement != <span style="color: rgba(0, 0, 255, 1)">null</span><span style="color: rgba(0, 0, 0, 1)">) {
+                    </span><span style="color: rgba(0, 0, 255, 1)">this</span>.recordConsumer.startField(valueName, 1<span style="color: rgba(0, 0, 0, 1)">);
+                    </span><span style="color: rgba(0, 0, 255, 1)">this</span><span style="color: rgba(0, 0, 0, 1)">.writeValue(valueElement, valueInspector, valuetype);
+                    </span><span style="color: rgba(0, 0, 255, 1)">this</span>.recordConsumer.endField(valueName, 1<span style="color: rgba(0, 0, 0, 1)">);
+                }
+            }
+        }
+
+        </span><span style="color: rgba(0, 0, 255, 1)">this</span>.recordConsumer.endField(repeatedType.getName(), 0<span style="color: rgba(0, 0, 0, 1)">);
+        </span><span style="color: rgba(0, 0, 255, 1)">this</span><span style="color: rgba(0, 0, 0, 1)">.recordConsumer.endGroup();
+    }
+
+    </span><span style="color: rgba(0, 0, 255, 1)">private</span> <span style="color: rgba(0, 0, 255, 1)">void</span><span style="color: rgba(0, 0, 0, 1)"> writeValue(Object value, ObjectInspector inspector, Type type) {
+        </span><span style="color: rgba(0, 0, 255, 1)">if</span><span style="color: rgba(0, 0, 0, 1)"> (type.isPrimitive()) {
+            </span><span style="color: rgba(0, 0, 255, 1)">this</span><span style="color: rgba(0, 0, 0, 1)">.checkInspectorCategory(inspector, Category.PRIMITIVE);
+            </span><span style="color: rgba(0, 0, 255, 1)">this</span><span style="color: rgba(0, 0, 0, 1)">.writePrimitive(value, (PrimitiveObjectInspector)inspector);
+        } </span><span style="color: rgba(0, 0, 255, 1)">else</span><span style="color: rgba(0, 0, 0, 1)"> {
+            GroupType groupType </span>=<span style="color: rgba(0, 0, 0, 1)"> type.asGroupType();
+            OriginalType originalType </span>=<span style="color: rgba(0, 0, 0, 1)"> type.getOriginalType();
+            </span><span style="color: rgba(0, 0, 255, 1)">if</span> (originalType != <span style="color: rgba(0, 0, 255, 1)">null</span> &amp;&amp;<span style="color: rgba(0, 0, 0, 1)"> originalType.equals(OriginalType.LIST)) {
+                </span><span style="color: rgba(0, 0, 255, 1)">this</span><span style="color: rgba(0, 0, 0, 1)">.checkInspectorCategory(inspector, Category.LIST);
+                </span><span style="color: rgba(0, 0, 255, 1)">this</span><span style="color: rgba(0, 0, 0, 1)">.writeArray(value, (ListObjectInspector)inspector, groupType);
+            } </span><span style="color: rgba(0, 0, 255, 1)">else</span> <span style="color: rgba(0, 0, 255, 1)">if</span> (originalType != <span style="color: rgba(0, 0, 255, 1)">null</span> &amp;&amp;<span style="color: rgba(0, 0, 0, 1)"> originalType.equals(OriginalType.MAP)) {
+                </span><span style="color: rgba(0, 0, 255, 1)">this</span><span style="color: rgba(0, 0, 0, 1)">.checkInspectorCategory(inspector, Category.MAP);
+                </span><span style="color: rgba(0, 0, 255, 1)">this</span><span style="color: rgba(0, 0, 0, 1)">.writeMap(value, (MapObjectInspector)inspector, groupType);
+            } </span><span style="color: rgba(0, 0, 255, 1)">else</span><span style="color: rgba(0, 0, 0, 1)"> {
+                </span><span style="color: rgba(0, 0, 255, 1)">this</span><span style="color: rgba(0, 0, 0, 1)">.checkInspectorCategory(inspector, Category.STRUCT);
+                </span><span style="color: rgba(0, 0, 255, 1)">this</span><span style="color: rgba(0, 0, 0, 1)">.writeGroup(value, (StructObjectInspector)inspector, groupType);
+            }
+        }
+
+    }
+    
+    </span><span style="color: rgba(0, 0, 255, 1)">private</span> <span style="color: rgba(0, 0, 255, 1)">void</span><span style="color: rgba(0, 0, 0, 1)"> writePrimitive(Object value, PrimitiveObjectInspector inspector) {
+        </span><span style="color: rgba(0, 0, 255, 1)">if</span> (value != <span style="color: rgba(0, 0, 255, 1)">null</span><span style="color: rgba(0, 0, 0, 1)">) {
+            </span><span style="color: rgba(0, 0, 255, 1)">switch</span><span style="color: rgba(0, 0, 0, 1)">(inspector.getPrimitiveCategory()) {
+            </span><span style="color: rgba(0, 0, 255, 1)">case</span><span style="color: rgba(0, 0, 0, 1)"> VOID:
+                </span><span style="color: rgba(0, 0, 255, 1)">return</span><span style="color: rgba(0, 0, 0, 1)">;
+            </span><span style="color: rgba(0, 0, 255, 1)">case</span><span style="color: rgba(0, 0, 0, 1)"> DOUBLE:
+                </span><span style="color: rgba(0, 0, 255, 1)">this</span><span style="color: rgba(0, 0, 0, 1)">.recordConsumer.addDouble(((DoubleObjectInspector)inspector).get(value));
+                </span><span style="color: rgba(0, 0, 255, 1)">break</span><span style="color: rgba(0, 0, 0, 1)">;
+            </span><span style="color: rgba(0, 0, 255, 1)">case</span><span style="color: rgba(0, 0, 0, 1)"> BOOLEAN:
+                </span><span style="color: rgba(0, 0, 255, 1)">this</span><span style="color: rgba(0, 0, 0, 1)">.recordConsumer.addBoolean(((BooleanObjectInspector)inspector).get(value));
+                </span><span style="color: rgba(0, 0, 255, 1)">break</span><span style="color: rgba(0, 0, 0, 1)">;
+            </span><span style="color: rgba(0, 0, 255, 1)">case</span><span style="color: rgba(0, 0, 0, 1)"> FLOAT:
+                </span><span style="color: rgba(0, 0, 255, 1)">this</span><span style="color: rgba(0, 0, 0, 1)">.recordConsumer.addFloat(((FloatObjectInspector)inspector).get(value));
+                </span><span style="color: rgba(0, 0, 255, 1)">break</span><span style="color: rgba(0, 0, 0, 1)">;
+            </span><span style="color: rgba(0, 0, 255, 1)">case</span><span style="color: rgba(0, 0, 0, 1)"> BYTE:
+                </span><span style="color: rgba(0, 0, 255, 1)">this</span><span style="color: rgba(0, 0, 0, 1)">.recordConsumer.addInteger(((ByteObjectInspector)inspector).get(value));
+                </span><span style="color: rgba(0, 0, 255, 1)">break</span><span style="color: rgba(0, 0, 0, 1)">;
+            </span><span style="color: rgba(0, 0, 255, 1)">case</span><span style="color: rgba(0, 0, 0, 1)"> INT:
+                </span><span style="color: rgba(0, 0, 255, 1)">this</span><span style="color: rgba(0, 0, 0, 1)">.recordConsumer.addInteger(((IntObjectInspector)inspector).get(value));
+                </span><span style="color: rgba(0, 0, 255, 1)">break</span><span style="color: rgba(0, 0, 0, 1)">;
+            </span><span style="color: rgba(0, 0, 255, 1)">case</span><span style="color: rgba(0, 0, 0, 1)"> LONG:
+                </span><span style="color: rgba(0, 0, 255, 1)">this</span><span style="color: rgba(0, 0, 0, 1)">.recordConsumer.addLong(((LongObjectInspector)inspector).get(value));
+                </span><span style="color: rgba(0, 0, 255, 1)">break</span><span style="color: rgba(0, 0, 0, 1)">;
+            </span><span style="color: rgba(0, 0, 255, 1)">case</span><span style="color: rgba(0, 0, 0, 1)"> SHORT:
+                </span><span style="color: rgba(0, 0, 255, 1)">this</span><span style="color: rgba(0, 0, 0, 1)">.recordConsumer.addInteger(((ShortObjectInspector)inspector).get(value));
+                </span><span style="color: rgba(0, 0, 255, 1)">break</span><span style="color: rgba(0, 0, 0, 1)">;
+            </span><span style="color: rgba(0, 0, 255, 1)">case</span><span style="color: rgba(0, 0, 0, 1)"> STRING:
+                String v </span>=<span style="color: rgba(0, 0, 0, 1)"> ((StringObjectInspector)inspector).getPrimitiveJavaObject(value);
+                </span><span style="color: rgba(0, 0, 255, 1)">this</span><span style="color: rgba(0, 0, 0, 1)">.recordConsumer.addBinary(Binary.fromString(v));
+                </span><span style="color: rgba(0, 0, 255, 1)">break</span><span style="color: rgba(0, 0, 0, 1)">;
+            </span><span style="color: rgba(0, 0, 255, 1)">case</span><span style="color: rgba(0, 0, 0, 1)"> CHAR:
+                String vChar </span>=<span style="color: rgba(0, 0, 0, 1)"> ((HiveCharObjectInspector)inspector).getPrimitiveJavaObject(value).getStrippedValue();
+                </span><span style="color: rgba(0, 0, 255, 1)">this</span><span style="color: rgba(0, 0, 0, 1)">.recordConsumer.addBinary(Binary.fromString(vChar));
+                </span><span style="color: rgba(0, 0, 255, 1)">break</span><span style="color: rgba(0, 0, 0, 1)">;
+            </span><span style="color: rgba(0, 0, 255, 1)">case</span><span style="color: rgba(0, 0, 0, 1)"> VARCHAR:
+                String vVarchar </span>=<span style="color: rgba(0, 0, 0, 1)"> ((HiveVarcharObjectInspector)inspector).getPrimitiveJavaObject(value).getValue();
+                </span><span style="color: rgba(0, 0, 255, 1)">this</span><span style="color: rgba(0, 0, 0, 1)">.recordConsumer.addBinary(Binary.fromString(vVarchar));
+                </span><span style="color: rgba(0, 0, 255, 1)">break</span><span style="color: rgba(0, 0, 0, 1)">;
+            </span><span style="color: rgba(0, 0, 255, 1)">case</span><span style="color: rgba(0, 0, 0, 1)"> BINARY:
+                </span><span style="color: rgba(0, 0, 255, 1)">byte</span>[] vBinary =<span style="color: rgba(0, 0, 0, 1)"> ((BinaryObjectInspector)inspector).getPrimitiveJavaObject(value);
+                </span><span style="color: rgba(0, 0, 255, 1)">this</span><span style="color: rgba(0, 0, 0, 1)">.recordConsumer.addBinary(Binary.fromByteArray(vBinary));
+                </span><span style="color: rgba(0, 0, 255, 1)">break</span><span style="color: rgba(0, 0, 0, 1)">;
+            </span><span style="color: rgba(0, 0, 255, 1)">case</span><span style="color: rgba(0, 0, 0, 1)"> TIMESTAMP:
+                Timestamp ts </span>=<span style="color: rgba(0, 0, 0, 1)"> ((TimestampObjectInspector)inspector).getPrimitiveJavaObject(value);
+                </span><span style="color: rgba(0, 0, 255, 1)">this</span>.recordConsumer.addBinary(NanoTimeUtils.getNanoTime(ts, <span style="color: rgba(0, 0, 255, 1)">false</span><span style="color: rgba(0, 0, 0, 1)">).toBinary());
+                </span><span style="color: rgba(0, 0, 255, 1)">break</span><span style="color: rgba(0, 0, 0, 1)">;
+            </span><span style="color: rgba(0, 0, 255, 1)">case</span><span style="color: rgba(0, 0, 0, 1)"> DECIMAL:
+                HiveDecimal vDecimal </span>=<span style="color: rgba(0, 0, 0, 1)"> (HiveDecimal)inspector.getPrimitiveJavaObject(value);
+                DecimalTypeInfo decTypeInfo </span>=<span style="color: rgba(0, 0, 0, 1)"> (DecimalTypeInfo)inspector.getTypeInfo();
+                </span><span style="color: rgba(0, 0, 255, 1)">this</span>.recordConsumer.addBinary(<span style="color: rgba(0, 0, 255, 1)">this</span><span style="color: rgba(0, 0, 0, 1)">.decimalToBinary(vDecimal, decTypeInfo));
+                </span><span style="color: rgba(0, 0, 255, 1)">break</span><span style="color: rgba(0, 0, 0, 1)">;
+            </span><span style="color: rgba(0, 0, 255, 1)">case</span><span style="color: rgba(0, 0, 0, 1)"> DATE:
+                Date vDate </span>=<span style="color: rgba(0, 0, 0, 1)"> ((DateObjectInspector)inspector).getPrimitiveJavaObject(value);
+                </span><span style="color: rgba(0, 0, 255, 1)">this</span><span style="color: rgba(0, 0, 0, 1)">.recordConsumer.addInteger(DateWritable.dateToDays(vDate));
+                </span><span style="color: rgba(0, 0, 255, 1)">break</span><span style="color: rgba(0, 0, 0, 1)">;
+            </span><span style="color: rgba(0, 0, 255, 1)">default</span><span style="color: rgba(0, 0, 0, 1)">:
+                </span><span style="color: rgba(0, 0, 255, 1)">throw</span> <span style="color: rgba(0, 0, 255, 1)">new</span> IllegalArgumentException("Unsupported primitive data type: " +<span style="color: rgba(0, 0, 0, 1)"> inspector.getPrimitiveCategory());
+            }
+
+        }
+    }</span></pre>
+</div>
+<p> </p>
+<p>parquet.io.MessageColumnIO.MessageColumnIORecordConsumer</p>
+<div class="cnblogs_code">
+<pre>        <span style="color: rgba(0, 0, 255, 1)">public</span> <span style="color: rgba(0, 0, 255, 1)">void</span> startField(String field, <span style="color: rgba(0, 0, 255, 1)">int</span><span style="color: rgba(0, 0, 0, 1)"> index) {
+            </span><span style="color: rgba(0, 0, 255, 1)">try</span><span style="color: rgba(0, 0, 0, 1)"> {
+                </span><span style="color: rgba(0, 0, 255, 1)">if</span><span style="color: rgba(0, 0, 0, 1)"> (MessageColumnIO.DEBUG) {
+                    </span><span style="color: rgba(0, 0, 255, 1)">this</span>.log("startField(" + field + ", " + index + ")"<span style="color: rgba(0, 0, 0, 1)">);
+                }
+
+                </span><span style="color: rgba(0, 0, 255, 1)">this</span>.currentColumnIO = ((GroupColumnIO)<span style="color: rgba(0, 0, 255, 1)">this</span><span style="color: rgba(0, 0, 0, 1)">.currentColumnIO).getChild(index);
+                </span><span style="color: rgba(0, 0, 255, 1)">this</span>.emptyField = <span style="color: rgba(0, 0, 255, 1)">true</span><span style="color: rgba(0, 0, 0, 1)">;
+                </span><span style="color: rgba(0, 0, 255, 1)">if</span><span style="color: rgba(0, 0, 0, 1)"> (MessageColumnIO.DEBUG) {
+                    </span><span style="color: rgba(0, 0, 255, 1)">this</span><span style="color: rgba(0, 0, 0, 1)">.printState();
+                }
+
+            } </span><span style="color: rgba(0, 0, 255, 1)">catch</span><span style="color: rgba(0, 0, 0, 1)"> (RuntimeException var4) {
+                </span><span style="color: rgba(0, 0, 255, 1)">throw</span> <span style="color: rgba(0, 0, 255, 1)">new</span> ParquetEncodingException("error starting field " + field + " at " +<span style="color: rgba(0, 0, 0, 1)"> index, var4);
+            }
+        }
+
+        </span><span style="color: rgba(0, 0, 255, 1)">public</span> <span style="color: rgba(0, 0, 255, 1)">void</span> endField(String field, <span style="color: rgba(0, 0, 255, 1)">int</span><span style="color: rgba(0, 0, 0, 1)"> index) {
+            </span><span style="color: rgba(0, 0, 255, 1)">if</span><span style="color: rgba(0, 0, 0, 1)"> (MessageColumnIO.DEBUG) {
+                </span><span style="color: rgba(0, 0, 255, 1)">this</span>.log("endField(" + field + ", " + index + ")"<span style="color: rgba(0, 0, 0, 1)">);
+            }
+
+            </span><span style="color: rgba(0, 0, 255, 1)">this</span>.currentColumnIO = <span style="color: rgba(0, 0, 255, 1)">this</span><span style="color: rgba(0, 0, 0, 1)">.currentColumnIO.getParent();
+            </span><span style="color: rgba(0, 0, 255, 1)">if</span> (<span style="color: rgba(0, 0, 255, 1)">this</span><span style="color: rgba(0, 0, 0, 1)">.emptyField) {
+                </span><span style="color: rgba(0, 0, 255, 1)">throw</span> <span style="color: rgba(0, 0, 255, 1)">new</span> ParquetEncodingException("empty fields are illegal, the field should be ommited completely instead"<span style="color: rgba(0, 0, 0, 1)">);
+            } </span><span style="color: rgba(0, 0, 255, 1)">else</span><span style="color: rgba(0, 0, 0, 1)"> {
+                </span><span style="color: rgba(0, 0, 255, 1)">this</span>.fieldsWritten[<span style="color: rgba(0, 0, 255, 1)">this</span><span style="color: rgba(0, 0, 0, 1)">.currentLevel].markWritten(index);
+                </span><span style="color: rgba(0, 0, 255, 1)">this</span>.r[<span style="color: rgba(0, 0, 255, 1)">this</span>.currentLevel] = <span style="color: rgba(0, 0, 255, 1)">this</span>.currentLevel == 0 ? 0 : <span style="color: rgba(0, 0, 255, 1)">this</span>.r[<span style="color: rgba(0, 0, 255, 1)">this</span>.currentLevel - 1<span style="color: rgba(0, 0, 0, 1)">];
+                </span><span style="color: rgba(0, 0, 255, 1)">if</span><span style="color: rgba(0, 0, 0, 1)"> (MessageColumnIO.DEBUG) {
+                    </span><span style="color: rgba(0, 0, 255, 1)">this</span><span style="color: rgba(0, 0, 0, 1)">.printState();
+                }
+
+            }
+        }
+        
+        </span><span style="color: rgba(0, 0, 255, 1)">public</span> <span style="color: rgba(0, 0, 255, 1)">void</span> addInteger(<span style="color: rgba(0, 0, 255, 1)">int</span><span style="color: rgba(0, 0, 0, 1)"> value) {
+            </span><span style="color: rgba(0, 0, 255, 1)">if</span><span style="color: rgba(0, 0, 0, 1)"> (MessageColumnIO.DEBUG) {
+                </span><span style="color: rgba(0, 0, 255, 1)">this</span>.log("addInt(" + value + ")"<span style="color: rgba(0, 0, 0, 1)">);
+            }
+
+            </span><span style="color: rgba(0, 0, 255, 1)">this</span>.emptyField = <span style="color: rgba(0, 0, 255, 1)">false</span><span style="color: rgba(0, 0, 0, 1)">;
+            </span><span style="color: rgba(0, 0, 255, 1)">this</span>.getColumnWriter().write(value, <span style="color: rgba(0, 0, 255, 1)">this</span>.r[<span style="color: rgba(0, 0, 255, 1)">this</span>.currentLevel], <span style="color: rgba(0, 0, 255, 1)">this</span><span style="color: rgba(0, 0, 0, 1)">.currentColumnIO.getDefinitionLevel());
+            </span><span style="color: rgba(0, 0, 255, 1)">this</span><span style="color: rgba(0, 0, 0, 1)">.setRepetitionLevel();
+            </span><span style="color: rgba(0, 0, 255, 1)">if</span><span style="color: rgba(0, 0, 0, 1)"> (MessageColumnIO.DEBUG) {
+                </span><span style="color: rgba(0, 0, 255, 1)">this</span><span style="color: rgba(0, 0, 0, 1)">.printState();
+            }
+
+        }</span></pre>
+</div>
+<p> </p>
+<p>The key codes for the error reported by DataWritableWriter are these lines</p>
+<blockquote>
+<pre><span>                Object keyElement =<span> keyValue.getKey();
+                this.recordConsumer.startField(keyName, 0<span>);
+                this<span>.writeValue(keyElement, keyInspector, keyType);
+                this.recordConsumer.endField(keyName, 0<span>);</span></span></span></span></span></pre>
+</blockquote>
+<p>The code process is summarized as follows:</p>
+<blockquote>
+<p>DataWritableWriter.writeMap</p>
+<p>         MessageColumnIORecordConsumer.startField</p>
+<p>                  <em>Note: this.emptyField = true;</em></p>
+<p>         Iterate entry</p>
+<p>                  handle key</p>
+<p>                          Object keyElement = keyValue.getKey();</p>
+<p>                          MessageColumnIORecordConsumer.startField</p>
+<p>                          DataWritableWriter.writeValue</p>
+<p>                                   DataWritableWriter.isPrimitive</p>
+<p>                                            DataWritableWriter.writePrimitive</p>
+<p>                                                     1)if (value == null) or Void</p>
+<p>                                                             <em>Note: this.emptyField is still true</em></p>
+<p>                                                     2)if (value != null) MessageColumnIORecordConsumer.addInteger</p>
+<p>                                                             <em>Note: this.emptyField = false;</em></p>
+<p>                          MessageColumnIORecordConsumer.endField</p>
+<p>         MessageColumnIORecordConsumer.endField</p>
+<p>                <em>Note: if (this.emptyField) {throw new ParquetEncodingException("empty fields are illegal, the field should be omited completely instead");}</em></p>
+</blockquote>
+<p>This error will be triggered when a column of type map&lt;?,?&gt; or array&lt;?&gt; is inserted into an empty collection or the key is null in the map.</p>
+<p>Later I found out that there has been an official discussion: https://issues.apache.org/jira/browse/Hive-11625</p>
+<p> </p>
+<p>There are two ways to avoid this problem:</p>
+<p>1 Switch to Hive to execute SQL;</p>
+<p>2 Add the udf function filter_map. When the map is an empty set, it is set to null. When the map is not an empty set, it filters out all entries with null keys in the map value.</p>
+<div class="cnblogs_code">
+<pre>spark.udf.register("filter_map", ((map : Map[String, String]) =&gt; {<span style="color: rgba(0, 0, 255, 1)">if</span> (map != <span style="color: rgba(0, 0, 255, 1)">null</span> &amp;&amp; !map.isEmpty) map.filter(_._1 != <span style="color: rgba(0, 0, 255, 1)">null</span>) <span style="color: rgba(0, 0, 255, 1)">else</span> null}))</pre>
+</div>
+<p> </p>
+</div>
+</div>
+<!-- Post Footer -->
+<div class="post-footer">
+<div class="post-navigation">
+<a class="nav-button" href="../blog.html">← Back to Home</a>
+<a class="nav-button" href="0313.html">Next Post →</a>
+</div>
+</div>
+</article>
+</div>
+</body>
+</html>

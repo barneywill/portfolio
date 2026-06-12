@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Application Cannot Restart on Marathon</title>
+<link href="../css/style3.css" rel="stylesheet"/>
+</head>
+<body>
+<div class="container">
+<!-- Header Navigation -->
+<div class="header">
+<h1><a href="../blog.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+</div>
+<!-- Post Container -->
+<article class="post">
+<!-- Post Header -->
+<div class="post-header">
+<h1>Application Cannot Restart on Marathon</h1>
+<div class="post-meta">
+<div class="post-meta-item">
+<span class="meta-icon">📅</span>
+<span>September 22, 2019</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">📖</span>
+<span>2 min read</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">👁️</span>
+<span>432 views</span>
+</div>
+</div>
+</div>
+<!-- Post Content -->
+<div class="post-content">
+<div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<p>Deployment appears after restarting the app by calling marathon through the API, but the app will not restart. The configuration is as follows:</p>
+<div class="cnblogs_code">
+<pre>  <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">constraints</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">: [
+    [
+      </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">hostname</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">,
+      </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">UNIQUE</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">
+    ],
+    [
+      </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">hostname</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">,
+      </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">LIKE</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">,
+      </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">HOST-00[12]</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">
+    ]
+  ]</span></pre>
+</div>
+<p>The specified app can only be started on 2 servers, and each server can only start 1 instance.</p>
+<p>The solution is as follows:</p>
+<div class="cnblogs_code">
+<pre>  <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">upgradeStrategy</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">: {
+    </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">maximumOverCapacity</span><span style="color: rgba(128, 0, 0, 1)">"</span>: 1<span style="color: rgba(0, 0, 0, 1)">,
+    </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">minimumHealthCapacity</span><span style="color: rgba(128, 0, 0, 1)">"</span>: 0.5<span style="color: rgba(0, 0, 0, 1)">
+  }</span></pre>
+</div>
+<p>The official explanation is as follows:</p>
+<blockquote>
+<p>Marathon allows you to perform rolling restarts to deploy new versions of applications. In general, there are two phases to deploying a new version of an application: starting a set of processes with the new version and stopping the set of processes with the old version.</p>
+<p>In Marathon, you can perform a rolling restart by defining an upgrade strategy with a <code class="highlighter-rouge">minimumHealthCapacity</code> at the application level.</p>
+<p>The minimumHealthCapacity is a percentage which, when applied to the instance count, defines the number of healthy instances that a certain version of the application must have at all times during update. Number of healthy instances is rounded up (ceil).</p>
+<ul>
+<li><code class="highlighter-rouge">minimumHealthCapacity</code> == 0 : All old instances can be killed before the new version is deployed.</li>
+<li><code class="highlighter-rouge">minimumHealthCapacity</code> == 1 : All instances of the new version are deployed side by side before the old version is stopped.</li>
+<li><code class="highlighter-rouge">minimumHealthCapacity</code> between 0 and 1 : Scale the old version to minimumHealthCapacity and start the new version to minimumHealthCapacity side by side. If this is completed successfully, the new version is scaled to 100% and the old version is stopped. Number of healthy instances is rounded up (ceil). E.g. 3 instances and minimumHealthCapacity 0.7 gives us <code class="highlighter-rouge">⌈3 × 0.7⌉ = ⌈2.1⌉ = 3</code> so all instances will remain.</li>
+</ul>
+</blockquote>
+<p>Cause of the problem: minimumHealthCapacity defaults to 1, that is, the old instance will be stopped only after the new instance is started, which conflicts with hostname:UNIQUE;</p>
+<p> </p>
+<p>Reference:</p>
+<p>marathon constraints</p>
+<p>https://mesosphere.github.io/marathon/docs/constraints.html</p>
+<p> </p>
+<p>marathon app deployment</p>
+<p>http://mesosphere.github.io/marathon/docs/deployments.html</p>
+<p> </p>
+</div>
+</div>
+<!-- Post Footer -->
+<div class="post-footer">
+<div class="post-navigation">
+<a class="nav-button" href="../blog.html">← Back to Home</a>
+<a class="nav-button" href="0093.html">Next Post →</a>
+</div>
+</div>
+</article>
+</div>
+</body>
+</html>

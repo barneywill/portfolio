@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Hue reports error when starting coordinator</title>
+<link href="../css/style3.css" rel="stylesheet"/>
+</head>
+<body>
+<div class="container">
+<!-- Header Navigation -->
+<div class="header">
+<h1><a href="../blog.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+</div>
+<!-- Post Container -->
+<article class="post">
+<!-- Post Header -->
+<div class="post-header">
+<h1>Hue reports error when starting coordinator</h1>
+<div class="post-meta">
+<div class="post-meta-item">
+<span class="meta-icon">📅</span>
+<span>May 13, 2019</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">📖</span>
+<span>7 min read</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">👁️</span>
+<span>946 views</span>
+</div>
+</div>
+</div>
+<!-- Post Content -->
+<div class="post-content">
+<div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<p>hue reports an error when starting the coordinator, and the page returns an undefined error box:</p>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201905/1509647-20190513195510353-1346693181.png"/></p>
+<p>Background log error:</p>
+<p>runcpserver.log</p>
+<div class="cnblogs_code">
+<pre>[13/May/2019 04:34:55 - 0700] middleware   INFO     Processing exception: <span style="color: rgba(128, 0, 0, 1)">'</span><span style="color: rgba(128, 0, 0, 1)">NoneType</span><span style="color: rgba(128, 0, 0, 1)">'</span> object has no attribute <span style="color: rgba(128, 0, 0, 1)">'</span><span style="color: rgba(128, 0, 0, 1)">is_superuser</span><span style="color: rgba(128, 0, 0, 1)">'</span><span style="color: rgba(0, 0, 0, 1)">: Traceback (most recent call last):
+  File </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">/opt/cloudera/parcels/CDH-5.16.1-1.cdh5.16.1.p0.3/lib/hue/build/env/lib/python2.7/site-packages/Django-1.6.10-py2.7.egg/django/core/handlers/base.py</span><span style="color: rgba(128, 0, 0, 1)">"</span>, line 112, <span style="color: rgba(0, 0, 255, 1)">in</span><span style="color: rgba(0, 0, 0, 1)"> get_response
+    response </span>= wrapped_callback(request, *callback_args, **<span style="color: rgba(0, 0, 0, 1)">callback_kwargs)
+  File </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">/opt/cloudera/parcels/CDH-5.16.1-1.cdh5.16.1.p0.3/lib/hue/build/env/lib/python2.7/site-packages/Django-1.6.10-py2.7.egg/django/db/transaction.py</span><span style="color: rgba(128, 0, 0, 1)">"</span>, line 371, <span style="color: rgba(0, 0, 255, 1)">in</span><span style="color: rgba(0, 0, 0, 1)"> inner
+    </span><span style="color: rgba(0, 0, 255, 1)">return</span> func(*args, **<span style="color: rgba(0, 0, 0, 1)">kwargs)
+  File </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">/opt/cloudera/parcels/CDH-5.16.1-1.cdh5.16.1.p0.3/lib/hue/apps/oozie/src/oozie/decorators.py</span><span style="color: rgba(128, 0, 0, 1)">"</span>, line 113, <span style="color: rgba(0, 0, 255, 1)">in</span><span style="color: rgba(0, 0, 0, 1)"> decorate
+    </span><span style="color: rgba(0, 0, 255, 1)">return</span> view_func(request, *args, **<span style="color: rgba(0, 0, 0, 1)">kwargs)
+  File </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">/opt/cloudera/parcels/CDH-5.16.1-1.cdh5.16.1.p0.3/lib/hue/apps/oozie/src/oozie/decorators.py</span><span style="color: rgba(128, 0, 0, 1)">"</span>, line 75, <span style="color: rgba(0, 0, 255, 1)">in</span><span style="color: rgba(0, 0, 0, 1)"> decorate
+    </span><span style="color: rgba(0, 0, 255, 1)">return</span> view_func(request, *args, **<span style="color: rgba(0, 0, 0, 1)">kwargs)
+  File </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">/opt/cloudera/parcels/CDH-5.16.1-1.cdh5.16.1.p0.3/lib/hue/apps/oozie/src/oozie/views/editor2.py</span><span style="color: rgba(128, 0, 0, 1)">"</span>, line 683, <span style="color: rgba(0, 0, 255, 1)">in</span><span style="color: rgba(0, 0, 0, 1)"> submit_coordinator
+    job_id </span>=<span style="color: rgba(0, 0, 0, 1)"> _submit_coordinator(request, coordinator, mapping)
+  File </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">/opt/cloudera/parcels/CDH-5.16.1-1.cdh5.16.1.p0.3/lib/hue/apps/oozie/src/oozie/views/editor2.py</span><span style="color: rgba(128, 0, 0, 1)">"</span>, line 709, <span style="color: rgba(0, 0, 255, 1)">in</span><span style="color: rgba(0, 0, 0, 1)"> _submit_coordinator
+    wf_dir </span>= Submission(request.user, wf, request.fs, request.jt, mapping, local_tz=coordinator.data[<span style="color: rgba(128, 0, 0, 1)">'</span><span style="color: rgba(128, 0, 0, 1)">properties</span><span style="color: rgba(128, 0, 0, 1)">'</span>][<span style="color: rgba(128, 0, 0, 1)">'</span><span style="color: rgba(128, 0, 0, 1)">timezone</span><span style="color: rgba(128, 0, 0, 1)">'</span><span style="color: rgba(0, 0, 0, 1)">]).deploy()
+  File </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">/opt/cloudera/parcels/CDH-5.16.1-1.cdh5.16.1.p0.3/lib/hue/desktop/libs/liboozie/src/liboozie/submission2.py</span><span style="color: rgba(128, 0, 0, 1)">"</span>, line 298, <span style="color: rgba(0, 0, 255, 1)">in</span><span style="color: rgba(0, 0, 0, 1)"> deploy
+    oozie_xml </span>=<span style="color: rgba(0, 0, 0, 1)"> self.job.to_xml(self.properties)
+  File </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">/opt/cloudera/parcels/CDH-5.16.1-1.cdh5.16.1.p0.3/lib/hue/apps/oozie/src/oozie/models2.py</span><span style="color: rgba(128, 0, 0, 1)">"</span>, line 468, <span style="color: rgba(0, 0, 255, 1)">in</span><span style="color: rgba(0, 0, 0, 1)"> to_xml
+    </span><span style="color: rgba(128, 0, 0, 1)">'</span><span style="color: rgba(128, 0, 0, 1)">workflow_mapping</span><span style="color: rgba(128, 0, 0, 1)">'</span><span style="color: rgba(0, 0, 0, 1)">: workflow_mapping
+  File </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">/opt/cloudera/parcels/CDH-5.16.1-1.cdh5.16.1.p0.3/lib/hue/desktop/core/src/desktop/lib/django_mako.py</span><span style="color: rgba(128, 0, 0, 1)">"</span>, line 114, <span style="color: rgba(0, 0, 255, 1)">in</span><span style="color: rgba(0, 0, 0, 1)"> render_to_string_normal
+    result </span>= template.render(**<span style="color: rgba(0, 0, 0, 1)">data_dict)
+  File </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">/opt/cloudera/parcels/CDH-5.16.1-1.cdh5.16.1.p0.3/lib/hue/build/env/lib/python2.7/site-packages/Mako-0.8.1-py2.7.egg/mako/template.py</span><span style="color: rgba(128, 0, 0, 1)">"</span>, line 443, <span style="color: rgba(0, 0, 255, 1)">in</span><span style="color: rgba(0, 0, 0, 1)"> render
+    </span><span style="color: rgba(0, 0, 255, 1)">return</span><span style="color: rgba(0, 0, 0, 1)"> runtime._render(self, self.callable_, args, data)
+  File </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">/opt/cloudera/parcels/CDH-5.16.1-1.cdh5.16.1.p0.3/lib/hue/build/env/lib/python2.7/site-packages/Mako-0.8.1-py2.7.egg/mako/runtime.py</span><span style="color: rgba(128, 0, 0, 1)">"</span>, line 786, <span style="color: rgba(0, 0, 255, 1)">in</span><span style="color: rgba(0, 0, 0, 1)"> _render
+    </span>**<span style="color: rgba(0, 0, 0, 1)">_kwargs_for_callable(callable_, data))
+  File </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">/opt/cloudera/parcels/CDH-5.16.1-1.cdh5.16.1.p0.3/lib/hue/build/env/lib/python2.7/site-packages/Mako-0.8.1-py2.7.egg/mako/runtime.py</span><span style="color: rgba(128, 0, 0, 1)">"</span>, line 818, <span style="color: rgba(0, 0, 255, 1)">in</span><span style="color: rgba(0, 0, 0, 1)"> _render_context
+    _exec_template(inherit, lclcontext, args</span>=args, kwargs=<span style="color: rgba(0, 0, 0, 1)">kwargs)
+  File </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">/opt/cloudera/parcels/CDH-5.16.1-1.cdh5.16.1.p0.3/lib/hue/build/env/lib/python2.7/site-packages/Mako-0.8.1-py2.7.egg/mako/runtime.py</span><span style="color: rgba(128, 0, 0, 1)">"</span>, line 844, <span style="color: rgba(0, 0, 255, 1)">in</span><span style="color: rgba(0, 0, 0, 1)"> _exec_template
+    callable_(context, </span>*args, **<span style="color: rgba(0, 0, 0, 1)">kwargs)
+  File </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">/tmp/tmpurIkf9/oozie/editor2/gen/workflow.xml.mako.py</span><span style="color: rgba(128, 0, 0, 1)">"</span>, line 110, <span style="color: rgba(0, 0, 255, 1)">in</span><span style="color: rgba(0, 0, 0, 1)"> render_body
+    </span><span style="color: rgba(128, 0, 128, 1)">__M_writer</span><span style="color: rgba(0, 0, 0, 1)">( node.to_xml(mapping, node_mapping, workflow_mapping) )
+  File </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">/opt/cloudera/parcels/CDH-5.16.1-1.cdh5.16.1.p0.3/lib/hue/apps/oozie/src/oozie/models2.py</span><span style="color: rgba(128, 0, 0, 1)">"</span>, line 860, <span style="color: rgba(0, 0, 255, 1)">in</span><span style="color: rgba(0, 0, 0, 1)"> to_xml
+    notebook </span>= Notebook(document=Document2.objects.get_by_uuid(user=self.user, uuid=self.data[<span style="color: rgba(128, 0, 0, 1)">'</span><span style="color: rgba(128, 0, 0, 1)">properties</span><span style="color: rgba(128, 0, 0, 1)">'</span>][<span style="color: rgba(128, 0, 0, 1)">'</span><span style="color: rgba(128, 0, 0, 1)">uuid</span><span style="color: rgba(128, 0, 0, 1)">'</span><span style="color: rgba(0, 0, 0, 1)">]))
+  File </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">/opt/cloudera/parcels/CDH-5.16.1-1.cdh5.16.1.p0.3/lib/hue/desktop/core/src/desktop/models.py</span><span style="color: rgba(128, 0, 0, 1)">"</span>, line 975, <span style="color: rgba(0, 0, 255, 1)">in</span><span style="color: rgba(0, 0, 0, 1)"> get_by_uuid
+    latest_doc.can_read_or_exception(user)
+  File </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">/opt/cloudera/parcels/CDH-5.16.1-1.cdh5.16.1.p0.3/lib/hue/desktop/core/src/desktop/models.py</span><span style="color: rgba(128, 0, 0, 1)">"</span>, line 1305, <span style="color: rgba(0, 0, 255, 1)">in</span><span style="color: rgba(0, 0, 0, 1)"> can_read_or_exception
+    </span><span style="color: rgba(0, 0, 255, 1)">if</span><span style="color: rgba(0, 0, 0, 1)"> self.can_read(user):
+  File </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">/opt/cloudera/parcels/CDH-5.16.1-1.cdh5.16.1.p0.3/lib/hue/desktop/core/src/desktop/models.py</span><span style="color: rgba(128, 0, 0, 1)">"</span>, line 1302, <span style="color: rgba(0, 0, 255, 1)">in</span><span style="color: rgba(0, 0, 0, 1)"> can_read
+    </span><span style="color: rgba(0, 0, 255, 1)">return</span> user.is_superuser <span style="color: rgba(0, 0, 255, 1)">or</span> self.owner == user <span style="color: rgba(0, 0, 255, 1)">or</span> self.can_write(user) <span style="color: rgba(0, 0, 255, 1)">or</span><span style="color: rgba(0, 0, 0, 1)"> has_read_permissions
+AttributeError: </span><span style="color: rgba(128, 0, 0, 1)">'</span><span style="color: rgba(128, 0, 0, 1)">NoneType</span><span style="color: rgba(128, 0, 0, 1)">'</span> object has no attribute <span style="color: rgba(128, 0, 0, 1)">'</span><span style="color: rgba(128, 0, 0, 1)">is_superuser</span><span style="color: rgba(128, 0, 0, 1)">'</span></pre>
+</div>
+<p>Solution:</p>
+<p>/opt/cloudera/parcels/CDH-5.16.1-1.cdh5.16.1.p0.3/lib/hue/apps/oozie/src/oozie/models2.py</p>
+<div class="cnblogs_code">
+<pre>   3395<span style="color: rgba(0, 0, 0, 1)">   @property
+   </span>3396   <span style="color: rgba(0, 0, 255, 1)">def</span><span style="color: rgba(0, 0, 0, 1)"> workflow(self):
+   </span>3397     <span style="color: rgba(0, 0, 255, 1)">if</span> self.document <span style="color: rgba(0, 0, 255, 1)">is</span><span style="color: rgba(0, 0, 0, 1)"> None:
+   </span>3398       <span style="color: rgba(0, 0, 255, 1)">raise</span> PopupException(_(<span style="color: rgba(128, 0, 0, 1)">'</span><span style="color: rgba(128, 0, 0, 1)">Cannot return workflow since document attribute is None.</span><span style="color: rgba(128, 0, 0, 1)">'</span><span style="color: rgba(0, 0, 0, 1)">))
+   </span>3399 
+   3400     <span style="color: rgba(0, 128, 0, 1)">#</span><span style="color: rgba(0, 128, 0, 1)"> Integrated scheduler</span>
+   3401     <span style="color: rgba(0, 0, 255, 1)">if</span> self.data[<span style="color: rgba(128, 0, 0, 1)">'</span><span style="color: rgba(128, 0, 0, 1)">properties</span><span style="color: rgba(128, 0, 0, 1)">'</span>][<span style="color: rgba(128, 0, 0, 1)">'</span><span style="color: rgba(128, 0, 0, 1)">document</span><span style="color: rgba(128, 0, 0, 1)">'</span><span style="color: rgba(0, 0, 0, 1)">]:
+   </span>3402       document = Document2.objects.get_by_uuid(user=self.document.owner, uuid=self.data[<span style="color: rgba(128, 0, 0, 1)">'</span><span style="color: rgba(128, 0, 0, 1)">properties</span><span style="color: rgba(128, 0, 0, 1)">'</span>][<span style="color: rgba(128, 0, 0, 1)">'</span><span style="color: rgba(128, 0, 0, 1)">document</span><span style="color: rgba(128, 0, 0, 1)">'</span><span style="color: rgba(0, 0, 0, 1)">])
+   </span>3403       wf_doc = WorkflowBuilder().create_workflow(document=document, user=self.document.owner, managed=<span style="color: rgba(0, 0, 0, 1)">True)
+   </span>3404       wf = Workflow(data=<span style="color: rgba(0, 0, 0, 1)">wf_doc.data)
+   </span>3405<span style="color: rgba(0, 0, 0, 1)">       wf_doc.delete()
+   </span>3406       <span style="color: rgba(0, 0, 255, 1)">return</span><span style="color: rgba(0, 0, 0, 1)"> wf
+   </span>3407     <span style="color: rgba(0, 0, 255, 1)">else</span><span style="color: rgba(0, 0, 0, 1)">:
+   </span>3408       wf_doc = Document2.objects.get_by_uuid(user=self.document.owner, uuid=self.data[<span style="color: rgba(128, 0, 0, 1)">'</span><span style="color: rgba(128, 0, 0, 1)">properties</span><span style="color: rgba(128, 0, 0, 1)">'</span>][<span style="color: rgba(128, 0, 0, 1)">'</span><span style="color: rgba(128, 0, 0, 1)">workflow</span><span style="color: rgba(128, 0, 0, 1)">'</span><span style="color: rgba(0, 0, 0, 1)">])
+   </span>3409       <span style="color: rgba(0, 0, 255, 1)">return</span> Workflow(document=wf_doc)</pre>
+</div>
+<p>Modify to</p>
+<div class="cnblogs_code">
+<pre>   3395<span style="color: rgba(0, 0, 0, 1)">   @property
+   </span>3396   <span style="color: rgba(0, 0, 255, 1)">def</span><span style="color: rgba(0, 0, 0, 1)"> workflow(self):
+   </span>3397     <span style="color: rgba(0, 0, 255, 1)">if</span> self.document <span style="color: rgba(0, 0, 255, 1)">is</span><span style="color: rgba(0, 0, 0, 1)"> None:
+   </span>3398       <span style="color: rgba(0, 0, 255, 1)">raise</span> PopupException(_(<span style="color: rgba(128, 0, 0, 1)">'</span><span style="color: rgba(128, 0, 0, 1)">Cannot return workflow since document attribute is None.</span><span style="color: rgba(128, 0, 0, 1)">'</span><span style="color: rgba(0, 0, 0, 1)">))
+   </span>3399 
+   3400     <span style="color: rgba(0, 128, 0, 1)">#</span><span style="color: rgba(0, 128, 0, 1)"> Integrated scheduler</span>
+   3401     <span style="color: rgba(0, 0, 255, 1)">if</span> self.data[<span style="color: rgba(128, 0, 0, 1)">'</span><span style="color: rgba(128, 0, 0, 1)">properties</span><span style="color: rgba(128, 0, 0, 1)">'</span>][<span style="color: rgba(128, 0, 0, 1)">'</span><span style="color: rgba(128, 0, 0, 1)">document</span><span style="color: rgba(128, 0, 0, 1)">'</span><span style="color: rgba(0, 0, 0, 1)">]:
+   </span>3402       document = Document2.objects.get_by_uuid(user=self.document.owner, uuid=self.data[<span style="color: rgba(128, 0, 0, 1)">'</span><span style="color: rgba(128, 0, 0, 1)">properties</span><span style="color: rgba(128, 0, 0, 1)">'</span>][<span style="color: rgba(128, 0, 0, 1)">'</span><span style="color: rgba(128, 0, 0, 1)">document</span><span style="color: rgba(128, 0, 0, 1)">'</span><span style="color: rgba(0, 0, 0, 1)">])
+   </span>3403       wf_doc = WorkflowBuilder().create_workflow(document=document, user=self.document.owner, managed=<span style="color: rgba(0, 0, 0, 1)">True)
+   </span>3404       wf = Workflow(data=wf_doc.data,user=<span style="color: rgba(0, 0, 0, 1)">self.document.owner)
+   </span>3405<span style="color: rgba(0, 0, 0, 1)">       wf_doc.delete()
+   </span>3406       <span style="color: rgba(0, 0, 255, 1)">return</span><span style="color: rgba(0, 0, 0, 1)"> wf
+   </span>3407     <span style="color: rgba(0, 0, 255, 1)">else</span><span style="color: rgba(0, 0, 0, 1)">:     
+   </span>3408       wf_doc = Document2.objects.get_by_uuid(user=self.document.owner, uuid=self.data[<span style="color: rgba(128, 0, 0, 1)">'</span><span style="color: rgba(128, 0, 0, 1)">properties</span><span style="color: rgba(128, 0, 0, 1)">'</span>][<span style="color: rgba(128, 0, 0, 1)">'</span><span style="color: rgba(128, 0, 0, 1)">workflow</span><span style="color: rgba(128, 0, 0, 1)">'</span><span style="color: rgba(0, 0, 0, 1)">])
+   </span>3409       <span style="color: rgba(0, 0, 255, 1)">return</span> Workflow(document=wf_doc,user=self.document.owner)</pre>
+</div>
+<p> </p>
+<p>refer to:<br/>https://issues.cloudera.org/browse/HUE-7919<br/>https://github.com/cloudera/hue/commit/4db8f45862302436e3a1f61be509a016f9cd1576</p>
+<p> </p>
+</div>
+</div>
+<!-- Post Footer -->
+<div class="post-footer">
+<div class="post-navigation">
+<a class="nav-button" href="../blog.html">← Back to Home</a>
+<a class="nav-button" href="0139.html">Next Post →</a>
+</div>
+</div>
+</article>
+</div>
+</body>
+</html>

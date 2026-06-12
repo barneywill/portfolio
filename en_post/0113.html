@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Java basics Nginx cache</title>
+<link href="../css/style3.css" rel="stylesheet"/>
+</head>
+<body>
+<div class="container">
+<!-- Header Navigation -->
+<div class="header">
+<h1><a href="../blog.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+</div>
+<!-- Post Container -->
+<article class="post">
+<!-- Post Header -->
+<div class="post-header">
+<h1>Java basics Nginx cache</h1>
+<div class="post-meta">
+<div class="post-meta-item">
+<span class="meta-icon">📅</span>
+<span>June 16, 2019</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">📖</span>
+<span>2 min read</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">👁️</span>
+<span>869 views</span>
+</div>
+</div>
+</div>
+<!-- Post Content -->
+<div class="post-content">
+<div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<h2> </h2>
+<h2>1 proxy_ignore_headers</h2>
+<h3>1.1 Set-Cookie</h3>
+<p>By default, nginx does not caches requests with Set-Cookie.</p>
+<p>By default: Nginx will not cache requests with Set-Cookie in the response;</p>
+<p> </p>
+<p>If a header includes the “Set-Cookie” field, such a response will not be cached. Processing of one or more of these response header fields can be disabled using the <a href="http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_ignore_headers" rel="noopener nofollow">proxy_ignore_headers</a> directive.</p>
+<p>At this time, you need to use the proxy_ignore_headers directive;</p>
+<p> <img alt="" src="https://img2018.cnblogs.com/blog/1509647/201812/1509647-20181213221810940-1303682642.png"/></p>
+<p>Nginx will ignore the relevant headers in the response returned by resin based on proxy_ignore_headers;</p>
+<p>proxy_ignore_header directive:</p>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201812/1509647-20181213221752123-1480603261.png"/></p>
+<p>Disables processing of certain response header fields from the proxied server. The following fields can be ignored: “X-Accel-Redirect”, “X-Accel-Expires”, “X-Accel-Limit-Rate” (1.1.6), “X-Accel-Buffering” (1.1.6), “X-Accel-Charset” (1.1.6), “Expires”, “Cache-Control”, and “Set-Cookie” (0.8.44).</p>
+<h3>1.2 Cache-Control</h3>
+<p>Public indicates that the response can be cached by any cache.</p>
+<p><strong>Private</strong>  Indicates that all or part of the response message for a single user cannot be processed by the shared cache. This allows the server to only describe a partial response from a user that is not valid for other users' requests.</p>
+<p><strong>no-cache</strong>  Indicates that the request or response message cannot be cached (HTTP/1.0 is replaced by Pragma's no-cache)</p>
+<p> </p>
+<p>Based on what can be cached</p>
+<p>no-store is used to prevent important information from being released accidentally. Sending it in the request message will cause both the request and response messages to use caching.</p>
+<p>Based on cache timeout</p>
+<p><strong>max-age</strong>  Indicates that the client can receive responses with a lifetime no greater than the specified time in seconds.</p>
+<p>min-fresh indicates that the client can receive responses with a response time less than the current time plus the specified time.</p>
+<p>max-stale indicates that the client can receive response messages beyond the timeout period. If you specify a value for max-stale messages, the client can receive response messages that exceed the specified value of the timeout period.</p>
+<p> </p>
+<p>After testing, cache files cannot be generated when cache-control is private and no-cache;</p>
+<p>You also need to use the proxy_ignore_header directive:</p>
+<p> <img alt="" src="https://img2018.cnblogs.com/blog/1509647/201812/1509647-20181213221729824-109475193.png"/></p>
+<p> </p>
+<h3>1.3 Expires</h3>
+<p>Parameters of caching can also be set directly in the response header. This has a higher precedence than setting of caching time using the directive. The “X-Accel-Expires” header field sets caching time of a response in seconds. The value 0 disables to cache a response. If a value starts with the prefix @, it sets an absolute time in seconds since Epoch, up to which the response may be cached. If header does not include the “X-Accel-Expires” field, parameters of caching may be set in the header fields “Expires” or “Cache-Control”. </p>
+<p> </p>
+<p>Expires and Cache-Control will affect the cache validity period, which is configured in the configuration file by default:</p>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201812/1509647-20181213221710456-1592328037.png"/></p>
+<p> </p>
+<p>Unless you really want to set the expiration time by resin, you also need to use the proxy_ignore_header directive:</p>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201812/1509647-20181213221654559-239281790.png"/></p>
+<p> </p>
+<p>After the above three steps of configuration, Nginx will ignore the resin and return the header in the response that affects whether the cache is generated and the cache time, and the cache file can be generated normally;</p>
+<p> </p>
+<h2>2 proxy_hide_header</h2>
+<p>By default, nginx does not pass the header fields “Date”, “Server”, “X-Pad”, and “X-Accel-...” from the response of a proxied server to a client. Theproxy_hide_header directive sets additional fields that will not be passed.</p>
+<p> </p>
+<p>Since resin is accessed for the first time, resin will return Set-Cookie:JSESSIONID=..., and Nginx will save the return of resin as a cache file intact:</p>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201812/1509647-20181213221604308-115563338.png"/></p>
+<p> </p>
+<p>Open the cache file and find that the first line is garbled, which may be the bytes related to the cache time controlled by Nginx. The second line is the KEY of the cache file. Below is a complete HTTP response, including the complete header and body. When the cache is hit, Nginx will return the response directly without requesting resin;</p>
+<p>In order to avoid the problem of session stringing, you need to add the proxy_hide_header directive:</p>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201812/1509647-20181213221627129-149009494.png"/></p>
+<p> </p>
+<p>To ensure that Nginx hides relevant headers in the response while using cache;</p>
+<p> </p>
+<p>Proxy_hide_header directive:</p>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201812/1509647-20181213221534587-1332018449.png"/></p>
+<p> </p>
+<p>Please check for details <a href="http://wiki.nginx.org/HttpProxyModule" rel="noopener nofollow">http://wiki.nginx.org/HttpProxyModule</a>；</p>
+<p> </p>
+<h1>3 memcached module</h1>
+<p>In addition, Nginx also has a memcached module that can also be used as a page cache, namely Nginx/memcached module:</p>
+<p>The Nginx / Memcached module allows you to setup the previous architecture, using <a href="http://nginx.org/" rel="noopener nofollow">Nginx</a> as a HTTP reverse proxy, and <a href="http://memcached.org/" rel="noopener nofollow">Memcached</a> as storage. (Note: memcached is often used as shared HTTP session storage)</p>
+<p>The module <a href="http://wiki.nginx.org/HttpMemcachedModule" rel="noopener nofollow">Nginx memcached</a> works very well. But it has a big limitation: it can not store HTTP headers with data. For example, pages served by Nginx via Memcached storage have the default Nginx Content-Type. Moreover, it is quite difficult to store multiple type of data in Memcached : CSS, JS, images, HTML, json … You can add some specifics HTTP headers, but only in Nginx configuration. These headers will be shared by every resources served by Nginx/Memached, unless you put lot of ugly “if” in the configuration.</p>
+<p>Using memcached for page caching avoids the problem of using proxy_cache to have a cache on each Nginx, and it is also easier to purge;</p>
+</div>
+</div>
+<!-- Post Footer -->
+<div class="post-footer">
+<div class="post-navigation">
+<a class="nav-button" href="../blog.html">← Back to Home</a>
+<a class="nav-button" href="0114.html">Next Post →</a>
+</div>
+</div>
+</article>
+</div>
+</body>
+</html>

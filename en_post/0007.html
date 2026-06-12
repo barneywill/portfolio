@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YARN</title>
+    <link rel="stylesheet" href="../css/style3.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header Navigation -->
+        <div class="header">
+            <h1><a href="../blog.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+        </div>
+
+        <!-- Post Container -->
+        <article class="post">
+            <!-- Post Header -->
+            <div class="post-header">
+                <h1>YARN</h1>
+                <div class="post-meta">
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📅</span>
+                        <span>May 31, 2022</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📖</span>
+                        <span>1 min read</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">👁️</span>
+                        <span>297 views</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Post Content -->
+            <div class="post-content">
+                <div class="blogpost-body cnblogs-markdown" id="cnblogs_post_body">
+<p><a href="https://hadoop.apache.org" rel="noopener nofollow" target="_blank">https://hadoop.apache.org</a><br/>
+A framework for job scheduling and cluster resource management.</p>
+<h1 id="deployment">1. Deployment</h1>
+<h2 id="roles">Roles</h2>
+<h3 id="resourcemanagernodemanager">ResourceManager、NodeManager</h3>
+<p><picture>
+  <source srcset="../img/1509647-20220531160829706-1445589635.webp" type="image/webp">
+  <img alt="" src="../img/1509647-20220531160829706-1445589635.png">
+</picture></p>
+<h2 id="client">Client</h2>
+<h3 id="jobappmastercontainer">Job、AppMaster、Container</h3>
+<p>The AppMaster is the first container started by the ResourceManager when a YARN job runs. It then manages the entire job lifecycle, including requesting containers, launching them, killing them, and checking their status.<br/>
+Each job type needs to provide its own AppMaster.<br/>
+YARN only provides an AppMaster for MapReduce jobs.</p>
+<p>The AppMaster for Spark on YARN:</p>
+<blockquote>
+<p>org.apache.spark.deploy.yarn.ApplicationMaster</p>
+</blockquote>
+<h2 id="ha">HA</h2>
+<h3 id="zk-nodes">ZooKeeper Nodes</h3>
+<blockquote>
+<p>/yarn-leader-election/${yarn.resourcemanager.cluster-id}/ActiveBreadCrumb<br/>
+/yarn-leader-election/${yarn.resourcemanager.cluster-id}/ActiveStandbyElectorLock</p>
+</blockquote>
+<p>Code:</p>
+<blockquote>
+<p>org.apache.hadoop.yarn.server.resourcemanager.EmbeddedElectorService</p>
+</blockquote>
+<h1 id="common-commands">2. Common Commands</h1>
+<blockquote>
+<p>yarn node<br/>
+yarn queue - status root<br/>
+yarn top<br/>
+yarn application - list - appStates ALL - appTypes MapReduce|more<br/>
+yarn rmadmin<br/>
+yarn logs - applicationid=$applicationId</p>
+</blockquote>
+<h1 id="resource-management">3. Resource Management</h1>
+<h2 id="compute-resources">Compute Resources</h2>
+<p>CPU and memory</p>
+<h2 id="management">Management</h2>
+<p>queue<br/>
+scheduler</p>
+<ul>
+<li>FIFO: first in, first out</li>
+<li>Capacity: configured by percentage</li>
+<li>Fair: configured by specific CPU core and memory amounts</li>
+</ul>
+<h1 id="api">4. API</h1>
+<blockquote>
+<p><a href="http://:8088$ip/ws/v1/cluster/metrics" target="_blank">http://:8088$ip/ws/v1/cluster/metrics</a><br/>
+<a href="http://:8088$ip/ws/v1/cluster/scheduler" target="_blank">http://:8088$ip/ws/v1/cluster/scheduler</a><br/>
+<a href="http://:8088$ip/ws/v1/cluster/apps" target="_blank">http://:8088$ip/ws/v1/cluster/apps</a></p>
+</blockquote>
+<p>Fetch metrics through the API and integrate them with ELK.<br/>
+<picture>
+  <source srcset="../img/1509647-20220531161424793-1913233054.webp" type="image/webp">
+  <img alt="" src="../img/1509647-20220531161424793-1913233054.png">
+</picture></p>
+<h1 id="data-locality">5. Data Locality</h1>
+<p>Moving Computation is Cheaper than Moving Data</p>
+<h2 id="spark-task-assignment-flow">Spark Task Assignment Flow</h2>
+<p>job-&gt;stage-task<br/>
+<code>resourceOffer</code> calls <code>getAllowedLocalityLevel</code> to determine which locality level is currently allowed for launching tasks. Internally, <code>getAllowedLocalityLevel</code> uses delay time and whether more tasks remain to control the allowed levels. For example, it may initially allow only <code>PROCESS_LOCAL</code>; after a delay, it may allow both <code>PROCESS_LOCAL</code> and <code>NODE_LOCAL</code> tasks.</p>
+<p>Data locality levels: <code>PROCESS_LOCAL</code>, <code>NODE_LOCAL</code>, <code>NO_PREF</code>, <code>RACK_LOCAL</code>, <code>ANY</code><br/>
+Configuration: <code>spark.locality.wait</code></p>
+<h2 id="impala">Impala</h2>
+<p>Efficiently retrieving data from HDFS is a challenge for all SQL-on-Hadoop systems. In order to perform data scans from both disk and memory at or near hardware speed, Impala uses an HDFS feature called short-circuit local reads to bypass the DataNode protocol when reading from local disk. Impala can read at almost disk bandwidth (approx.100MB/s per disk) and is typically able to saturate all available disks. We have measured that with 12 disks, Impala is capable of sustaining I/O at 1.2GB/sec.</p>
+</div>
+            </div>
+
+            <!-- Post Footer -->
+            <div class="post-footer">
+                <div class="post-navigation">
+                    <a href="../blog.html" class="nav-button">← Back to Home</a>
+                    <a href="0008.html" class="nav-button">Next Post →</a>
+                </div>
+            </div>
+        </article>
+    </div>
+</body>
+</html>

@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Kerberos 2 - Hive Impala HDFS access</title>
+<link href="../css/style3.css" rel="stylesheet"/>
+</head>
+<body>
+<div class="container">
+<!-- Header Navigation -->
+<div class="header">
+<h1><a href="../blog.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+</div>
+<!-- Post Container -->
+<article class="post">
+<!-- Post Header -->
+<div class="post-header">
+<h1>Kerberos 2 - Hive Impala HDFS access</h1>
+<div class="post-meta">
+<div class="post-meta-item">
+<span class="meta-icon">📅</span>
+<span>March 02, 2019</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">📖</span>
+<span>1 min read</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">👁️</span>
+<span>660 views</span>
+</div>
+</div>
+</div>
+<!-- Post Content -->
+<div class="post-content">
+<div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<h1>1 hive</h1>
+<blockquote>
+<p># kadmin.local - q 'ktadd - k /tmp/hive3.keytab - norandkey hive/server03@TEST.COM'<br/># kinit - kt /tmp/hive3.keytab hive/server03@TEST.COM<br/># klist</p>
+<p># beeline - u 'jdbc:hive2://192.168.0.3:10000/;principal=hive/server03@TEST.COM'<br/># hive</p>
+</blockquote>
+<p>Note that server03 here refers to the host of the Hive server, not the host of the client server;</p>
+<h1>2 impala</h1>
+<blockquote>
+<p># kadmin.local - q 'ktadd - k /tmp/impala3.keytab - norandkey impala/server03@TEST.COM'<br/># kinit - kt /tmp/impala3.keytab impala/server03@TEST.COM<br/># klist</p>
+<p># impala-shell - i 192.168.0.3:21000 - k<br/># beeline - u 'jdbc:hive2://192.168.0.3:21050/;principal=impala/server03@TEST.COM'</p>
+</blockquote>
+<p> </p>
+<h1>3 hdfs</h1>
+<blockquote>
+<p># kadmin.local - q 'ktadd - k /tmp/hdfs.keytab - norandkey hdfs/server01@TEST.COM'<br/># kinit - kt /tmp/hdfs.keytab hdfs/server01@TEST.COM<br/># klist</p>
+<p># hdfs dfs - ls /<br/># hdfs dfsadmin - report</p>
+</blockquote>
+<p> </p>
+</div>
+</div>
+<!-- Post Footer -->
+<div class="post-footer">
+<div class="post-navigation">
+<a class="nav-button" href="../blog.html">← Back to Home</a>
+<a class="nav-button" href="0197.html">Next Post →</a>
+</div>
+</div>
+</article>
+</div>
+</body>
+</html>

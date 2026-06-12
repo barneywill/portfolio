@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>FRP</title>
+<link href="../css/style3.css" rel="stylesheet"/>
+</head>
+<body>
+<div class="container">
+<!-- Header Navigation -->
+<div class="header">
+<h1><a href="../blog.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+</div>
+<!-- Post Container -->
+<article class="post">
+<!-- Post Header -->
+<div class="post-header">
+<h1>FRP</h1>
+<div class="post-meta">
+<div class="post-meta-item">
+<span class="meta-icon">📅</span>
+<span>July 24, 2021</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">📖</span>
+<span>1 min read</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">👁️</span>
+<span>161 views</span>
+</div>
+</div>
+</div>
+<!-- Post Content -->
+<div class="post-content">
+<div class="blogpost-body cnblogs-markdown" id="cnblogs_post_body">
+<h1 id="frp">frp</h1>
+<h2 id="section-0037-1">Introduction</h2>
+<p>frp is a fast reverse proxy to help you expose a local server behind a NAT or firewall to the Internet. As of now, it supports TCP and UDP, as well as HTTP and HTTPS protocols, where requests can be forwarded to internal services by domain name.</p>
+<h2 id="section-0037-2">download</h2>
+<p>Download the latest tag, download address:<a href="https://github.com/fatedier/frp" rel="noopener nofollow" target="_blank">https://github.com/fatedier/frp</a></p>
+<h2 id="section-0037-3">Install</h2>
+<p>Decompress separately on the server and client</p>
+<pre><code>tar xvf frp_0.37.0_linux_amd64.tar.gz
+</code></pre>
+<h3 id="section-0037-4">Server</h3>
+<h4 id="section-0037-5">Prepare configuration file: frps.ini</h4>
+<pre><code>[common]
+bind_port=7000
+token=$token
+dashboard_port=7500
+dashboard_user=$user
+dashboard_pwd=$pwd
+log_file=/path/to/frp_0.37.0_linux_amd64/logs/frps.log
+log_level=info
+log_max_days=3
+authentication_timeout=0
+max_pool_count=50
+</code></pre>
+<p>Configure token (used for client to connect to server), dashboard_user and dashboard_pwd (used for management page)</p>
+<h4 id="section-0037-6">start up</h4>
+<pre><code>./frps - c frps.ini
+</code></pre>
+<p>After startup, access: http://$server_ip:7500<br/>
+The account number and password are dashboard_user and dashboard_pwd</p>
+<h3 id="section-0037-7">client</h3>
+<h4 id="section-0037-8">Prepare configuration file: frpc.ini</h4>
+<pre><code>[common]
+server_addr=$server_ip
+server_port=7000
+token=$token
+
+
+[test_ssh]
+type=tcp
+local_ip=127.0.0.1
+local_port=22
+remote_port=$port
+</code></pre>
+<p>Similar to test_ssh, multiple configurations can be configured. Test_ssh indicates that the local port 22 is bound to the $port port of the remote server. That is, the client's port 22 can be indirectly accessed by accessing the $port of the remote server's $server_ip.</p>
+<h4 id="section-0037-9">start up</h4>
+<pre><code>./frps - c frpc.ini
+</code></pre>
+<h2 id="section-0037-10">Usage scenarios</h2>
+<p>A cloud host with an external network IP, configure the frp server on it, and then deploy the client on the intranet, bind the intranet port to the cloud host port, and achieve penetrating access to the intranet</p>
+</div>
+</div>
+<!-- Post Footer -->
+<div class="post-footer">
+<div class="post-navigation">
+<a class="nav-button" href="../blog.html">← Back to Home</a>
+<a class="nav-button" href="0038.html">Next Post →</a>
+</div>
+</div>
+</article>
+</div>
+</body>
+</html>

@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Importing Hive Metadata into Atlas</title>
+<link href="../css/style3.css" rel="stylesheet"/>
+</head>
+<body>
+<div class="container">
+<!-- Header Navigation -->
+<div class="header">
+<h1><a href="../blog.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+</div>
+<!-- Post Container -->
+<article class="post">
+<!-- Post Header -->
+<div class="post-header">
+<h1>Importing Hive Metadata into Atlas</h1>
+<div class="post-meta">
+<div class="post-meta-item">
+<span class="meta-icon">📅</span>
+<span>January 11, 2020</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">📖</span>
+<span>2 min read</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">👁️</span>
+<span>5864 views</span>
+</div>
+</div>
+</div>
+<!-- Post Content -->
+<div class="post-content">
+<div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<p>First, you must have the HIVE_HOME environment variable.</p>
+<p>If it is apache, configure it directly as the decompression directory; if it is CDH, set it as follows:</p>
+<blockquote>
+<p># export HIVE_HOME=/opt/cloudera/parcels/CDH-5.16.1-1.cdh5.16.1.p0.3/lib/hive</p>
+</blockquote>
+<p>Execute import</p>
+<blockquote>
+<p># bin/import-hive.sh<br/>...<br/>Failed to import Hive Meta Data!!!</p>
+</blockquote>
+<p>Report an error, check the log</p>
+<div class="cnblogs_code">
+<pre><span style="color: rgba(0, 128, 0, 1)">#</span><span style="color: rgba(0, 128, 0, 1)"> more logs/import-hive.log </span>
+2020-01-11 14:42:38,951 INFO  - [main:] ~ Looking <span style="color: rgba(0, 0, 255, 1)">for</span> atlas-application.properties <span style="color: rgba(0, 0, 255, 1)">in</span> classpath (ApplicationProperties:110<span style="color: rgba(0, 0, 0, 1)">)
+</span>2020-01-11 14:42:38,955 INFO  - [main:] ~ Looking <span style="color: rgba(0, 0, 255, 1)">for</span> /atlas-application.properties <span style="color: rgba(0, 0, 255, 1)">in</span> classpath (ApplicationProperties:115<span style="color: rgba(0, 0, 0, 1)">)
+</span>2020-01-11 14:42:38,956 INFO  - [main:] ~ Loading atlas-application.properties <span style="color: rgba(0, 0, 255, 1)">from</span> null (ApplicationProperties:123<span style="color: rgba(0, 0, 0, 1)">)
+</span>2020-01-11 14:42:38,984 ERROR - [main:] ~ Import failed (HiveMetaStoreBridge:176<span style="color: rgba(0, 0, 0, 1)">)
+org.apache.atlas.AtlasException: Failed to load application properties
+    at org.apache.atlas.ApplicationProperties.get(ApplicationProperties.java:</span>134<span style="color: rgba(0, 0, 0, 1)">)
+    at org.apache.atlas.ApplicationProperties.get(ApplicationProperties.java:</span>86<span style="color: rgba(0, 0, 0, 1)">)
+    at org.apache.atlas.hive.bridge.HiveMetaStoreBridge.main(HiveMetaStoreBridge.java:</span>120<span style="color: rgba(0, 0, 0, 1)">)
+Caused by: org.apache.commons.configuration.ConfigurationException: Cannot locate configuration source null
+    at org.apache.commons.configuration.AbstractFileConfiguration.load(AbstractFileConfiguration.java:</span>259<span style="color: rgba(0, 0, 0, 1)">)
+    at org.apache.commons.configuration.AbstractFileConfiguration.load(AbstractFileConfiguration.java:</span>238<span style="color: rgba(0, 0, 0, 1)">)
+    at org.apache.commons.configuration.AbstractFileConfiguration.</span>&lt;init&gt;(AbstractFileConfiguration.java:197<span style="color: rgba(0, 0, 0, 1)">)
+    at org.apache.commons.configuration.PropertiesConfiguration.</span>&lt;init&gt;(PropertiesConfiguration.java:284<span style="color: rgba(0, 0, 0, 1)">)
+    at org.apache.atlas.ApplicationProperties.</span>&lt;init&gt;(ApplicationProperties.java:69<span style="color: rgba(0, 0, 0, 1)">)
+    at org.apache.atlas.ApplicationProperties.get(ApplicationProperties.java:</span>125<span style="color: rgba(0, 0, 0, 1)">)
+    ... </span>2 more</pre>
+</div>
+<p>Prompt that atlas-application.properties cannot be found, copy it to the Hive conf directory</p>
+<blockquote>
+<p># cp conf/atlas-application.properties /etc/hive/conf/</p>
+</blockquote>
+<p>Execute again</p>
+<div class="cnblogs_code">
+<pre><span style="color: rgba(0, 128, 0, 1)">#</span><span style="color: rgba(0, 128, 0, 1)"> bin/import-hive.sh</span>
+<span style="color: rgba(0, 0, 0, 1)">...
+Enter username </span><span style="color: rgba(0, 0, 255, 1)">for</span> atlas :-<span style="color: rgba(0, 0, 0, 1)"> admin
+Enter password </span><span style="color: rgba(0, 0, 255, 1)">for</span> atlas :-<span style="color: rgba(0, 0, 0, 1)"> 
+Exception </span><span style="color: rgba(0, 0, 255, 1)">in</span> thread <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">main</span><span style="color: rgba(128, 0, 0, 1)">"</span> java.lang.NoClassDefFoundError: com/fasterxml/jackson/jaxrs/json/<span style="color: rgba(0, 0, 0, 1)">JacksonJaxbJsonProvider
+    at org.apache.atlas.AtlasBaseClient.getClient(AtlasBaseClient.java:</span>270<span style="color: rgba(0, 0, 0, 1)">)
+    at org.apache.atlas.AtlasBaseClient.initializeState(AtlasBaseClient.java:</span>453<span style="color: rgba(0, 0, 0, 1)">)
+    at org.apache.atlas.AtlasBaseClient.initializeState(AtlasBaseClient.java:</span>448<span style="color: rgba(0, 0, 0, 1)">)
+    at org.apache.atlas.AtlasBaseClient.</span>&lt;init&gt;(AtlasBaseClient.java:132<span style="color: rgba(0, 0, 0, 1)">)
+    at org.apache.atlas.AtlasClientV2.</span>&lt;init&gt;(AtlasClientV2.java:82<span style="color: rgba(0, 0, 0, 1)">)
+    at org.apache.atlas.hive.bridge.HiveMetaStoreBridge.main(HiveMetaStoreBridge.java:</span>131<span style="color: rgba(0, 0, 0, 1)">)
+Caused by: java.lang.ClassNotFoundException: com.fasterxml.jackson.jaxrs.json.JacksonJaxbJsonProvider
+    at java.net.URLClassLoader.findClass(URLClassLoader.java:</span>381<span style="color: rgba(0, 0, 0, 1)">)
+    at java.lang.ClassLoader.loadClass(ClassLoader.java:</span>424<span style="color: rgba(0, 0, 0, 1)">)
+    at sun.misc.Launcher$AppClassLoader.loadClass(Launcher.java:</span>335<span style="color: rgba(0, 0, 0, 1)">)
+    at java.lang.ClassLoader.loadClass(ClassLoader.java:</span>357<span style="color: rgba(0, 0, 0, 1)">)
+    ... </span>6<span style="color: rgba(0, 0, 0, 1)"> more
+Failed to </span><span style="color: rgba(0, 0, 255, 1)">import</span> Hive Meta Data!!!</pre>
+</div>
+<p>It still reports an error, saying that the class cannot be found. Copy it from the server directory to the hook/Hive directory.</p>
+<div class="cnblogs_code">
+<pre><span style="color: rgba(0, 128, 0, 1)">#</span><span style="color: rgba(0, 128, 0, 1)"> cp server/webapp/atlas/WEB-INF/lib/jackson-jaxrs-1.8.3.jar hook/hive/atlas-hive-plugin-impl/</span><span style="color: rgba(0, 128, 0, 1)">
+#</span><span style="color: rgba(0, 128, 0, 1)"> cp server/webapp/atlas/WEB-INF/lib/jackson-jaxrs-json-provider-2.9.2.jar hook/hive/atlas-hive-plugin-impl/</span><span style="color: rgba(0, 128, 0, 1)">
+#</span><span style="color: rgba(0, 128, 0, 1)"> cp server/webapp/atlas/WEB-INF/lib/jackson-module-jaxb-annotations-2.9.8.jar hook/hive/atlas-hive-plugin-impl/</span></pre>
+</div>
+<p>The execution is successful again, and you can see Hive related data in atlas.</p>
+<p><picture>
+<source srcset="../img/1509647-20200111162649871-936552825.webp" type="image/webp"/>
+<img alt="" src="../img/1509647-20200111162649871-936552825.png"/>
+</picture></p>
+<p> </p>
+<p>Import successful</p>
+</div>
+</div>
+<!-- Post Footer -->
+<div class="post-footer">
+<div class="post-navigation">
+<a class="nav-button" href="../blog.html">← Back to Home</a>
+<a class="nav-button" href="0075.html">Next Post →</a>
+</div>
+</div>
+</article>
+</div>
+</body>
+</html>

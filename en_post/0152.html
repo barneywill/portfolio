@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Elasticsearch optimization practice</title>
+<link href="../css/style3.css" rel="stylesheet"/>
+</head>
+<body>
+<div class="container">
+<!-- Header Navigation -->
+<div class="header">
+<h1><a href="../blog.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+</div>
+<!-- Post Container -->
+<article class="post">
+<!-- Post Header -->
+<div class="post-header">
+<h1>Elasticsearch optimization practice</h1>
+<div class="post-meta">
+<div class="post-meta-item">
+<span class="meta-icon">📅</span>
+<span>May 29, 2022</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">📖</span>
+<span>1 min read</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">👁️</span>
+<span>166 views</span>
+</div>
+</div>
+</div>
+<!-- Post Content -->
+<div class="post-content">
+<div class="blogpost-body cnblogs-markdown" id="cnblogs_post_body">
+<h1 id="section-0152-1">1 Hot and cold separation (Hot/Warm/Cold)</h1>
+<p>Index Lifecircle Management Policy</p>
+<h2 id="section-0152-2">Index features</h2>
+<ul>
+<li>Hot: The index is updated and a large number of queries are made</li>
+<li>Warm: The index is not updated and is occasionally queried</li>
+<li>Cold: The index is not updated and is rarely queried.</li>
+<li>Delete: The index is not updated and is not queried</li>
+</ul>
+<p>refer to:<a href="https://www.elastic.co/guide/en/elasticsearch/reference/7.0/index-lifecycle-management.html" rel="noopener nofollow" target="_blank">https://www.elastic.co/guide/en/elasticsearch/reference/7.0/index-lifecycle-management.html</a></p>
+<p>According to the index characteristics, the Elasticsearch cluster can be divided into several small clusters:</p>
+<ul>
+<li>Hot cluster: stores Hot index</li>
+<li>Warm cluster: stores Warm index</li>
+<li>Cold cluster: stores Cold index (optional)</li>
+</ul>
+<p><a href="https://www.elastic.co/blog/implementing-hot-warm-cold-in-elasticsearch-with-index-lifecycle-management" rel="noopener nofollow" target="_blank">https://www.elastic.co/blog/implementing-hot-warm-cold-in-elasticsearch-with-index-lifecycle-management</a></p>
+<p>The simplest is to divide it into Hot and Warm management. Their characteristics are:</p>
+<ul>
+<li>Hot cluster: multiple CPUs, large memory, small hard disk, small Shard, and can handle a large number of read and write requests at the same time</li>
+<li>Warm cluster: less CPU, small memory, large hard disk, large Shard, to cope with a small number of read and write requests</li>
+</ul>
+<p>When an index is moved from a Hot cluster to a Warm cluster, it is usually necessary to change the small shard into a large shard. Here a shrink operation is required, that is, multiple shards of an index are merged into fewer shards. For example, five 10G shards are merged into one 50G shard. The shrink index can be searched for the original index through alias.</p>
+<p><a href="https://www.elastic.co/guide/en/elasticsearch/reference/7.0/indices-shrink-index.html" rel="noopener nofollow" target="_blank">https://www.elastic.co/guide/en/elasticsearch/reference/7.0/indices-shrink-index.html</a></p>
+<h1 id="section-0152-3">2 memory allocation</h1>
+<p>The node memory of Elasticsearch is divided into 2 parts:</p>
+<ul>
+<li>JVM memory</li>
+<li>Lucene index memory: mainly affected by disk size and shard size</li>
+</ul>
+<p>The maximum memory occupied by the second Lucene index can be estimated by the disk size. Most of the remaining memory can be allocated to the JVM. For example, the current node has 32G of memory, the disk occupies 50%, and Lucene uses 1G of memory. It can be estimated that Lucene will use up to 2G of memory when the disk is full. Then most of the remaining 30G, such as 28G, can be allocated to the JVM for use, which can optimize the memory usage of the node.</p>
+<h1 id="section-0152-4">3 Uneven disk usage among different nodes</h1>
+<p>Elasticsearch's cluster balancing strategy is to ensure that the number of shards between different nodes is approximately equal. If the sizes of different shards are very different, uneven disk usage of different nodes will occur. This can be divided into two types:</p>
+<h2 id="section-0152-5">Hot node disk usage is uneven</h2>
+<p>Adjust the ILM strategy and change the index rolling strategy on the hot node to use size instead of time. This can reduce the unequal size of shards on the index hot node and further reduce the possibility of uneven disk distribution.</p>
+<h2 id="section-0152-6">Warm node disk usage is uneven</h2>
+<p>You can regularly delete empty indexes, merge small indexes and other operations to reduce the number of shards and further reduce the possibility of uneven disk distribution.</p>
+<h1 id="section-0152-7">4 others</h1>
+<h2 id="section-0152-8">Disk usage percentage</h2>
+<p>Hot nodes and hot node disks must be expanded in time when 90% is used.</p>
+<h2 id="section-0152-9">Performance bottleneck</h2>
+<p>Pay attention to the fact that nodes in the cluster have their own performance bottlenecks and processing capabilities, such as</p>
+<ul>
+<li>
+<p>max_restore_bytes_per_sec: must be lower than the disk limit, otherwise it will easily cause the node to die.</p>
+</li>
+<li>
+<p>cluster_concurrent_rebalance and node_concurrent_recoveries: If the Warm node is occasionally kicked off by the master, it may be because the shrink or migration concurrency is too large and exceeds the cluster's capacity. In this case, it is best to lower these two concurrency limits.</p>
+</li>
+</ul>
+</div>
+</div>
+<!-- Post Footer -->
+<div class="post-footer">
+<div class="post-navigation">
+<a class="nav-button" href="../blog.html">← Back to Home</a>
+<a class="nav-button" href="0153.html">Next Post →</a>
+</div>
+</div>
+</article>
+</div>
+</body>
+</html>

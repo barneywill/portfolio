@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Copy files between Linux servers</title>
+<link href="../css/style3.css" rel="stylesheet"/>
+</head>
+<body>
+<div class="container">
+<!-- Header Navigation -->
+<div class="header">
+<h1><a href="../blog.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+</div>
+<!-- Post Container -->
+<article class="post">
+<!-- Post Header -->
+<div class="post-header">
+<h1>Copy files between Linux servers</h1>
+<div class="post-meta">
+<div class="post-meta-item">
+<span class="meta-icon">📅</span>
+<span>December 13, 2018</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">📖</span>
+<span>1 min read</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">👁️</span>
+<span>1232 views</span>
+</div>
+</div>
+</div>
+<!-- Post Content -->
+<div class="post-content">
+<div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<p>There are several ways to copy files between Linux servers:</p>
+<p>1 If it is a scheduled task, you can use rsync</p>
+<p>2 If you are logging in based on ssh, you can use scp. The advantage is that you can copy from remote to remote. The disadvantage is that you need an account and password.</p>
+<blockquote>
+<p>upload: scp $local_file $remote_username@$remote_ip:$remote_folder</p>
+<p>download: scp $remote_username@$remote_ip:$remote_file $local_folder</p>
+</blockquote>
+<p>3. If you only transfer files temporarily and have logged in to two servers, there is a simpler way, you can use nc</p>
+<blockquote>
+<p>Receiving server A: nc -l $receive_port &gt; $file_name<br/>Sending server B: nc $receive_ip $receive_port &lt; $file_name</p>
+</blockquote>
+<p>You can copy the $file_name file on the server to server A;<br/>For example:</p>
+<blockquote>
+<p>1.1.1.1: nc -l 8888 &gt; test.log<br/>1.1.1.2: nc 1.1.1.1 8888 &lt; test.log</p>
+</blockquote>
+<p>Copy test.log on 1.1.1.2 to 1.1.1.1</p>
+<p>Want to copy a directory? Also very simple:</p>
+<blockquote>
+<p>Receiving server A: nc -l $receive_port |tar -zxvf -<br/>Sending server B: tar -zcvf - $dir_name |nc $receive_ip $receive_port</p>
+</blockquote>
+<p> </p>
+</div>
+</div>
+<!-- Post Footer -->
+<div class="post-footer">
+<div class="post-navigation">
+<a class="nav-button" href="../blog.html">← Back to Home</a>
+<a class="nav-button" href="0321.html">Next Post →</a>
+</div>
+</div>
+</article>
+</div>
+</body>
+</html>

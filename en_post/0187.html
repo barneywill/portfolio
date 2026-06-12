@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Test basics http_load 1 - Introduction, installation, use</title>
+<link href="../css/style3.css" rel="stylesheet"/>
+</head>
+<body>
+<div class="container">
+<!-- Header Navigation -->
+<div class="header">
+<h1><a href="../blog.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+</div>
+<!-- Post Container -->
+<article class="post">
+<!-- Post Header -->
+<div class="post-header">
+<h1>Test basics http_load 1 - Introduction, installation, use</h1>
+<div class="post-meta">
+<div class="post-meta-item">
+<span class="meta-icon">📅</span>
+<span>March 11, 2019</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">📖</span>
+<span>1 min read</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">👁️</span>
+<span>434 views</span>
+</div>
+</div>
+</div>
+<!-- Post Content -->
+<div class="post-content">
+<div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<p>http_load-09Mar2016<br/>Official: https://acme.com/software/http_load/</p>
+<h1>1 Introduction</h1>
+<p>http_load - multiprocessing http test client</p>
+<p>http_load runs multiple http fetches in parallel, to test the throughput of a web server. However unlike most such test clients, it runs in a single process, so it doesn't bog down the client machine. It can be configured to do https fetches as well.</p>
+<p>You give it a file containing a list of URLs that may be fetched, a flag specifying how to start connections (either by rate or by number of simulated users), and a flag specifying when to quit (either after a given number of fetches or a given elapsed time). There are also optional flags for checksums, throttling, random jitter, and progress reports.</p>
+<h1>2. Installation</h1>
+<blockquote>
+<p># wget https://acme.com/software/http_load/http_load-09Mar2016.tar.gz<br/># cd http_load-09Mar2016<br/># make</p>
+</blockquote>
+<h1>Three uses</h1>
+<blockquote>
+<p>$ ./http_load -h<br/>usage:  ./http_load [-checksum] [-throttle] [-proxy host:port] [-verbose] [-timeout secs] [-sip sip_file]<br/>            -parallel N | -rate N [-jitter]<br/>            -fetches N | -seconds N<br/>            url_file<br/>One start specifier, either -parallel or -rate, is required.<br/>One end specifier, either -fetches or -seconds, is required.</p>
+</blockquote>
+<p>Prepare urls file</p>
+<blockquote>
+<p>$ echo 'http://localhost:80' &gt; urls</p>
+</blockquote>
+<p>test</p>
+<blockquote>
+<p>$ ./http_load -parallel 2 -seconds 10 urls<br/>49 fetches, 2 max parallel, 289884 bytes, in 10.0148 seconds<br/>5916 mean bytes/connection<br/>4.89274 fetches/sec, 28945.5 bytes/sec<br/>msecs/connect: 28.8932 mean, 44.243 max, 24.488 min<br/>msecs/first-response: 63.5362 mean, 81.624 max, 57.803 min<br/>HTTP response codes:<br/>  code 200 -- 49</p>
+</blockquote>
+<p> </p>
+</div>
+</div>
+<!-- Post Footer -->
+<div class="post-footer">
+<div class="post-navigation">
+<a class="nav-button" href="../blog.html">← Back to Home</a>
+<a class="nav-button" href="0188.html">Next Post →</a>
+</div>
+</div>
+</article>
+</div>
+</body>
+</html>

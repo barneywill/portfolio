@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Common commands in Shell scripts</title>
+<link href="../css/style3.css" rel="stylesheet"/>
+</head>
+<body>
+<div class="container">
+<!-- Header Navigation -->
+<div class="header">
+<h1><a href="../blog.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+</div>
+<!-- Post Container -->
+<article class="post">
+<!-- Post Header -->
+<div class="post-header">
+<h1>Common commands in Shell scripts</h1>
+<div class="post-meta">
+<div class="post-meta-item">
+<span class="meta-icon">📅</span>
+<span>February 22, 2019</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">📖</span>
+<span>3 min read</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">👁️</span>
+<span>497 views</span>
+</div>
+</div>
+</div>
+<!-- Post Content -->
+<div class="post-content">
+<div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<p>#!/bin/sh</p>
+<h1>1 Get script parameters</h1>
+<p>$# Number of parameters<br/>$0 current script name<br/>$1 1st parameter<br/>$n nth parameter<br/>$* all parameters<br/>$@ all parameters<br/>$? Status of the previous command<br/>$$ current pid</p>
+<p>Get current directory</p>
+<blockquote>
+<p>$(cd `dirname $0`; pwd)</p>
+</blockquote>
+<h1>2 dates</h1>
+<blockquote>
+<p>$ date<br/>Wed Mar 27 17:27:18 CST 2019<br/>$ date +"%Y-%m-%d %H:%M:%S"<br/>2019-03-27 17:28:27<br/>$ date +"%Y-%m-%d %H:%M:%S" --date="-1 day"<br/>2019-03-26 17:29:10<br/>$ date +%s<br/>1553678982</p>
+<p>$ date - d "-1day2019-05-20" +%Y%m%d<br/>20190519</p>
+<p>$ date - d"$(date - d"1 month" +"%Y%m01") - 1 day" +"%Y%m%d" <br/>20190531</p>
+<p>$ date +"%Y%m$(cal|sed 'N;${s/.* //;P;d};D')"<br/>20190531</p>
+</blockquote>
+<h1>3 String replacement</h1>
+<p>Replace all a in the variable var with b</p>
+<blockquote>
+<p>${var//a/b}<br/>echo "$var"|awk 'gsub("a","b") {print $0}'<br/>echo "$"|sed 's/a/b/'</p>
+</blockquote>
+<h1>4 String interception substring</h1>
+<blockquote>
+<p>var=hello<br/>echo ${#var}<br/>echo $var|awk '{print substr($0, 2, 3)}'<br/>echo ${var:2}<br/>echo ${var:2:3}</p>
+<p>echo ${var#he}<br/>echo ${var%lo}</p>
+<p>echo ${var1:`echo $((${#var2}+1))`}</p>
+</blockquote>
+<h1>5 string split</h1>
+<h2>Array (the item itself cannot contain spaces)</h2>
+<div class="cnblogs_code">
+<pre>str=${str//,/<span style="color: rgba(0, 0, 0, 1)"> }
+</span><span style="color: rgba(0, 0, 255, 1)">for</span> item <span style="color: rgba(0, 0, 255, 1)">in</span> <span style="color: rgba(128, 0, 128, 1)">$str</span> 
+<span style="color: rgba(0, 0, 255, 1)">do</span><span style="color: rgba(0, 0, 0, 1)">
+    echo </span><span style="color: rgba(128, 0, 128, 1)">$item</span><span style="color: rgba(0, 0, 0, 1)">
+done</span></pre>
+</div>
+<h2>cut (cut: the delimiter must be a single character The delimiter can only be 1 character)</h2>
+<div class="cnblogs_code">
+<pre>        i=1
+        <span style="color: rgba(0, 0, 255, 1)">while</span>((1==1<span style="color: rgba(0, 0, 0, 1)">))
+        </span><span style="color: rgba(0, 0, 255, 1)">do</span><span style="color: rgba(0, 0, 0, 1)">
+                item</span>=`echo <span style="color: rgba(128, 0, 128, 1)">$str</span>|cut - d <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">,</span><span style="color: rgba(128, 0, 0, 1)">"</span> <span style="color: rgba(0, 128, 128, 1)">-f</span><span style="color: rgba(128, 0, 128, 1)">$i</span><span style="color: rgba(0, 0, 0, 1)">`
+                </span><span style="color: rgba(0, 0, 255, 1)">if</span> [ <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">$item</span><span style="color: rgba(128, 0, 0, 1)">"</span> != <span style="color: rgba(128, 0, 0, 1)">""</span><span style="color: rgba(0, 0, 0, 1)"> ]
+                then
+                        ((i</span>++<span style="color: rgba(0, 0, 0, 1)">))
+                        echo </span><span style="color: rgba(128, 0, 128, 1)">$item</span>
+                <span style="color: rgba(0, 0, 255, 1)">else</span>
+                        <span style="color: rgba(0, 0, 255, 1)">break</span><span style="color: rgba(0, 0, 0, 1)">
+                fi
+        done</span></pre>
+</div>
+<h2>awk - F (index position can only be hardcoded)</h2>
+<div class="cnblogs_code">
+<pre>$ echo <span style="color: rgba(128, 0, 128, 1)">$str</span>|awk <span style="color: rgba(0, 128, 128, 1)">-F</span> ',' '{print <span style="color: rgba(128, 0, 128, 1)">$1</span>}</pre>
+</div>
+<h2>awk split</h2>
+<div class="cnblogs_code">
+<pre>$ echo <span style="color: rgba(128, 0, 128, 1)">$str</span>|awk '{split(<span style="color: rgba(128, 0, 128, 1)">$0</span>,arr,<span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">,</span><span style="color: rgba(128, 0, 0, 1)">"</span>); <span style="color: rgba(0, 0, 255, 1)">for</span> (i <span style="color: rgba(0, 0, 255, 1)">in</span> arr) {print arr[i]}}'</pre>
+</div>
+<h1>6 cycles</h1>
+<p>String loop (space separated)</p>
+<blockquote>
+<p>var='1 2 3'<br/>for var in $vars<br/>do<br/>        echo $var<br/>done</p>
+</blockquote>
+<p>Loop over integers (from 1 to 100)</p>
+<blockquote>
+<p>for i in {1..100}<br/>do<br/>        echo $i<br/>done</p>
+</blockquote>
+<p>self-increment id</p>
+<blockquote>
+<p>i=0<br/>for var in $vars<br/>do<br/>        echo "$i $var"<br/>        ((i=i+1))<br/>done</p>
+</blockquote>
+<p>while</p>
+<blockquote>
+<p>#while true<br/>while [ 1 - eq 1 ]<br/>do<br/>  ..<br/>  break/continue<br/>  ..<br/>done</p>
+</blockquote>
+<h1>7 Determine whether the string is empty (equal, unequal)</h1>
+<blockquote>
+<p>if [ - z "$var" ]<br/>then <br/>    echo "var is empty" <br/>fi</p>
+<p>if [ - n "$var" ]<br/>then <br/>    echo "var is not empty" <br/>fi</p>
+<p>if [[ "$var" = "" ]]<br/>then<br/>    echo "empty"<br/>fi</p>
+<p>if [[ "$var" != "" ]]<br/>then<br/>    echo "not empty"<br/>fi</p>
+</blockquote>
+<h1>8 String contains judgment</h1>
+<blockquote>
+<p>if [[ "$all" == *"$sub"* ]]; then</p>
+<p>or</p>
+<p>if [[ "$all" =~ "$sub" ]] ;then</p>
+</blockquote>
+<h1>9 Integer comparison judgment</h1>
+<blockquote>
+<p>if [ $a - eq 0 ]  <br/>then  <br/>    echo "a = 0"  <br/>fi  <br/> <br/>if [ $a - ne 0 ]  <br/>then  <br/>    echo "a != 0"  <br/>fi  <br/> <br/>if [ $a - gt 0 ]  <br/>then   <br/>    echo "a &gt; 0"  <br/>fi  <br/> <br/>if [ $a - lt 0 ]  <br/>then  <br/>    echo "a &lt; 0"   <br/>fi</p>
+</blockquote>
+<h1>10 if</h1>
+<h2>if-else</h2>
+<blockquote>
+<p>if cond; then</p>
+<p>...</p>
+<p>elif cond; then</p>
+<p>...</p>
+<p>else</p>
+<p>...</p>
+<p>fi</p>
+</blockquote>
+<h2>Boolean connection AND OR</h2>
+<blockquote>
+<p>if [ $a - lt 0 - a - z "$b" ]; then</p>
+<p>　　echo ''</p>
+<p>fi</p>
+<p>or</p>
+<p>if [ $a - lt 0 ] &amp;&amp; [ - z "$b" ]; then</p>
+<p>　　echo ''</p>
+<p>fi</p>
+</blockquote>
+<p>The above is AND, replace - a - &gt; - o, &amp;&amp; - &gt; || with OR</p>
+<h1>11 Integer calculations</h1>
+<blockquote>
+<p>echo $((2+1))</p>
+</blockquote>
+<h1>12 comments</h1>
+<p>Single line comments</p>
+<blockquote>
+<p># comment</p>
+</blockquote>
+<p>Multi-line comments</p>
+<blockquote>
+<p>&lt;&lt;'COMMENT'<br/>comment1<br/>comment2<br/>...<br/>COMMENT</p>
+</blockquote>
+<h1>13 File and folder judgment</h1>
+<blockquote>
+<p>if [ - d "/path/to/dir" ]<br/>then<br/>        echo 'directory /path/to/dir exists'<br/>else<br/>        echo 'directory /path/to/dir does not exists'<br/>fi</p>
+<p>if [ - f "/path/to/file" ]<br/>then<br/>        echo 'file /path/to/file exists'<br/>else<br/>        echo 'file /path/to/file does not exists'<br/>fi</p>
+</blockquote>
+<h1>14 Traverse folders</h1>
+<blockquote>
+<p>dir=/path/to/dir/<br/>for file in $dir/*<br/>do<br/>    echo $file<br/>done</p>
+</blockquote>
+<h1>15 Exit script</h1>
+<blockquote>
+<p>exit 0<br/>exit 1</p>
+</blockquote>
+<p> </p>
+</div>
+</div>
+<!-- Post Footer -->
+<div class="post-footer">
+<div class="post-navigation">
+<a class="nav-button" href="../blog.html">← Back to Home</a>
+<a class="nav-button" href="0211.html">Next Post →</a>
+</div>
+</div>
+</article>
+</div>
+</body>
+</html>

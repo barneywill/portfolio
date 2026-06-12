@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Intermittent UDF Errors in Hive Jobs</title>
+<link href="../css/style3.css" rel="stylesheet"/>
+</head>
+<body>
+<div class="container">
+<!-- Header Navigation -->
+<div class="header">
+<h1><a href="../blog.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+</div>
+<!-- Post Container -->
+<article class="post">
+<!-- Post Header -->
+<div class="post-header">
+<h1>Intermittent UDF Errors in Hive Jobs</h1>
+<div class="post-meta">
+<div class="post-meta-item">
+<span class="meta-icon">📅</span>
+<span>May 19, 2022</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">📖</span>
+<span>1 min read</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">👁️</span>
+<span>423 views</span>
+</div>
+</div>
+</div>
+<!-- Post Content -->
+<div class="post-content">
+<div class="blogpost-body cnblogs-markdown" id="cnblogs_post_body">
+<h1 id="section-0023-1">background</h1>
+<p>Perform the operation of adding temporary udf in Hive SQL</p>
+<blockquote>
+<p>add jar hdfs:///user/hive/lib/tools-1.0.jar;<br/>
+create temporary function decode as 'com.test.etl.Decoder';</p>
+</blockquote>
+<p>Occasionally, errors will be reported during scheduled tasks. The errors are relatively random. The error information is as follows:</p>
+<pre><code>INFO  : Query ID = hive_20211026010225_545899e7-7afa-4b5c-b7db-fd71565a89c6
+INFO  : Total jobs = 1
+INFO  : Launching Job 1 out of 1
+INFO  : Starting task [Stage-1:MAPRED] in serial mode
+INFO  : Number of reduce tasks not specified. Estimated from input data size: 197
+INFO  : In order to change the average load for a reducer (in bytes):
+INFO  :   set hive.exec.reducers.bytes.per.reducer=
+INFO  : In order to limit the maximum number of reducers:
+INFO  :   set hive.exec.reducers.max=
+INFO  : In order to set a constant number of reducers:
+INFO  :   set mapreduce.job.reduces=
+INFO  : Cleaning up the staging area /user/yarn/hive/.staging/job_1629262398375_145140
+ERROR : Job Submission failed with exception 'java.io.FileNotFoundException(File file:/disk1/hive/download/tools-1.0.jar does not exist)'
+java.io.FileNotFoundException: File file:/disk1/hive/download/tools-1.0.jar does not exist
+    at org.apache.hadoop.fs.RawLocalFileSystem.deprecatedGetFileStatus(RawLocalFileSystem.java:641)
+    at org.apache.hadoop.fs.RawLocalFileSystem.getFileLinkStatusInternal(RawLocalFileSystem.java:867)
+    at org.apache.hadoop.fs.RawLocalFileSystem.getFileStatus(RawLocalFileSystem.java:631)
+    at org.apache.hadoop.fs.FilterFileSystem.getFileStatus(FilterFileSystem.java:442)
+    at org.apache.hadoop.fs.FileUtil.copy(FileUtil.java:378)
+    at org.apache.hadoop.fs.FileUtil.copy(FileUtil.java:329)
+    at org.apache.hadoop.mapreduce.JobResourceUploader.copyRemoteFiles(JobResourceUploader.java:680)
+    at org.apache.hadoop.mapreduce.JobResourceUploader.uploadLibJars(JobResourceUploader.java:313)
+    at org.apache.hadoop.mapreduce.JobResourceUploader.uploadResourcesInternal(JobResourceUploader.java:205)
+    at org.apache.hadoop.mapreduce.JobResourceUploader.uploadResources(JobResourceUploader.java:133)
+    at org.apache.hadoop.mapreduce.JobSubmitter.copyAndConfigureFiles(JobSubmitter.java:99)
+    at org.apache.hadoop.mapreduce.JobSubmitter.submitJobInternal(JobSubmitter.java:194)
+    at org.apache.hadoop.mapreduce.Job$11.run(Job.java:1570)
+    at org.apache.hadoop.mapreduce.Job$11.run(Job.java:1567)
+    at java.security.AccessController.doPrivileged(Native Method)
+    at javax.security.auth.Subject.doAs(Subject.java:422)
+    at org.apache.hadoop.security.UserGroupInformation.doAs(UserGroupInformation.java:1731)
+    at org.apache.hadoop.mapreduce.Job.submit(Job.java:1567)
+    at org.apache.hadoop.mapred.JobClient$1.run(JobClient.java:576)
+    at org.apache.hadoop.mapred.JobClient$1.run(JobClient.java:571)
+    at java.security.AccessController.doPrivileged(Native Method)
+    at javax.security.auth.Subject.doAs(Subject.java:422)
+    at org.apache.hadoop.security.UserGroupInformation.doAs(UserGroupInformation.java:1731)
+    at org.apache.hadoop.mapred.JobClient.submitJobInternal(JobClient.java:571)
+    at org.apache.hadoop.mapred.JobClient.submitJob(JobClient.java:562)
+    at org.apache.hadoop.hive.ql.exec.mr.ExecDriver.execute(ExecDriver.java:441)
+    at org.apache.hadoop.hive.ql.exec.mr.MapRedTask.execute(MapRedTask.java:146)
+    at org.apache.hadoop.hive.ql.exec.Task.executeTask(Task.java:199)
+    at org.apache.hadoop.hive.ql.exec.TaskRunner.runSequential(TaskRunner.java:97)
+    at org.apache.hadoop.hive.ql.Driver.launchTask(Driver.java:2250)
+    at org.apache.hadoop.hive.ql.Driver.execute(Driver.java:1893)
+    at org.apache.hadoop.hive.ql.Driver.runInternal(Driver.java:1613)
+    at org.apache.hadoop.hive.ql.Driver.run(Driver.java:1332)
+    at org.apache.hadoop.hive.ql.Driver.run(Driver.java:1327)
+    at org.apache.hive.service.cli.operation.SQLOperation.runQuery(SQLOperation.java:256)
+    at org.apache.hive.service.cli.operation.SQLOperation.access$600(SQLOperation.java:92)
+    at org.apache.hive.service.cli.operation.SQLOperation$BackgroundWork$1.run(SQLOperation.java:345)
+    at java.security.AccessController.doPrivileged(Native Method)
+    at javax.security.auth.Subject.doAs(Subject.java:422)
+    at org.apache.hadoop.security.UserGroupInformation.doAs(UserGroupInformation.java:1731)
+    at org.apache.hive.service.cli.operation.SQLOperation$BackgroundWork.run(SQLOperation.java:357)
+    at java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:511)
+    at java.util.concurrent.FutureTask.run(FutureTask.java:266)
+    at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1149)
+    at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:624)
+    at java.lang.Thread.run(Thread.java:748)
+ERROR : FAILED: Execution Error, return code 1 from org.apache.hadoop.hive.ql.exec.mr.MapRedTask. File file:/disk1/hive/download/tools-1.0.jar does not exist
+INFO  : Completed executing command(queryId=hive_20211026010225_545899e7-7afa-4b5c-b7db-fd71565a89c6); Time taken: 0.133 seconds
+Error: Error while processing statement: FAILED: Execution Error, return code 1 from org.apache.hadoop.hive.ql.exec.mr.MapRedTask. File file:/disk1/hive/download/tools-1.0.jar does not exist (state=08S01,code=1)
+Closing: 0: jdbc:hive2://master:10000
+Process exited with an error: 1 (Exit value: 1)
+</code></pre>
+<h1 id="section-0023-2">position</h1>
+<p>Error reports are sporadic and irregular. Check the directory where the error is reported and download the directory for Hive. The configuration is:</p>
+<blockquote>
+<p>hive.downloaded.resources.dir=/disk1/hive/download</p>
+</blockquote>
+<p>The inspection found that the directory does not exist for many nodes in the cluster. It is suspected that there is a problem with the initialization of the server environment, and some nodes are not initialized correctly.<br/>
+Further inspection revealed that the directory of the same node sometimes exists and sometimes does not exist, ruling out the above suspicion.<br/>
+The default value of this configuration in Hive is:</p>
+<blockquote>
+<p>hive.downloaded.resources.dir=${system:java.io.tmpdir}/${hive.session.id}_resources</p>
+</blockquote>
+<p>It can be seen that this directory is related to the session and will be deleted every time the session is closed. If the configured path does not have a sessionid, different sessions will affect each other.</p>
+<pre><code>DOWNLOADED_RESOURCES_DIR("hive.downloaded.resources.dir",
+    "${system:java.io.tmpdir}" + File.separator + "${hive.session.id}_resources",
+    "Temporary local directory for added resources in the remote file system."),
+</code></pre>
+<p>Modify the configuration as:</p>
+<blockquote>
+<p>hive.downloaded.resources.dir=/disk1/hive/download/${hive.session.id}_resources</p>
+</blockquote>
+<p>Problem solved.</p>
+</div>
+</div>
+<!-- Post Footer -->
+<div class="post-footer">
+<div class="post-navigation">
+<a class="nav-button" href="../blog.html">← Back to Home</a>
+<a class="nav-button" href="0024.html">Next Post →</a>
+</div>
+</div>
+</article>
+</div>
+</body>
+</html>

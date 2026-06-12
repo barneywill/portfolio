@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Positioning analysis-witness the power of Scala</title>
+<link href="../css/style3.css" rel="stylesheet"/>
+</head>
+<body>
+<div class="container">
+<!-- Header Navigation -->
+<div class="header">
+<h1><a href="../blog.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+</div>
+<!-- Post Container -->
+<article class="post">
+<!-- Post Header -->
+<div class="post-header">
+<h1>Positioning analysis-witness the power of Scala</h1>
+<div class="post-meta">
+<div class="post-meta-item">
+<span class="meta-icon">📅</span>
+<span>December 29, 2018</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">📖</span>
+<span>2 min read</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">👁️</span>
+<span>588 views</span>
+</div>
+</div>
+</div>
+<!-- Post Content -->
+<div class="post-content">
+<div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<h1>1. Scenario analysis</h1>
+<p>Positioning analysis is widely used, such as outdoor base station positioning, indoor Bluetooth beacon positioning, indoor wifi probe positioning, etc. The implementation method is three-point positioning Trilateration</p>
+<h2>ideal situation</h2>
+<p> <img alt="" src="https://img2018.cnblogs.com/blog/1509647/201812/1509647-20181229124718575-233102178.png"/></p>
+<p>This ideal situation requires three base stations to collect "accurate" distance information at the same time.</p>
+<h2>actual situation</h2>
+<ul>
+<li>The three base stations collect data at separate times;</li>
+<li>The distance at which the data was collected is inaccurate;</li>
+</ul>
+<p>The solution is:</p>
+<ul>
+<li>Increasing the number of base stations means increasing the density and quantity of collected data;</li>
+<li>Instead of using data from one point in time, data from a time period is used for calculation. For example, there may be only data from one base station within 5 seconds, but there may be data from more than three base stations within 30 seconds;</li>
+<li>Within the error range, mathematical methods are used to iteratively converge and find the coordinates of the most probable unknown point in terms of probability;</li>
+</ul>
+<p>After obtaining the coordinates of the unknown point and combining it with time, more applications can be made: trajectory maps, heat maps, etc., such as</p>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201812/1509647-20181229131334384-2097307750.png"/></p>
+<h1>2. Problem abstraction</h1>
+<h2>Known conditions</h2>
+<ul>
+<li>Position coordinates of n points: (x1, y1), (x2, y2), (x3, y3), ..., (xn, yn)</li>
+<li>Distance from unknown point to n points: d1, d2, d3, ..., dn</li>
+</ul>
+<h2>Solve</h2>
+<ul>
+<li>Unknown point position coordinates (x, y)</li>
+</ul>
+<h2>equation</h2>
+<p> <img alt="" src="https://img2018.cnblogs.com/blog/1509647/201812/1509647-20181229131800936-137508785.png"/></p>
+<h2>solution</h2>
+<p>The above equation is n quadratic equations,</p>
+<p>1) First try to reduce the degree, and subtract the i-th equation from the i-1 equation in the system of equations one by one to obtain a new equation, so that n quadratic equations are converted into n-1 linear equations,</p>
+<p>2) After obtaining n-1 linear equations (linear equations), the problem is converted into a linear regression problem:</p>
+<p>That is, there are n observation points (x1, y1), (x2, y2), ..., (xn, yn) in the plane. You need to find a straight line Y=aX+b. Calculate constant a and constant b to minimize the sum of squares of the distance (error) between the n observation points and the straight line (note that the coordinates of the unknown point in the original problem are the constant a and constant b here);</p>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201901/1509647-20190103223432010-1831955943.png"/></p>
+<p> </p>
+<p>The one-variable linear regression model can use the least squares method (least squares method) to obtain the optimal solution, that is, the least squares solution; for details on the least squares method, see:<a href="https://www.cnblogs.com/barneywill/p/10217349.html" target="_blank">https://www.cnblogs.com/barneywill/p/10217349.html</a></p>
+<p> </p>
+<h2>Problem model simplification</h2>
+<blockquote>
+<p>(x1, y1, d1)<br/>(x2, y2, d2)<br/>...<br/>(xn, yn, dn)<br/>-&gt;<br/>(x, y)</p>
+</blockquote>
+<h1>Three statistical examples</h1>
+<p>enter<br/>(1.0, 1.0, 1.0)<br/>(2.0, 0.0, 1.0)<br/>(2.0, 2.0, 1.0)</p>
+<p>output<br/>(2.0,1.0)</p>
+<h1>Four code implementation</h1>
+<h2>Scala core code</h2>
+<p>scala</p>
+<p> </p>
+<div class="cnblogs_code">
+<pre>  <span style="color: rgba(0, 128, 0, 1)">/**</span><span style="color: rgba(0, 128, 0, 1)">
+    * </span><span style="color: rgba(128, 128, 128, 1)">@param</span><span style="color: rgba(0, 128, 0, 1)"> datas Array(x_coordinates, y_coordinates, distance)
+    * </span><span style="color: rgba(128, 128, 128, 1)">@return</span><span style="color: rgba(0, 128, 0, 1)"> (x_coordinates, y_coordinates)
+    </span><span style="color: rgba(0, 128, 0, 1)">*/</span><span style="color: rgba(0, 0, 0, 1)">
+  def detect(datas : Array[(Double, Double, Double)]) : (Double, Double) </span>=<span style="color: rgba(0, 0, 0, 1)"> {
+    </span><span style="color: rgba(0, 0, 255, 1)">if</span> (datas == <span style="color: rgba(0, 0, 255, 1)">null</span> || datas.isEmpty) (0, 0<span style="color: rgba(0, 0, 0, 1)">)
+    </span><span style="color: rgba(0, 0, 255, 1)">else</span> <span style="color: rgba(0, 0, 255, 1)">if</span> (datas.length == 1) <span style="color: rgba(0, 0, 255, 1)">return</span><span style="color: rgba(0, 0, 0, 1)"> (datas.head._1, datas.head._2)
+    </span><span style="color: rgba(0, 0, 255, 1)">else</span> <span style="color: rgba(0, 0, 255, 1)">if</span> (datas.length == 2) <span style="color: rgba(0, 0, 255, 1)">return</span> ((datas.head._1 + datas.last._1) / 2, (datas.head._2 + datas.last._2) / 2<span style="color: rgba(0, 0, 0, 1)">)
+    </span><span style="color: rgba(0, 0, 255, 1)">else</span><span style="color: rgba(0, 0, 0, 1)"> {
+      var data </span>=<span style="color: rgba(0, 0, 0, 1)"> Array[Array[Double]]()
+      </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)">X + (y_1 - y_i)/(x_1 - x_i)Y = (sq(d_i) - sq(d_1) + sq(x_1) + sq(y_1) - sq(x_i) - sq(y_i))/2(x_1 - x_i)</span>
+      <span style="color: rgba(0, 0, 255, 1)">for</span> (i &lt;- 1 to (datas.length - 1)) data = data :+ Array((datas.head._2 - datas.apply(i)._2) / (datas.head._1 - datas.apply(i)._1), (Math.pow(datas.apply(i)._3, 2) - Math.pow(datas.head._3, 2) + Math.pow(datas.head._1, 2) + Math.pow(datas.head._2, 2) - Math.pow(datas.apply(i)._1, 2) - Math.pow(datas.apply(i)._2, 2))  / 2 / (datas.head._1 -<span style="color: rgba(0, 0, 0, 1)"> datas.apply(i)._1))
+      val regression </span>= <span style="color: rgba(0, 0, 255, 1)">new</span><span style="color: rgba(0, 0, 0, 1)"> SimpleRegression
+      regression.addData(data)
+      (regression.getIntercept, regression.getSlope)
+    }
+  }</span></pre>
+</div>
+<p>test run</p>
+<div class="cnblogs_code">
+<pre>      println(detect(Array((1.0, 1.0, 1.0<span style="color: rgba(0, 0, 0, 1)">))))
+      println(detect(Array((</span>1.0, 1.0, 1.0), (2.0, 2.0, 1.0<span style="color: rgba(0, 0, 0, 1)">))))
+      println(detect(Array((</span>1.0, 1.0, 1.0), (2.0, 0.0, 1.0), (2.0, 2.0, 1.0<span style="color: rgba(0, 0, 0, 1)">))))
+      println(detect(Array((</span>1.0, 1.0, 1.0), (2.0, 0.0, 1.0), (2.0, 3.0, 1.0<span style="color: rgba(0, 0, 0, 1)">))))
+      println(detect(Array((</span>1.0, 1.0, 1.0), (2.0, 0.0, 1.0), (2.0, 3.0, 1.0), (2.0, 3.0, 1.0), (20.0, 30.0, 1.0))))</pre>
+</div>
+<p>output</p>
+<p>(1.0,1.0)<br/>(1.5,1.5)<br/>(2.0,1.0)<br/>(2.5,1.5)<br/>(7.728915662650602,3.3674698795180724)</p>
+<h1>5. Radius map effect</h1>
+<p>Example of radius plot with real data:</p>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201812/1509647-20181229124035699-240469144.png"/></p>
+<p>The black points in the radius diagram represent the location of the base station. Each base station has one or two circles, two of which are drawn using the maximum distance and minimum distance in the data; the red points represent the location of the device located based on the algorithm;</p>
+<p> </p>
+</div>
+</div>
+<!-- Post Footer -->
+<div class="post-footer">
+<div class="post-navigation">
+<a class="nav-button" href="../blog.html">← Back to Home</a>
+<a class="nav-button" href="0287.html">Next Post →</a>
+</div>
+</div>
+</article>
+</div>
+</body>
+</html>

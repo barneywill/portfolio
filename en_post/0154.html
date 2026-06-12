@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>YARN enables log collection</title>
+<link href="../css/style3.css" rel="stylesheet"/>
+</head>
+<body>
+<div class="container">
+<!-- Header Navigation -->
+<div class="header">
+<h1><a href="../blog.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+</div>
+<!-- Post Container -->
+<article class="post">
+<!-- Post Header -->
+<div class="post-header">
+<h1>YARN enables log collection</h1>
+<div class="post-meta">
+<div class="post-meta-item">
+<span class="meta-icon">📅</span>
+<span>April 01, 2019</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">📖</span>
+<span>1 min read</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">👁️</span>
+<span>670 views</span>
+</div>
+</div>
+</div>
+<!-- Post Content -->
+<div class="post-content">
+<div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<p>YARN enables log collection function, in addition to configuration</p>
+<blockquote>
+<p>yarn.log-aggregation-enable=true</p>
+</blockquote>
+<p>Also check whether the /tmp/logs directory exists and its permissions. Especially after Kerberos is turned on, some directories may not be automatically created successfully and need to be created manually:</p>
+<blockquote>
+<p>$ hdfs dfs - mkdir /tmp<br/>$ hdfs dfs - chmod 777 /tmp</p>
+</blockquote>
+<p>HDFS log directory for each application:</p>
+<blockquote>
+<p>/tmp/logs/$user/logs/$applicationId</p>
+</blockquote>
+<p>If the above log directory exists but still cannot be found</p>
+<blockquote>
+<p>Log aggregation has not completed or is not enabled.</p>
+</blockquote>
+<p>It may be due to user permissions. You can switch to the corresponding user and query again.</p>
+<blockquote>
+<p># sudo - u $user yarn logs - applicationid=$applicationId</p>
+</blockquote>
+<p> </p>
+</div>
+</div>
+<!-- Post Footer -->
+<div class="post-footer">
+<div class="post-navigation">
+<a class="nav-button" href="../blog.html">← Back to Home</a>
+<a class="nav-button" href="0155.html">Next Post →</a>
+</div>
+</div>
+</article>
+</div>
+</body>
+</html>

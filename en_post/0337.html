@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>How to choose HBase client</title>
+<link href="../css/style3.css" rel="stylesheet"/>
+</head>
+<body>
+<div class="container">
+<!-- Header Navigation -->
+<div class="header">
+<h1><a href="../blog.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+</div>
+<!-- Post Container -->
+<article class="post">
+<!-- Post Header -->
+<div class="post-header">
+<h1>How to choose HBase client</h1>
+<div class="post-meta">
+<div class="post-meta-item">
+<span class="meta-icon">📅</span>
+<span>December 12, 2018</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">📖</span>
+<span>1 min read</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">👁️</span>
+<span>801 views</span>
+</div>
+</div>
+</div>
+<!-- Post Content -->
+<div class="post-content">
+<div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<p>There are two ways to access HBase in Java, one is the client that comes with HBase, and the other is through HBase thrift</p>
+<h1>1 HBase client example</h1>
+<div class="cnblogs_code">
+<pre>        Configuration conf =<span style="color: rgba(0, 0, 0, 1)"> HBaseConfiguration.create();
+
+        conf.set(HConstants.ZOOKEEPER_CLIENT_PORT, </span>"2181"<span style="color: rgba(0, 0, 0, 1)">);
+
+        conf.set(HConstants.ZOOKEEPER_QUORUM, </span>"zk_host"<span style="color: rgba(0, 0, 0, 1)">);
+
+        Connection connection </span>=<span style="color: rgba(0, 0, 0, 1)"> ConnectionFactory.createConnection(conf);
+
+        Table profileTable </span>= connection.getTable(TableName.valueOf("test_table"<span style="color: rgba(0, 0, 0, 1)">));
+
+ 
+
+        Result result </span>= profileTable.get(<span style="color: rgba(0, 0, 255, 1)">new</span> Get(Bytes.toBytes("test_rowkey"<span style="color: rgba(0, 0, 0, 1)">)));
+
+        System.out.println(</span><span style="color: rgba(0, 0, 255, 1)">new</span> String(result.getValue(Bytes.toBytes("test_cf"), Bytes.toBytes("test_column"))));</pre>
+</div>
+<p>Here you only need to configure ZooKeeper. The access process is to first find hmaster through ZooKeeper, then locate a RegionServer through hmaster, and then access the RegionServer. Therefore, the client needs to be reachable to all HBase nodes (including ZooKeeper, hmaster, and RegionServer), that is, the host can ping successfully;</p>
+<p> </p>
+<h1>2 HBase thrift example</h1>
+<div class="cnblogs_code">
+<pre>        TTransport transport = <span style="color: rgba(0, 0, 255, 1)">null</span><span style="color: rgba(0, 0, 0, 1)">;
+
+        </span><span style="color: rgba(0, 0, 255, 1)">try</span><span style="color: rgba(0, 0, 0, 1)"> {
+
+            transport </span>= <span style="color: rgba(0, 0, 255, 1)">new</span><span style="color: rgba(0, 0, 0, 1)"> TSocket(host, port, timeout);
+
+            transport.open();
+
+            TProtocol protocol </span>= <span style="color: rgba(0, 0, 255, 1)">new</span><span style="color: rgba(0, 0, 0, 1)"> TBinaryProtocol(transport);
+
+            THBaseService.Iface client </span>= <span style="color: rgba(0, 0, 255, 1)">new</span><span style="color: rgba(0, 0, 0, 1)"> THBaseService.Client(protocol);
+
+            ByteBuffer table </span>=<span style="color: rgba(0, 0, 0, 1)"> ByteBuffer.wrap(tableName.getBytes());
+
+            TGet get </span>= <span style="color: rgba(0, 0, 255, 1)">new</span><span style="color: rgba(0, 0, 0, 1)"> TGet(ByteBuffer.wrap(rowKey.getBytes()));
+
+            </span><span style="color: rgba(0, 0, 255, 1)">try</span><span style="color: rgba(0, 0, 0, 1)"> {
+
+                TResult result </span>=<span style="color: rgba(0, 0, 0, 1)"> client.get(table, get);
+
+                </span><span style="color: rgba(0, 0, 255, 1)">return</span><span style="color: rgba(0, 0, 0, 1)"> result;
+
+            } </span><span style="color: rgba(0, 0, 255, 1)">catch</span><span style="color: rgba(0, 0, 0, 1)"> (Exception e) {
+
+                </span><span style="color: rgba(0, 0, 255, 1)">throw</span> <span style="color: rgba(0, 0, 255, 1)">new</span><span style="color: rgba(0, 0, 0, 1)"> RuntimeException(e);
+
+            }
+
+        } </span><span style="color: rgba(0, 0, 255, 1)">catch</span><span style="color: rgba(0, 0, 0, 1)"> (Exception e) {
+
+            </span><span style="color: rgba(0, 0, 255, 1)">throw</span> <span style="color: rgba(0, 0, 255, 1)">new</span><span style="color: rgba(0, 0, 0, 1)"> RuntimeException(e);
+
+        } </span><span style="color: rgba(0, 0, 255, 1)">finally</span><span style="color: rgba(0, 0, 0, 1)"> {
+
+            transport.close();
+
+        }</span></pre>
+</div>
+<p>Here you only need to configure the IP and port of the HBase thrift server, without any other dependencies; the single point problem can be solved by adding a load balancer;</p>
+<p> </p>
+<p>In summary, if you do not need to configure a host, either method is fine. If you do need to configure a host, it is easier to use thrift;</p>
+</div>
+</div>
+<!-- Post Footer -->
+<div class="post-footer">
+<div class="post-navigation">
+<a class="nav-button" href="../blog.html">← Back to Home</a>
+<a class="nav-button" href="0338.html">Next Post →</a>
+</div>
+</div>
+</article>
+</div>
+</body>
+</html>

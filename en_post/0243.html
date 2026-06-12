@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>MySQL 2 - Master-slave library configuration</title>
+<link href="../css/style3.css" rel="stylesheet"/>
+</head>
+<body>
+<div class="container">
+<!-- Header Navigation -->
+<div class="header">
+<h1><a href="../blog.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+</div>
+<!-- Post Container -->
+<article class="post">
+<!-- Post Header -->
+<div class="post-header">
+<h1>MySQL 2 - Master-slave library configuration</h1>
+<div class="post-meta">
+<div class="post-meta-item">
+<span class="meta-icon">📅</span>
+<span>January 28, 2019</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">📖</span>
+<span>1 min read</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">👁️</span>
+<span>305 views</span>
+</div>
+</div>
+</div>
+<!-- Post Content -->
+<div class="post-content">
+<div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<h1>1 installation</h1>
+<blockquote>
+<p># wget - i - c http://dev.mysql.com/get/mysql57-community-release-el7-10.noarch.rpm<br/># yum - y install mysql57-community-release-el7-10.noarch.rpm<br/># yum - y install mysql-community-server</p>
+<p># systemctl start mysqld.service</p>
+<p># grep "password" /var/log/mysqld.log<br/>2019-01-28T07:35:19.672300Z 1 [Note] A temporary password is generated for root@localhost: %ym?OT&amp;&lt;k9kB</p>
+<p># mysql - uroot - p%ym?OT&amp;&lt;k9kB<br/>mysql&gt; ALTER USER 'root'@'localhost' IDENTIFIED BY '$newpass';</p>
+</blockquote>
+<h1>2. Master-slave configuration</h1>
+<h2>1 master</h2>
+<blockquote>
+<p># vi /etc/my.cnf<br/>[mysqld]<br/>server-id=1<br/>log-bin=master-bin<br/>log-bin-index=master-bin.index</p>
+<p>mysql&gt;create user 'repl'@'%' IDENTIFIED BY 'repl';<br/>mysql&gt;GRANT REPLICATION SLAVE ON *.* TO 'repl'@'%';</p>
+<p># service mysqld restart</p>
+<p>mysql&gt; SHOW MASTER STATUS;<br/>+-------------------+----------+--------------+------------------+-------------------+<br/>| File              | Position | Binlog_Do_DB | Binlog_Ignore_DB | Executed_Gtid_Set |<br/>+-------------------+----------+--------------+------------------+-------------------+<br/>| master-bin.000001 |    77411 |              |                  |                   |<br/>+-------------------+----------+--------------+------------------+-------------------+<br/>1 row in set (0.00 sec)</p>
+</blockquote>
+<h2>2 slave</h2>
+<blockquote>
+<p># vi /etc/my.cnf<br/>[mysqld]<br/>server-id=2<br/>relay-log-index=slave-relay-bin.index<br/>relay-log=slave-relay-bi</p>
+<p>#Read-only access from the library</p>
+<p>read_only=1</p>
+<p># service mysqld restart</p>
+<p>mysql&gt; change master to master_host='$master_server',master_port=3306,master_user='repl',master_password='repl',master_log_file='master-bin.000001',master_log_pos=0;<br/>mysql&gt; start slave;</p>
+<p>mysql&gt; show slave status;</p>
+</blockquote>
+<p>If the main library opens binlog or configures the slave library, the master library already has data, you need to manually synchronize the data to the slave library, and then enable master-slave synchronization. The synchronization process is as follows</p>
+<blockquote>
+<p>1 master</p>
+<p>mysql &gt; flush tables with read lock;<br/>mysql &gt; show master status;<br/>get $pos</p>
+<p># mysqldump - uroot - p --all-databases &gt; mysql_dump.sql</p>
+<p>mysql &gt; unlock tables;</p>
+<p>2 slave</p>
+<p># mysql - uroot - p &lt; mysql_dump.sql</p>
+<p>mysql &gt; change master to ... master_log_pos=$pos<br/>mysql &gt; start slave;<br/>mysql &gt; show slave status;</p>
+</blockquote>
+<p> </p>
+<p>ps: The main library has at least 512m of memory, and the slave library has at least 256m of memory;</p>
+<p> </p>
+<p>There is also a dual-master configuration, that is, two servers are master-slave for each other. In order to avoid data conflicts, it is necessary to distinguish the auto-incrementing IDs of the two servers (two servers are one odd and one even):</p>
+<blockquote>
+<p>server1：<br/>auto_increment_offset = 1<br/>auto_increment_increment = 2</p>
+<p>server2：<br/>auto_increment_offset = 2<br/>auto_increment_increment = 2</p>
+</blockquote>
+<p> </p>
+</div>
+</div>
+<!-- Post Footer -->
+<div class="post-footer">
+<div class="post-navigation">
+<a class="nav-button" href="../blog.html">← Back to Home</a>
+<a class="nav-button" href="0244.html">Next Post →</a>
+</div>
+</div>
+</article>
+</div>
+</body>
+</html>

@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>How does Oozie view task logs submitted to YARN?</title>
+<link href="../css/style3.css" rel="stylesheet"/>
+</head>
+<body>
+<div class="container">
+<!-- Header Navigation -->
+<div class="header">
+<h1><a href="../blog.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+</div>
+<!-- Post Container -->
+<article class="post">
+<!-- Post Header -->
+<div class="post-header">
+<h1>How does Oozie view task logs submitted to YARN?</h1>
+<div class="post-meta">
+<div class="post-meta-item">
+<span class="meta-icon">📅</span>
+<span>December 12, 2018</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">📖</span>
+<span>1 min read</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">👁️</span>
+<span>2776 views</span>
+</div>
+</div>
+</div>
+<!-- Post Content -->
+<div class="post-content">
+<div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<p>You can view process details through Oozie job id. The command is as follows:</p>
+<blockquote>
+<p>oozie job -info <strong>0012077-180830142722522-oozie-hado-W</strong></p>
+</blockquote>
+<p> </p>
+<p>Process details are as follows:</p>
+<blockquote>
+<p>Job ID : <strong>0012077-180830142722522-oozie-hado-W</strong></p>
+<p>------------------------------------------------------------------------------------------------------------------------------------</p>
+<p>Workflow Name : test_wf</p>
+<p>App Path      : <a rel="nofollow">hdfs://hdfs_name/oozie/test_wf.xml</a></p>
+<p>Status        : KILLED</p>
+<p>Run           : 0</p>
+<p>User          : hadoop</p>
+<p>Group         : -</p>
+<p>Created       : 2018-09-25 02:51 GMT</p>
+<p>Started       : 2018-09-25 02:51 GMT</p>
+<p>Last Modified : 2018-09-25 02:53 GMT</p>
+<p>Ended         : 2018-09-25 02:53 GMT</p>
+<p>CoordAction ID: -</p>
+<p> </p>
+<p>Actions</p>
+<p>------------------------------------------------------------------------------------------------------------------------------------</p>
+<p>ID                                                                            Status    Ext ID                 Ext Status Err Code </p>
+<p>------------------------------------------------------------------------------------------------------------------------------------</p>
+<p>0012077-180830142722522-oozie-hado-W@:start:                                  OK        -                      OK         -        </p>
+<p>------------------------------------------------------------------------------------------------------------------------------------</p>
+<p>0012077-180830142722522-oozie-hado-W@test_spark_task                  ERROR     application_1537326594090_5663<strong>FAILED/KILLED</strong>JA018    </p>
+<p>------------------------------------------------------------------------------------------------------------------------------------</p>
+<p>0012077-180830142722522-oozie-hado-W@Kill                                     OK        -                      OK         E0729    </p>
+<p>------------------------------------------------------------------------------------------------------------------------------------</p>
+</blockquote>
+<p> </p>
+<p>The failed task is defined as follows</p>
+<blockquote>
+<p>&lt;action name="test_spark_task"&gt; </p>
+<p>        &lt;spark xmlns="uri:oozie:spark-action:0.1"&gt; </p>
+<p>            &lt;job-tracker&gt;${job_tracker}&lt;/job-tracker&gt; </p>
+<p>            &lt;name-node&gt;${name_node}&lt;/name-node&gt; </p>
+<p>            &lt;master&gt;${jobmaster}&lt;/master&gt; </p>
+<p>            &lt;mode&gt;${jobmode}&lt;/mode&gt; </p>
+<p>            &lt;name&gt;${jobname}&lt;/name&gt; </p>
+<p>            &lt;class&gt;${jarclass}&lt;/class&gt; </p>
+<p>            &lt;jar&gt;${jarpath}&lt;/jar&gt; </p>
+<p>            &lt;spark-opts&gt;--executor-memory 4g --executor-cores 2 --num-executors 4 --driver-memory 4g&lt;/spark-opts&gt; </p>
+<p>        &lt;/spark&gt;</p>
+</blockquote>
+<p> </p>
+<p>You can see the application corresponding to application_1537326594090_5663 on YARN as follows:</p>
+<blockquote>
+<p>application_1537326594090_5663       hadoop oozie:launcher:T=spark:W=test_wf:A=test_spark_task:ID=0012077-180830142722522-oozie-hado-W         Oozie Launcher</p>
+</blockquote>
+<p> </p>
+<p>View application_1537326594090_5663 log discovery</p>
+<blockquote>
+<p>2018-09-25 10:52:05,237 [main] INFO  org.apache.hadoop.yarn.client.api.impl.YarnClientImpl  - Submitted application application_1537326594090_5664</p>
+</blockquote>
+<p> </p>
+<p>The application corresponding to application_1537326594090_5664 on YARN is as follows</p>
+<blockquote>
+<p>application_1537326594090_5664       hadoop    TestSparkTask SPARK</p>
+</blockquote>
+<p> </p>
+<p>That is, application_1537326594090_5664 is the Spark task corresponding to Action. Why is there an extra step in the middle? Please see the class structure and core code for details. <a href="https://www.cnblogs.com/barneywill/p/9895225.html" target="_blank" title="Big data foundation: Quartz (1) introduction, source code analysis">https://www.cnblogs.com/barneywill/p/9895225.html</a><a href="https://cf.jd.com/pages/viewpage.action?pageId=105293178" rel="noopener nofollow"><br/></a></p>
+<p>Briefly speaking, when Oozie executes an Action, that is, ActionExecutor (the main subclass is JavaActionExecutor, Hive, Spark and other actions are subclasses of this class), JavaActionExecutor will first submit a LauncherMapper (map task) Go to YARN, where LauncherMain will be executed (the specific action is its subclass, such as JavaMain, SparkMain, etc.), the Spark task will execute SparkMain, and org.apache.Spark.deploy.SparkSubmit will be called in SparkMain to submit the task.</p>
+<p> </p>
+<p>If a Spark task is submitted, then the applicationId of the actual task can be tracked according to the above method;<br/>If the hive2 task you submitted is actually started using beeline, starting from hive2, the log of the beeline command has been simplified. Unlike the Hive command, you can see the detailed applicationId and progress. There are two methods:</p>
+<p>1) Modify the Hive code so that the beeline command has the same detailed log output as the Hive command.</p>
+<p>For details, see:<a href="https://www.cnblogs.com/barneywill/p/10185949.html" target="_blank">https://www.cnblogs.com/barneywill/p/10185949.html</a></p>
+<p>2) Manually search for tasks based on application tag</p>
+<p>When Oozie uses beeline to submit a task, it will add a mapreduce.job.tags parameter, such as</p>
+<blockquote>
+<p>             --hiveconf<br/>             mapreduce.job.tags=oozie-9f896ad3d40c261235dc6858cadb885c</p>
+</blockquote>
+<p>However, this tag cannot be found from the YARN application command and can only be searched manually one by one (the actual started tasks will be incremented on the applicationId of the current LuancherMapper).</p>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201903/1509647-20190321105658212-1149426996.png"/></p>
+<p>Then you can see the actual started applicationId</p>
+<p> </p>
+<p>In addition, you can also see the detailed information of the application from the job history server, such as configuration, tasks, etc.</p>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201903/1509647-20190321105921182-1835194218.png"/></p>
+<p>To view the complete SQL of Hive task execution, please see:<a href="https://www.cnblogs.com/barneywill/p/10083731.html" target="_blank">https://www.cnblogs.com/barneywill/p/10083731.html</a></p>
+<p> </p>
+</div>
+</div>
+<!-- Post Footer -->
+<div class="post-footer">
+<div class="post-navigation">
+<a class="nav-button" href="../blog.html">← Back to Home</a>
+<a class="nav-button" href="0334.html">Next Post →</a>
+</div>
+</div>
+</article>
+</div>
+</body>
+</html>

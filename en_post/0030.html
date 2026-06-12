@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>PostgreSQL</title>
+<link href="../css/style3.css" rel="stylesheet"/>
+</head>
+<body>
+<div class="container">
+<!-- Header Navigation -->
+<div class="header">
+<h1><a href="../blog.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+</div>
+<!-- Post Container -->
+<article class="post">
+<!-- Post Header -->
+<div class="post-header">
+<h1>PostgreSQL</h1>
+<div class="post-meta">
+<div class="post-meta-item">
+<span class="meta-icon">📅</span>
+<span>September 17, 2021</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">📖</span>
+<span>1 min read</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">👁️</span>
+<span>216 views</span>
+</div>
+</div>
+</div>
+<!-- Post Content -->
+<div class="post-content">
+<div class="blogpost-body cnblogs-markdown" id="cnblogs_post_body">
+<h1 id="section-0030-1">Install</h1>
+<h2 id="section-0030-2">server side</h2>
+<pre><code>yum install https://download.postgresql.org/pub/repos/yum/reporpms/EL-7-x86_64/pgdg-redhat-repo-latest.noarch.rpm - y
+
+yum install postgresql11-server - y
+</code></pre>
+<h2 id="section-0030-3">client side</h2>
+<pre><code>yum install postgresql11 - y
+</code></pre>
+<h2 id="section-0030-4">initialization</h2>
+<pre><code>/usr/pgsql-11/bin/postgresql-11-setup initd
+</code></pre>
+<h2 id="section-0030-5">Modify configuration</h2>
+<pre><code>vim /var/lib/pgsql/11/data/postgresql.conf
+listen_address = '*'
+
+vim /var/lib/pgsql/11/data/pg_hba.conf
+host all all 0.0.0.0/0 md5
+</code></pre>
+<h1 id="section-0030-6">start up</h1>
+<pre><code>systemctl start postgresql-11
+</code></pre>
+<h1 id="section-0030-7">Log in</h1>
+<pre><code>sudo - su postgres psql - U postgres
+</code></pre>
+<h1 id="section-0030-8">Create account and permissions</h1>
+<pre><code>CREATE ROLE test WITH LOGIN;
+ALTER ROLE test WITH PASSWORD 'test';
+
+GRANT ALL ON DATABASE mydb TO test;
+GRANT ALL ON SCHEMA myschema TO test;
+GRANT ALL ON TABLE mytable TO test;
+</code></pre>
+<h1 id="section-0030-9">connect</h1>
+<pre><code>psql - h $host - p $port - U $user $db
+</code></pre>
+<h1 id="section-0030-10">View libraries and tables</h1>
+<pre><code>show databases：\l
+use $database：\c $database
+show tables：\dt
+desc table：\d $table
+change schema：set search_path to $schema
+</code></pre>
+<h1 id="section-0030-11">View table structure</h1>
+<pre><code>SELECT a.attname as name, format_type(a.atttypid,a.atttypmod) as type, col_description(a.attrelid,a.attnum) as comment 
+FROM pg_attribute as a, pg_namespace b, pg_class as c
+where b.nspname = '${schema}' and b.oid = c.relnamespace and c.relname = '${table}' and a.attrelid = c.oid and a.attnum &gt; 0 and a.attname not like '.%';
+</code></pre>
+</div>
+</div>
+<!-- Post Footer -->
+<div class="post-footer">
+<div class="post-navigation">
+<a class="nav-button" href="../blog.html">← Back to Home</a>
+<a class="nav-button" href="0031.html">Next Post →</a>
+</div>
+</div>
+</article>
+</div>
+</body>
+</html>

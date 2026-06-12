@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Kudu 2 - Remove dead tsever</title>
+<link href="../css/style3.css" rel="stylesheet"/>
+</head>
+<body>
+<div class="container">
+<!-- Header Navigation -->
+<div class="header">
+<h1><a href="../blog.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+</div>
+<!-- Post Container -->
+<article class="post">
+<!-- Post Header -->
+<div class="post-header">
+<h1>Kudu 2 - Remove dead tsever</h1>
+<div class="post-meta">
+<div class="post-meta-item">
+<span class="meta-icon">📅</span>
+<span>March 22, 2019</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">📖</span>
+<span>2 min read</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">👁️</span>
+<span>3106 views</span>
+</div>
+</div>
+</div>
+<!-- Post Content -->
+<div class="post-content">
+<div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<p>When a tserver in Kudu goes offline or is migrated or the hostname is modified, the old tserver will always appear in the dead state, and there will be a large number of connection retry logs in the tserver log. There will be several gigabytes of error logs in a day.</p>
+<blockquote>
+<p>W0322 22:13:59.202749 16927 tablet_service.cc:290] Invalid argument: UpdateConsensus: Wrong destination UUID requested. Local UUID: e2f80a1fcf0c47f6b7f220a44d69297f. Requested UUID: 45bfb5b3e3ff41d9b1b1d2afab78d65c: from {username='kudu'} at 192.168.0.1:34724: tablet_id: "9933f18e59554ae6b5354e2a948469e9" caller_uuid: "9b164f37d04a484c8634ea86eae1b048" caller_term: 3 preceding_id { term: 2 index: 1873 } ops { id { term: 3 index: 1874 } timestamp: 6359719759241142272 op_type: NO_OP noop_request { } } dest_uuid: "45bfb5b3e3ff41d9b1b1d2afab78d65c" committed_index: 1874 all_replicated_index: 0 safe_timestamp: 6359719761707556864 last_idx_appended_to_leader: 1874</p>
+</blockquote>
+<p>At this time, if you want to remove these tservers in the dead state, there is no direct command. The official method is as follows:</p>
+<p>Kudu does not currently have an automated way to remove a tablet server from a cluster permanently. Instead, use the following steps:</p>
+<ul>
+<li>1 Ensure the cluster is in good health using ksck. See Checking Cluster Health with ksck.
+<ul>
+<li>　　First ensure that the cluster is healthy (via the ksck command)</li>
+</ul>
+</li>
+<li>2 If the tablet server contains any replicas of tables with replication factor 1, these replicas must be manually moved off the tablet server prior to shutting it down. The kudu tablet change_config move_replica tool can be used for this.
+<ul>
+<li>　　Migrate the copy on the server in the dead state. If there is data with the replication factor set to 1, the data must be moved manually before going offline;</li>
+</ul>
+</li>
+<li>3 Shut down the tablet server. After - follower_unavailable_considered_failed_sec, which defaults to 5 minutes, Kudu will begin to re-replicate the tablet server’s replicas to other servers. Wait until the process is finished. Progress can be monitored using ksck.
+<ul>
+<li>　　As long as the tserver is offline for more than 5 minutes, the copy will be automatically migrated;</li>
+</ul>
+</li>
+<li>4 Once all the copies are complete, ksck will continue to report the tablet server as unavailable. The cluster will otherwise operate fine without the tablet server. To completely remove it from the cluster so ksck shows the cluster as completely healthy, restart the masters. In the case of a single master, this will cause cluster downtime. With multimaster, restart the masters in sequence to avoid cluster downtime.
+<ul>
+<li>　　After all replicas are migrated, ksck will still show that some tservers are unavailable. If you want to completely remove these servers in the dead state, you need to restart the master;</li>
+</ul>
+</li>
+</ul>
+<p>Do not shut down multiple tablet servers at once. To remove multiple tablet servers from the cluster, follow the above instructions for each tablet server, ensuring that the previous tablet server is removed from the cluster and ksck is healthy before shutting down the next.</p>
+<p>Finally, after restarting the master, restart the tservers one by one while ensuring the health of the cluster;</p>
+<p> </p>
+<p>If an error is still reported after this operation, it means that the leader copy may be lost, such as ksck error</p>
+<div class="cnblogs_code">
+<pre>Tablet c58cef3f36a846b4bdf58447f77a6bcf of table 'impala::impala.test_kudu' is unavailable: 2<span style="color: rgba(0, 0, 0, 1)"> replica(s) not RUNNING
+  a46f0fd38eba4a5286098ff7fe260eb1: TS unavailable
+  45bfb5b3e3ff41d9b1b1d2afab78d65c: TS unavailable
+  9b164f37d04a484c8634ea86eae1b048 (server02:</span>7050<span style="color: rgba(0, 0, 0, 1)">): RUNNING [LEADER]
+All reported replicas are:
+  A </span>=<span style="color: rgba(0, 0, 0, 1)"> a46f0fd38eba4a5286098ff7fe260eb1
+  B </span>=<span style="color: rgba(0, 0, 0, 1)"> 45bfb5b3e3ff41d9b1b1d2afab78d65c
+  C </span>=<span style="color: rgba(0, 0, 0, 1)"> 9b164f37d04a484c8634ea86eae1b048
+The consensus matrix is:
+ Config source </span>|        Replicas        | Current term | Config index | Committed?
+---------------+------------------------+--------------+--------------+------------<span style="color: rgba(0, 0, 0, 1)">
+ master        </span>| A   B   C*             |              |              |<span style="color: rgba(0, 0, 0, 1)"> Yes
+ A             </span>| [config not available] |              |              |<span style="color: rgba(0, 0, 0, 1)"> 
+ B             </span>| [config not available] |              |              |<span style="color: rgba(0, 0, 0, 1)"> 
+ C             </span>| [config not available] |              |              |</pre>
+</div>
+<p>The available replicas may have synchronization delays and lose some data. At this time, if it is determined that the leader replica is unrecoverable, you can force the remaining available replicas to be designated as leaders and restore the tablet to a healthy state;</p>
+<p>The remaining replica is not the leader, so the leader replica failed as well. This means the chance of data loss is higher since the remaining replica on <code>tserver-00</code> may have been lagging.</p>
+<blockquote>
+<p>$ sudo - u kudu kudu remote_replica unsafe_change_config tserver-00:7150 &lt;tablet-id&gt; &lt;tserver-00-uuid&gt;</p>
+</blockquote>
+<p>where <code>&lt;tablet-id&gt;</code> is <code>e822cab6c0584bc0858219d1539a17e6</code> and <code>&lt;tserver-00-uuid&gt;</code> is the uuid of <code>tserver-00</code>,<code>638a20403e3e4ae3b55d4d07d920e6de</code>. </p>
+<p>&lt;tablet-id&gt; is an unhealthy tablet, tserver-00:7150 is the tserver where the available replica is located, and &lt;tserver-00-uuid&gt; is the uuid of the tserver where the available replica is located, so that the tablet can be restored if a small amount of data may be lost;</p>
+<p>If there are many problematic tablets, you can refer to the following commands:</p>
+<blockquote>
+<p>$ kudu cluster ksck localhost|grep - e '^Tablet '|awk '{print $2}'|xargs - i echo "sudo - u kudu kudu remote_replica unsafe_change_config tserver-00:7150 {} &lt;tserver-00-uuid&gt;"</p>
+</blockquote>
+<p> </p>
+<p>refer to:</p>
+<p>https://kudu.apache.org/docs/administration.html#tablet_server_decommissioning</p>
+<p>https://kudu.apache.org/docs/administration.html#tablet_majority_down_recovery</p>
+<p> </p>
+</div>
+</div>
+<!-- Post Footer -->
+<div class="post-footer">
+<div class="post-navigation">
+<a class="nav-button" href="../blog.html">← Back to Home</a>
+<a class="nav-button" href="0164.html">Next Post →</a>
+</div>
+</div>
+</article>
+</div>
+</body>
+</html>

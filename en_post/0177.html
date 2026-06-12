@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>HDFS reports error after enabling Kerberos Encryption type AES256 CTS mode with HMAC SHA1-96 is not supported/enabled</title>
+<link href="../css/style3.css" rel="stylesheet"/>
+</head>
+<body>
+<div class="container">
+<!-- Header Navigation -->
+<div class="header">
+<h1><a href="../blog.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+</div>
+<!-- Post Container -->
+<article class="post">
+<!-- Post Header -->
+<div class="post-header">
+<h1>HDFS reports error after enabling Kerberos Encryption type AES256 CTS mode with HMAC SHA1-96 is not supported/enabled</h1>
+<div class="post-meta">
+<div class="post-meta-item">
+<span class="meta-icon">📅</span>
+<span>March 15, 2019</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">📖</span>
+<span>1 min read</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">👁️</span>
+<span>3103 views</span>
+</div>
+</div>
+</div>
+<!-- Post Content -->
+<div class="post-content">
+<div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<p>After HDFS turns on Kerberos, the NameNode reports an error and cannot connect to the journalnode.</p>
+<div class="cnblogs_code">
+<pre>2019-03-15 18:54:46,504 WARN org.apache.hadoop.security.UserGroupInformation: PriviledgedActionException as:hdfs/server-03<span style="color: rgba(0, 0, 0, 1)">.bj@TEST.COM (auth:KERBEROS) cause:org.apache.hadoop.ipc.RemoteException(javax.securi
+ty.sasl.SaslException): GSS initiate failed
+</span>2019-03-15 18:54:46,505 WARN org.apache.hadoop.ipc.Client: Couldn<span style="color: rgba(128, 0, 0, 1)">'</span><span style="color: rgba(128, 0, 0, 1)">t setup connection for hdfs/server-03.bj@TEST.COM to server-02.bj/192.168.0.1:8485</span>
+<span style="color: rgba(0, 0, 0, 1)">org.apache.hadoop.ipc.RemoteException(javax.security.sasl.SaslException): GSS initiate failed
+    at org.apache.hadoop.security.SaslRpcClient.saslConnect(SaslRpcClient.java:</span>378<span style="color: rgba(0, 0, 0, 1)">)
+    at org.apache.hadoop.ipc.Client$Connection.setupSaslConnection(Client.java:</span>594<span style="color: rgba(0, 0, 0, 1)">)
+    at org.apache.hadoop.ipc.Client$Connection.access$</span>2000(Client.java:396<span style="color: rgba(0, 0, 0, 1)">)
+    at org.apache.hadoop.ipc.Client$Connection$</span>2.run(Client.java:761<span style="color: rgba(0, 0, 0, 1)">)
+    at org.apache.hadoop.ipc.Client$Connection$</span>2.run(Client.java:757<span style="color: rgba(0, 0, 0, 1)">)
+    at java.security.AccessController.doPrivileged(Native Method)
+    at javax.security.auth.Subject.doAs(Subject.java:</span>422<span style="color: rgba(0, 0, 0, 1)">)
+    at org.apache.hadoop.security.UserGroupInformation.doAs(UserGroupInformation.java:</span>1924<span style="color: rgba(0, 0, 0, 1)">)
+    at org.apache.hadoop.ipc.Client$Connection.setupIOstreams(Client.java:</span>756<span style="color: rgba(0, 0, 0, 1)">)
+    at org.apache.hadoop.ipc.Client$Connection.access$</span>3000(Client.java:396<span style="color: rgba(0, 0, 0, 1)">)
+    at org.apache.hadoop.ipc.Client.getConnection(Client.java:</span>1557<span style="color: rgba(0, 0, 0, 1)">)
+    at org.apache.hadoop.ipc.Client.call(Client.java:</span>1480<span style="color: rgba(0, 0, 0, 1)">)
+    at org.apache.hadoop.ipc.Client.call(Client.java:</span>1441<span style="color: rgba(0, 0, 0, 1)">)
+    at org.apache.hadoop.ipc.ProtobufRpcEngine$Invoker.invoke(ProtobufRpcEngine.java:</span>231<span style="color: rgba(0, 0, 0, 1)">)
+    at com.sun.proxy.$Proxy19.getEditLogManifest(Unknown Source)
+    at org.apache.hadoop.hdfs.qjournal.protocolPB.QJournalProtocolTranslatorPB.getEditLogManifest(QJournalProtocolTranslatorPB.java:</span>245<span style="color: rgba(0, 0, 0, 1)">)
+    at org.apache.hadoop.hdfs.qjournal.client.IPCLoggerChannel$</span>13.call(IPCLoggerChannel.java:556<span style="color: rgba(0, 0, 0, 1)">)
+    at org.apache.hadoop.hdfs.qjournal.client.IPCLoggerChannel$</span>13.call(IPCLoggerChannel.java:553<span style="color: rgba(0, 0, 0, 1)">)
+    at java.util.concurrent.FutureTask.run(FutureTask.java:</span>266<span style="color: rgba(0, 0, 0, 1)">)
+    at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:</span>1149<span style="color: rgba(0, 0, 0, 1)">)
+    at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:</span>624<span style="color: rgba(0, 0, 0, 1)">)
+    at java.lang.Thread.run(Thread.java:</span>748)</pre>
+</div>
+<p>Journalnode also reported an error:</p>
+<div class="cnblogs_code">
+<pre>2019-03-15 20:21:01,014 INFO org.apache.hadoop.ipc.Server: Socket Reader <span style="color: rgba(0, 128, 0, 1)">#</span><span style="color: rgba(0, 128, 0, 1)">1 for port 8485: readAndProcess from client 192.168.0.56 threw exception [javax.security.sasl.SaslException: GSS initiate failed [Caused by GSSException: Failure unspecified at GSS-API level (Mechanism level: Encryption type AES256 CTS mode with HMAC SHA1-96 is not supported/enabled)]]</span></pre>
+</div>
+<p> </p>
+<p>This is because of jce problem, download address</p>
+<blockquote>
+<p>https://www.oracle.com/technetwork/java/javase/downloads/jce8-download-2133166.html</p>
+</blockquote>
+<p>After downloading, unzip it to get</p>
+<div class="cnblogs_code">
+<pre><span style="color: rgba(0, 128, 0, 1)">#</span><span style="color: rgba(0, 128, 0, 1)"> ls - l UnlimitedJCEPolicyJDK8/</span>
+total 16
+-rw-rw-r-- 1 root root 3035 Dec 21  2013<span style="color: rgba(0, 0, 0, 1)"> local_policy.jar
+</span>-rw-r--r-- 1 root root 7323 Dec 21  2013<span style="color: rgba(0, 0, 0, 1)"> README.txt
+</span>-rw-rw-r-- 1 root root 3023 Dec 21  2013 US_export_policy.jar</pre>
+</div>
+<p>Copy to the corresponding directory of jre</p>
+<div class="cnblogs_code">
+<pre><span style="color: rgba(0, 128, 0, 1)">#</span><span style="color: rgba(0, 128, 0, 1)"> cp UnlimitedJCEPolicyJDK8/*.jar $JAVA_HOME/jre/lib/security</span></pre>
+</div>
+<p>Then restart HDFS</p>
+</div>
+</div>
+<!-- Post Footer -->
+<div class="post-footer">
+<div class="post-navigation">
+<a class="nav-button" href="../blog.html">← Back to Home</a>
+<a class="nav-button" href="0178.html">Next Post →</a>
+</div>
+</div>
+</article>
+</div>
+</body>
+</html>

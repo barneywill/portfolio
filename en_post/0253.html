@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Users and groups</title>
+<link href="../css/style3.css" rel="stylesheet"/>
+</head>
+<body>
+<div class="container">
+<!-- Header Navigation -->
+<div class="header">
+<h1><a href="../blog.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+</div>
+<!-- Post Container -->
+<article class="post">
+<!-- Post Header -->
+<div class="post-header">
+<h1>Users and groups</h1>
+<div class="post-meta">
+<div class="post-meta-item">
+<span class="meta-icon">📅</span>
+<span>January 22, 2019</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">📖</span>
+<span>1 min read</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">👁️</span>
+<span>481 views</span>
+</div>
+</div>
+</div>
+<!-- Post Content -->
+<div class="post-content">
+<div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<p>1 Add and delete users</p>
+<blockquote>
+<p># useradd $user<br/># userdel $user</p>
+</blockquote>
+<p>2 Set user password</p>
+<blockquote>
+<p># passwd $user</p>
+</blockquote>
+<p>/etc/passwd</p>
+<p>3 View the user and group information of $user</p>
+<blockquote>
+<p># id $user</p>
+</blockquote>
+<p>4 Add user $user to group $group</p>
+<blockquote>
+<p># usermod -G $group $user</p>
+</blockquote>
+<p>or</p>
+<blockquote>
+<p># groupmems -g $group -a $user</p>
+</blockquote>
+<p>5 Add and delete groups</p>
+<blockquote>
+<p># groupadd $group<br/># groupdel $group</p>
+</blockquote>
+<p>6 View group members</p>
+<blockquote>
+<p># groupmems -g $group -l</p>
+</blockquote>
+<p>or</p>
+<blockquote>
+<p># grep hadoop /etc/group</p>
+</blockquote>
+<p>7 Remove user $user from group $group</p>
+<blockquote>
+<p># groupmems -g $group -d $user</p>
+</blockquote>
+<p>8 User home directory related</p>
+<p>The Linux user home directory is usually under /home/$user. There are two ways:</p>
+<p>1) When creating a user</p>
+<blockquote>
+<p># useradd -m $user</p>
+</blockquote>
+<p>2) Modify the user’s home directory</p>
+<blockquote>
+<p># usermod -d /path/to/home $user</p>
+</blockquote>
+<p>9 Switch users</p>
+<blockquote>
+<p># su - $user</p>
+</blockquote>
+<p>If an error is reported when switching users</p>
+<blockquote>
+<p>This account is currently not available.</p>
+</blockquote>
+<p>You need to modify /etc/passwd and change the last /sbin/nologin to /bin/bash; </p>
+<p>10 Specify or modify uid and gid</p>
+<p>Add user test and group test, specify uid and gid are both 1001</p>
+<blockquote>
+<p># groupadd -g 1001 test<br/># useradd -u 1001 -g test test</p>
+</blockquote>
+<p>Modify the uid of user test to 1001 and modify the gid of group test to 1001</p>
+<blockquote>
+<p># usermod -u 1001 test<br/># groupmod -g 1001 test</p>
+</blockquote>
+<p> </p>
+</div>
+</div>
+<!-- Post Footer -->
+<div class="post-footer">
+<div class="post-navigation">
+<a class="nav-button" href="../blog.html">← Back to Home</a>
+<a class="nav-button" href="0254.html">Next Post →</a>
+</div>
+</div>
+</article>
+</div>
+</body>
+</html>

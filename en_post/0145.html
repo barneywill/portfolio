@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Impala 3 - Partial Tuning</title>
+<link href="../css/style3.css" rel="stylesheet"/>
+</head>
+<body>
+<div class="container">
+<!-- Header Navigation -->
+<div class="header">
+<h1><a href="../blog.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+</div>
+<!-- Post Container -->
+<article class="post">
+<!-- Post Header -->
+<div class="post-header">
+<h1>Impala 3 - Partial Tuning</h1>
+<div class="post-meta">
+<div class="post-meta-item">
+<span class="meta-icon">📅</span>
+<span>April 20, 2019</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">📖</span>
+<span>1 min read</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">👁️</span>
+<span>713 views</span>
+</div>
+</div>
+</div>
+<!-- Post Content -->
+<div class="post-content">
+<div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<p>1) Separate the roles of coordinator and executor</p>
+<p>By default, each host in the cluster that runs the impalad daemon can act as the coordinator for an Impala query, execute the fragments of the execution plan for the query, or both. During highly concurrent workloads for large-scale queries, especially on large clusters, the dual roles can cause scalability issues:</p>
+<ul>
+<li>The extra work required for a host to act as the coordinator could interfere with its capacity to perform other work for the earlier phases of the query. For example, the coordinator can experience significant network and CPU overhead during queries containing a large number of query fragments. Each coordinator caches metadata for all table partitions and data files, which can be substantial and contend with memory needed to process joins, aggregations, and other operations performed by query executors.</li>
+<li>Having a large number of hosts act as coordinators can cause unnecessary network overhead, or even timeout errors, as each of those hosts communicates with the statestored daemon for metadata updates.</li>
+<li>The “soft limits” imposed by the admission control feature are more likely to be exceeded when there are a large number of heavily loaded hosts acting as coordinators.</li>
+</ul>
+<p>2) default_pool_max_requests, the default is 200, it should be adjusted according to the memory size of your cluster and the memory required for each query;</p>
+<p>Maximum number of concurrent outstanding requests allowed to run before incoming requests are queued. Because this limit applies cluster-wide, but each Impala node makes independent decisions to run queries immediately or queue them, it is a soft limit; the overall number of concurrent queries might be slightly higher during times of heavy load. A negative value indicates no limit. Ignored if fair_scheduler_config_path and llama_site_path are set.</p>
+<p>3) After Kerberos is turned on, client load balance needs to be done when accessing through JDBC, because the JDBC url needs to carry the principal of the corresponding server;</p>
+</div>
+</div>
+<!-- Post Footer -->
+<div class="post-footer">
+<div class="post-navigation">
+<a class="nav-button" href="../blog.html">← Back to Home</a>
+<a class="nav-button" href="0146.html">Next Post →</a>
+</div>
+</div>
+</article>
+</div>
+</body>
+</html>

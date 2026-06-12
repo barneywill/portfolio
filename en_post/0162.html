@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>HDFS copy number</title>
+<link href="../css/style3.css" rel="stylesheet"/>
+</head>
+<body>
+<div class="container">
+<!-- Header Navigation -->
+<div class="header">
+<h1><a href="../blog.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+</div>
+<!-- Post Container -->
+<article class="post">
+<!-- Post Header -->
+<div class="post-header">
+<h1>HDFS copy number</h1>
+<div class="post-meta">
+<div class="post-meta-item">
+<span class="meta-icon">📅</span>
+<span>March 25, 2019</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">📖</span>
+<span>1 min read</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">👁️</span>
+<span>1131 views</span>
+</div>
+</div>
+</div>
+<!-- Post Content -->
+<div class="post-content">
+<div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<p>When HDFS space is insufficient, in addition to deleting temporary data or junk data, you can also appropriately adjust the number of copies of some large directories in a multi-pronged approach;</p>
+<h1>1 View</h1>
+<blockquote>
+<p>$ hdfs dfs - ls /user/hive/warehouse/temp.db/test_ext_o<br/>-rwxr-xr-x   3 hadoop supergroup   44324200 2019-02-28 16:36 /user/hive/warehouse/temp.db/test_ext_o/000000_0</p>
+</blockquote>
+<p>The 3 after the permission is the number of copies</p>
+<h1>2 modifications</h1>
+<blockquote>
+<p>$ hadoop fs - setrep [-w] 2 /user/hive/warehouse/temp.db/test_ext_o/000000_0<br/>or<br/>$ hdfs dfs - setrep [-w] 2 /user/hive/warehouse/temp.db/test_ext_o/000000_0<br/>WARNING: the waiting time may be long for DECREASING the number of replications.</p>
+</blockquote>
+<p>Modify the number of copies to 2, and the startup path can specify a file or directory;<br/>You can add the -w parameter and it will wait for the operation to complete;</p>
+<p>The - w flag requests that the command wait for the replication to complete. This can potentially take a very long time.</p>
+</div>
+</div>
+<!-- Post Footer -->
+<div class="post-footer">
+<div class="post-navigation">
+<a class="nav-button" href="../blog.html">← Back to Home</a>
+<a class="nav-button" href="0163.html">Next Post →</a>
+</div>
+</div>
+</article>
+</div>
+</body>
+</html>

@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>hive.exec.max.dynamic.partitions Does Not Take Effect in Spark SQL</title>
+<link href="../css/style3.css" rel="stylesheet"/>
+</head>
+<body>
+<div class="container">
+<!-- Header Navigation -->
+<div class="header">
+<h1><a href="../blog.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+</div>
+<!-- Post Container -->
+<article class="post">
+<!-- Post Header -->
+<div class="post-header">
+<h1>hive.exec.max.dynamic.partitions Does Not Take Effect in Spark SQL</h1>
+<div class="post-meta">
+<div class="post-meta-item">
+<span class="meta-icon">📅</span>
+<span>October 03, 2019</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">📖</span>
+<span>1 min read</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">👁️</span>
+<span>7623 views</span>
+</div>
+</div>
+</div>
+<!-- Post Content -->
+<div class="post-content">
+<div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<p>spark 2.4</p>
+<p> </p>
+<p>Execute in spark SQL</p>
+<blockquote>
+<p>set hive.exec.max.dynamic.partitions=10000;</p>
+</blockquote>
+<p>If you execute the SQL later, the error will still be reported:</p>
+<div class="cnblogs_code">
+<pre><span style="color: rgba(0, 0, 0, 1)">org.apache.hadoop.hive.ql.metadata.HiveException:
+Number of dynamic partitions created </span><span style="color: rgba(0, 0, 255, 1)">is</span> 1001, which <span style="color: rgba(0, 0, 255, 1)">is</span> more than 1000<span style="color: rgba(0, 0, 0, 1)">.
+To solve this </span><span style="color: rgba(0, 0, 255, 1)">try</span> to set hive.<span style="color: rgba(0, 0, 255, 1)">exec</span>.max.dynamic.partitions to at least 1001.</pre>
+</div>
+<p>The default value of this parameter Hive.exec.max.dynamic.partitions is 1000, and the modification will not take effect.</p>
+<p> </p>
+<p>Here’s why:</p>
+<blockquote>
+<p>`HiveClient` does not know new value 1001. There is no way to change the default value of `hive.exec.max.dynamic.partitions` of `HiveCilent` with `SET` command.</p>
+<p>The root cause is that `hive` parameters are passed to `HiveClient` on creating. So, the workaround is to use `--hiveconf` when starting `spark-shell`.</p>
+</blockquote>
+<p> </p>
+<p>The solution is to set Hiveconf when starting spark-SQL</p>
+<blockquote>
+<p>spark-sql --hiveconf hive.exec.max.dynamic.partitions=10000</p>
+</blockquote>
+<p> </p>
+<p>Reference:</p>
+<p>https://issues.apache.org/jira/browse/SPARK-19881</p>
+</div>
+</div>
+<!-- Post Footer -->
+<div class="post-footer">
+<div class="post-navigation">
+<a class="nav-button" href="../blog.html">← Back to Home</a>
+<a class="nav-button" href="0090.html">Next Post →</a>
+</div>
+</div>
+</article>
+</div>
+</body>
+</html>

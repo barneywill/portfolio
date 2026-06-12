@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Hive metastore error</title>
+<link href="../css/style3.css" rel="stylesheet"/>
+</head>
+<body>
+<div class="container">
+<!-- Header Navigation -->
+<div class="header">
+<h1><a href="../blog.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+</div>
+<!-- Post Container -->
+<article class="post">
+<!-- Post Header -->
+<div class="post-header">
+<h1>Hive metastore error</h1>
+<div class="post-meta">
+<div class="post-meta-item">
+<span class="meta-icon">📅</span>
+<span>February 19, 2019</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">📖</span>
+<span>1 min read</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">👁️</span>
+<span>996 views</span>
+</div>
+</div>
+</div>
+<!-- Post Content -->
+<div class="post-content">
+<div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<p>Hive metastore error when building table</p>
+<blockquote>
+<p>[pool-5-thread-2]: MetaException(message:Got exception: java.net.ConnectException Call From server2 to server1:8020 failed on connection exception: java.net.ConnectException: Connection refused; For more details see: http://wiki.apache.org/hadoop/ConnectionRefused)</p>
+</blockquote>
+<p>Among them, server1:8020 is the NameNode, but the normal NameNode is server2:8020. Why is it connected to a non-existent NameNode?<br/>Check the conf directory used during the startup process of CDH Hive:</p>
+<blockquote>
+<p>using /opt/cloudera/parcels/CDH-5.16.1-1.cdh5.16.1.p0.3/lib/hive as HIVE_HOME<br/>using /opt/cloudera-manager/cm-5.16.1/run/cloudera-scm-agent/process/245-hive-HIVEMETASTORE as HIVE_CONF_DIR<br/>using /opt/cloudera/parcels/CDH-5.16.1-1.cdh5.16.1.p0.3/lib/hadoop as HADOOP_HOME<br/>using /opt/cloudera-manager/cm-5.16.1/run/cloudera-scm-agent/process/245-hive-HIVEMETASTORE/yarn-conf as HADOOP_CONF_DIR</p>
+</blockquote>
+<p>These directories are all normal NameNode configurations. Suddenly I thought that the HDFS path would be saved in the database.</p>
+<blockquote>
+<p>mysql&gt; select db_location_uri from DBS;</p>
+</blockquote>
+<p>Sure enough, there was something wrong with the HDFS path stored here. After modification, it became normal;</p>
+<p> </p>
+</div>
+</div>
+<!-- Post Footer -->
+<div class="post-footer">
+<div class="post-navigation">
+<a class="nav-button" href="../blog.html">← Back to Home</a>
+<a class="nav-button" href="0215.html">Next Post →</a>
+</div>
+</div>
+</article>
+</div>
+</body>
+</html>

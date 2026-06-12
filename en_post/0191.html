@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Benchmark 2 - TPC-DS</title>
+<link href="../css/style3.css" rel="stylesheet"/>
+</head>
+<body>
+<div class="container">
+<!-- Header Navigation -->
+<div class="header">
+<h1><a href="../blog.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+</div>
+<!-- Post Container -->
+<article class="post">
+<!-- Post Header -->
+<div class="post-header">
+<h1>Benchmark 2 - TPC-DS</h1>
+<div class="post-meta">
+<div class="post-meta-item">
+<span class="meta-icon">📅</span>
+<span>March 05, 2019</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">📖</span>
+<span>23 min read</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">👁️</span>
+<span>6706 views</span>
+</div>
+</div>
+</div>
+<!-- Post Content -->
+<div class="post-content">
+<div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<p>tpc</p>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201903/1509647-20190304155941416-364821929.png"/></p>
+<p>Official: http://www.tpc.org/</p>
+<p> </p>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201903/1509647-20190305101704784-751430995.png"/></p>
+<p> </p>
+<h1>1 Introduction</h1>
+<p>The TPC is a non-profit corporation founded to define transaction processing and database benchmarks and to disseminate objective, verifiable TPC performance data to the industry.</p>
+<p><em>TPC (The Transaction Processing Performance Council) is a non-profit company dedicated to defining transaction processing and database benchmarks, while releasing objective and verifiable TPC performance data to the industry;</em></p>
+<p>The term transaction is often applied to a wide variety of business and computer functions. Looked at as a computer function, a transaction could refer to a set of operations including disk read/writes, operating system calls, or some form of data transfer from one subsystem to another.</p>
+<p>While TPC benchmarks certainly involve the measurement and evaluation of computer functions and operations, the TPC regards a transaction as it is commonly understood in the business world: a commercial exchange of goods, services, or money. A typical transaction, as defined by the TPC, would include the updating to a database system for such things as inventory control (goods), airline reservations (services), or banking (money).</p>
+<p>In these environments, a number of customers or service representatives input and manage their transactions via a terminal or desktop computer connected to a database. Typically, the TPC produces benchmarks that measure transaction processing (TP) and database (DB) performance in terms of how many transactions a given system and database can perform per unit of time, e.g., transactions per second or transactions per minute.</p>
+<p> </p>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201903/1509647-20190304160011618-1502202162.png"/></p>
+<p> </p>
+<h2>TPC-DS is a Decision Support Benchmark</h2>
+<p>Official: http://www.tpc.org/tpcds/default.asp</p>
+<p>Documentation: http://www.tpc.org/tpc_documents_current_versions/pdf/tpc-ds_v2.10.1.pdf</p>
+<p> </p>
+<p>A simple schema for decision support systems or data warehouses is the star schema, where events are collected in large <em>fact tables</em>, while smaller supporting tables (<em>dimensions</em>) are used to describe the data.</p>
+<p>The TPC-DS is an example of such a schema. It models a typical retail warehouse where the events are sales and typical dimensions are date of sale, time of sale, or demographic of the purchasing party. </p>
+<p><em>In the schema of the decision support system, events are stored in large fact tables, and small dimension tables are used to describe data;</em></p>
+<p><em>TPC-DS, one of the most challenging test benchmarks in the database industry, simulates a typical retail industry data warehouse;</em></p>
+<p>The TPC Benchmark DS (TPC-DS) is a decision support benchmark that models several generally applicable aspects of a decision support system, including queries and data maintenance. The benchmark provides a representative evaluation of performance as a general purpose decision support system. A benchmark result measures query response time in single user mode, query throughput in multi user mode and data maintenance performance for a given hardware, operating system, and data processing system configuration under a controlled, complex, multi-user decision support workload. The purpose of TPC benchmarks is to provide relevant, objective performance data to industry users. TPC-DS Version 2 enables emerging technologies, such as Big Data systems, to execute the benchmark.</p>
+<p> </p>
+<h1>2. Use</h1>
+<h2>1 download</h2>
+<p>http://www.tpc.org/tpc_documents_current_versions/current_specifications.asp</p>
+<h2>2 installation</h2>
+<blockquote>
+<p># unzip TPC-DS_Tools_v2.10.1.zip<br/># cd v2.10.1rc3/tools<br/># make</p>
+</blockquote>
+<p>Two tools are generated:</p>
+<blockquote>
+<p>dsdgen<br/>dsqgen</p>
+</blockquote>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201903/1509647-20190305185657039-938228983.png"/></p>
+<h2>3 Initialize table structure SQL script</h2>
+<blockquote>
+<p>tpcds.sql<br/>tpcds_ri.sql<br/>tpcds_source.sql</p>
+</blockquote>
+<p>It may be necessary to modify some fields such as field types according to the specific db;</p>
+<h2>4 Generate test data</h2>
+<blockquote>
+<p># mkdir /tmp/tpcdsdata<br/># ./dsdgen -SCALE 1GB -DIR /tmp/tpcdsdata -parallel 4 -child 4</p>
+</blockquote>
+<p>Among them, -SCALE is used to specify the size of the generated data, which can be modified, such as 10GB, 1TB</p>
+<h2>5 Generate query script</h2>
+<blockquote>
+<p># ./dsqgen -input ../query_templates/templates.lst -directory ../query_templates -dialect oracle -scale 1GB -OUTPUT_DIR /tmp/tpcdsdata/query_oracle</p>
+</blockquote>
+<p>Dialect is supported by default as follows:</p>
+<blockquote>
+<p>db2.tpl<br/>netezza.tpl<br/>oracle.tpl<br/>sqlserver.tpl</p>
+</blockquote>
+<p>It can be seen that the default is for traditional relational databases. Let’s see how to apply it to big data scenarios;</p>
+<h1>3. Test Hive</h1>
+<p>Official: https://github.com/hortonworks/Hive-testbench</p>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201903/1509647-20190305191122004-1263608421.png"/></p>
+<p> </p>
+<h2>1 Download and install</h2>
+<blockquote>
+<p>$ wget https://github.com/hortonworks/hive-testbench/archive/hive14.zip<br/>$ unzip hive14.zip<br/>$ cd hive-testbench-hive14/<br/>$ ./tpcds-build.sh</p>
+</blockquote>
+<h2>2 Generate test data and query scripts</h2>
+<blockquote>
+<p>$ export FORMAT=parquet<br/>$ ./tpcds-setup.sh 1000</p>
+</blockquote>
+<p>The unit is G, modify FORMAT, such as ORC, Parquet, etc.</p>
+<p> </p>
+<p>Generate log</p>
+<blockquote>
+<p>TPC-DS text data generation complete.<br/>Loading text data into external tables.<br/>Optimizing table date_dim (1/24).<br/>Optimizing table time_dim (2/24).<br/>Optimizing table item (3/24).<br/>Optimizing table customer (4/24).<br/>Optimizing table customer_demographics (5/24).<br/>Optimizing table household_demographics (6/24).<br/>Optimizing table customer_address (7/24).<br/>Optimizing table store (8/24).<br/>Optimizing table promotion (9/24).<br/>Optimizing table warehouse (10/24).<br/>Optimizing table ship_mode (11/24).<br/>Optimizing table reason (12/24).<br/>Optimizing table income_band (13/24).<br/>Optimizing table call_center (14/24).<br/>Optimizing table catalog_page (16/24).<br/>Optimizing table web_page (15/24).<br/>Optimizing table web_site (17/24).<br/>Optimizing table store_sales (18/24).<br/>Optimizing table store_returns (19/24).<br/>Optimizing table web_sales (20/24).<br/>Optimizing table web_returns (21/24).<br/>Optimizing table catalog_sales (22/24).<br/>Optimizing table inventory (24/24).<br/>Optimizing table catalog_returns (23/24).<br/>Data loaded into database tpcds_bin_partitioned_parquet_10.</p>
+</blockquote>
+<p>Generate results</p>
+<blockquote>
+<p>hive&gt; use tpcds_bin_partitioned_parquet_10;<br/>OK<br/>Time taken: 0.025 seconds<br/>hive&gt; show tables;<br/>OK<br/>call_center<br/>catalog_page<br/>catalog_returns<br/>catalog_sales<br/>customer<br/>customer_address<br/>customer_demographics<br/>date_dim<br/>household_demographics<br/>income_band<br/>inventory<br/>item<br/>promotion<br/>reason<br/>ship_mode<br/>store<br/>store_returns<br/>store_sales<br/>time_dim<br/>warehouse<br/>web_page<br/>web_returns<br/>web_sales<br/>web_site<br/>Time taken: 0.049 seconds, Fetched: 24 row(s) </p>
+</blockquote>
+<h2>3 Run the test</h2>
+<p>Test SQL script directory: sample-queries-tpcds</p>
+<blockquote>
+<p>$ cd sample-queries-tpcds<br/>hive&gt; use tpcds_bin_partitioned_parquet_10;<br/>hive&gt; source query12.sql;</p>
+</blockquote>
+<h2>4 batch testing</h2>
+<p>Modify Hive configuration as needed: sample-queries-tpcds/testbench.settings<br/>Modify the test script (perl) as needed: runSuite.pl</p>
+<blockquote>
+<p>$ perl runSuiteCommon.pl <br/>ERROR: one or more parameters not defined</p>
+<p>Usage:<br/>        perl runSuiteCommon.pl [tpcds|tpch] [scale]</p>
+<p>Description:<br/>        This script runs the sample queries and outputs a CSV file of the time it took each query to run.  Also, all hive output is kept as a log file named 'queryXX.sql.log' for each query file of the form 'queryXX.sql'. Defaults to scale of 2.</p>
+</blockquote>
+<p>Core code:</p>
+<div class="cnblogs_code">
+<pre><span style="color: rgba(0, 0, 255, 1)">my</span> <span style="color: rgba(128, 0, 128, 1)">$suite</span> = <span style="color: rgba(0, 0, 255, 1)">shift</span><span style="color: rgba(0, 0, 0, 1)">;
+
+</span><span style="color: rgba(0, 0, 255, 1)">my</span> <span style="color: rgba(128, 0, 128, 1)">$scale</span> = <span style="color: rgba(0, 0, 255, 1)">shift</span> || <span style="color: rgba(128, 0, 0, 1)">2</span><span style="color: rgba(0, 0, 0, 1)">;
+
+dieWithUsage(</span><span style="color: rgba(0, 0, 0, 1); font-weight: bold">"</span><span style="color: rgba(0, 0, 0, 1); font-weight: bold">suite name required</span><span style="color: rgba(0, 0, 0, 1); font-weight: bold">"</span>) <span style="color: rgba(0, 0, 255, 1)">unless</span> <span style="color: rgba(128, 0, 128, 1)">$suite</span> eq <span style="color: rgba(0, 0, 0, 1); font-weight: bold">"</span><span style="color: rgba(0, 0, 0, 1); font-weight: bold">tpcds</span><span style="color: rgba(0, 0, 0, 1); font-weight: bold">"</span> or <span style="color: rgba(128, 0, 128, 1)">$suite</span> eq <span style="color: rgba(0, 0, 0, 1); font-weight: bold">"</span><span style="color: rgba(0, 0, 0, 1); font-weight: bold">tpch</span><span style="color: rgba(0, 0, 0, 1); font-weight: bold">"</span><span style="color: rgba(0, 0, 0, 1)">;
+
+ 
+
+</span><span style="color: rgba(0, 0, 255, 1)">chdir</span> <span style="color: rgba(128, 0, 128, 1)">$SCRIPT_PATH</span><span style="color: rgba(0, 0, 0, 1)">;
+
+</span><span style="color: rgba(0, 0, 255, 1)">if</span>( <span style="color: rgba(128, 0, 128, 1)">$suite</span> eq <span style="color: rgba(0, 0, 0, 1); font-weight: bold">'</span><span style="color: rgba(0, 0, 0, 1); font-weight: bold">tpcds</span><span style="color: rgba(0, 0, 0, 1); font-weight: bold">'</span><span style="color: rgba(0, 0, 0, 1)"> ) {
+
+        </span><span style="color: rgba(0, 0, 255, 1)">chdir</span> <span style="color: rgba(0, 0, 0, 1); font-weight: bold">"</span><span style="color: rgba(0, 0, 0, 1); font-weight: bold">sample-queries-tpcds</span><span style="color: rgba(0, 0, 0, 1); font-weight: bold">"</span><span style="color: rgba(0, 0, 0, 1)">;
+
+} </span><span style="color: rgba(0, 0, 255, 1)">else</span><span style="color: rgba(0, 0, 0, 1)"> {
+
+        </span><span style="color: rgba(0, 0, 255, 1)">chdir</span> <span style="color: rgba(0, 0, 0, 1); font-weight: bold">'</span><span style="color: rgba(0, 0, 0, 1); font-weight: bold">sample-queries-tpch</span><span style="color: rgba(0, 0, 0, 1); font-weight: bold">'</span><span style="color: rgba(0, 0, 0, 1)">;
+
+} </span><span style="color: rgba(0, 128, 0, 1)">#</span><span style="color: rgba(0, 128, 0, 1)"> end if</span>
+
+<span style="color: rgba(0, 0, 255, 1)">my</span> <span style="color: rgba(128, 0, 128, 1)">@queries</span> = <span style="color: rgba(0, 0, 255, 1)">glob</span> <span style="color: rgba(0, 0, 0, 1); font-weight: bold">'</span><span style="color: rgba(0, 0, 0, 1); font-weight: bold">*.sql</span><span style="color: rgba(0, 0, 0, 1); font-weight: bold">'</span><span style="color: rgba(0, 0, 0, 1)">;
+
+ 
+
+</span><span style="color: rgba(0, 0, 255, 1)">my</span> <span style="color: rgba(128, 0, 128, 1)">$db</span> =<span style="color: rgba(0, 0, 0, 1)"> {
+
+        </span><span style="color: rgba(0, 0, 0, 1); font-weight: bold">'</span><span style="color: rgba(0, 0, 0, 1); font-weight: bold">tpcds</span><span style="color: rgba(0, 0, 0, 1); font-weight: bold">'</span> =&gt; <span style="color: rgba(0, 0, 0, 1); font-weight: bold">"</span><span style="color: rgba(0, 0, 0, 1); font-weight: bold">tpcds_bin_partitioned_orc_$scale</span><span style="color: rgba(0, 0, 0, 1); font-weight: bold">"</span>,
+
+        <span style="color: rgba(0, 0, 0, 1); font-weight: bold">'</span><span style="color: rgba(0, 0, 0, 1); font-weight: bold">tpch</span><span style="color: rgba(0, 0, 0, 1); font-weight: bold">'</span> =&gt; <span style="color: rgba(0, 0, 0, 1); font-weight: bold">"</span><span style="color: rgba(0, 0, 0, 1); font-weight: bold">tpch_flat_orc_$scale</span><span style="color: rgba(0, 0, 0, 1); font-weight: bold">"</span><span style="color: rgba(0, 0, 0, 1)">
+
+};
+
+ 
+
+</span><span style="color: rgba(0, 0, 255, 1)">print</span> <span style="color: rgba(0, 0, 0, 1); font-weight: bold">"</span><span style="color: rgba(0, 0, 0, 1); font-weight: bold">filename,status,time,rows\n</span><span style="color: rgba(0, 0, 0, 1); font-weight: bold">"</span><span style="color: rgba(0, 0, 0, 1)">;
+
+</span><span style="color: rgba(0, 0, 255, 1)">for</span> <span style="color: rgba(0, 0, 255, 1)">my</span> <span style="color: rgba(128, 0, 128, 1)">$query</span> ( <span style="color: rgba(128, 0, 128, 1)">@queries</span><span style="color: rgba(0, 0, 0, 1)"> ) {
+
+        </span><span style="color: rgba(0, 0, 255, 1)">my</span> <span style="color: rgba(128, 0, 128, 1)">$logname</span> = <span style="color: rgba(0, 0, 0, 1); font-weight: bold">"</span><span style="color: rgba(0, 0, 0, 1); font-weight: bold">$query.log</span><span style="color: rgba(0, 0, 0, 1); font-weight: bold">"</span><span style="color: rgba(0, 0, 0, 1)">;
+
+        </span><span style="color: rgba(0, 0, 255, 1)">my</span> <span style="color: rgba(128, 0, 128, 1)">$cmd</span>=<span style="color: rgba(0, 0, 0, 1); font-weight: bold">"</span><span style="color: rgba(0, 0, 0, 1); font-weight: bold">echo 'use $db-&gt;{${suite}}; source $query;' | hive -i testbench.settings 2&gt;&amp;1  | tee $query.log</span><span style="color: rgba(0, 0, 0, 1); font-weight: bold">"</span>;</pre>
+</div>
+<p> </p>
+<p> </p>
+<p>This script has two parameters: suite scale, such as tpcds 10</p>
+<p><br/>The ones that can be modified are more general. One is the hard-coded ORC of the database, the other is the hard-coded Hive command, the other is to print the cmd being executed, and the other is the startup command that has the time cost of initializing the environment. The time-consuming of directly using beeline to connect to the server is more realistic; after modification, it can be used for other tests, such as Spark-SQL, Impala, drill, etc.;</p>
+<p>After modification, it looks like this:</p>
+<p> </p>
+<div class="cnblogs_code">
+<pre><span style="color: rgba(0, 128, 0, 1)">#</span><span style="color: rgba(0, 128, 0, 1)">!/usr/bin/perl</span>
+
+<span style="color: rgba(0, 0, 255, 1)">use</span><span style="color: rgba(0, 0, 0, 1)"> strict;
+</span><span style="color: rgba(0, 0, 255, 1)">use</span><span style="color: rgba(0, 0, 0, 1)"> warnings;
+</span><span style="color: rgba(0, 0, 255, 1)">use</span><span style="color: rgba(0, 0, 0, 1)"> POSIX;
+</span><span style="color: rgba(0, 0, 255, 1)">use</span> File::<span style="color: rgba(0, 0, 0, 1)">Basename;
+
+</span><span style="color: rgba(0, 128, 0, 1)">#</span><span style="color: rgba(0, 128, 0, 1)"> PROTOTYPES</span>
+<span style="color: rgba(0, 0, 255, 1)">sub</span><span style="color: rgba(0, 0, 0, 1)"> dieWithUsage(;$);
+
+</span><span style="color: rgba(0, 128, 0, 1)">#</span><span style="color: rgba(0, 128, 0, 1)"> GLOBALS</span>
+<span style="color: rgba(0, 0, 255, 1)">my</span> <span style="color: rgba(128, 0, 128, 1)">$SCRIPT_NAME</span> = basename( <span style="color: rgba(0, 0, 255, 1)">__FILE__</span><span style="color: rgba(0, 0, 0, 1)"> );
+</span><span style="color: rgba(0, 0, 255, 1)">my</span> <span style="color: rgba(128, 0, 128, 1)">$SCRIPT_PATH</span> = dirname( <span style="color: rgba(0, 0, 255, 1)">__FILE__</span><span style="color: rgba(0, 0, 0, 1)"> );
+
+</span><span style="color: rgba(0, 128, 0, 1)">#</span><span style="color: rgba(0, 128, 0, 1)"> MAIN</span>
+dieWithUsage(<span style="color: rgba(0, 0, 0, 1); font-weight: bold">"</span><span style="color: rgba(0, 0, 0, 1); font-weight: bold">one or more parameters not defined</span><span style="color: rgba(0, 0, 0, 1); font-weight: bold">"</span>) <span style="color: rgba(0, 0, 255, 1)">unless</span> <span style="color: rgba(128, 0, 128, 1)">@ARGV</span> &gt;= <span style="color: rgba(128, 0, 0, 1)">4</span><span style="color: rgba(0, 0, 0, 1)">;
+</span><span style="color: rgba(0, 0, 255, 1)">my</span> <span style="color: rgba(128, 0, 128, 1)">$suite</span> = <span style="color: rgba(0, 0, 255, 1)">shift</span><span style="color: rgba(0, 0, 0, 1)">;
+</span><span style="color: rgba(0, 0, 255, 1)">my</span> <span style="color: rgba(128, 0, 128, 1)">$scale</span> = <span style="color: rgba(0, 0, 255, 1)">shift</span> || <span style="color: rgba(128, 0, 0, 1)">2</span><span style="color: rgba(0, 0, 0, 1)">;
+</span><span style="color: rgba(0, 0, 255, 1)">my</span> <span style="color: rgba(128, 0, 128, 1)">$format</span> = <span style="color: rgba(0, 0, 255, 1)">shift</span> || <span style="color: rgba(128, 0, 0, 1)">3</span><span style="color: rgba(0, 0, 0, 1)">;
+</span><span style="color: rgba(0, 0, 255, 1)">my</span> <span style="color: rgba(128, 0, 128, 1)">$engineCmd</span> = <span style="color: rgba(0, 0, 255, 1)">shift</span> || <span style="color: rgba(128, 0, 0, 1)">4</span><span style="color: rgba(0, 0, 0, 1)">;
+dieWithUsage(</span><span style="color: rgba(0, 0, 0, 1); font-weight: bold">"</span><span style="color: rgba(0, 0, 0, 1); font-weight: bold">suite name required</span><span style="color: rgba(0, 0, 0, 1); font-weight: bold">"</span>) <span style="color: rgba(0, 0, 255, 1)">unless</span> <span style="color: rgba(128, 0, 128, 1)">$suite</span> eq <span style="color: rgba(0, 0, 0, 1); font-weight: bold">"</span><span style="color: rgba(0, 0, 0, 1); font-weight: bold">tpcds</span><span style="color: rgba(0, 0, 0, 1); font-weight: bold">"</span> or <span style="color: rgba(128, 0, 128, 1)">$suite</span> eq <span style="color: rgba(0, 0, 0, 1); font-weight: bold">"</span><span style="color: rgba(0, 0, 0, 1); font-weight: bold">tpch</span><span style="color: rgba(0, 0, 0, 1); font-weight: bold">"</span><span style="color: rgba(0, 0, 0, 1)">;
+</span><span style="color: rgba(0, 0, 255, 1)">print</span> <span style="color: rgba(0, 0, 0, 1); font-weight: bold">"</span><span style="color: rgba(0, 0, 0, 1); font-weight: bold">params: $suite, $scale, $format, $engineCmd;</span><span style="color: rgba(0, 0, 0, 1); font-weight: bold">"</span><span style="color: rgba(0, 0, 0, 1)">;
+
+</span><span style="color: rgba(0, 0, 255, 1)">chdir</span> <span style="color: rgba(128, 0, 128, 1)">$SCRIPT_PATH</span><span style="color: rgba(0, 0, 0, 1)">;
+</span><span style="color: rgba(0, 0, 255, 1)">if</span>( <span style="color: rgba(128, 0, 128, 1)">$suite</span> eq <span style="color: rgba(0, 0, 0, 1); font-weight: bold">'</span><span style="color: rgba(0, 0, 0, 1); font-weight: bold">tpcds</span><span style="color: rgba(0, 0, 0, 1); font-weight: bold">'</span><span style="color: rgba(0, 0, 0, 1)"> ) {
+        </span><span style="color: rgba(0, 0, 255, 1)">chdir</span> <span style="color: rgba(0, 0, 0, 1); font-weight: bold">"</span><span style="color: rgba(0, 0, 0, 1); font-weight: bold">sample-queries-tpcds</span><span style="color: rgba(0, 0, 0, 1); font-weight: bold">"</span><span style="color: rgba(0, 0, 0, 1)">;
+} </span><span style="color: rgba(0, 0, 255, 1)">else</span><span style="color: rgba(0, 0, 0, 1)"> {
+        </span><span style="color: rgba(0, 0, 255, 1)">chdir</span> <span style="color: rgba(0, 0, 0, 1); font-weight: bold">'</span><span style="color: rgba(0, 0, 0, 1); font-weight: bold">sample-queries-tpch</span><span style="color: rgba(0, 0, 0, 1); font-weight: bold">'</span><span style="color: rgba(0, 0, 0, 1)">;
+} </span><span style="color: rgba(0, 128, 0, 1)">#</span><span style="color: rgba(0, 128, 0, 1)"> end if</span>
+<span style="color: rgba(0, 0, 255, 1)">my</span> <span style="color: rgba(128, 0, 128, 1)">@queries</span> = <span style="color: rgba(0, 0, 255, 1)">glob</span> <span style="color: rgba(0, 0, 0, 1); font-weight: bold">'</span><span style="color: rgba(0, 0, 0, 1); font-weight: bold">*.sql</span><span style="color: rgba(0, 0, 0, 1); font-weight: bold">'</span><span style="color: rgba(0, 0, 0, 1)">;
+
+</span><span style="color: rgba(0, 0, 255, 1)">my</span> <span style="color: rgba(128, 0, 128, 1)">$db</span> =<span style="color: rgba(0, 0, 0, 1)"> { 
+        </span><span style="color: rgba(0, 0, 0, 1); font-weight: bold">'</span><span style="color: rgba(0, 0, 0, 1); font-weight: bold">tpcds</span><span style="color: rgba(0, 0, 0, 1); font-weight: bold">'</span> =&gt; <span style="color: rgba(0, 0, 0, 1); font-weight: bold">"</span><span style="color: rgba(0, 0, 0, 1); font-weight: bold">tpcds_bin_partitioned_${format}_$scale</span><span style="color: rgba(0, 0, 0, 1); font-weight: bold">"</span>,
+        <span style="color: rgba(0, 0, 0, 1); font-weight: bold">'</span><span style="color: rgba(0, 0, 0, 1); font-weight: bold">tpch</span><span style="color: rgba(0, 0, 0, 1); font-weight: bold">'</span> =&gt; <span style="color: rgba(0, 0, 0, 1); font-weight: bold">"</span><span style="color: rgba(0, 0, 0, 1); font-weight: bold">tpch_flat_${format}_$scale</span><span style="color: rgba(0, 0, 0, 1); font-weight: bold">"</span><span style="color: rgba(0, 0, 0, 1)">
+};
+
+</span><span style="color: rgba(0, 0, 255, 1)">print</span> <span style="color: rgba(0, 0, 0, 1); font-weight: bold">"</span><span style="color: rgba(0, 0, 0, 1); font-weight: bold">filename,status,time,rows\n</span><span style="color: rgba(0, 0, 0, 1); font-weight: bold">"</span><span style="color: rgba(0, 0, 0, 1)">;
+</span><span style="color: rgba(0, 0, 255, 1)">for</span> <span style="color: rgba(0, 0, 255, 1)">my</span> <span style="color: rgba(128, 0, 128, 1)">$query</span> ( <span style="color: rgba(128, 0, 128, 1)">@queries</span><span style="color: rgba(0, 0, 0, 1)"> ) {
+        </span><span style="color: rgba(0, 0, 255, 1)">my</span> <span style="color: rgba(128, 0, 128, 1)">$logname</span> = <span style="color: rgba(0, 0, 0, 1); font-weight: bold">"</span><span style="color: rgba(0, 0, 0, 1); font-weight: bold">$query.log</span><span style="color: rgba(0, 0, 0, 1); font-weight: bold">"</span><span style="color: rgba(0, 0, 0, 1)">;
+        </span><span style="color: rgba(0, 0, 255, 1)">my</span> <span style="color: rgba(128, 0, 128, 1)">$cmd</span>=<span style="color: rgba(0, 0, 0, 1); font-weight: bold">"</span><span style="color: rgba(0, 0, 0, 1); font-weight: bold">${engineCmd}/$db-&gt;{${suite}} -i conf.settings -f $query 2&gt;&amp;1  | tee $query.log</span><span style="color: rgba(0, 0, 0, 1); font-weight: bold">"</span><span style="color: rgba(0, 0, 0, 1)">;
+</span><span style="color: rgba(0, 128, 0, 1)">#</span><span style="color: rgba(0, 128, 0, 1)">       my $cmd="cat $query.log";
+        #print $cmd ; exit;</span>
+        <span style="color: rgba(0, 0, 255, 1)">my</span> <span style="color: rgba(128, 0, 128, 1)">$currentTime</span> = strftime(<span style="color: rgba(0, 0, 0, 1); font-weight: bold">"</span><span style="color: rgba(0, 0, 0, 1); font-weight: bold">%Y-%m-%d %H:%M:%S</span><span style="color: rgba(0, 0, 0, 1); font-weight: bold">"</span>, <span style="color: rgba(0, 0, 255, 1)">localtime</span>(<span style="color: rgba(0, 0, 255, 1)">time</span><span style="color: rgba(0, 0, 0, 1)">));
+        </span><span style="color: rgba(0, 0, 255, 1)">print</span> <span style="color: rgba(0, 0, 0, 1); font-weight: bold">"</span><span style="color: rgba(0, 0, 0, 1); font-weight: bold">$currentTime : </span><span style="color: rgba(0, 0, 0, 1); font-weight: bold">"</span><span style="color: rgba(0, 0, 0, 1)">;
+        </span><span style="color: rgba(0, 0, 255, 1)">print</span> <span style="color: rgba(0, 0, 0, 1); font-weight: bold">"</span><span style="color: rgba(0, 0, 0, 1); font-weight: bold">$cmd \n</span><span style="color: rgba(0, 0, 0, 1); font-weight: bold">"</span><span style="color: rgba(0, 0, 0, 1)">;
+
+        </span><span style="color: rgba(0, 0, 255, 1)">my</span> <span style="color: rgba(128, 0, 128, 1)">$hiveStart</span> = <span style="color: rgba(0, 0, 255, 1)">time</span><span style="color: rgba(0, 0, 0, 1)">();
+
+        </span><span style="color: rgba(0, 0, 255, 1)">my</span> <span style="color: rgba(128, 0, 128, 1)">@hiveoutput</span>=`<span style="color: rgba(128, 0, 128, 1)">$cmd</span><span style="color: rgba(0, 0, 0, 1)">`;
+        </span><span style="color: rgba(0, 0, 255, 1)">die</span> <span style="color: rgba(0, 0, 0, 1); font-weight: bold">"</span><span style="color: rgba(0, 0, 0, 1); font-weight: bold">${SCRIPT_NAME}:: ERROR:  hive command unexpectedly exited \$? = '$?', \$! = '$!'</span><span style="color: rgba(0, 0, 0, 1); font-weight: bold">"</span> <span style="color: rgba(0, 0, 255, 1)">if</span> $?<span style="color: rgba(0, 0, 0, 1)">;
+
+        </span><span style="color: rgba(0, 0, 255, 1)">my</span> <span style="color: rgba(128, 0, 128, 1)">$hiveEnd</span> = <span style="color: rgba(0, 0, 255, 1)">time</span><span style="color: rgba(0, 0, 0, 1)">();
+        </span><span style="color: rgba(0, 0, 255, 1)">my</span> <span style="color: rgba(128, 0, 128, 1)">$hiveTime</span> = <span style="color: rgba(128, 0, 128, 1)">$hiveEnd</span> - <span style="color: rgba(128, 0, 128, 1)">$hiveStart</span><span style="color: rgba(0, 0, 0, 1)">;
+        </span><span style="color: rgba(0, 0, 255, 1)">my</span> <span style="color: rgba(128, 0, 128, 1)">$is_success</span> = <span style="color: rgba(128, 0, 0, 1)">0</span><span style="color: rgba(0, 0, 0, 1)">;
+        </span><span style="color: rgba(0, 0, 255, 1)">foreach</span> <span style="color: rgba(0, 0, 255, 1)">my</span> <span style="color: rgba(128, 0, 128, 1)">$line</span> ( <span style="color: rgba(128, 0, 128, 1)">@hiveoutput</span><span style="color: rgba(0, 0, 0, 1)"> ) {
+                </span><span style="color: rgba(0, 0, 255, 1)">if</span>( <span style="color: rgba(128, 0, 128, 1)">$line</span> =~ /[(\d+|<span style="color: rgba(0, 0, 255, 1)">No</span>)]\s+row[s]? selected \(([\d\.]+) seconds\)/<span style="color: rgba(0, 0, 0, 1)"> ) {
+                        </span><span style="color: rgba(128, 0, 128, 1)">$is_success</span> = <span style="color: rgba(128, 0, 0, 1)">1</span><span style="color: rgba(0, 0, 0, 1)">;
+                        </span><span style="color: rgba(0, 0, 255, 1)">print</span> <span style="color: rgba(0, 0, 0, 1); font-weight: bold">"</span><span style="color: rgba(0, 0, 0, 1); font-weight: bold">$query,success,$hiveTime,$1\n</span><span style="color: rgba(0, 0, 0, 1); font-weight: bold">"</span><span style="color: rgba(0, 0, 0, 1)">; 
+                } </span><span style="color: rgba(0, 128, 0, 1)">#</span><span style="color: rgba(0, 128, 0, 1)"> end if</span>
+        } <span style="color: rgba(0, 128, 0, 1)">#</span><span style="color: rgba(0, 128, 0, 1)"> end while</span>
+        <span style="color: rgba(0, 0, 255, 1)">if</span>( <span style="color: rgba(128, 0, 128, 1)">$is_success</span> == <span style="color: rgba(128, 0, 0, 1)">0</span><span style="color: rgba(0, 0, 0, 1)">) {
+                </span><span style="color: rgba(0, 0, 255, 1)">print</span> <span style="color: rgba(0, 0, 0, 1); font-weight: bold">"</span><span style="color: rgba(0, 0, 0, 1); font-weight: bold">$query,failed,$hiveTime\n</span><span style="color: rgba(0, 0, 0, 1); font-weight: bold">"</span><span style="color: rgba(0, 0, 0, 1)">;
+        }
+} </span><span style="color: rgba(0, 128, 0, 1)">#</span><span style="color: rgba(0, 128, 0, 1)"> end for</span>
+
+
+<span style="color: rgba(0, 0, 255, 1)">sub</span><span style="color: rgba(0, 0, 0, 1)"> dieWithUsage(;$) {
+        </span><span style="color: rgba(0, 0, 255, 1)">my</span> <span style="color: rgba(128, 0, 128, 1)">$err</span> = <span style="color: rgba(0, 0, 255, 1)">shift</span> || <span style="color: rgba(0, 0, 0, 1); font-weight: bold">''</span><span style="color: rgba(0, 0, 0, 1)">;
+        </span><span style="color: rgba(0, 0, 255, 1)">if</span>( <span style="color: rgba(128, 0, 128, 1)">$err</span> ne <span style="color: rgba(0, 0, 0, 1); font-weight: bold">''</span><span style="color: rgba(0, 0, 0, 1)"> ) {
+                </span><span style="color: rgba(0, 0, 255, 1)">chomp</span> <span style="color: rgba(128, 0, 128, 1)">$err</span><span style="color: rgba(0, 0, 0, 1)">;
+                </span><span style="color: rgba(128, 0, 128, 1)">$err</span> = <span style="color: rgba(0, 0, 0, 1); font-weight: bold">"</span><span style="color: rgba(0, 0, 0, 1); font-weight: bold">ERROR: $err\n\n</span><span style="color: rgba(0, 0, 0, 1); font-weight: bold">"</span><span style="color: rgba(0, 0, 0, 1)">;
+        } </span><span style="color: rgba(0, 128, 0, 1)">#</span><span style="color: rgba(0, 128, 0, 1)"> end if</span>
+
+        <span style="color: rgba(0, 0, 255, 1)">print</span> STDERR &lt;&lt;<span style="color: rgba(0, 0, 0, 1)">USAGE;
+${err}Usage</span>:<span style="color: rgba(0, 0, 0, 1)">
+        perl ${SCRIPT_NAME} [tpcds</span>|tpch] [scale] [<span style="color: rgba(0, 0, 255, 1)">format</span><span style="color: rgba(0, 0, 0, 1)">] [engineCmd]
+
+Description</span>:<span style="color: rgba(0, 0, 0, 1)">
+        This script runs the sample queries and outputs a CSV file of the </span><span style="color: rgba(0, 0, 255, 1)">time</span> it took <span style="color: rgba(0, 0, 255, 1)">each</span> query to run.  Also, all hive output is kept as a <span style="color: rgba(0, 0, 255, 1)">log</span> file named <span style="color: rgba(0, 0, 0, 1); font-weight: bold">'</span><span style="color: rgba(0, 0, 0, 1); font-weight: bold">queryXX.sql.log</span><span style="color: rgba(0, 0, 0, 1); font-weight: bold">'</span> <span style="color: rgba(0, 0, 255, 1)">for</span> <span style="color: rgba(0, 0, 255, 1)">each</span> query file of the form <span style="color: rgba(0, 0, 0, 1); font-weight: bold">'</span><span style="color: rgba(0, 0, 0, 1); font-weight: bold">queryXX.sql</span><span style="color: rgba(0, 0, 0, 1); font-weight: bold">'</span>. Defaults to scale of <span style="color: rgba(128, 0, 0, 1)">4</span>.<span style="color: rgba(0, 0, 0, 1)">
+USAGE
+        </span><span style="color: rgba(0, 0, 255, 1)">exit</span> <span style="color: rgba(128, 0, 0, 1)">1</span><span style="color: rgba(0, 0, 0, 1)">;
+}</span></pre>
+</div>
+<p> </p>
+<p> </p>
+<p>implement:</p>
+<blockquote>
+<p><span style="background-color: initial"># beeline to hiveserver2</span></p>
+<p>$ perl runSuite.pl tpcds 10 parquet "$HIVE_HOME/bin/beeline -u jdbc:hive2://localhost:10000"</p>
+<p># beeline to spark thrift server</p>
+<p>$ perl runSuite.pl tpcds 10 parquet "$SPARK_HOME/bin/beeline -u jdbc:hive2://localhost:11111"</p>
+<p># beeline to impala</p>
+<p>perl runSuite.pl tpcds 10 parquet "$HIVE_HOME/bin/beeline -d com.cloudera.impala.jdbc4.Driver -u jdbc:impala://localhost:21050"</p>
+</blockquote>
+<p>Batch test script</p>
+<div class="cnblogs_code">
+<pre><span style="color: rgba(0, 128, 0, 1)">#</span><span style="color: rgba(0, 128, 0, 1)">!/bin/sh</span>
+<span style="color: rgba(0, 0, 0, 1)">
+current_dir</span>=<span style="color: rgba(0, 0, 0, 1)">`pwd`
+
+scale</span>=<span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">$1</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">
+format</span>=<span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">$2</span><span style="color: rgba(128, 0, 0, 1)">"</span>
+
+<span style="color: rgba(0, 0, 255, 1)">if</span> [ -z <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">$scale</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)"> ]; then
+        scale</span>=10<span style="color: rgba(0, 0, 0, 1)">
+fi
+</span><span style="color: rgba(0, 0, 255, 1)">if</span> [ -z <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">$format</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)"> ]; then
+        format</span>=<span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">parquet</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">
+fi
+
+</span><span style="color: rgba(0, 128, 0, 1)">#</span><span style="color: rgba(0, 128, 0, 1)">echo "$current_dir $component $scale $test_dir"</span>
+echo <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">mkdir merge</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">
+echo </span><span style="color: rgba(128, 0, 0, 1)">""</span><span style="color: rgba(0, 0, 0, 1)">
+
+component</span>=<span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">hive</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)"> 
+test_dir</span>=<span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">test_$component</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">
+
+echo </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)"># test $component</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">
+echo </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">mkdir $test_dir</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">
+echo </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">cp -R sample-queries-tpcds $test_dir</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">
+echo </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">ln -s $current_dir/runSuiteCommon.pl $test_dir/runSuite.pl</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">
+echo </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">cd $test_dir</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">
+echo </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">perl runSuite.pl tpcds ${scale} $format \"$HIVE_HOME/bin/beeline -i conf.settings -n hadoop -u jdbc:hive2://localhost:10000\" 2&gt;&amp;1| tee ${component}_${scale}_${format}.log</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">
+echo </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">cd ..</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">
+echo </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">grep -e '^query' $test_dir/${component}_${scale}_${format}.log|sort &gt; merge/${component}_${scale}_${format}.log</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)"> 
+echo </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">wc -l merge/${component}_${scale}_${format}.log</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">
+echo </span><span style="color: rgba(128, 0, 0, 1)">""</span><span style="color: rgba(0, 0, 0, 1)">
+
+component</span>=<span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">spark</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">
+test_dir</span>=<span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">test_$component</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">
+
+echo </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)"># test $component</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">
+echo </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">mkdir $test_dir</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)"> 
+echo </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">cp -R sample-queries-tpcds $test_dir</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)"> 
+echo </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">ln -s $current_dir/runSuiteCommon.pl $test_dir/runSuite.pl</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)"> 
+echo </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">cd $test_dir</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)"> 
+echo </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">perl runSuite.pl tpcds ${scale} $format \"$SPARK_HOME/bin/beeline -i conf.settings -u jdbc:hive2://localhost:11111\" 2&gt;&amp;1| tee ${component}_${scale}_${format}.log</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">
+echo </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">cd ..</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">
+echo </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">grep -e '^query' $test_dir/${component}_${scale}_${format}.log|sort &gt; merge/${component}_${scale}_${format}.log</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)"> 
+echo </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">wc -l merge/${component}_${scale}_${format}.log</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">
+echo </span><span style="color: rgba(128, 0, 0, 1)">""</span><span style="color: rgba(0, 0, 0, 1)">
+
+component</span>=<span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">impala</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">
+test_dir</span>=<span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">test_$component</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">
+
+echo </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)"># test $component</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">
+echo </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">mkdir $test_dir</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">  
+echo </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">cp -R sample-queries-tpcds $test_dir</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">  
+echo </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">ln -s $current_dir/runSuiteCommon.pl $test_dir/runSuite.pl</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">  
+echo </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">cd $test_dir</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)"> 
+echo </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">perl runSuite.pl tpcds ${scale} $format \"$HIVE_HOME/bin/beeline -i conf.settings -d com.cloudera.impala.jdbc4.Driver -u jdbc:impala://localhost:21050\" 2&gt;&amp;1| tee ${component}_${scale}_${format}.log</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">
+echo </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">cd ..</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">
+echo </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">grep -e '^query' $test_dir/${component}_${scale}_${format}.log|sort &gt; merge/${component}_${scale}_${format}.log</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)"> 
+echo </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">wc -l merge/${component}_${scale}_${format}.log</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">
+echo </span><span style="color: rgba(128, 0, 0, 1)">""</span><span style="color: rgba(0, 0, 0, 1)">
+
+component</span>=<span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">presto</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">
+test_dir</span>=<span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">test_$component</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">
+
+echo </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)"># test $component</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">
+echo </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">mkdir $test_dir</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">  
+echo </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">cp -R sample-queries-tpcds $test_dir</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">  
+echo </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">ln -s $current_dir/runSuiteCommon.pl $test_dir/runSuite.pl</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">  
+echo </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">cd $test_dir</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)"> 
+echo </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">perl runSuite.pl tpcds ${scale} $format \"$HIVE_HOME/bin/beeline -i conf.settings -d com.facebook.presto.jdbc.PrestoDriver -n hadoop -u jdbc:presto://localhost:8080/hive\" 2&gt;&amp;1| tee ${component}_${scale}_${format}.log</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">
+echo </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">cd ..</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">
+echo </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">grep -e '^query' $test_dir/${component}_${scale}_${format}.log|sort &gt; merge/${component}_${scale}_${format}.log</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)"> 
+echo </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">wc -l merge/${component}_${scale}_${format}.log</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">
+
+
+echo </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">awk -F ',' '{if(NF==4){print \$1\",\"\$4}else{print \$1\",0\"}}' merge/hive_${scale}_${format}.log &gt; /tmp/hive_${scale}_${format}.log</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">
+echo </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">awk -F ',' '{if(NF==4){print \$4}else{print \"0\"}}' merge/spark_${scale}_${format}.log &gt; /tmp/spark_${scale}_${format}.log</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">
+echo </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">awk -F ',' '{if(NF==4){print \$4}else{print \"0\"}}' merge/impala_${scale}_${format}.log &gt; /tmp/impala_${scale}_${format}.log</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">
+echo </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">awk -F ',' '{if(NF==4){print \$4}else{print \"0\"}}' merge/presto_${scale}_${format}.log &gt; /tmp/presto_${scale}_${format}.log</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">
+echo </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">paste -d\",\" /tmp/hive_${scale}_${format}.log /tmp/spark_${scale}_${format}.log /tmp/impala_${scale}_${format}.log /tmp/presto_${scale}_${format}.log &gt; merge/result_${scale}_${format}.csv</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">
+echo </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">sed -i \"1i sql_${scale}_${format},hive,spark,impala,presto\" merge/result_${scale}_${format}.csv</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">
+echo </span><span style="color: rgba(128, 0, 0, 1)">""</span></pre>
+</div>
+<p> </p>
+<p> </p>
+<p>The results are merged and displayed graphically using excel.</p>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201903/1509647-20190308214639086-1259986375.png"/></p>
+<p> </p>
+</div>
+</div>
+<!-- Post Footer -->
+<div class="post-footer">
+<div class="post-navigation">
+<a class="nav-button" href="../blog.html">← Back to Home</a>
+<a class="nav-button" href="0192.html">Next Post →</a>
+</div>
+</div>
+</article>
+</div>
+</body>
+</html>

@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Oozie 1 - Introduction, source code analysis</title>
+<link href="../css/style3.css" rel="stylesheet"/>
+</head>
+<body>
+<div class="container">
+<!-- Header Navigation -->
+<div class="header">
+<h1><a href="../blog.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+</div>
+<!-- Post Container -->
+<article class="post">
+<!-- Post Header -->
+<div class="post-header">
+<h1>Oozie 1 - Introduction, source code analysis</h1>
+<div class="post-meta">
+<div class="post-meta-item">
+<span class="meta-icon">📅</span>
+<span>November 02, 2018</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">📖</span>
+<span>2 min read</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">👁️</span>
+<span>2477 views</span>
+</div>
+</div>
+</div>
+<!-- Post Content -->
+<div class="post-content">
+<div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<p>Oozie4.3</p>
+<h1>1 Introduction</h1>
+<p> <img alt="" src="https://img2018.cnblogs.com/blog/1509647/201811/1509647-20181107111409607-211135577.png"/></p>
+<p> </p>
+<h2>1 official website</h2>
+<p><a href="http://oozie.apache.org/" rel="noopener nofollow">http://oozie.apache.org/</a></p>
+<h4>Apache Oozie Workflow Scheduler for Hadoop</h4>
+<blockquote>
+<p>Workflow scheduler for Hadoop ecosystem</p>
+</blockquote>
+<h5>Overview</h5>
+<p>Oozie is a workflow scheduler system to manage Apache Hadoop jobs.</p>
+<p>Oozie Workflow jobs are Directed Acyclical Graphs (DAGs) of actions.</p>
+<p>Oozie Coordinator jobs are recurrent Oozie Workflow jobs triggered by time (frequency) and data availability.</p>
+<p>Oozie is integrated with the rest of the Hadoop stack supporting several types of Hadoop jobs out of the box (such as Java map-reduce, Streaming map-reduce, Pig, Hive, Sqoop and Distcp) as well as system specific jobs (such as Java programs and shell scripts).</p>
+<p>Oozie is a scalable, reliable and extensible system.</p>
+<p> <img alt="" src="https://img2018.cnblogs.com/blog/1509647/201811/1509647-20181107111425649-1894455818.png"/></p>
+<h2>2 Deployment</h2>
+<p> <img alt="" src="https://img2018.cnblogs.com/blog/1509647/201811/1509647-20181107111446613-1172860781.png"/></p>
+<h2>3 Database table structure</h2>
+<p> <img alt="" src="https://img2018.cnblogs.com/blog/1509647/201811/1509647-20181107111502822-1953156128.png"/></p>
+<p> </p>
+<p>wf_jobs: Workflow instance</p>
+<p>wf_actions: task instance</p>
+<p>coord_jobs: scheduling instance</p>
+<p>coord_actions: Scheduling task instance</p>
+<h2>4 concepts</h2>
+<p>l Control Node: The start and end of the workflow and the node that determines the execution path of the Workflow (start, end, kill, decision, fork/join)</p>
+<p>l Action Node: Computing tasks executed by workflow, supported types include (HDFS, MapReduce, Java, Shell, SSH, Pig, Hive, Email, Sub-Workflow, Sqoop, Distcp), that is<strong>Task</strong></p>
+<p>l Workflow: A workflow composed of Control Node and a series of Action Node, that is,<strong>Workflow</strong></p>
+<p>l Coordinator: Trigger workflow based on specified Cron information, that is<strong>Scheduling</strong></p>
+<p>l Bundle: Manage Coordinator tasks in batches according to groups to achieve centralized start and stop.</p>
+<h1>2. Code analysis</h1>
+<h2>1 Startup process</h2>
+<p>Load all configured services:</p>
+<p><strong>ServicesLoader.contextInitialized</strong></p>
+<p><strong>         Services.init</strong></p>
+<p><strong>                  Services.loadServices (oozie.services, oozie.services.ext)</strong></p>
+<p> </p>
+<p>Service structure:</p>
+<p><strong>Service</strong></p>
+<p><strong>         org.apache.oozie.service.SchedulerService,</strong></p>
+<p><strong>         org.apache.oozie.service.InstrumentationService,</strong></p>
+<p><strong>         org.apache.oozie.service.MemoryLocksService,</strong></p>
+<p><strong>         org.apache.oozie.service.UUIDService,</strong></p>
+<p><strong>         org.apache.oozie.service.ELService,</strong></p>
+<p><strong>         org.apache.oozie.service.AuthorizationService,</strong></p>
+<p><strong>         org.apache.oozie.service.UserGroupInformationService,</strong></p>
+<p><strong>         org.apache.oozie.service.HadoopAccessorService,</strong></p>
+<p><strong>         org.apache.oozie.service.JobsConcurrencyService,</strong></p>
+<p><strong>         org.apache.oozie.service.URIHandlerService,</strong></p>
+<p><strong>         org.apache.oozie.service.DagXLogInfoService,</strong></p>
+<p><strong>         org.apache.oozie.service.SchemaService,</strong></p>
+<p><strong>         org.apache.oozie.service.LiteWorkflowAppService,</strong></p>
+<p><strong>         org.apache.oozie.service.JPAService,</strong></p>
+<p><strong>         org.apache.oozie.service.StoreService,</strong></p>
+<p><strong>         org.apache.oozie.service.SLAStoreService,</strong></p>
+<p><strong>         org.apache.oozie.service.DBLiteWorkflowStoreService,</strong></p>
+<p><strong>         org.apache.oozie.service.CallbackService,</strong></p>
+<p><strong>         org.apache.oozie.service.ActionService,</strong></p>
+<p><strong>         org.apache.oozie.service.ShareLibService,</strong></p>
+<p><strong>         org.apache.oozie.service.CallableQueueService,</strong></p>
+<p><strong>         org.apache.oozie.service.ActionCheckerService,</strong></p>
+<p><strong>         org.apache.oozie.service.RecoveryService,</strong></p>
+<p><strong>         org.apache.oozie.service.PurgeService,</strong></p>
+<p><strong>         org.apache.oozie.service.CoordinatorEngineService,</strong></p>
+<p><strong>         org.apache.oozie.service.BundleEngineService,</strong></p>
+<p><strong>         org.apache.oozie.service.DagEngineService,</strong></p>
+<p><strong>         org.apache.oozie.service.CoordMaterializeTriggerService,</strong></p>
+<p><strong>         org.apache.oozie.service.StatusTransitService,</strong></p>
+<p><strong>         org.apache.oozie.service.PauseTransitService,</strong></p>
+<p><strong>         org.apache.oozie.service.GroupsService,</strong></p>
+<p><strong>         org.apache.oozie.service.ProxyUserService,</strong></p>
+<p><strong>         org.apache.oozie.service.XLogStreamingService,</strong></p>
+<p><strong>         org.apache.oozie.service.JvmPauseMonitorService,</strong></p>
+<p><strong>         org.apache.oozie.service.SparkConfigurationService</strong></p>
+<p> </p>
+<h2>2 core engine</h2>
+<p><strong>BaseEngine</strong></p>
+<p><strong>         DAGEngine (responsible for workflow execution<strong>）</strong></strong></p>
+<p><strong>         CoordinatorEngine <strong>（</strong>Responsible for coordinator execution<strong>）</strong></strong></p>
+<p><strong>         BundleEngine <strong>（</strong>Responsible for bundle execution<strong>）</strong></strong></p>
+<p> </p>
+<h2>3 workflow submission execution process</h2>
+<p><strong>DAGEngine.submitJob| submitJobFromCoordinator (submit workflow)</strong></p>
+<p><strong>         SubmitXCommand.call</strong></p>
+<p><strong>                  execute</strong></p>
+<p><strong>                          LiteWorkflowAppService.parseDef (parse to get WorkflowApp)</strong></p>
+<p><strong>                                   LiteWorkflowLib.parseDef</strong></p>
+<p><strong>                                            LiteWorkflowAppParser.validateAndParse</strong></p>
+<p><strong>                                                     parse</strong></p>
+<p><strong>                          WorkflowLib.createInstance (create WorkflowInstance)</strong></p>
+<p><strong>                          BatchQueryExecutor.executeBatchInsertUpdateDelete (save WorkflowJobBean to wf_jobs)</strong></p>
+<p><strong>         StartXCommand.call</strong></p>
+<p><strong>                  SignalXCommand.call</strong></p>
+<p><strong>                          execute</strong></p>
+<p><strong>                                   WorkflowInstance.start</strong></p>
+<p><strong>                                            LiteWorkflowInstance.start</strong></p>
+<p><strong>                                                     signal</strong></p>
+<p><strong>                                                             NodeHandler.enter</strong></p>
+<p><strong>                                                                      ActionNodeHandler.enter</strong></p>
+<p><strong>                                                                               start</strong></p>
+<p><strong>                                                                                        LiteWorkflowStoreService.liteExecute (add WorkflowActionBean to ACTIONS_TO_START)</strong></p>
+<p><strong>                                   WorkflowStoreService.getActionsToStart (take Action from ACTIONS_TO_START)</strong></p>
+<p><strong>                                            ActionStartXCommand.call</strong></p>
+<p><strong>                                                     ActionExecutor.start</strong></p>
+<p><strong>                                                     WorkflowNotificationXCommand.call</strong></p>
+<p><strong>                                            BatchQueryExecutor.executeBatchInsertUpdateDelete (save WorkflowActionBean to wf_actions)</strong></p>
+<p> </p>
+<p>ActionExecutor.start is asynchronous, and you also need to check the Action execution status to advance the process. There are two situations:</p>
+<p>One is for Oozie Server to run normally: using JobEndNotification</p>
+<p><strong>CallbackServlet.doGet</strong></p>
+<p><strong>         DagEngine.processCallback</strong></p>
+<p><strong>                  CompletedActionXCommand.call</strong></p>
+<p><strong>                          ActionCheckXCommand.call</strong></p>
+<p><strong>                                   ActionExecutor.check</strong></p>
+<p><strong>ActionEndXCommand.call</strong></p>
+<p><strong>                                            SignalXCommand.call</strong></p>
+<p>One is to restart Oozie Server: using ActionCheckerService</p>
+<p><strong>ActionCheckerService.init</strong></p>
+<p><strong>         ActionCheckRunnable.run</strong></p>
+<p><strong>                  runWFActionCheck (GET_RUNNING_ACTIONS, oozie.service.ActionCheckerService.action.check.delay=600)</strong></p>
+<p><strong>                          ActionCheckXCommand.call</strong></p>
+<p><strong>                                    ActionExecutor.check</strong></p>
+<p><strong>                                   ActionEndXCommand.call</strong></p>
+<p><strong>                                            SignalXCommand.call</strong></p>
+<p><strong>                  runCoordActionCheck</strong></p>
+<p> </p>
+<h2>4 coordinator submits the execution process</h2>
+<p><strong>CoordinatorEngine.submitJob (submit coordinator)</strong></p>
+<p><strong>         CoordSubmitXCommand.call</strong></p>
+<p><strong>                  submit</strong></p>
+<p><strong>                          submitJob</strong></p>
+<p><strong>                                   storeToDB</strong></p>
+<p><strong>                                            CoordJobQueryExecutor.insert (save CoordinatorJobBean to coord_jobs)</strong></p>
+<p><strong>                                   queueMaterializeTransitionXCommand</strong></p>
+<p><strong>                                            CoordMaterializeTransitionXCommand.call</strong></p>
+<p><strong>                                                     execute</strong></p>
+<p><strong>                                                              materialize</strong></p>
+<p><strong>                                                                      materializeActions</strong></p>
+<p><strong>                                                                               CoordCommandUtils.materializeOneInstance(create CoordinatorActionBean)</strong></p>
+<p><strong>                                                                                storeToDB</strong></p>
+<p><strong>                                                             performWrites</strong></p>
+<p><strong>                                                                      BatchQueryExecutor.executeBatchInsertUpdateDelete (save CoordinatorActionBean to coord_actions)</strong></p>
+<p><strong>                                                                      CoordActionInputCheckXCommand.call</strong></p>
+<p><strong>                                                                               CoordActionReadyXCommand.call</strong></p>
+<p><strong>                                                                                        CoordActionStartXCommand.call</strong></p>
+<p><strong>                                                                                                DAGEngine.submitJobFromCoordinator</strong></p>
+<p>Scheduled tasks trigger Materialize:</p>
+<p><strong>CoordMaterializeTriggerService.init</strong></p>
+<p><strong>         CoordMaterializeTriggerRunnable.run</strong></p>
+<p><strong>                  CoordMaterializeTriggerService.runCoordJobMatLookup</strong></p>
+<p><strong>                          materializeCoordJobs (GET_COORD_JOBS_OLDER_FOR_MATERIALIZATION)</strong></p>
+<p><strong>                                   CoordMaterializeTransitionXCommand.call</strong></p>
+<p> </p>
+<h2>5 distributed</h2>
+<p>Some internal tasks can only be started once. In the single-server environment Oozie, this is guaranteed by MemoryLocksService. In the multi-server environment Oozie, it is guaranteed by ZKLocksService. To enable ZK, you need to enable some services:</p>
+<p><strong>org.apache.oozie.service.ZKLocksService,</strong></p>
+<p><strong>org.apache.oozie.service.ZKXLogStreamingService,</strong></p>
+<p><strong>org.apache.oozie.service.ZKJobsConcurrencyService,</strong></p>
+<p><strong>org.apache.oozie.service.ZKUUIDService</strong></p>
+<p>At the same time, you need to configure Oozie.ZooKeeper.connection.string</p>
+<h2>6 Task execution process</h2>
+<p>ActionExecutor is the core abstract base class for task execution. All specific tasks are subclasses of this class.</p>
+<p><strong>ActionExecutor</strong></p>
+<p><strong>         JavaActionExecutor</strong></p>
+<p><strong>         SshActionExecutor</strong></p>
+<p><strong>         FsActionExecutor</strong></p>
+<p><strong>         SubWorkflowActionExecutor</strong></p>
+<p> </p>
+<p>Among them, JavaActionExecutor is the most important subclass, and many other tasks are subclasses of this class (such as HiveActionExecutor, SparkActionExecutor, etc.)</p>
+<p><strong>JavaActionExecutor.start</strong></p>
+<p><strong>         prepareActionDir</strong></p>
+<p><strong>         submitLauncher</strong></p>
+<p><strong>                  JobClient.getJob</strong></p>
+<p><strong>                  injectLauncherCallback</strong></p>
+<p><strong>                          ActionExecutor.Context.getCallbackUrl</strong></p>
+<p><strong>                                   job.end.notification.url</strong></p>
+<p><strong>                  createLauncherConf</strong></p>
+<p><strong>                          LauncherMapperHelper.setupLauncherInfo</strong></p>
+<p><strong>                  JobClient.submitJob</strong></p>
+<p><strong>         check</strong></p>
+<p> </p>
+<p>When JavaActionExecutor is executed, it will submit a map task to YARN, that is, LauncherMapper.</p>
+<p><strong>LauncherMapper.map</strong></p>
+<p><strong>         LauncherMain.main</strong></p>
+<p> </p>
+<p>LauncherMain is the execution class for specific tasks</p>
+<p><strong>LauncherMain</strong></p>
+<p><strong>         JavaMain</strong></p>
+<p><strong>         HiveMain</strong></p>
+<p><strong>         Hive2Main</strong></p>
+<p><strong>         SparkMain</strong></p>
+<p><strong>         ShellMain</strong></p>
+<p><strong>         SqoopMain</strong></p>
+</div>
+</div>
+<!-- Post Footer -->
+<div class="post-footer">
+<div class="post-navigation">
+<a class="nav-button" href="../blog.html">← Back to Home</a>
+<a class="nav-button" href="0358.html">Next Post →</a>
+</div>
+</div>
+</article>
+</div>
+</body>
+</html>

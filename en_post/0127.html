@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Cloudera Manager agent starts component process process</title>
+<link href="../css/style3.css" rel="stylesheet"/>
+</head>
+<body>
+<div class="container">
+<!-- Header Navigation -->
+<div class="header">
+<h1><a href="../blog.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+</div>
+<!-- Post Container -->
+<article class="post">
+<!-- Post Header -->
+<div class="post-header">
+<h1>Cloudera Manager agent starts component process process</h1>
+<div class="post-meta">
+<div class="post-meta-item">
+<span class="meta-icon">📅</span>
+<span>May 28, 2019</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">📖</span>
+<span>2 min read</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">👁️</span>
+<span>1936 views</span>
+</div>
+</div>
+</div>
+<!-- Post Content -->
+<div class="post-content">
+<div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<p>Overview</p>
+<p>The Agent is started by init.d at start-up. It, in turn, contacts the Cloudera Manager Server and determines which processes should be running. The Agent is monitored as part of Cloudera Manager's host monitoring. If the Agent stops heartbeating, the host is marked as having bad health.</p>
+<p>One of the Agent's main responsibilities is to start and stop processes. When the Agent detects a new process from the Server heartbeat, the Agent creates a directory for it in /var/run/cloudera-scm-agent and unpacks the configuration. It then contacts supervisord, which starts the process.</p>
+<p> </p>
+<h1>1 Generate configuration file directory</h1>
+<div class="cnblogs_code">
+<pre>[25/May/2019 16:16:36 +0000] 27716 MainThread agent        INFO     Created /opt/cloudera-manager/cm-5.16.1/run/<span style="color: rgba(0, 0, 0, 1)">cloudera
+</span>-scm-agent/process/333-kudu-<span style="color: rgba(0, 0, 0, 1)">KUDU_TSERVER
+[</span>25/May/2019 16:16:36 +0000] 27716 MainThread agent        INFO     Chowning /opt/cloudera-manager/cm-5.16.1/run/<span style="color: rgba(0, 0, 0, 1)">clouder
+a</span>-scm-agent/process/333-kudu-KUDU_TSERVER to kudu (982) kudu (978<span style="color: rgba(0, 0, 0, 1)">)
+[</span>25/May/2019 16:16:36 +0000] 27716 MainThread agent        INFO     Chmod<span style="color: rgba(128, 0, 0, 1)">'</span><span style="color: rgba(128, 0, 0, 1)">ing /opt/cloudera-manager/cm-5.16.1/run/cloude</span>
+ra-scm-agent/process/333-kudu-KUDU_TSERVER to 0751<span style="color: rgba(0, 0, 0, 1)">
+[</span>25/May/2019 16:16:36 +0000] 27716 MainThread agent        INFO     Created /opt/cloudera-manager/cm-5.16.1/run/<span style="color: rgba(0, 0, 0, 1)">cloudera
+</span>-scm-agent/process/333-kudu-KUDU_TSERVER/<span style="color: rgba(0, 0, 0, 1)">logs
+[</span>25/May/2019 16:16:36 +0000] 27716 MainThread agent        INFO     Chowning /opt/cloudera-manager/cm-5.16.1/run/<span style="color: rgba(0, 0, 0, 1)">clouder
+a</span>-scm-agent/process/333-kudu-KUDU_TSERVER/logs to kudu (982) kudu (978<span style="color: rgba(0, 0, 0, 1)">)
+[</span>25/May/2019 16:16:36 +0000] 27716 MainThread agent        INFO     Chmod<span style="color: rgba(128, 0, 0, 1)">'</span><span style="color: rgba(128, 0, 0, 1)">ing /opt/cloudera-manager/cm-5.16.1/run/cloude</span>
+ra-scm-agent/process/333-kudu-KUDU_TSERVER/logs to 0751<span style="color: rgba(0, 0, 0, 1)">
+[</span>25/May/2019 16:16:36 +0000] 27716 MainThread process      INFO     [333-kudu-<span style="color: rgba(0, 0, 0, 1)">KUDU_TSERVER] Refreshing process files: No
+ne
+[</span>25/May/2019 16:16:36 +0000] 27716 MainThread <span style="color: rgba(128, 0, 128, 1)">__init__</span>     INFO     Extracted 9 files <span style="color: rgba(0, 0, 255, 1)">and</span> 0 dirs to /opt/cloudera-<span style="color: rgba(0, 0, 0, 1)">manage
+r</span>/cm-5.16.1/run/cloudera-scm-agent/process/333-kudu-<span style="color: rgba(0, 0, 0, 1)">KUDU_TSERVER.</span>
+[25/May/2019 16:16:36 +0000] 27716 MainThread process      INFO     reading limits: {u<span style="color: rgba(128, 0, 0, 1)">'</span><span style="color: rgba(128, 0, 0, 1)">limit_memlock</span><span style="color: rgba(128, 0, 0, 1)">'</span>: None, u<span style="color: rgba(128, 0, 0, 1)">'</span><span style="color: rgba(128, 0, 0, 1)">limit_fds</span><span style="color: rgba(128, 0, 0, 1)">
+'</span><span style="color: rgba(128, 0, 0, 1)">: None}</span>
+[25/May/2019 16:16:36 +0000] 27716 MainThread process      INFO     [333-kudu-KUDU_TSERVER] Launching process. one-<span style="color: rgba(0, 0, 0, 1)">off F
+alse, command csd</span>/csd.sh, args [u<span style="color: rgba(128, 0, 0, 1)">'</span><span style="color: rgba(128, 0, 0, 1)">tserver</span><span style="color: rgba(128, 0, 0, 1)">'</span>]</pre>
+</div>
+<p>Table of contents:</p>
+<blockquote>
+<p>/opt/cloudera-manager/cm-5.16.1/run/cloudera-scm-agent/process/$index_component_config</p>
+</blockquote>
+<p>The proc.JSON file in the configuration directory contains detailed information about the process, including startup commands and parameters; </p>
+<p> </p>
+<p>Python code directory</p>
+<blockquote>
+<p>/opt/cloudera-manager/cm-5.16.1/lib64/cmf/agent/build/env/lib/python2.7/site-packages/cmf-5.16.1-py2.7.egg/cmf/</p>
+<p>agent.py<br/>process.py</p>
+<p>write_configuration</p>
+</blockquote>
+<h1>2 Set environment variables</h1>
+<blockquote>
+<p>CONF_DIR=/opt/cloudera-manager/cm-5.16.1/run/cloudera-scm-agent/process/341-hdfs-DATANODE<br/>CMF_CONF_DIR=/opt/cloudera-manager/cm-5.16.1/etc/cloudera-scm-agent</p>
+<p>/opt/cloudera/parcels/CDH-5.16.1-1.cdh5.16.1.p0.3/meta/cdh_env.sh</p>
+</blockquote>
+<h1>3 start</h1>
+<blockquote>
+<p>/opt/cloudera/parcels/CDH-5.16.1-1.cdh5.16.1.p0.3/lib/hadoop-hdfs/bin/hdfs --config /opt/cloudera-manager/cm-5.16.1/run/cloudera-scm-agent/process/341-hdfs-DATANODE datanode</p>
+</blockquote>
+<h1>4 others</h1>
+<p>agent uuid directory</p>
+<blockquote>
+<p>/opt/cloudera-manager/cm-5.16.1/lib/cloudera-scm-agent/</p>
+</blockquote>
+<p> </p>
+<p>refer to:<br/>https://www.cloudera.com/documentation/enterprise/5-6-x/topics/admin_cloudera_manager_agents.html</p>
+<p> </p>
+</div>
+</div>
+<!-- Post Footer -->
+<div class="post-footer">
+<div class="post-navigation">
+<a class="nav-button" href="../blog.html">← Back to Home</a>
+<a class="nav-button" href="0128.html">Next Post →</a>
+</div>
+</div>
+</article>
+</div>
+</body>
+</html>

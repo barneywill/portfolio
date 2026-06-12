@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HBase Master Initialization Failed After Cluster Restart</title>
+    <link rel="stylesheet" href="../css/style3.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header Navigation -->
+        <div class="header">
+            <h1><a href="../blog.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+        </div>
+
+        <!-- Post Container -->
+        <article class="post">
+            <!-- Post Header -->
+            <div class="post-header">
+                <h1>HBase Master Initialization Failed After Cluster Restart</h1>
+                <div class="post-meta">
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📅</span>
+                        <span>June 16, 2022</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📖</span>
+                        <span>1 min read</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">👁️</span>
+                        <span>837 views</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Post Content -->
+            <div class="post-content">
+                <div class="blogpost-body cnblogs-markdown" id="cnblogs_post_body">
+<p>After restarting the HBase cluster, the cluster did not come up normally. The root cause was a master initialization failure, and the master startup log showed the following:</p>
+<blockquote>
+<p>2022-05-26 14:06:15,645 WARN org.apache.hadoop.hbase.master.HMaster: hbase:namespace,,1607716627354.56dafb9f3eadaae9e95d5b05f3142a34. is NOT online; state={56dafb9f3eadaae9e95d5b05f3142a34 state=OPEN, ts=1637906648217, server=hadoop-server1,16020,1637905629938}; ServerCrashProcedures=false. Master startup cannot progress, in holding-pattern until region onlined.</p>
+</blockquote>
+<p>The issue was that the region for the critical <code>hbase:namespace</code> table could not come online. The region details were:</p>
+<pre><code>hbase(main):003:0&gt; get 'hbase:meta', 'hbase:namespace,,1607716627354.56dafb9f3eadaae9e95d5b05f3142a34.'
+COLUMN                                                 CELL                                                                                                                                                        
+ info:regioninfo                                       timestamp=1637905641937, value={ENCODED =&gt; 56dafb9f3eadaae9e95d5b05f3142a34, NAME =&gt; 'hbase:namespace,,1607716627354.56dafb9f3eadaae9e95d5b05f3142a34.', STARTKEY =&gt; '', ENDKEY =&gt; ''}                                                                                                                                   
+ info:seqnumDuringOpen                                 timestamp=1637905641937, value=\x00\x00\x00\x00\x00\x00\x00o                                                                                                
+ info:server                                           timestamp=1637905641937, value=hadoop-server1:16020                                                                                                               
+ info:serverstartcode                                  timestamp=1637905641937, value=1637905629938                                                                                                                
+ info:sn                                               timestamp=1637905640873, value=hadoop-server1,16020,1637905629938                                                                                                 
+ info:state                                            timestamp=1637905641937, value=OPEN                                                                                                                         
+1 row(s)
+Took 0.0737 seconds
+</code></pre>
+<p>I tried manually assigning the region to bring it online:</p>
+<pre><code>hbase(main):034:0&gt; assign '56dafb9f3eadaae9e95d5b05f3142a34'
+ERROR: org.apache.hadoop.hbase.PleaseHoldException: Master is initializing
+    at org.apache.hadoop.hbase.master.HMaster.checkInitialized(HMaster.java:2998)
+    at org.apache.hadoop.hbase.master.MasterRpcServices.assignRegion(MasterRpcServices.java:564)
+    at org.apache.hadoop.hbase.shaded.protobuf.generated.MasterProtos$MasterService$2.callBlockingMethod(MasterProtos.java)
+    at org.apache.hadoop.hbase.ipc.RpcServer.call(RpcServer.java:413)
+    at org.apache.hadoop.hbase.ipc.CallRunner.run(CallRunner.java:130)
+    at org.apache.hadoop.hbase.ipc.RpcExecutor$Handler.run(RpcExecutor.java:324)
+    at org.apache.hadoop.hbase.ipc.RpcExecutor$Handler.run(RpcExecutor.java:304)
+For usage try 'help "assign"'
+</code></pre>
+<p>This created a dependency loop: recovering the region required the master to start, but starting the master required this region to already be online.</p>
+<p>There were two possible approaches:</p>
+<ul>
+<li>Back up the namespace directory at <code>/user/hbase/data/hbase/namespace</code>, delete <code>hbase:namespace</code> from <code>hbase:meta</code>, and then restore it. This is relatively difficult and risky.</li>
+<li>Use the hbck2 tool.</li>
+</ul>
+<p>Download link: <a href="https://github.com/apache/hbase-operator-tools/tree/master/hbase-hbck2" rel="noopener nofollow" target="_blank">https://github.com/apache/hbase-operator-tools/tree/master/hbase-hbck2</a></p>
+<p>Run the command:</p>
+<blockquote>
+<p>hbase hbck - j hbase-hbck2-1.1.0.jar assigns 56dafb9f3eadaae9e95d5b05f3142a34</p>
+</blockquote>
+<p>After running it, <code>hbase:namespace</code> recovered and the master started successfully.</p>
+</div>
+            </div>
+
+            <!-- Post Footer -->
+            <div class="post-footer">
+                <div class="post-navigation">
+                    <a href="../blog.html" class="nav-button">← Back to Home</a>
+                    <a href="0004.html" class="nav-button">Next Post →</a>
+                </div>
+            </div>
+        </article>
+    </div>
+</body>
+</html>

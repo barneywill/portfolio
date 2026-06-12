@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Several deployment methods of Hive metastore</title>
+<link href="../css/style3.css" rel="stylesheet"/>
+</head>
+<body>
+<div class="container">
+<!-- Header Navigation -->
+<div class="header">
+<h1><a href="../blog.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+</div>
+<!-- Post Container -->
+<article class="post">
+<!-- Post Header -->
+<div class="post-header">
+<h1>Several deployment methods of Hive metastore</h1>
+<div class="post-meta">
+<div class="post-meta-item">
+<span class="meta-icon">📅</span>
+<span>January 21, 2019</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">📖</span>
+<span>1 min read</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">👁️</span>
+<span>1288 views</span>
+</div>
+</div>
+</div>
+<!-- Post Content -->
+<div class="post-content">
+<div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<p>Hive and other components (such as Spark, Impala, etc.) will depend on Hive metastore, and the dependent configuration file is located in Hive-site.XML</p>
+<h1>Important configuration of Hive metastore</h1>
+<blockquote>
+<p>hive.metastore.warehouse.dir<br/>The default for hive2 and previous versions is /user/Hive/warehouse/. When creating a database or table, the corresponding directory will be created in this directory.</p>
+<p>javax.jdo.option.ConnectionURL<br/>javax.jdo.option.ConnectionDriverName<br/>javax.jdo.option.ConnectionUserName<br/>javax.jdo.option.ConnectionPassword<br/>Default is derby</p>
+<p>hive.metastore.uris<br/>Default is empty</p>
+</blockquote>
+<h1>Hive metastore deployment method</h1>
+<h2>1 All default configurations</h2>
+<p>The built-in derby library is used, and the HDFS directory is /user/Hive/warehouse/</p>
+<h2>2 Configure only javax.jdo.option.* related configurations</h2>
+<p>Use the configured database (such as MySQL), and the HDFS directory is /user/Hive/warehouse/</p>
+<h2>3 Only configure Hive.metastore.uris</h2>
+<p>All metadata operations interact through the remote metastore (note that an independent Hive metastore process needs to be started at this time), and the HDFS directory is /user/Hive/warehouse/</p>
+<p>ps: Note that 1 and 2 do not require any Hive process, but all 3 methods need to rely on HDFS</p>
+<h1>Summarize</h1>
+<p>In summary, when you only need to use Impala or Spark without Hive, you only need a remote database (such as MySQL), and there is no need to start the Hive metastore process separately;</p>
+<p>How to initialize a Hive metadata database?</p>
+<blockquote>
+<p>$ ls $HIVE_HOME/scripts/metastore/upgrade<br/>derby  mssql  mysql  oracle  postgres</p>
+</blockquote>
+<p>There are initialization scripts for various versions of various databases in the Hive directory. For example, Impala relies on hive1.2. You only need to install the metadatabase of hive1.2. The corresponding SQL file is:</p>
+<blockquote>
+<p>$HIVE_HOME/scripts/metastore/upgrade/mysql/hive-schema-1.2.0.mysql.sql</p>
+</blockquote>
+<p>which will depend on</p>
+<blockquote>
+<p>$HIVE_HOME/scripts/metastore/upgrade/mysql/hive-txn-schema-0.13.0.mysql.sql</p>
+</blockquote>
+<p>After the initialization is completed, directly configure javax.jdo.option.* in /etc/Impala/conf/Hive-site.XML to point to the MySQL library;</p>
+<p> </p>
+<p>The minimal installation of Impala is: HDFS + MySQL (Hive metabase) + Impala</p>
+<p>The minimum installation of Spark is: HDFS + MySQL (Hive metabase) + Spark</p>
+<p> </p>
+<p>Reference: https://cwiki.apache.org/confluence/display/Hive/AdminManual+Metastore+Administration</p>
+<p> </p>
+</div>
+</div>
+<!-- Post Footer -->
+<div class="post-footer">
+<div class="post-navigation">
+<a class="nav-button" href="../blog.html">← Back to Home</a>
+<a class="nav-button" href="0257.html">Next Post →</a>
+</div>
+</div>
+</article>
+</div>
+</body>
+</html>

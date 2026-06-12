@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Kafka client reports error SocketException: Too many open files There are too many open files</title>
+<link href="../css/style3.css" rel="stylesheet"/>
+</head>
+<body>
+<div class="container">
+<!-- Header Navigation -->
+<div class="header">
+<h1><a href="../blog.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+</div>
+<!-- Post Container -->
+<article class="post">
+<!-- Post Header -->
+<div class="post-header">
+<h1>Kafka client reports error SocketException: Too many open files There are too many open files</h1>
+<div class="post-meta">
+<div class="post-meta-item">
+<span class="meta-icon">📅</span>
+<span>November 07, 2018</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">📖</span>
+<span>2 min read</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">👁️</span>
+<span>7567 views</span>
+</div>
+</div>
+</div>
+<!-- Post Content -->
+<div class="post-content">
+<div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<p>kafka0.8.1</p>
+<h1>1 question</h1>
+<p>On October 22, the application system suddenly reported an error:</p>
+<blockquote>
+<p>[2014/12/22 11:52:32.738]<strong>java.net.SocketException: </strong><strong>Too many files open</strong></p>
+<p>[2014/12/22 11:52:32.738]       at java.net.Socket.createImpl(Socket.java:447)</p>
+<p>[2014/12/22 11:52:32.738]       at java.net.Socket.connect(Socket.java:577)</p>
+<p>[2014/12/22 11:52:32.738]       at java.net.Socket.connect(Socket.java:528)</p>
+<p>[2014/12/22 11:52:32.738]       at sun.net.NetworkClient.doConnect(NetworkClient.java:180)</p>
+<p>[2014/12/22 11:52:32.738]       at sun.net.www.http.HttpClient.openServer(HttpClient.java:432)</p>
+<p>[2014/12/22 11:52:32.738]       at sun.net.www.http.HttpClient.openServer(HttpClient.java:527)</p>
+<p>[2014/12/22 11:52:32.738]       at sun.net.www.http.HttpClient.&lt;init&gt;(HttpClient.java:211)</p>
+<p>[2014/12/22 11:52:32.738]       at sun.net.www.http.HttpClient.New(HttpClient.java:308)</p>
+<p>[2014/12/22 11:52:32.738]       at sun.net.www.http.HttpClient.New(HttpClient.java:326)</p>
+<p>[2014/12/22 11:52:32.738]       at sun.net.www.protocol.http.HttpURLConnection.getNewHttpClient(HttpURLConnection.java:996)</p>
+<p>[2014/12/22 11:52:32.738]       at sun.net.www.protocol.http.HttpURLConnection.plainConnect(HttpURLConnection.java:932)</p>
+<p>[2014/12/22 11:52:32.738]       at sun.net.www.protocol.http.HttpURLConnection.connect(HttpURLConnection.java:850)</p>
+<p>[2014/12/22 11:52:32.738]       at sun.net.www.protocol.http.HttpURLConnection.getOutputStream(HttpURLConnection.java:1091)</p>
+<p>[2014/12/22 11:52:32.738]       at com.rbc.http.client.RbcHttpClient.callCptService(RbcHttpClient.java:50)</p>
+<p>[2014/12/22 11:52:32.738]       at com.rbc.http.client.RbcHttpClient.callCptService(RbcHttpClient.java:144)</p>
+<p>[2014/12/22 11:52:32.738]       at com.rbc.http.bean.BaseBean.call(BaseBean.java:54)</p>
+<p>[2014/12/22 11:52:32.739]       at app.package.APPClass.send2Center(APPClass.java:852)</p>
+<p>[2014/12/22 11:52:32.739]       at sun.reflect.GeneratedMethodAccessor4312.invoke(Unknown Source)</p>
+<p>[2014/12/22 11:52:32.739]       at sun.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)</p>
+<p>[2014/12/22 11:52:32.739]       at java.lang.reflect.Method.invoke(Method.java:606)</p>
+<p>[2014/12/22 11:52:32.739]       at org.springframework.aop.support.AopUtils.invokeJoinpointUsingReflection(AopUtils.java:307)</p>
+<p>[2014/12/22 11:52:32.739]       at org.springframework.aop.framework.JdkDynamicAopProxy.invoke(JdkDynamicAopProxy.java:198)</p>
+<p>[2014/12/22 11:52:32.739]       at com.sun.proxy.$Proxy157.send2Center(Unknown Source)</p>
+<p>[2014/12/22 11:52:32.739]       at java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:471)</p>
+<p>[2014/12/22 11:52:32.739]       at java.util.concurrent.FutureTask.run(FutureTask.java:262)</p>
+<p>[2014/12/22 11:52:32.739]       at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1145)</p>
+<p>[2014/12/22 11:52:32.739]       at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:615)</p>
+<p>[2014/12/22 11:52:32.739]       at java.lang.Thread.run(Thread.java:745)</p>
+</blockquote>
+<p>It was found that a switch was turned on in the morning, that is, the application system sent access logs to the messaging platform Kafka, but the application system server did not configure the host of the messaging platform Kafka, causing problems;</p>
+<p> </p>
+<h1>2. Problem recurrence</h1>
+<p>Configure the broker-list of the Kafka client to a non-existent host, and continuously send messages, execute:</p>
+<blockquote>
+<p>lsof –p $pid|wc -l</p>
+</blockquote>
+<p>You will find that the file descriptor of the Java process continues to grow, contains a large number of socket connections, and eventually exceeds the limit. You can pass:</p>
+<blockquote>
+<p>ulimit -a|grep 'open files'</p>
+</blockquote>
+<p>To check the limit on the number of file descriptors, if the limit is exceeded, errors will continue to be reported:</p>
+<blockquote>
+<p>java.net.SocketException: Too many open files</p>
+</blockquote>
+<p>Problem reappears;</p>
+<p> </p>
+<p><strong><em>But if the broker-list</em><em>Configured as a non-existent ip</em><em>, the problem cannot be reproduced;</em></strong></p>
+<p> </p>
+<h1>three background</h1>
+<h2>1 File Descriptor</h2>
+<p>Generally, a file descriptor is an index for an entry in a <a href="http://en.wikipedia.org/wiki/Kernel_(computer_science)" rel="noopener nofollow" title="Kernel (computer science)">kernel</a>-resident <a href="http://en.wikipedia.org/wiki/Array_data_structure" rel="noopener nofollow" title="Array data structure">array data structure</a> containing the details of open files. In POSIX this data structure is called a file descriptor table, and each <a href="http://en.wikipedia.org/wiki/Process_(computing)" rel="noopener nofollow" title="Process (computing)">process</a> has its own file descriptor table. The process passes the file descriptor to the kernel through a <a href="http://en.wikipedia.org/wiki/System_call" rel="noopener nofollow" title="System call">system call</a>, and the kernel will access the file on behalf of the process. The process itself cannot read or write the file descriptor table directly.</p>
+<p>On <a href="http://en.wikipedia.org/wiki/Linux" rel="noopener nofollow" title="Linux">Linux</a>, the set of file descriptors open in a process can be accessed under the path /proc/PID/fd/, where PID is the <a href="http://en.wikipedia.org/wiki/Process_identifier" rel="noopener nofollow" title="Process identifier">process identifier</a>.</p>
+<p> </p>
+<blockquote>
+<p>ulimit -a|grep 'open files'</p>
+</blockquote>
+<p>View process file descriptor limits</p>
+<blockquote>
+<p>cat /proc/sys/fs/file-max</p>
+</blockquote>
+<p>Check the total file descriptor limit of the system</p>
+<blockquote>
+<p>lsof –p $pid</p>
+</blockquote>
+<p>View the specific file descriptors opened by a process</p>
+<blockquote>
+<p>ulimit –n $num</p>
+</blockquote>
+<p>Temporarily modify file descriptor limits</p>
+<p> </p>
+<h2>2 Kafka Async Producer</h2>
+<p>In order to avoid Kafka problems affecting the application system, use the Kafka asynchronous producer. After sending the message, the message will be added to the memory queue and returned immediately. Another thread continuously processes the messages in the memory queue and sends them to Kafka:</p>
+<p> <img alt="" src="https://img2018.cnblogs.com/blog/1509647/201811/1509647-20181107155717735-1757607226.png"/></p>
+<p>When there is a problem with the Kafka server and the message cannot be sent out, as long as queue.enqueue.timeout.ms=0 is configured, the message will be discarded directly when the memory queue is full without blocking:</p>
+<p> <img alt="" src="https://img2018.cnblogs.com/blog/1509647/201811/1509647-20181107155737862-1848076776.png"/></p>
+<p> </p>
+<h1>Four causes of the problem</h1>
+<p>Before the Kafka client sends a message, it will first connect to any broker to obtain metadata through the configuration in broker-list:</p>
+<blockquote>
+<p>ERROR [2014-12-22 14:05:04,687] (Logging.scala:103)  - Producer connection to $kafka_server_1:9096 unsuccessful</p>
+<p>java.nio.channels.UnresolvedAddressException</p>
+<p>       at sun.nio.ch.Net.checkAddress(Net.java:127)</p>
+<p>       at sun.nio.ch.SocketChannelImpl.connect(SocketChannelImpl.java:613)</p>
+<p>       at kafka.network.BlockingChannel.connect(BlockingChannel.scala:57)</p>
+<p>       at kafka.producer.SyncProducer.connect(SyncProducer.scala:141)</p>
+<p>       at kafka.producer.SyncProducer.getOrMakeConnection(SyncProducer.scala:156)</p>
+<p>       at kafka.producer.SyncProducer.kafka$producer$SyncProducer$$doSend(SyncProducer.scala:68)</p>
+<p>       at kafka.producer.SyncProducer.send(SyncProducer.scala:112)</p>
+<p>       <strong>at kafka.client.ClientUtils$.fetchTopicMetadata(ClientUtils.scala:53)</strong>     </p>
+</blockquote>
+<p> </p>
+<p>An UnresolvedAddressException error is reported during this process, and part of the SyncProducer code is as follows:</p>
+<p> <img alt="" src="https://img2018.cnblogs.com/blog/1509647/201811/1509647-20181107155901101-1605444930.png"/></p>
+<p>BlockingChannel code is as follows:</p>
+<p> <img alt="" src="https://img2018.cnblogs.com/blog/1509647/201811/1509647-20181107155942192-159266970.png"/></p>
+<p>Found the cause of the problem: In the connect method of BlockingChannel, the line channel.connect throws an exception. At this time, connected is false, but in the disconnect of SyncProducer, the disconnect method of BlockingChannel will only be called when the connected method of BlockingChannel is true. Therefore, the connect method of Blockingchannel is always called without calling the disconnect method, and the SocketChannel.open method is called in the connect method:</p>
+<p> <img alt="" src="https://img2018.cnblogs.com/blog/1509647/201811/1509647-20181107160030679-986646149.png"/></p>
+<p>-&gt;</p>
+<p> <img alt="" src="https://img2018.cnblogs.com/blog/1509647/201811/1509647-20181107160044147-1745628802.png"/></p>
+<p>-&gt;</p>
+<p> <img alt="" src="https://img2018.cnblogs.com/blog/1509647/201811/1509647-20181107160100495-1458228769.png"/></p>
+<p>-&gt;</p>
+<p> <img alt="" src="https://img2018.cnblogs.com/blog/1509647/201811/1509647-20181107160112835-1222366110.png"/></p>
+<p>It can be seen that each time the SocketChannel.open method is called, a file descriptor will be created, so the file descriptor will continue to increase. Why is there a problem only when configuring the host, but not when configuring the IP? Part of the SocketChannelImpl code:</p>
+<p> <img alt="" src="https://img2018.cnblogs.com/blog/1509647/201811/1509647-20181107160157349-24324457.png"/></p>
+<p>When configuring a host, an UnresolvedAddressException exception is thrown when Net.checkAddress is used, and the readerCleanup code is as follows:</p>
+<p> <img alt="" src="https://img2018.cnblogs.com/blog/1509647/201811/1509647-20181107160214445-373443548.png"/></p>
+<p>-&gt;</p>
+<p> <img alt="" src="https://img2018.cnblogs.com/blog/1509647/201811/1509647-20181107160227836-1866726214.png"/></p>
+<p>It can be seen that although disconnect is not called, the file descriptor will be closed, so the problem of too many file descriptors will not occur when configuring IP;</p>
+<p> </p>
+<h1>Five fixes</h1>
+<p>Modify the Kafka.network.SocketChannel code as follows:</p>
+<p> <img alt="" src="https://img2018.cnblogs.com/blog/1509647/201811/1509647-20181107160253087-191093626.png"/></p>
+<p>Add try-catch and call disconnect when UnresolvedAddressException occurs, and the problem is solved;</p>
+<p> </p>
+<p>These are the issues submitted on Kafka jira after the problem was discovered: <a href="https://issues.apache.org/jira/browse/KAFKA-1832" rel="noopener nofollow" target="_blank" title="https://issues.apache.org/jira/browse/KAFKA-1832">https://issues.apache.org/jira/browse/KAFKA-1832</a></p>
+<p> </p>
+</div>
+</div>
+<!-- Post Footer -->
+<div class="post-footer">
+<div class="post-navigation">
+<a class="nav-button" href="../blog.html">← Back to Home</a>
+<a class="nav-button" href="0350.html">Next Post →</a>
+</div>
+</div>
+</article>
+</div>
+</body>
+</html>

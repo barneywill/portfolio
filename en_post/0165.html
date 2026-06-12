@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Flume 2 - kudu sink</title>
+<link href="../css/style3.css" rel="stylesheet"/>
+</head>
+<body>
+<div class="container">
+<!-- Header Navigation -->
+<div class="header">
+<h1><a href="../blog.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+</div>
+<!-- Post Container -->
+<article class="post">
+<!-- Post Header -->
+<div class="post-header">
+<h1>Flume 2 - kudu sink</h1>
+<div class="post-meta">
+<div class="post-meta-item">
+<span class="meta-icon">📅</span>
+<span>March 21, 2019</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">📖</span>
+<span>16 min read</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">👁️</span>
+<span>1665 views</span>
+</div>
+</div>
+</div>
+<!-- Post Content -->
+<div class="post-content">
+<div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<p>Flume sink code path in Kudu:</p>
+<p>https://github.com/apache/kudu/tree/master/java/kudu-flume-sink</p>
+<p> </p>
+<p>The producer used by Kudu-Flume-sink by default is</p>
+<p>org.apache.kudu.flume.sink.SimpleKuduOperationsProducer</p>
+<div class="cnblogs_code">
+<pre>  <span style="color: rgba(0, 0, 255, 1)">public</span> List&lt;Operation&gt; getOperations(Event event) <span style="color: rgba(0, 0, 255, 1)">throws</span><span style="color: rgba(0, 0, 0, 1)"> FlumeException {
+    </span><span style="color: rgba(0, 0, 255, 1)">try</span><span style="color: rgba(0, 0, 0, 1)"> {
+      Insert insert </span>=<span style="color: rgba(0, 0, 0, 1)"> table.newInsert();
+      PartialRow row </span>=<span style="color: rgba(0, 0, 0, 1)"> insert.getRow();
+      row.addBinary(payloadColumn, event.getBody());
+
+      </span><span style="color: rgba(0, 0, 255, 1)">return</span><span style="color: rgba(0, 0, 0, 1)"> Collections.singletonList((Operation) insert);
+    } </span><span style="color: rgba(0, 0, 255, 1)">catch</span><span style="color: rgba(0, 0, 0, 1)"> (Exception e) {
+      </span><span style="color: rgba(0, 0, 255, 1)">throw</span> <span style="color: rgba(0, 0, 255, 1)">new</span> FlumeException("Failed to create Kudu Insert object"<span style="color: rgba(0, 0, 0, 1)">, e);
+    }
+  }</span></pre>
+</div>
+<p>The message is stored directly in a payload column.</p>
+<p> </p>
+<p>If you want to support JSON format data, secondary development is required.</p>
+<div class="cnblogs_code">
+<pre><span style="color: rgba(0, 0, 255, 1)">package</span><span style="color: rgba(0, 0, 0, 1)"> com.cloudera.kudu;
+</span><span style="color: rgba(0, 0, 255, 1)">public</span> <span style="color: rgba(0, 0, 255, 1)">class</span> JsonKuduOperationsProducer <span style="color: rgba(0, 0, 255, 1)">implements</span> KuduOperationsProducer {</pre>
+</div>
+<p>Someone has shared the code online: https://cloud.tencent.com/developer/article/1158194</p>
+<p>However, the above code has several inconveniences. 1) null is not allowed; 2) time type support is not good; 3) all values ​​must be strings, and then parsed according to the field type in Kudu. You need to pay attention when generating data, otherwise you need to modify the code yourself;</p>
+<p> </p>
+<p>To address the above inconvenience, the modified code is as follows:</p>
+<p>JsonKuduOperationsProducer.java</p>
+<div class="cnblogs_code">
+<pre><span style="color: rgba(0, 0, 255, 1)">package</span><span style="color: rgba(0, 0, 0, 1)"> com.cloudera.kudu;
+
+</span><span style="color: rgba(0, 0, 255, 1)">import</span><span style="color: rgba(0, 0, 0, 1)"> com.google.common.collect.Lists;
+</span><span style="color: rgba(0, 0, 255, 1)">import</span><span style="color: rgba(0, 0, 0, 1)"> com.google.common.base.Preconditions;
+</span><span style="color: rgba(0, 0, 255, 1)">import</span><span style="color: rgba(0, 0, 0, 1)"> org.apache.avro.data.Json;
+</span><span style="color: rgba(0, 0, 255, 1)">import</span><span style="color: rgba(0, 0, 0, 1)"> org.json.JSONObject;
+</span><span style="color: rgba(0, 0, 255, 1)">import</span><span style="color: rgba(0, 0, 0, 1)"> org.apache.flume.Context;
+</span><span style="color: rgba(0, 0, 255, 1)">import</span><span style="color: rgba(0, 0, 0, 1)"> org.apache.flume.Event;
+</span><span style="color: rgba(0, 0, 255, 1)">import</span><span style="color: rgba(0, 0, 0, 1)"> org.apache.flume.FlumeException;
+</span><span style="color: rgba(0, 0, 255, 1)">import</span><span style="color: rgba(0, 0, 0, 1)"> org.apache.flume.annotations.InterfaceAudience;
+</span><span style="color: rgba(0, 0, 255, 1)">import</span><span style="color: rgba(0, 0, 0, 1)"> org.apache.flume.annotations.InterfaceStability;
+</span><span style="color: rgba(0, 0, 255, 1)">import</span><span style="color: rgba(0, 0, 0, 1)"> org.apache.kudu.ColumnSchema;
+</span><span style="color: rgba(0, 0, 255, 1)">import</span><span style="color: rgba(0, 0, 0, 1)"> org.apache.kudu.Schema;
+</span><span style="color: rgba(0, 0, 255, 1)">import</span><span style="color: rgba(0, 0, 0, 1)"> org.apache.kudu.Type;
+</span><span style="color: rgba(0, 0, 255, 1)">import</span><span style="color: rgba(0, 0, 0, 1)"> org.apache.kudu.client.KuduTable;
+</span><span style="color: rgba(0, 0, 255, 1)">import</span><span style="color: rgba(0, 0, 0, 1)"> org.apache.kudu.client.Operation;
+</span><span style="color: rgba(0, 0, 255, 1)">import</span><span style="color: rgba(0, 0, 0, 1)"> org.apache.kudu.client.PartialRow;
+</span><span style="color: rgba(0, 0, 255, 1)">import</span><span style="color: rgba(0, 0, 0, 1)"> org.apache.kudu.flume.sink.KuduOperationsProducer;
+</span><span style="color: rgba(0, 0, 255, 1)">import</span><span style="color: rgba(0, 0, 0, 1)"> org.slf4j.Logger;
+</span><span style="color: rgba(0, 0, 255, 1)">import</span><span style="color: rgba(0, 0, 0, 1)"> org.slf4j.LoggerFactory;
+
+</span><span style="color: rgba(0, 0, 255, 1)">import</span><span style="color: rgba(0, 0, 0, 1)"> java.nio.charset.Charset;
+</span><span style="color: rgba(0, 0, 255, 1)">import</span><span style="color: rgba(0, 0, 0, 1)"> java.text.SimpleDateFormat;
+</span><span style="color: rgba(0, 0, 255, 1)">import</span><span style="color: rgba(0, 0, 0, 1)"> java.util.List;
+</span><span style="color: rgba(0, 0, 255, 1)">import</span><span style="color: rgba(0, 0, 0, 1)"> java.util.TimeZone;
+</span><span style="color: rgba(0, 0, 255, 1)">import</span><span style="color: rgba(0, 0, 0, 1)"> java.util.function.Function;
+
+@InterfaceAudience.Public
+@InterfaceStability.Evolving
+</span><span style="color: rgba(0, 0, 255, 1)">public</span> <span style="color: rgba(0, 0, 255, 1)">class</span> JsonKuduOperationsProducer <span style="color: rgba(0, 0, 255, 1)">implements</span><span style="color: rgba(0, 0, 0, 1)"> KuduOperationsProducer {
+    </span><span style="color: rgba(0, 0, 255, 1)">private</span> <span style="color: rgba(0, 0, 255, 1)">static</span> <span style="color: rgba(0, 0, 255, 1)">final</span> Logger logger = LoggerFactory.getLogger(JsonKuduOperationsProducer.<span style="color: rgba(0, 0, 255, 1)">class</span><span style="color: rgba(0, 0, 0, 1)">);
+    </span><span style="color: rgba(0, 0, 255, 1)">private</span> <span style="color: rgba(0, 0, 255, 1)">static</span> <span style="color: rgba(0, 0, 255, 1)">final</span> String INSERT = "insert"<span style="color: rgba(0, 0, 0, 1)">;
+    </span><span style="color: rgba(0, 0, 255, 1)">private</span> <span style="color: rgba(0, 0, 255, 1)">static</span> <span style="color: rgba(0, 0, 255, 1)">final</span> String UPSERT = "upsert"<span style="color: rgba(0, 0, 0, 1)">;
+    </span><span style="color: rgba(0, 0, 255, 1)">private</span> <span style="color: rgba(0, 0, 255, 1)">static</span> <span style="color: rgba(0, 0, 255, 1)">final</span> List&lt;String&gt; validOperations =<span style="color: rgba(0, 0, 0, 1)"> Lists.newArrayList(UPSERT, INSERT);
+
+    </span><span style="color: rgba(0, 0, 255, 1)">public</span> <span style="color: rgba(0, 0, 255, 1)">static</span> <span style="color: rgba(0, 0, 255, 1)">final</span> String ENCODING_PROP = "encoding"<span style="color: rgba(0, 0, 0, 1)">;
+    </span><span style="color: rgba(0, 0, 255, 1)">public</span> <span style="color: rgba(0, 0, 255, 1)">static</span> <span style="color: rgba(0, 0, 255, 1)">final</span> String DEFAULT_ENCODING = "utf-8"<span style="color: rgba(0, 0, 0, 1)">;
+    </span><span style="color: rgba(0, 0, 255, 1)">public</span> <span style="color: rgba(0, 0, 255, 1)">static</span> <span style="color: rgba(0, 0, 255, 1)">final</span> String OPERATION_PROP = "operation"<span style="color: rgba(0, 0, 0, 1)">;
+    </span><span style="color: rgba(0, 0, 255, 1)">public</span> <span style="color: rgba(0, 0, 255, 1)">static</span> <span style="color: rgba(0, 0, 255, 1)">final</span> String DEFAULT_OPERATION =<span style="color: rgba(0, 0, 0, 1)"> UPSERT;
+    </span><span style="color: rgba(0, 0, 255, 1)">public</span> <span style="color: rgba(0, 0, 255, 1)">static</span> <span style="color: rgba(0, 0, 255, 1)">final</span> String SKIP_MISSING_COLUMN_PROP = "skipMissingColumn"<span style="color: rgba(0, 0, 0, 1)">;
+    </span><span style="color: rgba(0, 0, 255, 1)">public</span> <span style="color: rgba(0, 0, 255, 1)">static</span> <span style="color: rgba(0, 0, 255, 1)">final</span> <span style="color: rgba(0, 0, 255, 1)">boolean</span> DEFAULT_SKIP_MISSING_COLUMN = <span style="color: rgba(0, 0, 255, 1)">false</span><span style="color: rgba(0, 0, 0, 1)">;
+    </span><span style="color: rgba(0, 0, 255, 1)">public</span> <span style="color: rgba(0, 0, 255, 1)">static</span> <span style="color: rgba(0, 0, 255, 1)">final</span> String SKIP_BAD_COLUMN_VALUE_PROP = "skipBadColumnValue"<span style="color: rgba(0, 0, 0, 1)">;
+    </span><span style="color: rgba(0, 0, 255, 1)">public</span> <span style="color: rgba(0, 0, 255, 1)">static</span> <span style="color: rgba(0, 0, 255, 1)">final</span> <span style="color: rgba(0, 0, 255, 1)">boolean</span> DEFAULT_SKIP_BAD_COLUMN_VALUE = <span style="color: rgba(0, 0, 255, 1)">false</span><span style="color: rgba(0, 0, 0, 1)">;
+    </span><span style="color: rgba(0, 0, 255, 1)">public</span> <span style="color: rgba(0, 0, 255, 1)">static</span> <span style="color: rgba(0, 0, 255, 1)">final</span> String WARN_UNMATCHED_ROWS_PROP = "skipUnmatchedRows"<span style="color: rgba(0, 0, 0, 1)">;
+    </span><span style="color: rgba(0, 0, 255, 1)">public</span> <span style="color: rgba(0, 0, 255, 1)">static</span> <span style="color: rgba(0, 0, 255, 1)">final</span> <span style="color: rgba(0, 0, 255, 1)">boolean</span> DEFAULT_WARN_UNMATCHED_ROWS = <span style="color: rgba(0, 0, 255, 1)">true</span><span style="color: rgba(0, 0, 0, 1)">;
+
+    </span><span style="color: rgba(0, 0, 255, 1)">private</span><span style="color: rgba(0, 0, 0, 1)"> KuduTable table;
+    </span><span style="color: rgba(0, 0, 255, 1)">private</span><span style="color: rgba(0, 0, 0, 1)"> Charset charset;
+    </span><span style="color: rgba(0, 0, 255, 1)">private</span><span style="color: rgba(0, 0, 0, 1)"> String operation;
+    </span><span style="color: rgba(0, 0, 255, 1)">private</span> <span style="color: rgba(0, 0, 255, 1)">boolean</span><span style="color: rgba(0, 0, 0, 1)"> skipMissingColumn;
+    </span><span style="color: rgba(0, 0, 255, 1)">private</span> <span style="color: rgba(0, 0, 255, 1)">boolean</span><span style="color: rgba(0, 0, 0, 1)"> skipBadColumnValue;
+    </span><span style="color: rgba(0, 0, 255, 1)">private</span> <span style="color: rgba(0, 0, 255, 1)">boolean</span><span style="color: rgba(0, 0, 0, 1)"> warnUnmatchedRows;
+
+    </span><span style="color: rgba(0, 0, 255, 1)">public</span><span style="color: rgba(0, 0, 0, 1)"> JsonKuduOperationsProducer() {
+    }
+
+    @Override
+    </span><span style="color: rgba(0, 0, 255, 1)">public</span> <span style="color: rgba(0, 0, 255, 1)">void</span><span style="color: rgba(0, 0, 0, 1)"> configure(Context context) {
+        String charsetName </span>=<span style="color: rgba(0, 0, 0, 1)"> context.getString(ENCODING_PROP, DEFAULT_ENCODING);
+        </span><span style="color: rgba(0, 0, 255, 1)">try</span><span style="color: rgba(0, 0, 0, 1)"> {
+            charset </span>=<span style="color: rgba(0, 0, 0, 1)"> Charset.forName(charsetName);
+        } </span><span style="color: rgba(0, 0, 255, 1)">catch</span><span style="color: rgba(0, 0, 0, 1)"> (IllegalArgumentException e) {
+            </span><span style="color: rgba(0, 0, 255, 1)">throw</span> <span style="color: rgba(0, 0, 255, 1)">new</span><span style="color: rgba(0, 0, 0, 1)"> FlumeException(
+                    String.format(</span>"Invalid or unsupported charset %s"<span style="color: rgba(0, 0, 0, 1)">, charsetName), e);
+        }
+        operation </span>=<span style="color: rgba(0, 0, 0, 1)"> context.getString(OPERATION_PROP, DEFAULT_OPERATION).toLowerCase();
+        Preconditions.checkArgument(
+                validOperations.contains(operation),
+                </span>"Unrecognized operation '%s'"<span style="color: rgba(0, 0, 0, 1)">,
+                operation);
+        skipMissingColumn </span>=<span style="color: rgba(0, 0, 0, 1)"> context.getBoolean(SKIP_MISSING_COLUMN_PROP,
+                DEFAULT_SKIP_MISSING_COLUMN);
+        skipBadColumnValue </span>=<span style="color: rgba(0, 0, 0, 1)"> context.getBoolean(SKIP_BAD_COLUMN_VALUE_PROP,
+                DEFAULT_SKIP_BAD_COLUMN_VALUE);
+        warnUnmatchedRows </span>=<span style="color: rgba(0, 0, 0, 1)"> context.getBoolean(WARN_UNMATCHED_ROWS_PROP,
+                DEFAULT_WARN_UNMATCHED_ROWS);
+    }
+
+    @Override
+    </span><span style="color: rgba(0, 0, 255, 1)">public</span> <span style="color: rgba(0, 0, 255, 1)">void</span><span style="color: rgba(0, 0, 0, 1)"> initialize(KuduTable table) {
+        </span><span style="color: rgba(0, 0, 255, 1)">this</span>.table =<span style="color: rgba(0, 0, 0, 1)"> table;
+    }
+
+    @Override
+    </span><span style="color: rgba(0, 0, 255, 1)">public</span> List&lt;Operation&gt; getOperations(Event event) <span style="color: rgba(0, 0, 255, 1)">throws</span><span style="color: rgba(0, 0, 0, 1)"> FlumeException {
+        String raw </span>= <span style="color: rgba(0, 0, 255, 1)">new</span><span style="color: rgba(0, 0, 0, 1)"> String(event.getBody(), charset);
+        logger.info(</span>"get raw: " +<span style="color: rgba(0, 0, 0, 1)"> raw);
+        List</span>&lt;Operation&gt; ops =<span style="color: rgba(0, 0, 0, 1)"> Lists.newArrayList();
+        </span><span style="color: rgba(0, 0, 255, 1)">if</span>(raw != <span style="color: rgba(0, 0, 255, 1)">null</span> &amp;&amp; !<span style="color: rgba(0, 0, 0, 1)">raw.isEmpty()) {
+            JSONObject json </span>= <span style="color: rgba(0, 0, 255, 1)">null</span><span style="color: rgba(0, 0, 0, 1)">;
+            </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)">just pass if it is not a json</span>
+            <span style="color: rgba(0, 0, 255, 1)">try</span><span style="color: rgba(0, 0, 0, 1)"> {
+                json </span>= <span style="color: rgba(0, 0, 255, 1)">new</span><span style="color: rgba(0, 0, 0, 1)"> JSONObject(raw);
+            } </span><span style="color: rgba(0, 0, 255, 1)">catch</span><span style="color: rgba(0, 0, 0, 1)"> (Exception e) {
+                e.printStackTrace();
+            }
+            </span><span style="color: rgba(0, 0, 255, 1)">if</span> (json != <span style="color: rgba(0, 0, 255, 1)">null</span><span style="color: rgba(0, 0, 0, 1)">) {
+                Schema schema </span>=<span style="color: rgba(0, 0, 0, 1)"> table.getSchema();
+                Operation op;
+                </span><span style="color: rgba(0, 0, 255, 1)">switch</span><span style="color: rgba(0, 0, 0, 1)"> (operation) {
+                    </span><span style="color: rgba(0, 0, 255, 1)">case</span><span style="color: rgba(0, 0, 0, 1)"> UPSERT:
+                        op </span>=<span style="color: rgba(0, 0, 0, 1)"> table.newUpsert();
+                        </span><span style="color: rgba(0, 0, 255, 1)">break</span><span style="color: rgba(0, 0, 0, 1)">;
+                    </span><span style="color: rgba(0, 0, 255, 1)">case</span><span style="color: rgba(0, 0, 0, 1)"> INSERT:
+                        op </span>=<span style="color: rgba(0, 0, 0, 1)"> table.newInsert();
+                        </span><span style="color: rgba(0, 0, 255, 1)">break</span><span style="color: rgba(0, 0, 0, 1)">;
+                    </span><span style="color: rgba(0, 0, 255, 1)">default</span><span style="color: rgba(0, 0, 0, 1)">:
+                        </span><span style="color: rgba(0, 0, 255, 1)">throw</span> <span style="color: rgba(0, 0, 255, 1)">new</span><span style="color: rgba(0, 0, 0, 1)"> FlumeException(
+                                String.format(</span>"Unrecognized operation type '%s' in getOperations(): " +
+                                        "this should never happen!"<span style="color: rgba(0, 0, 0, 1)">, operation));
+                }
+                </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)">just record the error event into log and pass</span>
+                <span style="color: rgba(0, 0, 255, 1)">try</span><span style="color: rgba(0, 0, 0, 1)"> {
+                    PartialRow row </span>=<span style="color: rgba(0, 0, 0, 1)"> op.getRow();
+                    </span><span style="color: rgba(0, 0, 255, 1)">for</span><span style="color: rgba(0, 0, 0, 1)"> (ColumnSchema col : schema.getColumns()) {
+                        </span><span style="color: rgba(0, 0, 255, 1)">try</span><span style="color: rgba(0, 0, 0, 1)"> {
+                            </span><span style="color: rgba(0, 0, 255, 1)">if</span> (json.has(col.getName()) &amp;&amp; json.get(col.getName()) != <span style="color: rgba(0, 0, 255, 1)">null</span><span style="color: rgba(0, 0, 0, 1)">) coerceAndSet(json.get(col.getName()), col.getName(), col.getType(), col.isKey(), col.isNullable(), col.getDefaultValue(), row);
+                            </span><span style="color: rgba(0, 0, 255, 1)">else</span> <span style="color: rgba(0, 0, 255, 1)">if</span> (col.isKey() || !col.isNullable()) <span style="color: rgba(0, 0, 255, 1)">throw</span> <span style="color: rgba(0, 0, 255, 1)">new</span> RuntimeException("column : " + col.getName() + " is null or not exists in " +<span style="color: rgba(0, 0, 0, 1)"> row);
+                        } </span><span style="color: rgba(0, 0, 255, 1)">catch</span><span style="color: rgba(0, 0, 0, 1)"> (NumberFormatException e) {
+                            String msg </span>=<span style="color: rgba(0, 0, 0, 1)"> String.format(
+                                    </span>"Raw value '%s' couldn't be parsed to type %s for column '%s'"<span style="color: rgba(0, 0, 0, 1)">,
+                                    raw, col.getType(), col.getName());
+                            logOrThrow(skipBadColumnValue, msg, e);
+                        } </span><span style="color: rgba(0, 0, 255, 1)">catch</span><span style="color: rgba(0, 0, 0, 1)"> (IllegalArgumentException e) {
+                            String msg </span>=<span style="color: rgba(0, 0, 0, 1)"> String.format(
+                                    </span>"Column '%s' has no matching group in '%s'"<span style="color: rgba(0, 0, 0, 1)">,
+                                    col.getName(), raw);
+                            logOrThrow(skipMissingColumn, msg, e);
+                        }
+                    }
+                    ops.add(op);
+                } </span><span style="color: rgba(0, 0, 255, 1)">catch</span><span style="color: rgba(0, 0, 0, 1)"> (Exception e) {
+                    logger.error(</span>"get error [" + e.getMessage() + "]: " +<span style="color: rgba(0, 0, 0, 1)"> raw, e);
+                }
+            }
+        }
+        </span><span style="color: rgba(0, 0, 255, 1)">return</span><span style="color: rgba(0, 0, 0, 1)"> ops;
+    }
+
+    </span><span style="color: rgba(0, 0, 255, 1)">protected</span> &lt;T&gt; T getValue(T defaultValue, Object val, <span style="color: rgba(0, 0, 255, 1)">boolean</span> isKey, <span style="color: rgba(0, 0, 255, 1)">boolean</span> isNullable, Object columnDefaultValue, <span style="color: rgba(0, 0, 255, 1)">boolean</span> compressException, Function&lt;String, T&gt;<span style="color: rgba(0, 0, 0, 1)"> fromStr) {
+        T result </span>=<span style="color: rgba(0, 0, 0, 1)"> defaultValue;
+        </span><span style="color: rgba(0, 0, 255, 1)">try</span><span style="color: rgba(0, 0, 0, 1)"> {
+            </span><span style="color: rgba(0, 0, 255, 1)">if</span> (val == <span style="color: rgba(0, 0, 255, 1)">null</span><span style="color: rgba(0, 0, 0, 1)">) {
+                </span><span style="color: rgba(0, 0, 255, 1)">if</span> (isKey || !<span style="color: rgba(0, 0, 0, 1)">isNullable) {
+                    </span><span style="color: rgba(0, 0, 255, 1)">throw</span> <span style="color: rgba(0, 0, 255, 1)">new</span> RuntimeException("column is key or not nullable"<span style="color: rgba(0, 0, 0, 1)">);
+                }
+                </span><span style="color: rgba(0, 0, 255, 1)">if</span> (columnDefaultValue != <span style="color: rgba(0, 0, 255, 1)">null</span> &amp;&amp; !"null"<span style="color: rgba(0, 0, 0, 1)">.equals(columnDefaultValue)) {
+                    </span><span style="color: rgba(0, 0, 255, 1)">if</span> (columnDefaultValue <span style="color: rgba(0, 0, 255, 1)">instanceof</span> String) result =<span style="color: rgba(0, 0, 0, 1)"> fromStr.apply((String)columnDefaultValue);
+                    </span><span style="color: rgba(0, 0, 255, 1)">else</span> result =<span style="color: rgba(0, 0, 0, 1)"> (T)columnDefaultValue;
+                }
+            } </span><span style="color: rgba(0, 0, 255, 1)">else</span><span style="color: rgba(0, 0, 0, 1)"> {
+                </span><span style="color: rgba(0, 0, 255, 1)">boolean</span> isConverted = <span style="color: rgba(0, 0, 255, 1)">false</span><span style="color: rgba(0, 0, 0, 1)">;
+                </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)">handle: try to convert directly
+</span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)">                try {
+</span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)">                    result = (T)val;
+</span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)">                    isConverted = true;
+</span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)">                } catch (Exception e1) {</span><span style="color: rgba(0, 128, 0, 1)">
+////</span><span style="color: rgba(0, 128, 0, 1)">                    e1.printStackTrace();
+</span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)">                }
+                </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)">handle: parse from string</span>
+                <span style="color: rgba(0, 0, 255, 1)">if</span> (!isConverted) result =<span style="color: rgba(0, 0, 0, 1)"> fromStr.apply(val.toString());
+            }
+        } </span><span style="color: rgba(0, 0, 255, 1)">catch</span><span style="color: rgba(0, 0, 0, 1)">(Exception e) {
+            </span><span style="color: rgba(0, 0, 255, 1)">if</span><span style="color: rgba(0, 0, 0, 1)"> (compressException) e.printStackTrace();
+            </span><span style="color: rgba(0, 0, 255, 1)">else</span> <span style="color: rgba(0, 0, 255, 1)">throw</span><span style="color: rgba(0, 0, 0, 1)"> e;
+        }
+        </span><span style="color: rgba(0, 0, 255, 1)">return</span><span style="color: rgba(0, 0, 0, 1)"> result;
+    }
+
+    </span><span style="color: rgba(0, 0, 255, 1)">private</span> SimpleDateFormat[] sdfs = <span style="color: rgba(0, 0, 255, 1)">new</span><span style="color: rgba(0, 0, 0, 1)"> SimpleDateFormat[]{
+            </span><span style="color: rgba(0, 0, 255, 1)">new</span> SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.000'Z'"<span style="color: rgba(0, 0, 0, 1)">),
+            </span><span style="color: rgba(0, 0, 255, 1)">new</span> SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'"<span style="color: rgba(0, 0, 0, 1)">),
+            </span><span style="color: rgba(0, 0, 255, 1)">new</span> SimpleDateFormat("yyyy-MM-dd HH:mm:ss"<span style="color: rgba(0, 0, 0, 1)">)
+    };
+    {
+        </span><span style="color: rgba(0, 0, 255, 1)">for</span> (SimpleDateFormat sdf : sdfs) sdf.setTimeZone(TimeZone.getTimeZone("UTC"<span style="color: rgba(0, 0, 0, 1)">));
+    }
+
+    </span><span style="color: rgba(0, 0, 255, 1)">private</span> <span style="color: rgba(0, 0, 255, 1)">void</span> coerceAndSet(Object rawVal, String colName, Type type, <span style="color: rgba(0, 0, 255, 1)">boolean</span> isKey, <span style="color: rgba(0, 0, 255, 1)">boolean</span><span style="color: rgba(0, 0, 0, 1)"> isNullable, Object defaultValue, PartialRow row)
+            </span><span style="color: rgba(0, 0, 255, 1)">throws</span><span style="color: rgba(0, 0, 0, 1)"> NumberFormatException {
+        </span><span style="color: rgba(0, 0, 255, 1)">switch</span><span style="color: rgba(0, 0, 0, 1)"> (type) {
+            </span><span style="color: rgba(0, 0, 255, 1)">case</span><span style="color: rgba(0, 0, 0, 1)"> INT8:
+                row.addByte(colName, (rawVal </span>!= <span style="color: rgba(0, 0, 255, 1)">null</span> &amp;&amp; rawVal <span style="color: rgba(0, 0, 255, 1)">instanceof</span> Boolean) ? (Boolean)rawVal ? (<span style="color: rgba(0, 0, 255, 1)">byte</span>)1 : (<span style="color: rgba(0, 0, 255, 1)">byte</span>)0  : <span style="color: rgba(0, 0, 255, 1)">this</span>.getValue((<span style="color: rgba(0, 0, 255, 1)">byte</span>)0, rawVal, isKey, isNullable, defaultValue, <span style="color: rgba(0, 0, 255, 1)">this</span>.skipBadColumnValue, (String str) - &gt;<span style="color: rgba(0, 0, 0, 1)"> Byte.parseByte(str)));
+                </span><span style="color: rgba(0, 0, 255, 1)">break</span><span style="color: rgba(0, 0, 0, 1)">;
+            </span><span style="color: rgba(0, 0, 255, 1)">case</span><span style="color: rgba(0, 0, 0, 1)"> INT16:
+                row.addShort(colName, </span><span style="color: rgba(0, 0, 255, 1)">this</span>.getValue((<span style="color: rgba(0, 0, 255, 1)">short</span>)0, rawVal, isKey, isNullable, defaultValue, <span style="color: rgba(0, 0, 255, 1)">this</span>.skipBadColumnValue, (String str) - &gt;<span style="color: rgba(0, 0, 0, 1)"> Short.parseShort(str)));
+                </span><span style="color: rgba(0, 0, 255, 1)">break</span><span style="color: rgba(0, 0, 0, 1)">;
+            </span><span style="color: rgba(0, 0, 255, 1)">case</span><span style="color: rgba(0, 0, 0, 1)"> INT32:
+                row.addInt(colName, </span><span style="color: rgba(0, 0, 255, 1)">this</span>.getValue(0, rawVal, isKey, isNullable, defaultValue, <span style="color: rgba(0, 0, 255, 1)">this</span>.skipBadColumnValue, (String str) - &gt;<span style="color: rgba(0, 0, 0, 1)"> Integer.parseInt(str)));
+                </span><span style="color: rgba(0, 0, 255, 1)">break</span><span style="color: rgba(0, 0, 0, 1)">;
+            </span><span style="color: rgba(0, 0, 255, 1)">case</span><span style="color: rgba(0, 0, 0, 1)"> INT64:
+                row.addLong(colName, </span><span style="color: rgba(0, 0, 255, 1)">this</span>.getValue(0l, rawVal, isKey, isNullable, defaultValue, <span style="color: rgba(0, 0, 255, 1)">this</span>.skipBadColumnValue, (String str) - &gt;<span style="color: rgba(0, 0, 0, 1)"> Long.parseLong(str)));
+                </span><span style="color: rgba(0, 0, 255, 1)">break</span><span style="color: rgba(0, 0, 0, 1)">;
+            </span><span style="color: rgba(0, 0, 255, 1)">case</span><span style="color: rgba(0, 0, 0, 1)"> BINARY:
+                row.addBinary(colName, rawVal </span>== <span style="color: rgba(0, 0, 255, 1)">null</span> ? <span style="color: rgba(0, 0, 255, 1)">new</span> <span style="color: rgba(0, 0, 255, 1)">byte</span>[0<span style="color: rgba(0, 0, 0, 1)">] : rawVal.toString().getBytes(charset));
+                </span><span style="color: rgba(0, 0, 255, 1)">break</span><span style="color: rgba(0, 0, 0, 1)">;
+            </span><span style="color: rgba(0, 0, 255, 1)">case</span><span style="color: rgba(0, 0, 0, 1)"> STRING:
+                row.addString(colName, rawVal </span>== <span style="color: rgba(0, 0, 255, 1)">null</span> ? ""<span style="color: rgba(0, 0, 0, 1)"> : rawVal.toString());
+                </span><span style="color: rgba(0, 0, 255, 1)">break</span><span style="color: rgba(0, 0, 0, 1)">;
+            </span><span style="color: rgba(0, 0, 255, 1)">case</span><span style="color: rgba(0, 0, 0, 1)"> BOOL:
+                row.addBoolean(colName, </span><span style="color: rgba(0, 0, 255, 1)">this</span>.getValue(<span style="color: rgba(0, 0, 255, 1)">false</span>, rawVal, isKey, isNullable, defaultValue, <span style="color: rgba(0, 0, 255, 1)">this</span>.skipBadColumnValue, (String str) - &gt;<span style="color: rgba(0, 0, 0, 1)"> Boolean.parseBoolean(str)));
+                </span><span style="color: rgba(0, 0, 255, 1)">break</span><span style="color: rgba(0, 0, 0, 1)">;
+            </span><span style="color: rgba(0, 0, 255, 1)">case</span><span style="color: rgba(0, 0, 0, 1)"> FLOAT:
+                row.addFloat(colName, </span><span style="color: rgba(0, 0, 255, 1)">this</span>.getValue(0f, rawVal, isKey, isNullable, defaultValue, <span style="color: rgba(0, 0, 255, 1)">this</span>.skipBadColumnValue, (String str) - &gt;<span style="color: rgba(0, 0, 0, 1)"> Float.parseFloat(str)));
+                </span><span style="color: rgba(0, 0, 255, 1)">break</span><span style="color: rgba(0, 0, 0, 1)">;
+            </span><span style="color: rgba(0, 0, 255, 1)">case</span><span style="color: rgba(0, 0, 0, 1)"> DOUBLE:
+                row.addDouble(colName, </span><span style="color: rgba(0, 0, 255, 1)">this</span>.getValue(0d, rawVal, isKey, isNullable, defaultValue, <span style="color: rgba(0, 0, 255, 1)">this</span>.skipBadColumnValue, (String str) - &gt;<span style="color: rgba(0, 0, 0, 1)"> Double.parseDouble(str)));
+                </span><span style="color: rgba(0, 0, 255, 1)">break</span><span style="color: rgba(0, 0, 0, 1)">;
+            </span><span style="color: rgba(0, 0, 255, 1)">case</span><span style="color: rgba(0, 0, 0, 1)"> UNIXTIME_MICROS:
+                Long value </span>= <span style="color: rgba(0, 0, 255, 1)">this</span>.&lt;Long&gt;getValue(<span style="color: rgba(0, 0, 255, 1)">null</span>, rawVal, isKey, isNullable, defaultValue, <span style="color: rgba(0, 0, 255, 1)">this</span>.skipBadColumnValue, (String str) - &gt;<span style="color: rgba(0, 0, 0, 1)"> {
+                    Long result </span>= <span style="color: rgba(0, 0, 255, 1)">null</span><span style="color: rgba(0, 0, 0, 1)">;
+                    </span><span style="color: rgba(0, 0, 255, 1)">if</span> (str != <span style="color: rgba(0, 0, 255, 1)">null</span> &amp;&amp; !""<span style="color: rgba(0, 0, 0, 1)">.equals(str)) {
+                        </span><span style="color: rgba(0, 0, 255, 1)">boolean</span> isPatternOk =<span style="color: rgba(0, 0, 255, 1)">false</span><span style="color: rgba(0, 0, 0, 1)">;
+                        </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)">handle: yyyy-MM-dd HH:mm:ss</span>
+                        <span style="color: rgba(0, 0, 255, 1)">if</span> (str.contains("-") &amp;&amp; str.contains(":"<span style="color: rgba(0, 0, 0, 1)">)) {
+                            </span><span style="color: rgba(0, 0, 255, 1)">for</span><span style="color: rgba(0, 0, 0, 1)"> (SimpleDateFormat sdf : sdfs) {
+                                </span><span style="color: rgba(0, 0, 255, 1)">try</span><span style="color: rgba(0, 0, 0, 1)"> {
+                                    result </span>= sdf.parse(str).getTime() * 1000<span style="color: rgba(0, 0, 0, 1)">;
+                                    isPatternOk </span>= <span style="color: rgba(0, 0, 255, 1)">true</span><span style="color: rgba(0, 0, 0, 1)">;
+                                    </span><span style="color: rgba(0, 0, 255, 1)">break</span><span style="color: rgba(0, 0, 0, 1)">;
+                                } </span><span style="color: rgba(0, 0, 255, 1)">catch</span><span style="color: rgba(0, 0, 0, 1)"> (Exception e) {
+</span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)">                                  e.printStackTrace();</span>
+<span style="color: rgba(0, 0, 0, 1)">                                }
+                            }
+                        }
+                        </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)">handle: second, millisecond, microsecond</span>
+                        <span style="color: rgba(0, 0, 255, 1)">if</span> (!isPatternOk &amp;&amp; (str.length() == 10 || str.length() == 13 || str.length() == 16<span style="color: rgba(0, 0, 0, 1)">)) {
+                            result </span>=<span style="color: rgba(0, 0, 0, 1)"> Long.parseLong(str);
+                            </span><span style="color: rgba(0, 0, 255, 1)">if</span> (str.length() == 10) result *= 1000000<span style="color: rgba(0, 0, 0, 1)">;
+                            </span><span style="color: rgba(0, 0, 255, 1)">if</span> (str.length() == 13) result *= 1000<span style="color: rgba(0, 0, 0, 1)">;
+                        }
+                    }
+                    </span><span style="color: rgba(0, 0, 255, 1)">return</span><span style="color: rgba(0, 0, 0, 1)"> result;
+                });
+                </span><span style="color: rgba(0, 0, 255, 1)">if</span> (value != <span style="color: rgba(0, 0, 255, 1)">null</span><span style="color: rgba(0, 0, 0, 1)">) row.addLong(colName, value);
+                </span><span style="color: rgba(0, 0, 255, 1)">break</span><span style="color: rgba(0, 0, 0, 1)">;
+            </span><span style="color: rgba(0, 0, 255, 1)">default</span><span style="color: rgba(0, 0, 0, 1)">:
+                logger.warn(</span>"got unknown type {} for column '{}'-- ignoring this column"<span style="color: rgba(0, 0, 0, 1)">, type, colName);
+        }
+    }
+
+    </span><span style="color: rgba(0, 0, 255, 1)">private</span> <span style="color: rgba(0, 0, 255, 1)">void</span> logOrThrow(<span style="color: rgba(0, 0, 255, 1)">boolean</span><span style="color: rgba(0, 0, 0, 1)"> log, String msg, Exception e)
+            </span><span style="color: rgba(0, 0, 255, 1)">throws</span><span style="color: rgba(0, 0, 0, 1)"> FlumeException {
+        </span><span style="color: rgba(0, 0, 255, 1)">if</span><span style="color: rgba(0, 0, 0, 1)"> (log) {
+            logger.warn(msg, e);
+        } </span><span style="color: rgba(0, 0, 255, 1)">else</span><span style="color: rgba(0, 0, 0, 1)"> {
+            </span><span style="color: rgba(0, 0, 255, 1)">throw</span> <span style="color: rgba(0, 0, 255, 1)">new</span><span style="color: rgba(0, 0, 0, 1)"> FlumeException(msg, e);
+        }
+    }
+
+    @Override
+    </span><span style="color: rgba(0, 0, 255, 1)">public</span> <span style="color: rgba(0, 0, 255, 1)">void</span><span style="color: rgba(0, 0, 0, 1)"> close() {
+    }
+}</span></pre>
+</div>
+<p>Remove the JsonStr2Map class, mainly getValue and coerceAndSet, support default values, support null, support passing any type (automatic adaptation processing), support boolean conversion to byte, time type supports yyyy-MM-dd HH:mm:ss and other patterns and 4 formats of seconds, milliseconds and microseconds, and will automatically convert seconds and milliseconds into microseconds;</p>
+<p>Note that SimpleDateFormat sets the timezone to UTC. This is to ensure that the time in the message is consistent with the time written in Kudu. Otherwise, it will be offset based on the timezone. For example, if the timezone is Asia/Shanghai, the time written in Kudu will be 8 hours later than the time in the message;</p>
+<p> </p>
+<p>Package it and put it under $FLUME_HOME/lib</p>
+<p> </p>
+</div>
+</div>
+<!-- Post Footer -->
+<div class="post-footer">
+<div class="post-navigation">
+<a class="nav-button" href="../blog.html">← Back to Home</a>
+<a class="nav-button" href="0166.html">Next Post →</a>
+</div>
+</div>
+</article>
+</div>
+</body>
+</html>

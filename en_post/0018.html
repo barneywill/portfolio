@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Message Loss in Some Kafka Topics</title>
+<link href="../css/style3.css" rel="stylesheet"/>
+</head>
+<body>
+<div class="container">
+<!-- Header Navigation -->
+<div class="header">
+<h1><a href="../blog.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+</div>
+<!-- Post Container -->
+<article class="post">
+<!-- Post Header -->
+<div class="post-header">
+<h1>Message Loss in Some Kafka Topics</h1>
+<div class="post-meta">
+<div class="post-meta-item">
+<span class="meta-icon">📅</span>
+<span>May 20, 2022</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">📖</span>
+<span>2 min read</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">👁️</span>
+<span>2674 views</span>
+</div>
+</div>
+</div>
+<!-- Post Content -->
+<div class="post-content">
+<div class="blogpost-body cnblogs-markdown" id="cnblogs_post_body">
+<h1 id="section-0018-1">Background</h1>
+<p>Some students reported that messages were lost in a certain Kafka topic (the consumption was less than the production), and the loss rate was about 20%.</p>
+<h1 id="section-0018-2">Troubleshooting</h1>
+<p>The replication-factor of the problematic topic is 2, the number of partitions is 5, and the status of the topic is as follows:</p>
+<p><picture>
+<source srcset="../img/1509647-20220520161118206-232887920.webp" type="image/webp"/>
+<img alt="" src="../img/1509647-20220520161118206-232887920.png"/>
+</picture></p>
+<p>There is a topic in the Under Replicated state, with only one ISR. Node 193 did not come in after being kicked out, and it was not replaced with other nodes.</p>
+<p>First, check whether the producer reports an error. In Kafka 2.0, the producer sending method is async+interceptor. You can specify a custom interceptor through interceptor.class.</p>
+<p><picture>
+<source srcset="../img/1509647-20220520161158006-64991256.webp" type="image/webp"/>
+<img alt="" src="../img/1509647-20220520161158006-64991256.png"/>
+</picture></p>
+<p>All errors will call back the interceptor</p>
+<p><picture>
+<source srcset="../img/1509647-20220520161229846-644966799.webp" type="image/webp"/>
+<img alt="" src="../img/1509647-20220520161229846-644966799.png"/>
+</picture></p>
+<p>By adding an interceptor and printing the error log in onSendError, an error is reported:</p>
+<blockquote>
+<p>ERROR ninebot.iot.hub.KafkaTest 100 - send error :Messages are rejected since there are fewer in-sync replicas than required.<br/>
+org.apache.kafka.common.errors.NotEnoughReplicasException: Messages are rejected since there are fewer in-sync replicas than required.</p>
+</blockquote>
+<p>The direct reason for the error is: partition-0 has only 1 replica, which is less than the configured 2. All messages sent to this partition will be rejected.</p>
+<p>The following logs were found on node 192:</p>
+<pre><code>2021-07-27 17:41:47,159 INFO kafka.cluster.Partition: [Partition test-7 broker=192] Shrinking ISR from 192,193 to 192
+2021-07-27 17:51:07,551 ERROR kafka.server.ReplicaManager: [ReplicaManager broker=192] Error processing append operation on partition test-7
+org.apache.kafka.common.errors.NotEnoughReplicasException: Number of insync replicas for partition test-7 is [1], below required minimum [2]
+</code></pre>
+<p>Further searching the Shrinking ISR from log found that a large number of partitions kicked off the 193 node.<br/>
+Looking at Kafka's code, we found that the condition of shrink isr is that the follower's lastCaughtUpTimeMs times out.</p>
+<p><picture>
+<source srcset="../img/1509647-20220520161334884-263830708.webp" type="image/webp"/>
+<img alt="" src="../img/1509647-20220520161334884-263830708.png"/>
+</picture></p>
+<p>Check the 193 node log and find that there was an error at that time</p>
+<pre><code>2021-07-27 17:41:11,547 INFO kafka.server.epoch.LeaderEpochFileCache: Updated PartitionLeaderEpoch. New: {epoch:15, offset:201}, Current: {epoch:-1, offset:-1} for Partition: test-1. Cache now contains 0 entries.
+2021-07-27 17:41:11,549 WARN kafka.log.Log: [Log partition=test-1, dir=/data/kafka] Newly rolled segment file /data/kafka/test-1/00000000000000000201.log already exists; deleting it first
+2021-07-27 17:41:11,549 WARN kafka.log.Log: [Log partition=test-1, dir=/data/kafka] Newly rolled segment file /data/kafka/test-1/00000000000000000201.index already exists; deleting it first
+2021-07-27 17:41:11,549 WARN kafka.log.Log: [Log partition=test-1, dir=/data/kafka] Newly rolled segment file /data/kafka/test-1/00000000000000000201.timeindex already exists; deleting it first
+2021-07-27 17:41:11,550 ERROR kafka.server.ReplicaFetcherThread: [ReplicaFetcher replicaId=193, leaderId=192, fetcherId=2] Error due to
+org.apache.kafka.common.KafkaException: Error processing data for partition test-1 offset 201
+at kafka.server.AbstractFetcherThread$$anonfun$processFetchRequest$2$$anonfun$apply$mcV$sp$1$$anonfun$apply$2.apply(AbstractFetcherThread.scala:207)
+at kafka.server.AbstractFetcherThread$$anonfun$processFetchRequest$2$$anonfun$apply$mcV$sp$1$$anonfun$apply$2.apply(AbstractFetcherThread.scala:172)
+at scala.Option.foreach(Option.scala:257)
+at kafka.server.AbstractFetcherThread$$anonfun$processFetchRequest$2$$anonfun$apply$mcV$sp$1.apply(AbstractFetcherThread.scala:172)
+at kafka.server.AbstractFetcherThread$$anonfun$processFetchRequest$2$$anonfun$apply$mcV$sp$1.apply(AbstractFetcherThread.scala:169)
+at scala.collection.mutable.ResizableArray$class.foreach(ResizableArray.scala:59)
+at scala.collection.mutable.ArrayBuffer.foreach(ArrayBuffer.scala:48)
+at kafka.server.AbstractFetcherThread$$anonfun$processFetchRequest$2.apply$mcV$sp(AbstractFetcherThread.scala:169)
+at kafka.server.AbstractFetcherThread$$anonfun$processFetchRequest$2.apply(AbstractFetcherThread.scala:169)
+at kafka.server.AbstractFetcherThread$$anonfun$processFetchRequest$2.apply(AbstractFetcherThread.scala:169)
+at kafka.utils.CoreUtils$.inLock(CoreUtils.scala:251)
+at kafka.server.AbstractFetcherThread.processFetchRequest(AbstractFetcherThread.scala:167)
+at kafka.server.AbstractFetcherThread.doWork(AbstractFetcherThread.scala:114)
+at kafka.utils.ShutdownableThread.run(ShutdownableThread.scala:82)
+Caused by: org.apache.kafka.common.KafkaException: Trying to roll a new log segment for topic partition test-1 with start offset 201 while it already exists.
+at kafka.log.Log$$anonfun$roll$2.apply(Log.scala:1498)
+at kafka.log.Log$$anonfun$roll$2.apply(Log.scala:1465)
+at kafka.log.Log.maybeHandleIOException(Log.scala:1842)
+at kafka.log.Log.roll(Log.scala:1465)
+at kafka.log.Log.kafka$log$Log$$maybeRoll(Log.scala:1450)
+at kafka.log.Log$$anonfun$append$2.apply(Log.scala:858)
+at kafka.log.Log$$anonfun$append$2.apply(Log.scala:752)
+at kafka.log.Log.maybeHandleIOException(Log.scala:1842)
+at kafka.log.Log.append(Log.scala:752)
+at kafka.log.Log.appendAsFollower(Log.scala:733)
+at kafka.cluster.Partition$$anonfun$doAppendRecordsToFollowerOrFutureReplica$1.apply(Partition.scala:606)
+at kafka.utils.CoreUtils$.inLock(CoreUtils.scala:251)
+at kafka.utils.CoreUtils$.inReadLock(CoreUtils.scala:257)
+at kafka.cluster.Partition.doAppendRecordsToFollowerOrFutureReplica(Partition.scala:593)
+at kafka.cluster.Partition.appendRecordsToFollowerOrFutureReplica(Partition.scala:613)
+at kafka.server.ReplicaFetcherThread.processPartitionData(ReplicaFetcherThread.scala:127)
+at kafka.server.ReplicaFetcherThread.processPartitionData(ReplicaFetcherThread.scala:40)
+at kafka.server.AbstractFetcherThread$$anonfun$processFetchRequest$2$$anonfun$apply$mcV$sp$1$$anonfun$apply$2.apply(AbstractFetcherThread.scala:186)
+... 13 more
+2021-07-27 17:41:11,550 INFO kafka.server.ReplicaFetcherThread: [ReplicaFetcher replicaId=193, leaderId=192, fetcherId=2] Stopped
+</code></pre>
+<p>The calling process is as follows:</p>
+<blockquote>
+<p>AbstractFetcherThread.processFetchRequest<br/>
+→ ReplicaFetcherThread.processPartitionData<br/>
+→ Partition.appendRecordsToFollowerOrFutureReplica<br/>
+→ Log.maybeRoll<br/>
+→ Log.roll</p>
+</blockquote>
+<p>Log.roll code is as follows:</p>
+<p><picture>
+<source srcset="../img/1509647-20220520161414391-1752889813.webp" type="image/webp"/>
+<img alt="" src="../img/1509647-20220520161414391-1752889813.png"/>
+</picture></p>
+<p>From the log, we can see that there are three delete operations first.</p>
+<blockquote>
+<p>Newly rolled segment file /data/kafka/test-1/00000000000000000201.log already exists; deleting it first<br/>
+Newly rolled segment file /data/kafka/test-1/00000000000000000201.index already exists; deleting it first<br/>
+Newly rolled segment file /data/kafka/test-1/00000000000000000201.timeindex already exists; deleting it first</p>
+</blockquote>
+<p>Then report an error</p>
+<blockquote>
+<p>Trying to roll a new log segment for topic partition test-1 with start offset 201 while it already exists.</p>
+</blockquote>
+<p>It indicates that the deletion failed. It is suspected that the file was being opened for writing at that time, causing the deletion to fail.</p>
+<p>The server file situation is as follows:</p>
+<pre><code># ls /data/kafka/test-1/ -l
+total 4
+-rw-r--r-- 1 kafka kafka 10485760 Jul 27 17:41 00000000000000000201.index
+-rw-r--r-- 1 kafka kafka 0 Jul 27 17:41 00000000000000000201.log
+-rw-r--r-- 1 kafka kafka 10485756 Jul 27 17:41 00000000000000000201.timeindex
+-rw-r--r-- 1 kafka kafka 11 Jul 27 17:41 leader-epoch-checkpoint
+</code></pre>
+<p>Why does a ReplicaFetcherThread error cause 25 partitions to be eliminated?</p>
+<p>There is a variable in ReplicaFetcherManager's parent class AbstractFetcherManager</p>
+<blockquote>
+<p>private[server] val fetcherThreadMap = new mutable.HashMap[BrokerIdAndFetcherId, AbstractFetcherThread]</p>
+</blockquote>
+<p>This map will use brokerId and fetcherId as keys to store ReplicaFetcherThread. It can be considered that one source broker corresponds to one fetcher thread. This fetcher thread will be responsible for the synchronization of all partitions on the source broker. The error of ReplicaFetcherThread will cause the entire thread to exit.</p>
+<p><picture>
+<source srcset="../img/1509647-20220520161500863-1655832348.webp" type="image/webp"/>
+<img alt="" src="../img/1509647-20220520161500863-1655832348.png"/>
+</picture></p>
+<p>Then it will affect the synchronization of all partitions on the source broker, causing these partitions to be kicked out at the same time 193</p>
+<p>Why did the deletion fail at that time?</p>
+<p>I found that this bug has been mentioned on the official jira of Kafka.</p>
+<p><a href="https://issues.apache.org/jira/browse/KAFKA-6388" rel="noopener nofollow" target="_blank">https://issues.apache.org/jira/browse/KAFKA-6388</a></p>
+<p>and the bug has been fixed</p>
+<p><a href="https://github.com/apache/kafka/pull/6006/commits/f39a9f533f7bedf28dbaca7644b99808e163ea4d" rel="noopener nofollow" target="_blank">https://github.com/apache/kafka/pull/6006/commits/f39a9f533f7bedf28dbaca7644b99808e163ea4d</a></p>
+<p>Remove the prev check and exception throwing code</p>
+<p>Upgrade Kafka from 2.0 to 2.1. This bug has been fixed since 2.1<br/>
+<picture>
+<source srcset="../img/1509647-20220520161541104-2057829869.webp" type="image/webp"/>
+<img alt="" src="../img/1509647-20220520161541104-2057829869.png"/>
+</picture></p>
+</div>
+</div>
+<!-- Post Footer -->
+<div class="post-footer">
+<div class="post-navigation">
+<a class="nav-button" href="../blog.html">← Back to Home</a>
+<a class="nav-button" href="0019.html">Next Post →</a>
+</div>
+</div>
+</article>
+</div>
+</body>
+</html>

@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Error when starting HBase in standalone mode</title>
+<link href="../css/style3.css" rel="stylesheet"/>
+</head>
+<body>
+<div class="container">
+<!-- Header Navigation -->
+<div class="header">
+<h1><a href="../blog.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+</div>
+<!-- Post Container -->
+<article class="post">
+<!-- Post Header -->
+<div class="post-header">
+<h1>Error when starting HBase in standalone mode</h1>
+<div class="post-meta">
+<div class="post-meta-item">
+<span class="meta-icon">📅</span>
+<span>January 17, 2019</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">📖</span>
+<span>2 min read</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">👁️</span>
+<span>3205 views</span>
+</div>
+</div>
+</div>
+<!-- Post Content -->
+<div class="post-content">
+<div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<p>hbase 2.0.2</p>
+<p>Error when starting HBase in standalone mode:</p>
+<blockquote>
+<p>2019-01-17 15:49:08,730 ERROR [Thread-24] master.HMaster: Failed to become active master</p>
+<p>java.lang.IllegalStateException: The procedure WAL relies on the ability to hsync for proper operation during component failures, but the underlying filesystem does not support doing so. Please check the config value of 'hbase.procedure.store.wal.use.hsync' to set the desired level of robustness and ensure the config value of 'hbase.wal.dir' points to a FileSystem mount that can provide it.</p>
+<p>        at org.apache.hadoop.hbase.procedure2.store.wal.WALProcedureStore.rollWriter(WALProcedureStore.java:1082)</p>
+<p>        at org.apache.hadoop.hbase.procedure2.store.wal.WALProcedureStore.recoverLease(WALProcedureStore.java:423)</p>
+<p>        at org.apache.hadoop.hbase.procedure2.ProcedureExecutor.init(ProcedureExecutor.java:714)</p>
+<p>        at org.apache.hadoop.hbase.master.HMaster.createProcedureExecutor(HMaster.java:1398)</p>
+<p>        at org.apache.hadoop.hbase.master.HMaster.finishActiveMasterInitialization(HMaster.java:857)</p>
+<p>        at org.apache.hadoop.hbase.master.HMaster.startActiveMasterManager(HMaster.java:2225)</p>
+<p>        at org.apache.hadoop.hbase.master.HMaster.lambda$run$0(HMaster.java:568)</p>
+<p>        at java.lang.Thread.run(Thread.java:748)</p>
+</blockquote>
+<p>The reason for the error is described clearly in the message. The standalone mode directly uses the local disk, and the local disk does not support hsync. Check the configuration:</p>
+<blockquote>
+<p>  &lt;property&gt;</p>
+<p>    &lt;name&gt;hbase.procedure.store.wal.use.hsync&lt;/name&gt;</p>
+<p>    &lt;value&gt;true&lt;/value&gt;</p>
+<p>  &lt;/property&gt;</p>
+</blockquote>
+<p>Change it to false and restart, but the error is still reported. Follow up the code:</p>
+<p>org.apache.hadoop.hbase.procedure2.store.wal.WALProcedureStore</p>
+<div class="cnblogs_code">
+<pre>  <span style="color: rgba(0, 0, 255, 1)">private</span> <span style="color: rgba(0, 0, 255, 1)">final</span> <span style="color: rgba(0, 0, 255, 1)">boolean</span><span style="color: rgba(0, 0, 0, 1)"> enforceStreamCapability;
+
+  </span><span style="color: rgba(0, 0, 255, 1)">public</span> WALProcedureStore(<span style="color: rgba(0, 0, 255, 1)">final</span> Configuration conf, <span style="color: rgba(0, 0, 255, 1)">final</span> Path walDir, <span style="color: rgba(0, 0, 255, 1)">final</span><span style="color: rgba(0, 0, 0, 1)"> Path walArchiveDir,
+      </span><span style="color: rgba(0, 0, 255, 1)">final</span> LeaseRecovery leaseRecovery) <span style="color: rgba(0, 0, 255, 1)">throws</span><span style="color: rgba(0, 0, 0, 1)"> IOException {
+...
+    </span><span style="color: rgba(0, 0, 255, 1)">this</span>.enforceStreamCapability = conf.getBoolean(CommonFSUtils.UNSAFE_STREAM_CAPABILITY_ENFORCE, <span style="color: rgba(0, 0, 255, 1)">true</span><span style="color: rgba(0, 0, 0, 1)">);
+...
+
+  </span><span style="color: rgba(0, 0, 255, 1)">boolean</span> rollWriter(<span style="color: rgba(0, 0, 255, 1)">final</span> <span style="color: rgba(0, 0, 255, 1)">long</span> logId) <span style="color: rgba(0, 0, 255, 1)">throws</span><span style="color: rgba(0, 0, 0, 1)"> IOException {
+...
+    </span><span style="color: rgba(0, 0, 255, 1)">final</span> String durability = useHsync ? "hsync" : "hflush"<span style="color: rgba(0, 0, 0, 1)">;
+    </span><span style="color: rgba(0, 0, 255, 1)">if</span> (enforceStreamCapability &amp;&amp; !<span style="color: rgba(0, 0, 0, 1)">(CommonFSUtils.hasCapability(newStream, durability))) {
+        </span><span style="color: rgba(0, 0, 255, 1)">throw</span> <span style="color: rgba(0, 0, 255, 1)">new</span> IllegalStateException("The procedure WAL relies on the ability to " + durability +
+          " for proper operation during component failures, but the underlying filesystem does " +
+          "not support doing so. Please check the config value of '" + USE_HSYNC_CONF_KEY +
+          "' to set the desired level of robustness and ensure the config value of '" +<span style="color: rgba(0, 0, 0, 1)">
+          CommonFSUtils.HBASE_WAL_DIR </span>+ "' points to a FileSystem mount that can provide it."<span style="color: rgba(0, 0, 0, 1)">);
+    }
+...</span></pre>
+</div>
+<p>It can be seen that if HBase.procedure.store.wal.use.hsync is true, hsync is used; if it is false, hflush is used;<br/>Both will report errors. At this time, I noticed that there is another variable controlling enforceStreamCapability. The corresponding configuration of this variable is HBase.unsafe.stream.capability.enforce. Set the configuration to false and the problem is solved;</p>
+<p>When standalone HBase is needed, it is usually used by beginners for practice, but there are also some products in use, such as Ambari's metrics collector;</p>
+<p>About Standalone HBase</p>
+<p><em>This is the default mode. In standalone mode, HBase does not use HDFS -- it uses the local filesystem instead -- and it runs all HBase daemons and a local ZooKeeper all up in the same JVM. Zookeeper binds to a well known port so clients may talk to HBase.</em></p>
+<p>For details on the standalone method, please refer to the official documentation:<br/>http://hbase.apache.org/0.94/book/quickstart.html</p>
+<p> </p>
+</div>
+</div>
+<!-- Post Footer -->
+<div class="post-footer">
+<div class="post-navigation">
+<a class="nav-button" href="../blog.html">← Back to Home</a>
+<a class="nav-button" href="0265.html">Next Post →</a>
+</div>
+</div>
+</article>
+</div>
+</body>
+</html>

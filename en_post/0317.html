@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Java Basics Session Mechanism</title>
+<link href="../css/style3.css" rel="stylesheet"/>
+</head>
+<body>
+<div class="container">
+<!-- Header Navigation -->
+<div class="header">
+<h1><a href="../blog.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+</div>
+<!-- Post Container -->
+<article class="post">
+<!-- Post Header -->
+<div class="post-header">
+<h1>Java Basics Session Mechanism</h1>
+<div class="post-meta">
+<div class="post-meta-item">
+<span class="meta-icon">📅</span>
+<span>December 13, 2018</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">📖</span>
+<span>1 min read</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">👁️</span>
+<span>1459 views</span>
+</div>
+</div>
+</div>
+<!-- Post Content -->
+<div class="post-content">
+<div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<h1>Session mechanism</h1>
+<p>JSESSIONID is the identifier of the Session. When the client requests the server, the server will check whether a Session has been created for the client, that is, whether the header in the client's request has Cookie: JSESSIONID=.... If the client request contains JSESSIONID, then the server can use JSESSI ONID finds the corresponding Session; if not, the server thinks that the client is visiting for the first time and will add a header to the response, namely Set-Cookie:JSESSIONID=…. When the client receives the response, the cookie will be set, and subsequent requests will carry the cookie to ensure the consistency of the session;</p>
+<h2>1 Session mechanism test</h2>
+<h3>1.1 Simulate first access (without JSESSION)</h3>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201812/1509647-20181213222102689-1581075533.png"/></p>
+<p> </p>
+<h3>1.2 Simulate non-first access (with JSESSIONID)</h3>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201812/1509647-20181213222146071-1297066369.png"/></p>
+<h2> </h2>
+<h2>2 Distributed Session Implementation</h2>
+<h3>2.1 Pseudo-distributed Session</h3>
+<h4>2.1.1 nginx ip_hash</h4>
+<p>Distribute requests to different servers based on the client's IP;</p>
+<p>The configuration is as follows:</p>
+<blockquote>
+<p>upstream my_upstream {</p>
+<p>                ip_hash;</p>
+<p>                server 10.20.35.11:8001;<br/>                server 10.20.35.11:8002;<br/> }</p>
+</blockquote>
+<h4>2.1.2 nginx sticky</h4>
+<pre>https://bitbucket.org/nginx-goodies/nginx-sticky-module-ng/overview</pre>
+<p>After downloading, recompile Nginx through --add-module;</p>
+<p>The configuration is as follows:</p>
+<blockquote>
+<pre>upstream my_upstream{
+　　　　sticky;
+　　　　server 10.20.35.11:8001;
+　　　　server 10.20.35.11:8002;
+}</pre>
+</blockquote>
+<p>Implementation principle:</p>
+<p>Sticky is a module of Nginx. It is an Nginx load balancing solution based on cookies. By distributing and identifying cookies, the same client's requests fall on the same server. The default identification name is route.<br/>1 The client initiates an access request for the first time. After Nginx receives it, it finds that there is no cookie in the request header, and then distributes the request to the back-end server in a polling manner.<br/>2. The backend server processes the request and returns the response data to Nginx.<br/>3 At this time, Nginx generates a cookie with route and returns it to the client. The value of route corresponds to the back-end server. It may be plain text or hash values ​​such as md5 and sha1.<br/>4 The client receives the request and saves the cookie with route.<br/>5 When the client sends a request next time, it will bring the route, and Nginx will forward it to the corresponding back-end server based on the route value in the received cookie.</p>
+<h3> </h3>
+<h3>2.2 True Distributed Session</h3>
+<p>Backend implementation:</p>
+<p>1 Inherit HttpSessionWrapper, such as DistributeHttpSessionWrapper, override getAttributeNames, getAttribute, setAttribute and other methods, and instead read and write session attributes in a public place, such as DB, Memcached, Redis, etc.;</p>
+<p><strong>javax.servlet.http.HttpSession</strong></p>
+<p>2 Inherit HttpServletRequestWrapper, such as DistributeHttpServletRequestWrapper, override the getSession method and return DistributeHttpSessionWrapper instead;</p>
+<p><strong>javax.servlet.http.HttpServletRequestWrapper</strong></p>
+<p>2 Inherit Filter, such as DistributeSessionFilter, override the doFilter method, and replace HttpServletRequest with DistributeHttpServletRequestWrapper in the call chain;</p>
+<p><strong>javax.servlet.Filter</strong></p>
+<p> </p>
+</div>
+</div>
+<!-- Post Footer -->
+<div class="post-footer">
+<div class="post-navigation">
+<a class="nav-button" href="../blog.html">← Back to Home</a>
+<a class="nav-button" href="0318.html">Next Post →</a>
+</div>
+</div>
+</article>
+</div>
+</body>
+</html>

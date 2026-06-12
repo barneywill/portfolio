@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>opensuse leap 15</title>
+<link href="../css/style3.css" rel="stylesheet"/>
+</head>
+<body>
+<div class="container">
+<!-- Header Navigation -->
+<div class="header">
+<h1><a href="../blog.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+</div>
+<!-- Post Container -->
+<article class="post">
+<!-- Post Header -->
+<div class="post-header">
+<h1>opensuse leap 15</h1>
+<div class="post-meta">
+<div class="post-meta-item">
+<span class="meta-icon">📅</span>
+<span>March 05, 2019</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">📖</span>
+<span>2 min read</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">👁️</span>
+<span>1323 views</span>
+</div>
+</div>
+</div>
+<!-- Post Content -->
+<div class="post-content">
+<div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<h1>Installation</h1>
+<p>Execute after installation</p>
+<blockquote>
+<p>sudo zypper ar - fc https://mirrors.aliyun.com/opensuse/distribution/leap/15.0/repo/oss openSUSE-Aliyun-OSS<br/>sudo zypper ar - fc https://mirrors.aliyun.com/opensuse/distribution/leap/15.0/repo/non-oss openSUSE-Aliyun-NON-OSS<br/>sudo zypper ar - fc https://mirrors.aliyun.com/opensuse/update/leap/15.0/oss openSUSE-Aliyun-UPDATE-OSS<br/>sudo zypper ar - fc https://mirrors.aliyun.com/opensuse/update/leap/15.0/non-oss openSUSE-Aliyun-UPDATE-NON-OSS<br/>sudo zypper ar - fc https://mirrors.aliyun.com/packman/openSUSE_Leap_15.0 openSUSE-Aliyun-Packman<br/>sudo zypper ar - fc https://download.opensuse.org/repositories/home:/opensuse_zh/openSUSE_Leap_15.0 openSUSE-zh<br/>sudo zypper ar - fc https://download.opensuse.org/repositories/M17N/openSUSE_Leap_15.0 M17N<br/>sudo zypper ar - fc https://download.videolan.org/pub/SuSE/Leap_15.0 VLC<br/>sudo zypper ar - f https://download.nvidia.com/opensuse/leap/15.0 NVIDIA</p>
+<p>sudo zypper ar http://download.opensuse.org/repositories/system:/snappy/openSUSE_Leap_15.0/ snappy</p>
+<p>#You can replace 15.0 with other versions, such as 15.1</p>
+<p>sudo zypper ref</p>
+<p>sudo zypper inr (install-new-recommends)</p>
+<p>sudo zypper in snapd</p>
+<p>sudo systemctl start snapd.socket</p>
+<p>sudo snap install spotify (install spotify)</p>
+<p>sudo snap install bcloud --devmode --beta (install Baidu Netdisk)</p>
+<p>sudo snap install xmind (install xmind)</p>
+<p> </p>
+<p>sudo zypper in libQtWebKit4</p>
+<p>sudo zypper in fcitx, fcitx-cloudpinyin, fcitx-googlepinyin, fcitx-libpinyin, fcitx-sunpinyin (google pinyin)<br/>sudo zypper in chromium （chrome）<br/>sudo zypper in wps-office （wps）<br/>sudo zypper in netease-cloud-music (Netease Cloud Music)</p>
+<p>sudo zypper in p7zip (compression and decompression software)</p>
+<p>sudo zypper in shutter (screenshot software)<br/>sudo zypper in vlc (player software)</p>
+<p>sudo zypper in yakuake rxvt-unicode gvim (one-click call out terminal)</p>
+<p>sudo zypper in wine (install Thunder and other software after installation)</p>
+<p># After installing wine, open the application Browse C:\ Drive, where C:\Windows\Fonts is empty. You need to find the folder with the same name on the Windows computer and copy some font files over, so that wine can display Chinese normally.</p>
+<p># vlc lib<br/>sudo zypper in ffmpeg-tools<br/>sudo zypper in vlc-codecs</p>
+<p>#One-click installation <a href="https://www.opensuse-community.org/" rel="noopener nofollow">https://www.opensuse-community.org/</a></p>
+<p> </p>
+<p>#If the Windows boot cannot be found after restarting, you can execute the following command to fix it</p>
+<p>sudo grub2-mkconfig - o /boot/grub2/grub.cfg</p>
+<p> </p>
+<p>#disable baloo</p>
+<p>mv /usr/bin/baloo_file_extractor /usr/bin/baloo_file_extractor.orig</p>
+<p>ln - s /bin/true /usr/bin/baloo_file_extractor</p>
+<p> </p>
+<p>In addition, tools such as qq, virtualbox, xmind, and Baidu Netdisk all have Linux versions, which can be downloaded from the official website.</p>
+<p> </p>
+<p>Useful widgets: Application Dashbard, Pager, Show Desktop, Analog Clock, Launchpad Plasma, Event Calendar</p>
+<p> </p>
+<p>#sleep</p>
+<p># <code class="bash functions">echo</code> <code class="bash plain">“disk” &gt; </code><code class="bash plain">/sys/power/state</code></p>
+</blockquote>
+<p> shutter custom shortcut keys</p>
+<p><img alt="" src="https://img2020.cnblogs.com/blog/1509647/202007/1509647-20200725234417520-1913840291.png"/></p>
+<p>Automatic wallpaper change</p>
+<p><img alt="" src="https://img2020.cnblogs.com/blog/1509647/202007/1509647-20200726015604700-265554779.png"/></p>
+<p> </p>
+<p> Also note that you need to cancel Only Show Current Language in fcitx configuration.</p>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201903/1509647-20190305224759812-1478217156.png"/></p>
+<p>Otherwise, the Chinese input method cannot be displayed.</p>
+<p> </p>
+<p>Stock: http://jstock.org/</p>
+<p> </p>
+<h2>zypper common commands</h2>
+<blockquote>
+<p>zypper lr - d<br/>zypper ar $url $name<br/>zypper rr $name<br/>zypper se $name<br/>zypper info $name<br/>zypper in $name<br/>zypper rm $name</p>
+</blockquote>
+<p> </p>
+<h1>kde shortcut keys</h1>
+<p>Ctrl+F12 Return to desktop<br/>Ctrl+F8 Show desktop grid<br/>Ctrl+F1 first desktop<br/>Ctrl+F2 Second desktop<br/>...<br/>Ctrl+F9 displays all applications on the current desktop<br/>Ctrl+F10 Show all desktop all applications<br/>Ctrl+Esc Show system activity</p>
+<p>Ctrl+Alt+L lock screen</p>
+<p>Alt+Tab Switch between apps<br/>Alt+Shift+Tab reverse<br/>Alt+` Switch between different Windows in an application<br/>Alt+Shift+` reverse<br/>Alt+F1 displays system menu<br/>Alt+F3 Show window operations<br/>Alt+F4 close window</p>
+<p>F11 full screen, exit full screen</p>
+<h2>Dolphin shortcut keys</h2>
+<p>F3 opens the left and right columns</p>
+<p>F4 opens terminal</p>
+<h2>Quickly start Konsole</h2>
+<p>System Settings-&gt;Shortcuts-&gt;Custom Shortcuts-&gt;Examples-&gt;Run Konsole</p>
+<p>Ctrl+Alt+T Quickly start Konsole</p>
+<p> </p>
+<h2>Mouse click -&gt; double click</h2>
+<p>Configure Desktop-&gt;Input Devices-&gt;Mouse-&gt;General-&gt;Double Click to open files or folders</p>
+<p> </p>
+<h2>kde desktop macization</h2>
+<p>sudo zypper in latte-dock</p>
+<p>System Settings - &gt; Workspace Theme - &gt; Desktop Theme (MacBreeze Shadowless)</p>
+<p>System Settings - &gt; Workspace Theme - &gt; Look And Feel (McMojave-light)</p>
+<p>System Settings - &gt; Workspace Theme - &gt; Cursor Theme (McMojave Cursor)</p>
+<p>System Settings - &gt; Icons - &gt; Icons (McMojave-circle)</p>
+<p>Desktop - &gt; Add Panle - &gt; Aplication Menu Bar-&gt; Add Widget (Digital Clock / System Tray / Lock/Logout / Application Launcher / Application Title)</p>
+<p>Note that you need to Add Spacer to the left of the right Widget.</p>
+<p> </p>
+<h2>Install additional desktops</h2>
+<p>sudo zypper in - t pattern xfce</p>
+<p>sudo zypper in i3 dmenu</p>
+<p>yast2 - &gt; software management - &gt; view - &gt; patterns</p>
+<p><img alt="" src="https://img2020.cnblogs.com/blog/1509647/202007/1509647-20200725232453896-630334050.png"/></p>
+<h2>Modify the default startup desktop</h2>
+<p>All desktops are under /usr/share/xsessions. There are two links here to control the default desktop.</p>
+<blockquote>
+<p>ls - l /usr/share/xsessions <br/>total 12<br/>lrwxrwxrwx 1 root root   42 Mar 28  2019 default.desktop - &gt; /etc/alternatives/default-xsession.desktop<br/>-rw-r--r-- 1 root root 5465 Apr  2  2019 xfce.desktop</p>
+<p>ln - s /usr/share/xsessions/xfce.desktop /etc/alternatives/default-xsession.desktop</p>
+</blockquote>
+<h2>kde supports various customizations</h2>
+<p>wallpaper download</p>
+<p>widget download</p>
+<p>look and feel download</p>
+<p>desktop theme download</p>
+<p>cursor theme download</p>
+<p>iconsdownload</p>
+<p> </p>
+<h2>kde + i3wm</h2>
+<p>KDEWM=i3wm</p>
+<p>refer to:<a href="https://userbase.kde.org/Tutorials/Using_Other_Window_Managers_with_Plasma" rel="noopener nofollow">https://userbase.kde.org/Tutorials/Using_Other_Window_Managers_with_Plasma</a></p>
+<p> </p>
+<p>Note: If you find some problems after installing leap on newer computers and hardware, use the tumbleweed version instead. The kernel used by leap 15.2 is 5.3, and the kernel used by tumbleweed has reached 5.9. I self-tested the new computer amd ryzen 7 4800 has various problems when using leap15.2: the display resolution is too low, the screen goes black after sleeping, the screen expansion prompt appears from time to time, and the external typec interface cannot expand the screen. After installing tumbleweed, all problems are solved, and various shortcut keys on the keyboard are available.</p>
+<p> </p>
+</div>
+</div>
+<!-- Post Footer -->
+<div class="post-footer">
+<div class="post-navigation">
+<a class="nav-button" href="../blog.html">← Back to Home</a>
+<a class="nav-button" href="0193.html">Next Post →</a>
+</div>
+</div>
+</article>
+</div>
+</body>
+</html>

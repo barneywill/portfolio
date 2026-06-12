@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Installing the Oracle Client on CentOS</title>
+<link href="../css/style3.css" rel="stylesheet"/>
+</head>
+<body>
+<div class="container">
+<!-- Header Navigation -->
+<div class="header">
+<h1><a href="../blog.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+</div>
+<!-- Post Container -->
+<article class="post">
+<!-- Post Header -->
+<div class="post-header">
+<h1>Installing the Oracle Client on CentOS</h1>
+<div class="post-meta">
+<div class="post-meta-item">
+<span class="meta-icon">📅</span>
+<span>December 18, 2019</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">📖</span>
+<span>1 min read</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">👁️</span>
+<span>356 views</span>
+</div>
+</div>
+</div>
+<!-- Post Content -->
+<div class="post-content">
+<div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<h1>1 Download client</h1>
+<p>Official download address: https://www.oracle.com/database/technologies/instant-client/Linux-x86-64-downloads.html</p>
+<p>download</p>
+<p>Basic Package (RPM)</p>
+<p>SQL*Plus Package (RPM)</p>
+<h1>2 installation</h1>
+<blockquote>
+<p># rpm - ivh oracle-instantclient19.5-basic-19.5.0.0.0-1.x86_64.rpm</p>
+<p># rpm - ivh oracle-instantclient19.5-sqlplus-19.5.0.0.0-1.x86_64.rpm</p>
+</blockquote>
+<h1>3 environment variables</h1>
+<div class="cnblogs_code">
+<pre><span style="color: rgba(0, 128, 0, 1)">#</span><span style="color: rgba(0, 128, 0, 1)">vi ~/.bash_profile</span>
+export ORACLE_BASE=/usr/lib/oracle/19.5<span style="color: rgba(0, 0, 0, 1)">
+export ORACLE_HOME</span>=$ORACLE_BASE/<span style="color: rgba(0, 0, 0, 1)">client64
+export LD_LIBRARY_PATH</span>=$ORACLE_HOME/<span style="color: rgba(0, 0, 0, 1)">lib:$LD_LIBRARY_PATH
+export TNS_ADMIN</span>=$ORACLE_BASE/<span style="color: rgba(0, 0, 0, 1)">admin
+export NLS_LANG</span>=AMERICAN_AMERICA.AL32UTF8</pre>
+</div>
+<h1>4 Configure TNS</h1>
+<div class="cnblogs_code">
+<pre><span style="color: rgba(0, 128, 0, 1)">#</span><span style="color: rgba(0, 128, 0, 1)"> mkdir - p $ORACLE_HOME/network/admin</span><span style="color: rgba(0, 128, 0, 1)">
+#</span><span style="color: rgba(0, 128, 0, 1)"> vi $ORACLE_HOME/network/admin/tnsnames.ora</span>
+alias =<span style="color: rgba(0, 0, 0, 1)">
+ (DESCRIPTION </span>=<span style="color: rgba(0, 0, 0, 1)">
+ (ADDRESS </span>= (PROTOCOL = TCP)(HOST = 192.168.1.1)(PORT = 1521<span style="color: rgba(0, 0, 0, 1)">))
+  (CONNECT_DATA </span>=<span style="color: rgba(0, 0, 0, 1)">
+   (SERVER </span>=<span style="color: rgba(0, 0, 0, 1)"> DEDICATED)
+   (SERVICE_NAME </span>=<span style="color: rgba(0, 0, 0, 1)"> orcl)
+  )
+ )</span></pre>
+</div>
+<p>Note that the file format has strict requirements and the indentation must be spaces, otherwise a parsing error will be reported;</p>
+<h1>5 SQLPLUS test</h1>
+<blockquote>
+<p># sqlplus xxx/xxx@alias</p>
+</blockquote>
+</div>
+</div>
+<!-- Post Footer -->
+<div class="post-footer">
+<div class="post-navigation">
+<a class="nav-button" href="../blog.html">← Back to Home</a>
+<a class="nav-button" href="0082.html">Next Post →</a>
+</div>
+</div>
+</article>
+</div>
+</body>
+</html>

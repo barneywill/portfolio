@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hive</title>
+    <link rel="stylesheet" href="../css/style3.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header Navigation -->
+        <div class="header">
+            <h1><a href="../blog.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+        </div>
+
+        <!-- Post Container -->
+        <article class="post">
+            <!-- Post Header -->
+            <div class="post-header">
+                <h1>Hive</h1>
+                <div class="post-meta">
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📅</span>
+                        <span>May 31, 2022</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📖</span>
+                        <span>3 min read</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">👁️</span>
+                        <span>288 views</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Post Content -->
+            <div class="post-content">
+                <div class="blogpost-body cnblogs-markdown" id="cnblogs_post_body">
+<p><a href="http://hive.apache.org/" rel="noopener nofollow" target="_blank">http://hive.apache.org/</a><br/>
+The Apache Hive ™ data warehouse software facilitates reading, writing, and managing large datasets residing in distributed storage using SQL. Structure can be projected onto data already in storage. A command line tool and JDBC driver are provided to connect users to Hive.</p>
+<h1 id="deployment-architecture">1. Deployment Architecture</h1>
+<h2 id="server-side">Server Side</h2>
+<ul>
+<li>HiveServer2</li>
+<li>Metastore</li>
+</ul>
+<h2 id="client-side">Client Side</h2>
+<ul>
+<li>hive</li>
+<li>beeline</li>
+</ul>
+<p><picture>
+  <source srcset="../img/1509647-20220531173255938-39941964.webp" type="image/webp">
+  <img alt="" src="../img/1509647-20220531173255938-39941964.png">
+</picture></p>
+<h1 id="installation">2. Installation</h1>
+<h2 id="dependencies">Dependencies</h2>
+<h3 id="1-jdk">1 JDK</h3>
+<h3 id="2-hadoop">2 Hadoop</h3>
+<p>$HADOOP_HOME</p>
+<p>Directories</p>
+<blockquote>
+<p>$ $HADOOP_HOME/bin/hadoop fs - mkdir       /tmp<br/>
+$ $HADOOP_HOME/bin/hadoop fs - mkdir       /user/hive/warehouse<br/>
+$ $HADOOP_HOME/bin/hadoop fs - chmod g+w   /tmp<br/>
+$ $HADOOP_HOME/bin/hadoop fs - chmod g+w   /user/hive/warehous</p>
+</blockquote>
+<p>Configuration</p>
+<blockquote>
+<p>hive.metastore.warehouse.dir</p>
+</blockquote>
+<h3 id="3-mysql">3 Mysql</h3>
+<p>Server<br/>
+jdbc jar</p>
+<h2 id="install">Install</h2>
+<p>Download all versions:</p>
+<blockquote>
+<p><a href="http://archive.apache.org/dist/hive/" rel="noopener nofollow" target="_blank">http://archive.apache.org/dist/hive/</a></p>
+</blockquote>
+<p>Install:</p>
+<blockquote>
+<p>$ tar - xzvf hive-x.y.z.tar.gz<br/>
+$ cd hive-x.y.z<br/>
+$ export HIVE_HOME={{pwd}}<br/>
+$ export PATH=$HIVE_HOME/bin:$PATH</p>
+</blockquote>
+<h2 id="initialization">Initialization</h2>
+<p>Configuration file: <code>$HIVE_HOME/conf/hive-site.xml</code></p>
+<blockquote>
+<p>javax.jdo.option.ConnectionURL<br/>
+javax.jdo.option.ConnectionDriverName<br/>
+javax.jdo.option.ConnectionUserName<br/>
+javax.jdo.option.ConnectionPassword</p>
+</blockquote>
+<p>All available configuration items:</p>
+<blockquote>
+<p>$ wc - l $HIVE_HOME/conf/hive-default.xml.template<br/>
+5959</p>
+</blockquote>
+<p>Initialize the metastore database:</p>
+<blockquote>
+<p>$HIVE_HOME/bin/schematool - dbType <db type=""> - initSchema</db></p>
+</blockquote>
+<p>All initialization scripts:</p>
+<blockquote>
+<p># ls $HIVE_HOME/scripts/metastore/upgrade/<br/>
+derby  mssql  mysql  oracle  postgres<br/>
+# ls $HIVE_HOME/scripts/metastore/upgrade/mysql<br/>
+hive-schema-0.10.0.mysql.sql<br/>
+hive-schema-2.1.0.mysql.sql<br/>
+hive-schema-2.3.0.mysql.sql<br/>
+hive-txn-schema-2.1.0.mysql.sql<br/>
+hive-txn-schema-2.3.0.mysql.sql<br/>
+upgrade-0.10.0-to-0.11.0.mysql.sql<br/>
+upgrade-2.1.0-to-2.2.0.mysql.sql<br/>
+upgrade-2.2.0-to-2.3.0.mysql.sql</p>
+</blockquote>
+<h2 id="metastore-schema">Metastore Schema</h2>
+<h3 id="version">Version</h3>
+<p>VERSION</p>
+<h3 id="metadata">Metadata</h3>
+<p>DBS: databases<br/>
+TBLS: tables<br/>
+PARTITIONS: partitions<br/>
+COLUMNS_V2: columns<br/>
+SERDES: serializers/deserializers<br/>
+FUNCS: functions<br/>
+IDXS: indexes</p>
+<h3 id="permissions">Permissions</h3>
+<p>DB_PRIVS<br/>
+TBL_COL_PRIVS</p>
+<h3 id="statistics">Statistics</h3>
+<p>TAB_COL_STATS</p>
+<h2 id="start-metastore">Start Metastore</h2>
+<p>Start the metastore process:</p>
+<blockquote>
+<p>$ $HIVE_HOME/bin/hive --service metastore</p>
+</blockquote>
+<p>Startup class:</p>
+<blockquote>
+<p>org.apache.hadoop.hive.metastore.HiveMetaStore</p>
+</blockquote>
+<p>Port configuration:</p>
+<blockquote>
+<p>hive.metastore.port : 9083</p>
+</blockquote>
+<p>Configuration:</p>
+<blockquote>
+<p>hive.metastore.uris<br/>
+javax.jdo.option.*</p>
+</blockquote>
+<h2 id="start-hiveserver2">Start HiveServer2</h2>
+<p>Start the HiveServer2 process:</p>
+<blockquote>
+<p>$ $HIVE_HOME/bin/hiveserver2<br/>
+$ $HIVE_HOME/bin/hive --service hiveserver2</p>
+</blockquote>
+<p>Startup class:</p>
+<blockquote>
+<p>org.apache.hive.service.server.HiveServer2</p>
+</blockquote>
+<p>Port configuration:</p>
+<blockquote>
+<p>hive.server2.thrift.port : 10000</p>
+</blockquote>
+<h2 id="ha">HA</h2>
+<p>Metastore<br/>
+Configuration</p>
+<blockquote>
+<p>hive.metastore.uris</p>
+</blockquote>
+<p>HiveServer2<br/>
+Configuration</p>
+<blockquote>
+<p>hive.server2.support.dynamic.service.discovery<br/>
+hive.server2.zookeeper.namespace<br/>
+hive.zookeeper.quorum</p>
+</blockquote>
+<p>URL</p>
+<blockquote>
+<p>jdbc:hive2://zkNode1:2181,zkNode2:2181,zkNode3:2181/;serviceDiscoveryMode=zooKeeper;zooKeeperNamespace=hiveserver2</p>
+</blockquote>
+<h1 id="clients">3. Clients</h1>
+<h2 id="hive">hive</h2>
+<p>Client command:</p>
+<blockquote>
+<p>$ $HIVE_HOME/bin/hive</p>
+</blockquote>
+<p>Startup class:</p>
+<blockquote>
+<p>org.apache.hadoop.hive.cli.CliDriver<br/>
+run-&gt;executeDriver</p>
+</blockquote>
+<p>Execute SQL directly:</p>
+<blockquote>
+<p>hive - e "$sql"<br/>
+hive - f $file_path</p>
+</blockquote>
+<h2 id="beeline">beeline</h2>
+<p>Client command:</p>
+<blockquote>
+<p>$ $HIVE_HOME/bin/beeline - u jdbc:hive2://$HS2_HOST:$HS2_PORT</p>
+</blockquote>
+<h1 id="other-topics">4. Other Topics</h1>
+<h2 id="execution-engine">Execution Engine</h2>
+<p>Configuration:</p>
+<blockquote>
+<p>hive.execution.engine</p>
+</blockquote>
+<p>Options:</p>
+<ul>
+<li>mr</li>
+<li>spark</li>
+<li>tez</li>
+</ul>
+<h2 id="external-tables">External Tables</h2>
+<p>create external table * ();</p>
+<p>Differences between managed and external tables:</p>
+<blockquote>
+<p>location<br/>
+drop table</p>
+</blockquote>
+<p>Use cases:</p>
+<ul>
+<li>Data safety</li>
+<li>Convenient access to external data sources such as HBase and Elasticsearch</li>
+</ul>
+<h2 id="storage-and-compression-formats">Storage and Compression Formats</h2>
+<p>SERDE</p>
+<ul>
+<li>Serialize/Deserilize</li>
+</ul>
+<p>Storage formats:</p>
+<ul>
+<li>Row-oriented</li>
+<li>TextFile (native, CSV, JSON, XML)
+<ul>
+<li>Use case: raw data ingestion</li>
+</ul>
+</li>
+<li>Column-oriented
+<ul>
+<li>orc</li>
+<li>parquet</li>
+<li>Use case: query workloads</li>
+</ul>
+</li>
+</ul>
+<p>Compression formats:</p>
+<ul>
+<li>lzo</li>
+<li>snappy</li>
+</ul>
+<h3 id="formats-and-serde">Formats and SERDE</h3>
+<blockquote>
+<p>csv<br/>
+org.apache.hadoop.hive.serde2.OpenCSVSerde<br/>
+json<br/>
+org.apache.hive.hcatalog.data.JsonSerDe<br/>
+xml<br/>
+com.ibm.spss.hive.serde2.xml.XmlSerDe<br/>
+parquet<br/>
+org.apache.hadoop.hive.ql.io.parquet.serde.ParquetHiveSerDe<br/>
+orc<br/>
+org.apache.hadoop.hive.ql.io.orc.OrcSerde<br/>
+hbase<br/>
+org.apache.hadoop.hive.hbase.HBaseSerDe</p>
+</blockquote>
+<h2 id="data-ingestion">Data Ingestion</h2>
+<h3 id="file-ingestion">File Ingestion</h3>
+<p>Regular table<br/>
+hive</p>
+<blockquote>
+<p>LOAD DATA LOCAL INPATH ${local_path} INTO TABLE ${db.${table};<br/>
+LOAD DATA INPATH ${hdfs_path} INTO TABLE ${db.${table};</p>
+</blockquote>
+<p>hdfs</p>
+<blockquote>
+<p>hdfs dfs - put ${filepath} /user/hive/warehouse/${db}.db/$</p>
+</blockquote>
+<p>Partitioned table<br/>
+hive</p>
+<blockquote>
+<p>LOAD DATA LOCAL INPATH ${local_path} INTO TABLE ${db}.${table} partition(dt='${value}');</p>
+</blockquote>
+<p>hdfs</p>
+<blockquote>
+<p>hdfs dfs - mkdir /user/hive/warehouse/${db}.db/${table}/dt=${value}<br/>
+hdfs dfs - put ${filepath} /user/hive/warehouse/${db}.db/${table}/dt=${value}<br/>
+msck repair table ${db}.$</p>
+</blockquote>
+<h3 id="database-ingestion">Database Ingestion</h3>
+<blockquote>
+<p>sqoop<br/>
+spark-sql<br/>
+datax<br/>
+kettle<br/>
+flume<br/>
+logstash</p>
+</blockquote>
+<h2 id="data-querying">Data Querying</h2>
+<h3 id="single-table-query">Single-Table Query</h3>
+<h4 id="query-flow">Query Flow</h4>
+<blockquote>
+<p>SQL-&gt;AST (Abstract Syntax Tree)-&gt;Task (MapRedTask, FetchTask)-&gt;QueryPlan (task set)-&gt;Job (YARN)</p>
+</blockquote>
+<p>Core code:</p>
+<blockquote>
+<p>org.apache.hadoop.hive.ql.Driver.compile<br/>
+org.apache.hadoop.hive.ql.parse.ParseDriver<br/>
+org.apache.hadoop.hive.ql.parse.BaseSemanticAnalyzer<br/>
+org.apache.hadoop.hive.ql.QueryPlan<br/>
+org.apache.hadoop.hive.ql.Driver.execute<br/>
+org.apache.hadoop.hive.ql.Driver.getResult</p>
+</blockquote>
+<p><picture>
+  <source srcset="../img/1509647-20220531174757720-85482692.webp" type="image/webp">
+  <img alt="" src="../img/1509647-20220531174757720-85482692.png">
+</picture></p>
+<h3 id="multi-table-query">Multi-Table Query</h3>
+<h4 id="join">Join</h4>
+<ul>
+<li>map join、broadcast
+<ul>
+<li>Scenario: large table joined with small table</li>
+<li>Configuration: <code>hive.auto.convert.join</code></li>
+</ul>
+</li>
+<li>bucket map join
+<ul>
+<li>Scenario: large table joined with large table</li>
+<li>Configuration: <code>hive.optimize.bucketmapjoin</code></li>
+<li>clustered by</li>
+</ul>
+</li>
+<li>sorted merge bucket join
+<ul>
+<li>Configuration: <code>hive.optimize.bucketmapjoin.sortedmerge</code></li>
+</ul>
+</li>
+<li>skew join
+<ul>
+<li>Scenario: data skew</li>
+<li>Configuration: <code>hive.optimize.skewjoin</code></li>
+</ul>
+</li>
+<li>left semi join
+<ul>
+<li>Scenario: <code>IN</code> and <code>EXISTS</code></li>
+</ul>
+</li>
+</ul>
+<h4 id="cbo">CBO</h4>
+<p>CBO-Cost Based Optimize<br/>
+The main goal of a CBO is to generate efficient execution plans by examining the tables and conditions specified in the query, ultimately cutting down on query execution time and reducing resource utilization.</p>
+<h4 id="explain-plan">Explain Plan</h4>
+<p>explain</p>
+<p>Query flow:</p>
+<ul>
+<li>Map
+<ul>
+<li>TableScan</li>
+<li>Filter Operator</li>
+<li>Selector Operator</li>
+<li>Group By Operator</li>
+<li>Reduce Output Operator</li>
+</ul>
+</li>
+<li>Reduce
+<ul>
+<li>Group By Operator</li>
+<li>File Output Operator</li>
+</ul>
+</li>
+<li>Fetch Operator</li>
+</ul>
+<p>Code:</p>
+<blockquote>
+<p>org.apache.hadoop.hive.ql.exec</p>
+</blockquote>
+</div>
+            </div>
+
+            <!-- Post Footer -->
+            <div class="post-footer">
+                <div class="post-navigation">
+                    <a href="../blog.html" class="nav-button">← Back to Home</a>
+                    <a href="0006.html" class="nav-button">Next Post →</a>
+                </div>
+            </div>
+        </article>
+    </div>
+</body>
+</html>

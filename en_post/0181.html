@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Logstash 2 - application MySQL-Kafka</title>
+<link href="../css/style3.css" rel="stylesheet"/>
+</head>
+<body>
+<div class="container">
+<!-- Header Navigation -->
+<div class="header">
+<h1><a href="../blog.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+</div>
+<!-- Post Container -->
+<article class="post">
+<!-- Post Header -->
+<div class="post-header">
+<h1>Logstash 2 - application MySQL-Kafka</h1>
+<div class="post-meta">
+<div class="post-meta-item">
+<span class="meta-icon">📅</span>
+<span>March 13, 2019</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">📖</span>
+<span>3 min read</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">👁️</span>
+<span>760 views</span>
+</div>
+</div>
+</div>
+<!-- Post Content -->
+<div class="post-content">
+<div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<p>Application 1: Incremental synchronization of MySQL data to Kafka</p>
+<p> </p>
+<h1>1 Prepare MySQL test table</h1>
+<div class="cnblogs_code">
+<pre>mysql&gt; create table test_sync(id int <span style="color: rgba(0, 0, 255, 1)">not</span> null auto_increment, name varchar(32), description varchar(64<span style="color: rgba(0, 0, 0, 1)">), create_time timestamp, update_time timestamp, primary key(id));        
+Query OK, 0 rows affected (</span>0.04<span style="color: rgba(0, 0, 0, 1)"> sec)
+
+mysql</span>&gt; insert into test_sync (name, description, create_time, update_time) values(<span style="color: rgba(128, 0, 0, 1)">'</span><span style="color: rgba(128, 0, 0, 1)">test1</span><span style="color: rgba(128, 0, 0, 1)">'</span>, <span style="color: rgba(128, 0, 0, 1)">'</span><span style="color: rgba(128, 0, 0, 1)">1</span><span style="color: rgba(128, 0, 0, 1)">'</span><span style="color: rgba(0, 0, 0, 1)">, now(), now());
+Query OK, </span>1 row affected (0.02<span style="color: rgba(0, 0, 0, 1)"> sec)
+
+mysql</span>&gt; select * <span style="color: rgba(0, 0, 255, 1)">from</span><span style="color: rgba(0, 0, 0, 1)"> test_sync;
+</span>+----+-------+-------------+---------------------+---------------------+
+| id | name  | description | create_time         | update_time         |
++----+-------+-------------+---------------------+---------------------+
+|  1 | test1 | 1           | 2019-03-13 10:45:49 | 2019-03-13 10:45:49 |
++----+-------+-------------+---------------------+---------------------+
+1 row <span style="color: rgba(0, 0, 255, 1)">in</span> set (0.00 sec)</pre>
+</div>
+<p> </p>
+<h1>2 Prepare Kafka topic</h1>
+<div class="cnblogs_code">
+<pre># bin/kafka-topics.sh --zookeeper $zk:2181/kafka - create --topic test_sync --partitions 2 --replication-factor 2
+WARNING: Due to limitations in metric names, topics with a period ('.') or underscore ('_') could collide. To avoid issues it is best to use either, but not<span> both.
+Created topic "test_sync"<span>.
+# bin/kafka-topics.sh --zookeeper $zk:2181/kafka - describe --topic test_sync
+Topic:test_sync PartitionCount:2        ReplicationFactor:2<span>     Configs:
+        Topic: test_sync        Partition: 0    Leader: 112     Replicas: 112,111       Isr: 112,111<span>
+        Topic: test_sync        Partition: 1    Leader: 110     Replicas: 110,112       Isr: 110,112</span></span></span></span></pre>
+</div>
+<p> </p>
+<h1>3 Prepare Logstash conf</h1>
+<div class="cnblogs_code">
+<pre><span style="color: rgba(0, 0, 0, 1)">input {
+  jdbc {
+  jdbc_driver_library </span>=&gt; <span style="color: rgba(128, 0, 0, 1)">"/path/to/</span><span style="color: rgba(128, 0, 0, 1)">mysql-connector-java-5.1.36-bin.jar</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">
+  jdbc_driver_class </span>=&gt; <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">com.mysql.jdbc.Driver</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">
+  jdbc_connection_string </span>=&gt; <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">jdbc:mysql://localhost:3306/database</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">
+  jdbc_user </span>=&gt; <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">DBUSERNAME</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">
+  jdbc_password </span>=&gt; <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">DBPASSWORD</span><span style="color: rgba(128, 0, 0, 1)">"<br/></span><span style="color: rgba(0, 0, 0, 1)">  jdbc_paging_enabled =&gt; "true"<br/>  jdbc_page_size =&gt; "10000"<br/>  jdbc_default_timezone =&gt; "UTC"
+  statement </span>=&gt; <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">select * from TABLE where id &gt; :sql_last_value</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">
+  tracking_column </span>=&gt;<span style="color: rgba(0, 0, 0, 1)"> id<br/>  tracking_column_type =&gt; "numeric"
+  use_column_value </span>=&gt;<span style="color: rgba(0, 0, 0, 1)"> true<br/>  record_last_run =&gt; true<br/>  clean_run =&gt; false<br/></span><span style="color: rgba(0, 128, 0, 1)">  #</span><span style="color: rgba(0, 128, 0, 1)">I have scheduled this to run in every second</span>
+  schedule =&gt; <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">* * * * * * Asia/Shanghai</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">
+  }
+}</span></pre>
+<p>output {<br/>  kafka {<br/>    bootstrap_servers =&gt; "192.168.0.1:9092,192.168.0.2:9092"<br/>    topic_id =&gt; "test_sync"<br/>    codec =&gt; json<br/>  }<br/>  stdout {codec =&gt; json}<br/>}</p>
+</div>
+<p>Notice</p>
+<p>1) The time zone must be set. Note that the parsed time is UTC (8 hours later than Asia/Shanghai time). If you want the parsed time to be consistent with the time in MySQL, you need to set jdbc_default_timezone =&gt; "UTC";</p>
+<p>2) It is best to set up paging;</p>
+<p>3) There are two ways to increment,</p>
+<ul>
+<li>One is based on id, which is suitable for situations where the data will not be modified after it is created, corresponding to tracking_column_type =&gt; "numeric";</li>
+<li>One is based on update_time, which is suitable for situations where update_time will be modified after each creation or modification, corresponding to tracking_column_type =&gt; "timestamp";</li>
+</ul>
+<p>Second example</p>
+<div class="cnblogs_code">
+<pre>  statement =&gt; <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">select * from table where update_time &gt; :sql_last_value;</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">
+  tracking_column </span>=&gt; <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">update_time</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)"> 
+  tracking_column_type </span>=&gt; <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">timestamp</span><span style="color: rgba(128, 0, 0, 1)">"</span></pre>
+</div>
+<p>The incremental progress is located in last_run_metadata_path. The default path is $HOME/.logstash_jdbc_last_run. If multiple Logstash is started on one machine, each needs to be configured separately.</p>
+<p>Control how often incremental synchronization is performed through schedule;</p>
+<p> </p>
+<h1>4 Start Logstash</h1>
+<p> </p>
+<blockquote>
+<p>$ logstash - f $conf</p>
+</blockquote>
+<p>Observe whether the log is normal. The executed SQL and the message sent will be displayed in the log;</p>
+<blockquote>
+<p>[2019-03-13T22:43:00,312][INFO ][logstash.inputs.jdbc ] (0.000253s) SELECT version()<br/>[2019-03-13T22:43:00,314][INFO ][logstash.inputs.jdbc     ] (0.000564s) select * from test_sync where update_time &gt; '2019-03-13 14:07:41';<br/>{"update_time":"2019-03-13T06:42:40.000Z","id":1,"create_time":"2019-03-13T06:07:41.000Z","@version":"1","@timestamp":"2019-03-13T14:43:00.507Z","name":"test1","description":"2"}</p>
+</blockquote>
+<p>Further test the modification and addition of MySQL, everything is normal;</p>
+<h1>5 Kafka confirmation</h1>
+<blockquote>
+<p># $KAFKA_HOME/bin/kafka-console-consumer.sh --bootstrap-server 192.168.0.1:9092 --topic test_sync --from-beginning</p>
+</blockquote>
+<h1>6 possible questions</h1>
+<p>Error can't dup Fixnum</p>
+<blockquote>
+<p>[2019-03-13T22:19:46,790][ERROR][logstash.pipeline ] Pipeline aborted due to error {:pipeline_id=&gt;"main", :exception=&gt;#&lt;TypeError: can't dup Fixnum&gt;, :backtrace=&gt;["org/jruby/RubyKernel.java:1882:in `dup'", "uri:classloader:/META-INF/jruby.home/lib/ruby/stdlib/date/format.rb:838:in `_parse'", "uri:classloader:/META-INF/jruby.home/lib/ruby/stdlib/date.rb:1830:in `parse'"...</p>
+</blockquote>
+<p>This may be because tracking_column was previously run as numeric and later changed to timestamp. Check last_run_metadata_path. The default path is $HOME/.logstash_jdbc_last_run. If it is due to the above reasons, delete it.</p>
+<p> </p>
+<p>refer to:</p>
+<p>https://www.elastic.co/guide/en/logstash/current/plugins-inputs-jdbc.html</p>
+<p>https://www.elastic.co/guide/en/logstash/current/plugins-outputs-kafka.html</p>
+<p>https://stackoverflow.com/questions/31446405/incremental-mysql-reading-using-logstash</p>
+<p> </p>
+</div>
+</div>
+<!-- Post Footer -->
+<div class="post-footer">
+<div class="post-navigation">
+<a class="nav-button" href="../blog.html">← Back to Home</a>
+<a class="nav-button" href="0182.html">Next Post →</a>
+</div>
+</div>
+</article>
+</div>
+</body>
+</html>

@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Hive 2 - SQL parsing process of Hive SQL execution process</title>
+<link href="../css/style3.css" rel="stylesheet"/>
+</head>
+<body>
+<div class="container">
+<!-- Header Navigation -->
+<div class="header">
+<h1><a href="../blog.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+</div>
+<!-- Post Container -->
+<article class="post">
+<!-- Post Header -->
+<div class="post-header">
+<h1>Hive 2 - SQL parsing process of Hive SQL execution process</h1>
+<div class="post-meta">
+<div class="post-meta-item">
+<span class="meta-icon">📅</span>
+<span>December 27, 2018</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">📖</span>
+<span>10 min read</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">👁️</span>
+<span>3830 views</span>
+</div>
+</div>
+</div>
+<!-- Post Content -->
+<div class="post-content">
+<div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<h1>Hive SQL parsing process</h1>
+<blockquote>
+<p>SQL-&gt;AST (Abstract Syntax Tree)-&gt;Task (MapRedTask, FetchTask)-&gt;QueryPlan (Task collection)-&gt;Job (YARN)</p>
+</blockquote>
+<p>SQL parsing will be performed in two places:</p>
+<ul>
+<li>One is compile before SQL execution, specifically in Driver.compile, in order to create QueryPlan;</li>
+<li>One is explain, specifically in ExplainSemanticAnalyzer.analyzeInternal, in order to create ExplainTask;</li>
+</ul>
+<h1>SQL execution process</h1>
+<h2>1 compile process (SQL-&gt;AST(Abstract Syntax Tree)-&gt;QueryPlan)</h2>
+<p>org.apache.hadoop.hive.ql.Driver</p>
+<div class="cnblogs_code">
+<pre>  <span style="color: rgba(0, 0, 255, 1)">public</span> <span style="color: rgba(0, 0, 255, 1)">int</span> compile(String command, <span style="color: rgba(0, 0, 255, 1)">boolean</span> resetTaskIds, <span style="color: rgba(0, 0, 255, 1)">boolean</span><span style="color: rgba(0, 0, 0, 1)"> deferClose) {
+...
+      ParseDriver pd </span>= <span style="color: rgba(0, 0, 255, 1)">new</span><span style="color: rgba(0, 0, 0, 1)"> ParseDriver();
+      ASTNode tree </span>=<span style="color: rgba(0, 0, 0, 1)"> pd.parse(command, ctx);
+      tree </span>=<span style="color: rgba(0, 0, 0, 1)"> ParseUtils.findRootNonNullToken(tree);
+...
+      BaseSemanticAnalyzer sem </span>=<span style="color: rgba(0, 0, 0, 1)"> SemanticAnalyzerFactory.get(queryState, tree);
+...
+        sem.analyze(tree, ctx);
+...
+      </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> Record any ACID compliant FileSinkOperators we saw so we can add our transaction ID to
+      </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> them later.</span>
+      acidSinks =<span style="color: rgba(0, 0, 0, 1)"> sem.getAcidFileSinks();
+
+      LOG.info(</span>"Semantic Analysis Completed"<span style="color: rgba(0, 0, 0, 1)">);
+
+      </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> validate the plan</span>
+<span style="color: rgba(0, 0, 0, 1)">      sem.validate();
+      acidInQuery </span>=<span style="color: rgba(0, 0, 0, 1)"> sem.hasAcidInQuery();
+      perfLogger.PerfLogEnd(CLASS_NAME, PerfLogger.ANALYZE);
+
+      </span><span style="color: rgba(0, 0, 255, 1)">if</span><span style="color: rgba(0, 0, 0, 1)"> (isInterrupted()) {
+        </span><span style="color: rgba(0, 0, 255, 1)">return</span> handleInterruption("after analyzing query."<span style="color: rgba(0, 0, 0, 1)">);
+      }
+
+      </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> get the output schema</span>
+      schema =<span style="color: rgba(0, 0, 0, 1)"> getSchema(sem, conf);
+      plan </span>= <span style="color: rgba(0, 0, 255, 1)">new</span><span style="color: rgba(0, 0, 0, 1)"> QueryPlan(queryStr, sem, perfLogger.getStartTime(PerfLogger.DRIVER_RUN), queryId,
+        queryState.getHiveOperation(), schema);
+...</span></pre>
+</div>
+<p>The compile process is to first convert SQL to ASTNode by ParseDriver, then analyze ASTNode by BaseSemanticAnalyzer, and finally pass BaseSemanticAnalyzer into the QueryPlan constructor to create QueryPlan;</p>
+<h3>1) The process of converting SQL to ASTNode is as follows (SQL-&gt;AST (Abstract Syntax Tree))</h3>
+<p>org.apache.hadoop.hive.ql.parse.ParseDriver</p>
+<div class="cnblogs_code">
+<pre>  <span style="color: rgba(0, 0, 255, 1)">public</span> ASTNode parse(String command, Context ctx, <span style="color: rgba(0, 0, 255, 1)">boolean</span><span style="color: rgba(0, 0, 0, 1)"> setTokenRewriteStream)
+      </span><span style="color: rgba(0, 0, 255, 1)">throws</span><span style="color: rgba(0, 0, 0, 1)"> ParseException {
+    </span><span style="color: rgba(0, 0, 255, 1)">if</span><span style="color: rgba(0, 0, 0, 1)"> (LOG.isDebugEnabled()) {
+      LOG.debug(</span>"Parsing command: " +<span style="color: rgba(0, 0, 0, 1)"> command);
+    }
+
+    HiveLexerX lexer </span>= <span style="color: rgba(0, 0, 255, 1)">new</span> HiveLexerX(<span style="color: rgba(0, 0, 255, 1)">new</span><span style="color: rgba(0, 0, 0, 1)"> ANTLRNoCaseStringStream(command));
+    TokenRewriteStream tokens </span>= <span style="color: rgba(0, 0, 255, 1)">new</span><span style="color: rgba(0, 0, 0, 1)"> TokenRewriteStream(lexer);
+    </span><span style="color: rgba(0, 0, 255, 1)">if</span> (ctx != <span style="color: rgba(0, 0, 255, 1)">null</span><span style="color: rgba(0, 0, 0, 1)">) {
+      </span><span style="color: rgba(0, 0, 255, 1)">if</span><span style="color: rgba(0, 0, 0, 1)"> ( setTokenRewriteStream) {
+        ctx.setTokenRewriteStream(tokens);
+      }
+      lexer.setHiveConf(ctx.getConf());
+    }
+    HiveParser parser </span>= <span style="color: rgba(0, 0, 255, 1)">new</span><span style="color: rgba(0, 0, 0, 1)"> HiveParser(tokens);
+    </span><span style="color: rgba(0, 0, 255, 1)">if</span> (ctx != <span style="color: rgba(0, 0, 255, 1)">null</span><span style="color: rgba(0, 0, 0, 1)">) {
+      parser.setHiveConf(ctx.getConf());
+    }
+    parser.setTreeAdaptor(adaptor);
+    HiveParser.statement_return r </span>= <span style="color: rgba(0, 0, 255, 1)">null</span><span style="color: rgba(0, 0, 0, 1)">;
+    </span><span style="color: rgba(0, 0, 255, 1)">try</span><span style="color: rgba(0, 0, 0, 1)"> {
+      r </span>=<span style="color: rgba(0, 0, 0, 1)"> parser.statement();
+    } </span><span style="color: rgba(0, 0, 255, 1)">catch</span><span style="color: rgba(0, 0, 0, 1)"> (RecognitionException e) {
+      e.printStackTrace();
+      </span><span style="color: rgba(0, 0, 255, 1)">throw</span> <span style="color: rgba(0, 0, 255, 1)">new</span><span style="color: rgba(0, 0, 0, 1)"> ParseException(parser.errors);
+    }
+
+    </span><span style="color: rgba(0, 0, 255, 1)">if</span> (lexer.getErrors().size() == 0 &amp;&amp; parser.errors.size() == 0<span style="color: rgba(0, 0, 0, 1)">) {
+      LOG.debug(</span>"Parse Completed"<span style="color: rgba(0, 0, 0, 1)">);
+    } </span><span style="color: rgba(0, 0, 255, 1)">else</span> <span style="color: rgba(0, 0, 255, 1)">if</span> (lexer.getErrors().size() != 0<span style="color: rgba(0, 0, 0, 1)">) {
+      </span><span style="color: rgba(0, 0, 255, 1)">throw</span> <span style="color: rgba(0, 0, 255, 1)">new</span><span style="color: rgba(0, 0, 0, 1)"> ParseException(lexer.getErrors());
+    } </span><span style="color: rgba(0, 0, 255, 1)">else</span><span style="color: rgba(0, 0, 0, 1)"> {
+      </span><span style="color: rgba(0, 0, 255, 1)">throw</span> <span style="color: rgba(0, 0, 255, 1)">new</span><span style="color: rgba(0, 0, 0, 1)"> ParseException(parser.errors);
+    }
+
+    ASTNode tree </span>=<span style="color: rgba(0, 0, 0, 1)"> (ASTNode) r.getTree();
+    tree.setUnknownTokenBoundaries();
+    </span><span style="color: rgba(0, 0, 255, 1)">return</span><span style="color: rgba(0, 0, 0, 1)"> tree;
+  }</span></pre>
+</div>
+<h3>2) analyze process (AST (Abstract Syntax Tree)-&gt;Task)</h3>
+<p>org.apache.hadoop.hive.ql.parse.BaseSemanticAnalyzer</p>
+<div class="cnblogs_code">
+<pre>  <span style="color: rgba(0, 0, 255, 1)">public</span> <span style="color: rgba(0, 0, 255, 1)">void</span> analyze(ASTNode ast, Context ctx) <span style="color: rgba(0, 0, 255, 1)">throws</span><span style="color: rgba(0, 0, 0, 1)"> SemanticException {
+    initCtx(ctx);
+    init(</span><span style="color: rgba(0, 0, 255, 1)">true</span><span style="color: rgba(0, 0, 0, 1)">);
+    analyzeInternal(ast);
+  }</span></pre>
+</div>
+<p>Among them, analyzeInternal is an abstract method, implemented by different subclasses, such as DDLSemanticAnalyzer, SemanticAnalyzer, UpdateDeleteSemanticAnalyzer, ExplainSemanticAnalyzer, etc.;<br/>The main job of analyzeInternal is to convert ASTNode into Task, including possible optimize. The process is relatively complicated and the code will not be posted here;</p>
+<h3>3) The process of creating QueryPlan is as follows (Task-&gt;QueryPlan)</h3>
+<p>org.apache.hadoop.hive.ql.QueryPlan</p>
+<div class="cnblogs_code">
+<pre>  <span style="color: rgba(0, 0, 255, 1)">public</span><span style="color: rgba(0, 0, 0, 1)"> QueryPlan(String queryString, BaseSemanticAnalyzer sem, Long startTime, String queryId,
+                  HiveOperation operation, Schema resultSchema) {
+    </span><span style="color: rgba(0, 0, 255, 1)">this</span>.queryString =<span style="color: rgba(0, 0, 0, 1)"> queryString;
+
+    rootTasks </span>= <span style="color: rgba(0, 0, 255, 1)">new</span> ArrayList&lt;Task&lt;? <span style="color: rgba(0, 0, 255, 1)">extends</span> Serializable&gt;&gt;<span style="color: rgba(0, 0, 0, 1)">(sem.getAllRootTasks());
+    reducerTimeStatsPerJobList </span>= <span style="color: rgba(0, 0, 255, 1)">new</span> ArrayList&lt;ReducerTimeStatsPerJob&gt;<span style="color: rgba(0, 0, 0, 1)">();
+    fetchTask </span>=<span style="color: rgba(0, 0, 0, 1)"> sem.getFetchTask();
+    </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> Note that inputs and outputs can be changed when the query gets executed</span>
+    inputs =<span style="color: rgba(0, 0, 0, 1)"> sem.getAllInputs();
+    outputs </span>=<span style="color: rgba(0, 0, 0, 1)"> sem.getAllOutputs();
+    linfo </span>=<span style="color: rgba(0, 0, 0, 1)"> sem.getLineageInfo();
+    tableAccessInfo </span>=<span style="color: rgba(0, 0, 0, 1)"> sem.getTableAccessInfo();
+    columnAccessInfo </span>=<span style="color: rgba(0, 0, 0, 1)"> sem.getColumnAccessInfo();
+    idToTableNameMap </span>= <span style="color: rgba(0, 0, 255, 1)">new</span> HashMap&lt;String, String&gt;<span style="color: rgba(0, 0, 0, 1)">(sem.getIdToTableNameMap());
+
+    </span><span style="color: rgba(0, 0, 255, 1)">this</span>.queryId = queryId == <span style="color: rgba(0, 0, 255, 1)">null</span> ?<span style="color: rgba(0, 0, 0, 1)"> makeQueryId() : queryId;
+    query </span>= <span style="color: rgba(0, 0, 255, 1)">new</span><span style="color: rgba(0, 0, 0, 1)"> org.apache.hadoop.hive.ql.plan.api.Query();
+    query.setQueryId(</span><span style="color: rgba(0, 0, 255, 1)">this</span><span style="color: rgba(0, 0, 0, 1)">.queryId);
+    query.putToQueryAttributes(</span>"queryString", <span style="color: rgba(0, 0, 255, 1)">this</span><span style="color: rgba(0, 0, 0, 1)">.queryString);
+    queryProperties </span>=<span style="color: rgba(0, 0, 0, 1)"> sem.getQueryProperties();
+    queryStartTime </span>=<span style="color: rgba(0, 0, 0, 1)"> startTime;
+    </span><span style="color: rgba(0, 0, 255, 1)">this</span>.operation =<span style="color: rgba(0, 0, 0, 1)"> operation;
+    </span><span style="color: rgba(0, 0, 255, 1)">this</span>.autoCommitValue =<span style="color: rgba(0, 0, 0, 1)"> sem.getAutoCommitValue();
+    </span><span style="color: rgba(0, 0, 255, 1)">this</span>.resultSchema =<span style="color: rgba(0, 0, 0, 1)"> resultSchema;
+  }</span></pre>
+</div>
+<p>It can be seen that the content in BaseSemanticAnalyzer is simply copied out, the most important of which are sem.getAllRootTasks and sem.getFetchTask;</p>
+<h2>2 execute process (QueryPlan-&gt;Job)</h2>
+<p>org.apache.hadoop.hive.ql.Driver</p>
+<div class="cnblogs_code">
+<pre>  <span style="color: rgba(0, 0, 255, 1)">public</span> <span style="color: rgba(0, 0, 255, 1)">int</span> execute(<span style="color: rgba(0, 0, 255, 1)">boolean</span> deferClose) <span style="color: rgba(0, 0, 255, 1)">throws</span><span style="color: rgba(0, 0, 0, 1)"> CommandNeedRetryException {
+...
+      </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> Add root Tasks to runnable</span>
+      <span style="color: rgba(0, 0, 255, 1)">for</span> (Task&lt;? <span style="color: rgba(0, 0, 255, 1)">extends</span> Serializable&gt;<span style="color: rgba(0, 0, 0, 1)"> tsk : plan.getRootTasks()) {
+        </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> This should never happen, if it does, it's a bug with the potential to produce
+        </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> incorrect results.</span>
+        <span style="color: rgba(0, 0, 255, 1)">assert</span> tsk.getParentTasks() == <span style="color: rgba(0, 0, 255, 1)">null</span> ||<span style="color: rgba(0, 0, 0, 1)"> tsk.getParentTasks().isEmpty();
+        driverCxt.addToRunnable(tsk);
+      }
+...
+      </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> Loop while you either have tasks running, or tasks queued up</span>
+      <span style="color: rgba(0, 0, 255, 1)">while</span><span style="color: rgba(0, 0, 0, 1)"> (driverCxt.isRunning()) {
+
+        </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> Launch upto maxthreads tasks</span>
+        Task&lt;? <span style="color: rgba(0, 0, 255, 1)">extends</span> Serializable&gt;<span style="color: rgba(0, 0, 0, 1)"> task;
+        </span><span style="color: rgba(0, 0, 255, 1)">while</span> ((task = driverCxt.getRunnable(maxthreads)) != <span style="color: rgba(0, 0, 255, 1)">null</span><span style="color: rgba(0, 0, 0, 1)">) {
+          TaskRunner runner </span>=<span style="color: rgba(0, 0, 0, 1)"> launchTask(task, queryId, noName, jobname, jobs, driverCxt);
+          </span><span style="color: rgba(0, 0, 255, 1)">if</span> (!<span style="color: rgba(0, 0, 0, 1)">runner.isRunning()) {
+            </span><span style="color: rgba(0, 0, 255, 1)">break</span><span style="color: rgba(0, 0, 0, 1)">;
+          }
+        }
+...
+
+  </span><span style="color: rgba(0, 0, 255, 1)">private</span> TaskRunner launchTask(Task&lt;? <span style="color: rgba(0, 0, 255, 1)">extends</span> Serializable&gt; tsk, String queryId, <span style="color: rgba(0, 0, 255, 1)">boolean</span><span style="color: rgba(0, 0, 0, 1)"> noName,
+      String jobname, </span><span style="color: rgba(0, 0, 255, 1)">int</span> jobs, DriverContext cxt) <span style="color: rgba(0, 0, 255, 1)">throws</span><span style="color: rgba(0, 0, 0, 1)"> HiveException {
+...
+    TaskRunner tskRun </span>= <span style="color: rgba(0, 0, 255, 1)">new</span><span style="color: rgba(0, 0, 0, 1)"> TaskRunner(tsk, tskRes);
+...
+      tskRun.start();
+...
+      tskRun.runSequential();
+...</span></pre>
+</div>
+<p>In Driver.run, take out the Task from QueryPlan and launchTask one by one. The launchTask process is to wrap the Task into TaskRunner and finally call TaskRunner.runSequential. Let’s look at TaskRunner:</p>
+<p>org.apache.hadoop.hive.ql.exec.TaskRunner</p>
+<div class="cnblogs_code">
+<pre>  <span style="color: rgba(0, 0, 255, 1)">public</span> <span style="color: rgba(0, 0, 255, 1)">void</span><span style="color: rgba(0, 0, 0, 1)"> runSequential() {
+    </span><span style="color: rgba(0, 0, 255, 1)">int</span> exitVal = - 101<span style="color: rgba(0, 0, 0, 1)">;
+    </span><span style="color: rgba(0, 0, 255, 1)">try</span><span style="color: rgba(0, 0, 0, 1)"> {
+      exitVal </span>=<span style="color: rgba(0, 0, 0, 1)"> tsk.executeTask();
+...</span></pre>
+</div>
+<p>Call Task.executeTask directly here</p>
+<p>org.apache.hadoop.hive.ql.exec.Task</p>
+<div class="cnblogs_code">
+<pre>  <span style="color: rgba(0, 0, 255, 1)">public</span> <span style="color: rgba(0, 0, 255, 1)">int</span><span style="color: rgba(0, 0, 0, 1)"> executeTask() {
+...
+      </span><span style="color: rgba(0, 0, 255, 1)">int</span> retval =<span style="color: rgba(0, 0, 0, 1)"> execute(driverContext);
+...</span></pre>
+</div>
+<p>Here execute is an abstract method, implemented by subclasses, such as DDLTask, MapRedTask, etc. Focus on MapRedTask, because most of the Tasks are MapRedTask:</p>
+<p>org.apache.hadoop.hive.ql.exec.mr.MapRedTask</p>
+<div class="cnblogs_code">
+<pre>  <span style="color: rgba(0, 0, 255, 1)">public</span> <span style="color: rgba(0, 0, 255, 1)">int</span><span style="color: rgba(0, 0, 0, 1)"> execute(DriverContext driverContext) {
+...
+      </span><span style="color: rgba(0, 0, 255, 1)">if</span> (!<span style="color: rgba(0, 0, 0, 1)">runningViaChild) {
+        </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> we are not running this mapred task via child jvm
+        </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> so directly invoke ExecDriver</span>
+        <span style="color: rgba(0, 0, 255, 1)">return</span> <span style="color: rgba(0, 0, 255, 1)">super</span><span style="color: rgba(0, 0, 0, 1)">.execute(driverContext);
+      }
+...</span></pre>
+</div>
+<p>Here the parent class method is called directly, which is ExecDriver.execute, see below:</p>
+<p>org.apache.hadoop.hive.ql.exec.mr.ExecDriver</p>
+<div class="cnblogs_code">
+<pre>  <span style="color: rgba(0, 0, 255, 1)">protected</span> <span style="color: rgba(0, 0, 255, 1)">transient</span><span style="color: rgba(0, 0, 0, 1)"> JobConf job;
+...
+  </span><span style="color: rgba(0, 0, 255, 1)">public</span> <span style="color: rgba(0, 0, 255, 1)">int</span><span style="color: rgba(0, 0, 0, 1)"> execute(DriverContext driverContext) {
+...
+    JobClient jc </span>= <span style="color: rgba(0, 0, 255, 1)">null</span><span style="color: rgba(0, 0, 0, 1)">;
+
+    MapWork mWork </span>=<span style="color: rgba(0, 0, 0, 1)"> work.getMapWork();
+    ReduceWork rWork </span>=<span style="color: rgba(0, 0, 0, 1)"> work.getReduceWork();
+...
+    </span><span style="color: rgba(0, 0, 255, 1)">if</span> (mWork.getNumMapTasks() != <span style="color: rgba(0, 0, 255, 1)">null</span><span style="color: rgba(0, 0, 0, 1)">) {
+      job.setNumMapTasks(mWork.getNumMapTasks().intValue());
+    }
+...
+    job.setNumReduceTasks(rWork </span>!= <span style="color: rgba(0, 0, 255, 1)">null</span> ? rWork.getNumReduceTasks().intValue() : 0<span style="color: rgba(0, 0, 0, 1)">);
+    job.setReducerClass(ExecReducer.</span><span style="color: rgba(0, 0, 255, 1)">class</span><span style="color: rgba(0, 0, 0, 1)">);
+...
+      jc </span>= <span style="color: rgba(0, 0, 255, 1)">new</span><span style="color: rgba(0, 0, 0, 1)"> JobClient(job);
+...
+      rj </span>=<span style="color: rgba(0, 0, 0, 1)"> jc.submitJob(job);
+      </span><span style="color: rgba(0, 0, 255, 1)">this</span>.jobID =<span style="color: rgba(0, 0, 0, 1)"> rj.getJobID();
+...</span></pre>
+</div>
+<p>Here, the Task is converted into a Job and submitted to YARN for execution;</p>
+<h1>SQL Explain process</h1>
+<p>Another SQL parsing process is explain. ASTNode is converted into ExplainTask in ExplainSemanticAnalyzer:</p>
+<p>org.apache.hadoop.hive.ql.parse.ExplainSemanticAnalyzer</p>
+<div class="cnblogs_code">
+<pre>  <span style="color: rgba(0, 0, 255, 1)">public</span> <span style="color: rgba(0, 0, 255, 1)">void</span> analyzeInternal(ASTNode ast) <span style="color: rgba(0, 0, 255, 1)">throws</span><span style="color: rgba(0, 0, 0, 1)"> SemanticException {
+...
+    ctx.setExplain(</span><span style="color: rgba(0, 0, 255, 1)">true</span><span style="color: rgba(0, 0, 0, 1)">);
+    ctx.setExplainLogical(logical);
+
+    </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> Create a semantic analyzer for the query</span>
+    ASTNode input = (ASTNode) ast.getChild(0<span style="color: rgba(0, 0, 0, 1)">);
+    BaseSemanticAnalyzer sem </span>=<span style="color: rgba(0, 0, 0, 1)"> SemanticAnalyzerFactory.get(queryState, input);
+    sem.analyze(input, ctx);
+    sem.validate();
+
+    ctx.setResFile(ctx.getLocalTmpPath());
+    List</span>&lt;Task&lt;? <span style="color: rgba(0, 0, 255, 1)">extends</span> Serializable&gt;&gt; tasks =<span style="color: rgba(0, 0, 0, 1)"> sem.getAllRootTasks();
+    </span><span style="color: rgba(0, 0, 255, 1)">if</span> (tasks == <span style="color: rgba(0, 0, 255, 1)">null</span><span style="color: rgba(0, 0, 0, 1)">) {
+      tasks </span>=<span style="color: rgba(0, 0, 0, 1)"> Collections.emptyList();
+    }
+
+    FetchTask fetchTask </span>=<span style="color: rgba(0, 0, 0, 1)"> sem.getFetchTask();
+    </span><span style="color: rgba(0, 0, 255, 1)">if</span> (fetchTask != <span style="color: rgba(0, 0, 255, 1)">null</span><span style="color: rgba(0, 0, 0, 1)">) {
+      </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> Initialize fetch work such that operator tree will be constructed.</span>
+<span style="color: rgba(0, 0, 0, 1)">      fetchTask.getWork().initializeForFetch(ctx.getOpContext());
+    }
+
+    ParseContext pCtx </span>= <span style="color: rgba(0, 0, 255, 1)">null</span><span style="color: rgba(0, 0, 0, 1)">;
+    </span><span style="color: rgba(0, 0, 255, 1)">if</span> (sem <span style="color: rgba(0, 0, 255, 1)">instanceof</span><span style="color: rgba(0, 0, 0, 1)"> SemanticAnalyzer) {
+      pCtx </span>=<span style="color: rgba(0, 0, 0, 1)"> ((SemanticAnalyzer)sem).getParseContext();
+    }
+
+    </span><span style="color: rgba(0, 0, 255, 1)">boolean</span> userLevelExplain = !<span style="color: rgba(0, 0, 0, 1)">extended
+        </span>&amp;&amp; !<span style="color: rgba(0, 0, 0, 1)">formatted
+        </span>&amp;&amp; !<span style="color: rgba(0, 0, 0, 1)">dependency
+        </span>&amp;&amp; !<span style="color: rgba(0, 0, 0, 1)">logical
+        </span>&amp;&amp; !<span style="color: rgba(0, 0, 0, 1)">authorize
+        </span>&amp;&amp; (HiveConf.getBoolVar(ctx.getConf(), HiveConf.ConfVars.HIVE_EXPLAIN_USER) &amp;&amp;<span style="color: rgba(0, 0, 0, 1)"> HiveConf
+            .getVar(conf, HiveConf.ConfVars.HIVE_EXECUTION_ENGINE).equals(</span>"tez"<span style="color: rgba(0, 0, 0, 1)">));
+    ExplainWork work </span>= <span style="color: rgba(0, 0, 255, 1)">new</span><span style="color: rgba(0, 0, 0, 1)"> ExplainWork(ctx.getResFile(),
+        pCtx,
+        tasks,
+        fetchTask,
+        sem,
+        extended,
+        formatted,
+        dependency,
+        logical,
+        authorize,
+        userLevelExplain,
+        ctx.getCboInfo());
+
+    work.setAppendTaskType(
+        HiveConf.getBoolVar(conf, HiveConf.ConfVars.HIVEEXPLAINDEPENDENCYAPPENDTASKTYPES));
+
+    ExplainTask explTask </span>=<span style="color: rgba(0, 0, 0, 1)"> (ExplainTask) TaskFactory.get(work, conf);
+
+    fieldList </span>=<span style="color: rgba(0, 0, 0, 1)"> explTask.getResultSchema();
+    rootTasks.add(explTask);
+  }</span></pre>
+</div>
+<p> </p>
+</div>
+</div>
+<!-- Post Footer -->
+<div class="post-footer">
+<div class="post-navigation">
+<a class="nav-button" href="../blog.html">← Back to Home</a>
+<a class="nav-button" href="0293.html">Next Post →</a>
+</div>
+</div>
+</article>
+</div>
+</body>
+</html>

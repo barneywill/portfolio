@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Doris and ClickHouse Comparison</title>
+<link href="../css/style3.css" rel="stylesheet"/>
+</head>
+<body>
+<div class="container">
+<!-- Header Navigation -->
+<div class="header">
+<h1><a href="../blog.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+</div>
+<!-- Post Container -->
+<article class="post">
+<!-- Post Header -->
+<div class="post-header">
+<h1>Doris and ClickHouse Comparison</h1>
+<div class="post-meta">
+<div class="post-meta-item">
+<span class="meta-icon">📅</span>
+<span>May 20, 2022</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">📖</span>
+<span>2 min read</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">👁️</span>
+<span>2309 views</span>
+</div>
+</div>
+</div>
+<!-- Post Content -->
+<div class="post-content">
+<div class="blogpost-body cnblogs-markdown" id="cnblogs_post_body">
+<table>
+<thead>
+<tr>
+<th></th>
+<th>***</th>
+<th>doris</th>
+<th>clickhouse</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Official website</strong></td>
+<td></td>
+<td><a href="http://doris.apache.org/" rel="noopener nofollow" target="_blank">http://doris.apache.org/</a></td>
+<td><a href="https://clickhouse.tech/" rel="noopener nofollow" target="_blank">https://clickhouse.tech/</a></td>
+</tr>
+<tr>
+<td><strong>Version</strong></td>
+<td></td>
+<td>0.14.0</td>
+<td>21.7.2.7</td>
+</tr>
+<tr>
+<td><strong>Open source</strong></td>
+<td></td>
+<td>yes</td>
+<td>yes</td>
+</tr>
+<tr>
+<td><strong>development language</strong></td>
+<td>*</td>
+<td>java + c</td>
+<td>c</td>
+</tr>
+<tr>
+<td><strong>Install</strong></td>
+<td></td>
+<td>Source code compilation</td>
+<td>rpm package</td>
+</tr>
+<tr>
+<td><strong>position</strong></td>
+<td></td>
+<td>olap</td>
+<td>olap</td>
+</tr>
+<tr>
+<td><strong>Architecture</strong></td>
+<td></td>
+<td>mpp</td>
+<td>scatter-gatter</td>
+</tr>
+<tr>
+<td><strong>development company</strong></td>
+<td></td>
+<td>Yandex</td>
+</tr>
+<tr>
+<td><strong>accomplish</strong></td>
+<td></td>
+<td>google mesa + impala</td>
+<td></td>
+</tr>
+<tr>
+<td><strong>storage</strong></td>
+<td></td>
+<td>Manage it yourself, lsm-tree + compact</td>
+<td>Manage it yourself, merge tree</td>
+</tr>
+<tr>
+<td><strong>Column type</strong></td>
+<td></td>
+<td>yes</td>
+<td>yes</td>
+</tr>
+<tr>
+<td><strong>cluster</strong></td>
+<td></td>
+<td>fe master and slave</td>
+<td>zk（read-only mode）、clickhouse-keeper</td>
+</tr>
+<tr>
+<td><strong>Data distribution</strong></td>
+<td>**</td>
+<td>transparent</td>
+<td>Local table, distributed table</td>
+</tr>
+<tr>
+<td><strong>copy</strong></td>
+<td>**</td>
+<td>tablet, replica (single master)</td>
+<td>shard, replica (multiple masters)</td>
+</tr>
+<tr>
+<td><strong>Large table writing</strong></td>
+<td>**</td>
+<td>transparent</td>
+<td>Manually split shards for balancing, similar to database splitting operations</td>
+</tr>
+<tr>
+<td><strong>Role</strong></td>
+<td></td>
+<td>3 fe, at least 3 be</td>
+<td>At least 2 servers</td>
+</tr>
+<tr>
+<td><strong>High availability</strong></td>
+<td></td>
+<td>Too much</td>
+<td>Multiple servers</td>
+</tr>
+<tr>
+<td><strong>Metadata High Availability</strong></td>
+<td></td>
+<td>Support,berkerlydb</td>
+<td>shard+replica，/clickhouse_path/metadata，system table</td>
+</tr>
+<tr>
+<td><strong>process daemon</strong></td>
+<td></td>
+<td>Third party supervisor</td>
+<td>systemctl</td>
+</tr>
+<tr>
+<td><strong>Start up</strong></td>
+<td></td>
+<td>Third party supervisor</td>
+<td>systemctl</td>
+</tr>
+<tr>
+<td><strong>monitor</strong></td>
+<td>***</td>
+<td>prometheus + grafana</td>
+<td>Only log files can be recorded, third-party clickhouse-grafana + prometheus</td>
+</tr>
+<tr>
+<td><strong>Expansion</strong></td>
+<td>***</td>
+<td>Both fe and be can be expanded through commands. After expansion, data will be automatically migrated without manual intervention.</td>
+<td>Shard expansion, ring removal, and data migration (re-shard) all require manual operations.</td>
+</tr>
+<tr>
+<td><strong>SQL support</strong></td>
+<td>***</td>
+<td>Rich</td>
+<td>generally</td>
+</tr>
+<tr>
+<td><strong>client</strong></td>
+<td>**</td>
+<td>mysql</td>
+<td>clickhouse-client、mysql</td>
+</tr>
+<tr>
+<td><strong>Permissions</strong></td>
+<td></td>
+<td>mysql</td>
+<td>grant, revoke statements, support external (LDAP)</td>
+</tr>
+<tr>
+<td><strong>upgrade</strong></td>
+<td></td>
+<td>After replacing the installation files, first restart be one by one, and then restart fe one by one.</td>
+<td>Stop the server, yum upgrade, start</td>
+</tr>
+<tr>
+<td><strong>Management interface</strong></td>
+<td></td>
+<td><a href="http://ip:8030" rel="noopener nofollow" target="_blank">http://ip:8030</a></td>
+<td>none</td>
+</tr>
+<tr>
+<td><strong>jdbc</strong></td>
+<td>*</td>
+<td>jdbc:mysql://</td>
+<td>jdbc:clickhouse://</td>
+</tr>
+<tr>
+<td><strong>Tableau integration</strong></td>
+<td>*</td>
+<td>mysql</td>
+<td>Other data sources (odbc)</td>
+</tr>
+<tr>
+<td><strong>spark integration</strong></td>
+<td></td>
+<td>spark connection, which can map doris to spark view</td>
+<td>Not supported</td>
+</tr>
+<tr>
+<td><strong>flink integration</strong></td>
+<td></td>
+<td>flink connection</td>
+<td>Third-party flink-clickhouse-sink</td>
+</tr>
+<tr>
+<td><strong>logstash integration</strong></td>
+<td></td>
+<td>output</td>
+<td>Not supported</td>
+</tr>
+<tr>
+<td><strong>Kafka integration</strong></td>
+<td></td>
+<td>Support (routine load)</td>
+<td>Support (Kafka engine)</td>
+</tr>
+<tr>
+<td><strong>Data import</strong></td>
+<td>**</td>
+<td>http (file, csv, json), broker (HDFS, Hive), routine (Kafka), external table</td>
+<td>http、mysql、kafka</td>
+</tr>
+<tr>
+<td><strong>Import transaction control</strong></td>
+<td>**</td>
+<td>Support, transaction id</td>
+<td>Not supported</td>
+</tr>
+<tr>
+<td><strong>table partition</strong></td>
+<td>***</td>
+<td>Support, Range, List</td>
+<td>Supported, date type</td>
+</tr>
+<tr>
+<td><strong>table bucket</strong></td>
+<td>***</td>
+<td>support</td>
+<td>Not supported</td>
+</tr>
+<tr>
+<td><strong>join</strong></td>
+<td>***</td>
+<td>hash、broadcast、colocate、bucket</td>
+<td>hash, merge (two or more large tables)</td>
+</tr>
+<tr>
+<td><strong>multi-tenant</strong></td>
+<td>*</td>
+<td>experimental stage, cluster</td>
+<td></td>
+</tr>
+<tr>
+<td><strong>Prepolymerization</strong></td>
+<td>***</td>
+<td>Support, you can customize any rollup according to the scene</td>
+<td>Support, MergeTree series</td>
+</tr>
+<tr>
+<td><strong>Customize the order before and after aggregation</strong></td>
+<td></td>
+<td>Support, sequence column</td>
+<td>Not supported</td>
+</tr>
+<tr>
+<td><strong>rollup</strong></td>
+<td>***</td>
+<td>Support, Aggregate table</td>
+<td>Not supported</td>
+</tr>
+<tr>
+<td><strong>materialized view</strong></td>
+<td>***</td>
+<td>Supports, single table, superset of rollup</td>
+<td>support, to table, populate, live</td>
+</tr>
+<tr>
+<td><strong>Materialized view usage</strong></td>
+<td>***</td>
+<td>transparent</td>
+<td>Explicitly specified</td>
+</tr>
+<tr>
+<td><strong>external table</strong></td>
+<td>***</td>
+<td>odbc (MySQL, oracle, postgre), Elasticsearch (supports Pushdown), Hive</td>
+<td>database（mysql、postgre）</td>
+</tr>
+<tr>
+<td><strong>table type</strong></td>
+<td></td>
+<td>Aggregate、Unique、Duplicate</td>
+<td>MergeTree、ReplacingMergeTree</td>
+</tr>
+<tr>
+<td><strong>main index</strong></td>
+<td></td>
+<td>prefix sparse index</td>
+<td>sparse index (primary key), index into memory</td>
+</tr>
+<tr>
+<td><strong>sort column</strong></td>
+<td></td>
+<td>prefix，36byte</td>
+<td>sort by</td>
+</tr>
+<tr>
+<td><strong>Other indexes</strong></td>
+<td></td>
+<td>bloomfilter、bitmap</td>
+<td>data skipping indexes (minmax/set/bloom_filter/ngrambf/tokenbf), manually added</td>
+</tr>
+<tr>
+<td><strong>row grouping</strong></td>
+<td></td>
+<td>1024</td>
+<td>index_granularity=8192</td>
+</tr>
+<tr>
+<td><strong>primary key</strong></td>
+<td></td>
+<td>none</td>
+<td>Yes, repeatable</td>
+</tr>
+<tr>
+<td><strong>multiple disks</strong></td>
+<td>***</td>
+<td>Supports multiple disks, SSD and HDD, automatically separates hot and cold data according to partition strategy</td>
+<td>Supports multiple disks, SSD and HDD, automatic hot and cold data separation (TTL) according to partition strategy</td>
+</tr>
+<tr>
+<td><strong>Automatically create new date-type partitions</strong></td>
+<td></td>
+<td>support</td>
+<td></td>
+</tr>
+<tr>
+<td><strong>dynamic partitioning</strong></td>
+<td></td>
+<td>support</td>
+<td></td>
+</tr>
+<tr>
+<td><strong>bitmap type</strong></td>
+<td>***</td>
+<td>support</td>
+<td>support</td>
+</tr>
+<tr>
+<td><strong>table switch</strong></td>
+<td>*</td>
+<td>support, replace</td>
+<td>support, exchange</td>
+</tr>
+<tr>
+<td><strong>Partition switching</strong></td>
+<td>*</td>
+<td>support</td>
+<td>Not supported</td>
+</tr>
+<tr>
+<td><strong>Data update</strong></td>
+<td></td>
+<td>append、delete、merge</td>
+<td>MergeTree supports,mutation,high cost</td>
+</tr>
+<tr>
+<td><strong>Data deletion</strong></td>
+<td></td>
+<td>support, mark + compact</td>
+<td>MergeTree supports,mutation,high cost</td>
+</tr>
+<tr>
+<td><strong>Modify table structure</strong></td>
+<td></td>
+<td>Support, longer time</td>
+<td>Supported, very soon, the data will take effect after merge</td>
+</tr>
+<tr>
+<td><strong>Data backup</strong></td>
+<td>**</td>
+<td>Support, remote (HDFS)</td>
+<td>Not supported, manual backup (backup Kafka data, file system snapshot, clickhouse-copier)</td>
+</tr>
+<tr>
+<td><strong>data recovery</strong></td>
+<td>**</td>
+<td>Support, remote (HDFS)</td>
+<td>Not supported, manual recovery</td>
+</tr>
+<tr>
+<td><strong>Cluster balancing</strong></td>
+<td>**</td>
+<td>Support, BeLoad disk usage, number of Partitions</td>
+<td>Not supported. Large tables require manual re-sharding.</td>
+</tr>
+<tr>
+<td><strong>Table delete recovery</strong></td>
+<td></td>
+<td>support, recycle bin</td>
+<td>Supported, only metadata is deleted during drop, and the actual deletion is done in the background based on database_atomic_delay_before_drop_table_sec</td>
+</tr>
+<tr>
+<td><strong>CPU SIMD acceleration</strong></td>
+<td>**</td>
+<td>Not supported yet</td>
+<td>support</td>
+</tr>
+<tr>
+<td><strong>compression</strong></td>
+<td></td>
+<td>lz4</td>
+<td>Codecs（LZ4/LZ4HC/ZSTD），Specialized Codecs（Delta/DoubleDelta/Gorilla/T64）</td>
+</tr>
+<tr>
+<td><strong>UDF</strong></td>
+<td></td>
+<td>Support,c</td>
+<td>Support,c</td>
+</tr>
+<tr>
+<td><strong>HLL</strong></td>
+<td></td>
+<td>support</td>
+<td>support</td>
+</tr>
+<tr>
+<td><strong>sampling</strong></td>
+<td></td>
+<td>Not supported</td>
+<td>support</td>
+</tr>
+<tr>
+<td><strong>View profile</strong></td>
+<td></td>
+<td>Support, command to open, page view</td>
+<td>sampling query profiler</td>
+</tr>
+<tr>
+<td><strong>cloud hosting</strong></td>
+<td></td>
+<td>Not supported</td>
+<td>Alibaba Cloud, Tencent Cloud, Kingsoft Cloud, etc.</td>
+</tr>
+<tr>
+<td><strong>limit</strong></td>
+<td></td>
+<td>count is slow</td>
+<td>join weak</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<!-- Post Footer -->
+<div class="post-footer">
+<div class="post-navigation">
+<a class="nav-button" href="../blog.html">← Back to Home</a>
+<a class="nav-button" href="0014.html">Next Post →</a>
+</div>
+</div>
+</article>
+</div>
+</body>
+</html>

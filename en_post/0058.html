@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>VS Code Java Language Server Initialization Failed</title>
+<link href="../css/style3.css" rel="stylesheet"/>
+</head>
+<body>
+<div class="container">
+<!-- Header Navigation -->
+<div class="header">
+<h1><a href="../blog.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+</div>
+<!-- Post Container -->
+<article class="post">
+<!-- Post Header -->
+<div class="post-header">
+<h1>VS Code Java Language Server Initialization Failed</h1>
+<div class="post-meta">
+<div class="post-meta-item">
+<span class="meta-icon">📅</span>
+<span>July 20, 2020</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">📖</span>
+<span>1 min read</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">👁️</span>
+<span>4052 views</span>
+</div>
+</div>
+</div>
+<!-- Post Content -->
+<div class="post-content">
+<div class="blogpost-body cnblogs-markdown" id="cnblogs_post_body">
+<p>The java plug-in in vscode Language Support for Java by RedHat After normal initialization, the lower right corner of vscode looks like this<br/>
+<picture>
+<source srcset="../img/1509647-20200720121011720-1929469016.webp" type="image/webp"/>
+<img alt="" src="../img/1509647-20200720121011720-1929469016.png"/>
+</picture><br/>
+It is a thumbs-up state. At this time, the Run|Debug shortcut link will appear on the main method and TestCase method, which can be conveniently tested.<br/>
+<picture>
+<source srcset="../img/1509647-20200720122605028-762202087.webp" type="image/webp"/>
+<img alt="" src="../img/1509647-20200720122605028-762202087.png"/>
+</picture><br/>
+Information similar to the following will be output in the terminal</p>
+<pre><code>9b7c9ae3 Synchronizing projects [Done]
+30bb500f Building [Done]
+25a21665 Building [Done]
+182dd5d5 Refreshing workspace [Done]
+28b7d532 Setting classpath containers [Done]
+7329fe90 Building [Done]
+98cbeb3b Synchronizing projects [Done]
+2e750be6 Building [Done]
+75d81303 Building [Done]
+0b0220d7 Refreshing workspace [Done]
+02c5152f Refreshing workspace [Done]
+7cece74d Resolve plugin dependency [Done]
+1c86063d Building [Done]
+a5a3679d Building [Done]
+929ba446 Building [Done]
+5e357308 Register Watchers [Done]
+6b8ee61a Building [Done]
+0211f3bb Building [Done]
+5417ca59 Building [Done]
+6c426d2f Building [Done]
+ca8e1582 Building [Done]
+</code></pre>
+<p>Sometimes there will be an abnormal initialization of the Java plug-in. The phenomenon is that the thumb position keeps spinning in circles without any error.</p>
+<p>At this time, you can perform the following operations:</p>
+<ul>
+<li>Set java.trace.server=verbose<br/>
+<picture>
+<source srcset="../img/1509647-20200720121950490-43990841.webp" type="image/webp"/>
+<img alt="" src="../img/1509647-20200720121950490-43990841.png"/>
+</picture><br/>
+set up<br/>
+<picture>
+<source srcset="../img/1509647-20200720122018598-1313960490.webp" type="image/webp"/>
+<img alt="" src="../img/1509647-20200720122018598-1313960490.png"/>
+</picture></li>
+<li>Open developer tools (open the command panel and enter developer tools)<br/>
+Plug-in org.eclipse.jdt.ls.core was unable to load class org.eclipse.jdt.ls.core.internal.LanguageServero</li>
+</ul>
+<p>Then you see the following error:</p>
+<pre><code>Plug-in org.eclipse.jdt.ls.core was unable to load class org.eclipse.jdt.ls.core.internal.LanguageServero
+</code></pre>
+<p>There is a way to solve it. Copy the code project to another directory and then open it. The reason is unknown.</p>
+<p>Reference:<br/>
+<a href="https://github.com/redhat-developer/vscode-java/wiki/Troubleshooting" rel="noopener nofollow" target="_blank">https://github.com/redhat-developer/vscode-java/wiki/Troubleshooting</a></p>
+</div>
+</div>
+<!-- Post Footer -->
+<div class="post-footer">
+<div class="post-navigation">
+<a class="nav-button" href="../blog.html">← Back to Home</a>
+<a class="nav-button" href="0059.html">Next Post →</a>
+</div>
+</div>
+</article>
+</div>
+</body>
+</html>

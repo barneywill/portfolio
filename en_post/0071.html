@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Creating a Self-Signed HTTPS Certificate</title>
+<link href="../css/style3.css" rel="stylesheet"/>
+</head>
+<body>
+<div class="container">
+<!-- Header Navigation -->
+<div class="header">
+<h1><a href="../blog.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+</div>
+<!-- Post Container -->
+<article class="post">
+<!-- Post Header -->
+<div class="post-header">
+<h1>Creating a Self-Signed HTTPS Certificate</h1>
+<div class="post-meta">
+<div class="post-meta-item">
+<span class="meta-icon">📅</span>
+<span>March 28, 2020</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">📖</span>
+<span>1 min read</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">👁️</span>
+<span>588 views</span>
+</div>
+</div>
+</div>
+<!-- Post Content -->
+<div class="post-content">
+<div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<p>Replace your.domain in the following commands and configuration with your domain name</p>
+<h1>1 Generate ca.key</h1>
+<blockquote>
+<p>openssl genrsa - des3 - out ca.key 2048</p>
+</blockquote>
+<p>Enter the password of ca.key, more than 4 characters</p>
+<h1>2 Generate ca.crt</h1>
+<blockquote>
+<p>openssl req - new - x509 - days 7305 - key ca.key - out ca.crt</p>
+</blockquote>
+<p>Enter the password for ca.key<br/>Fill in: Common Name (eg, your name or your server's hostname) [] is your.domain</p>
+<h1>3 Generate your.domain.pem</h1>
+<blockquote>
+<p>openssl genrsa - des3 - out your.domain.pem 1024</p>
+</blockquote>
+<p>Enter the password of your.domain.pem, more than 4 characters</p>
+<h1>4 Generate your.domain.key</h1>
+<blockquote>
+<p>openssl rsa - in your.domain.pem - out your.domain.key</p>
+</blockquote>
+<p>Enter the password for your.domain.pem</p>
+<h1>5 Generate your.domain.csr</h1>
+<blockquote>
+<p>openssl req - new - key your.domain.pem - out your.domain.csr</p>
+</blockquote>
+<p>Enter the password for your.domain.pem<br/>Fill in: Common Name (eg, your name or your server's hostname) [] is your.domain</p>
+<h1>6 Generate your.domain.crt</h1>
+<blockquote>
+<p>openssl ca - policy policy_anything - days 1460 - cert ca.crt - keyfile ca.key - in your.domain.csr - out your.domain.crt</p>
+</blockquote>
+<p>Enter the password for ca.key</p>
+<p>The last step may report an error:</p>
+<blockquote>
+<p>/etc/pki/CA/index.txt: No such file or directory<br/>unable to open '/etc/pki/CA/index.txt'<br/>139707575097232:error:02001002:system library:fopen:No such file or directory:bss_file.c:402:fopen('/etc/pki/CA/index.txt','r')<br/>139707575097232:error:20074002:BIO routines:FILE_CTRL:system lib:bss_file.c:404:</p>
+</blockquote>
+<p>Solution:</p>
+<blockquote>
+<p># touch /etc/pki/CA/index.txt</p>
+</blockquote>
+<h1>7 nginx configuration certificate</h1>
+<blockquote>
+<p>server {<br/>    listen       443 ssl;<br/>    server_name  your.domain;</p>
+<p>    ssl_certificate /etc/nginx/conf.d/ssl/your.domain.crt;<br/>    ssl_certificate_key /etc/nginx/conf.d/ssl/your.domain.key;</p>
+</blockquote>
+</div>
+</div>
+<!-- Post Footer -->
+<div class="post-footer">
+<div class="post-navigation">
+<a class="nav-button" href="../blog.html">← Back to Home</a>
+<a class="nav-button" href="0072.html">Next Post →</a>
+</div>
+</div>
+</article>
+</div>
+</body>
+</html>

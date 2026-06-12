@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Users submit tasks to YARN and report errors</title>
+<link href="../css/style3.css" rel="stylesheet"/>
+</head>
+<body>
+<div class="container">
+<!-- Header Navigation -->
+<div class="header">
+<h1><a href="../blog.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+</div>
+<!-- Post Container -->
+<article class="post">
+<!-- Post Header -->
+<div class="post-header">
+<h1>Users submit tasks to YARN and report errors</h1>
+<div class="post-meta">
+<div class="post-meta-item">
+<span class="meta-icon">📅</span>
+<span>March 30, 2019</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">📖</span>
+<span>2 min read</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">👁️</span>
+<span>3439 views</span>
+</div>
+</div>
+</div>
+<!-- Post Content -->
+<div class="post-content">
+<div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<p>Users may encounter the following errors when submitting tasks to YARN:</p>
+<p>1）</p>
+<blockquote>
+<p>Requested user anything is not whitelisted and has id 980,which is below the minimum allowed 1000</p>
+</blockquote>
+<p>This is because min.user.id=1000 is configured in YARN. YARN considers those with IDs less than 1000 to be super users, and YARN prohibits super users from submitting tasks;</p>
+<p><em>Each account must have a user ID that is greater than or equal to 1000. In the /etc/hadoop/conf/taskcontroller.cfg file, the default setting for the banned.users property is mapred, hdfs, and bin to prevent jobs from being submitted via those user accounts. The default setting for the min.user.id property is 1000 to prevent jobs from being submitted with a user ID less than 1000, which are conventionally Unix super users.</em></p>
+<p>Just change it to smaller</p>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201903/1509647-20190330171050638-217665122.png"/></p>
+<p>Then restart YARN</p>
+<p> </p>
+<p>2）</p>
+<blockquote>
+<p>Requested user hdfs is banned</p>
+</blockquote>
+<p>This is because banned.users=HDFS, YARN, mapred, bin are configured in YARN, which will prevent these users from submitting tasks.</p>
+<p><em>the default setting for the banned.users property is hdfs, yarn, mapred, and bin to prevent jobs from being submitted via those user accounts.</em></p>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201904/1509647-20190401111433791-1541660448.png"/></p>
+<p> </p>
+<p>3) Other components such as Oozie cannot obtain the status of the application submitted to YARN</p>
+<div class="cnblogs_code">
+<pre>2019-04-01 11:22:23,528 WARN org.apache.oozie.command.wf.ActionCheckXCommand: SERVER[cdp-test-server-04.bj] USER[impala] GROUP[-] TOKEN[] APP[test_sh_wf] JOB[0000000-190330171215585-oozie-oozi-W] ACTION[0000000-190330171215585-oozie-oozi-W@test_sh_action] Exception <span style="color: rgba(0, 0, 255, 1)">while</span> executing check(). Error Code [JA017], Message[JA017: Could not lookup launched hadoop Job ID [job_1553937093273_0007] which was associated with  action [0000000-190330171215585-oozie-oozi-W@test_sh_action].  Failing this action!<span style="color: rgba(0, 0, 0, 1)">]
+org.apache.oozie.action.ActionExecutorException: JA017: Could not lookup launched hadoop Job ID [job_1553937093273_0007] which was associated with  action [</span>0000000-190330171215585-oozie-oozi-W@test_sh_action].  Failing this action!<span style="color: rgba(0, 0, 0, 1)">
+        at org.apache.oozie.action.hadoop.JavaActionExecutor.check(JavaActionExecutor.java:</span>1507<span style="color: rgba(0, 0, 0, 1)">)
+        at org.apache.oozie.command.wf.ActionCheckXCommand.execute(ActionCheckXCommand.java:</span>182<span style="color: rgba(0, 0, 0, 1)">)
+        at org.apache.oozie.command.wf.ActionCheckXCommand.execute(ActionCheckXCommand.java:</span>56<span style="color: rgba(0, 0, 0, 1)">)
+        at org.apache.oozie.command.XCommand.call(XCommand.java:</span>286<span style="color: rgba(0, 0, 0, 1)">)
+        at java.util.concurrent.FutureTask.run(FutureTask.java:</span>266<span style="color: rgba(0, 0, 0, 1)">)
+        at org.apache.oozie.service.CallableQueueService</span><span style="color: rgba(128, 0, 128, 1)">$CallableWrapper</span>.run(CallableQueueService.java:179<span style="color: rgba(0, 0, 0, 1)">)
+        at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:</span>1149<span style="color: rgba(0, 0, 0, 1)">)
+        at java.util.concurrent.ThreadPoolExecutor</span><span style="color: rgba(128, 0, 128, 1)">$Worker</span>.run(ThreadPoolExecutor.java:624<span style="color: rgba(0, 0, 0, 1)">)
+        at java.lang.Thread.run(Thread.java:</span>748)</pre>
+</div>
+<p>At this time, please check the jobhistory server. If there is no application in the jobhistory server page, you can also view it through curl:</p>
+<div class="cnblogs_code">
+<pre><span style="color: rgba(0, 128, 0, 1)">#</span><span style="color: rgba(0, 128, 0, 1)"> curl http:/localhost:19888/jobhistory - v</span>
+<span style="color: rgba(0, 0, 0, 1)">...
+            &lt;script type</span>=<span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">text/javascript</span><span style="color: rgba(128, 0, 0, 1)">"</span>&gt;<span style="color: rgba(0, 0, 0, 1)">
+              var jobsTableData</span>=<span style="color: rgba(0, 0, 0, 1)">[
+]
+            &lt;</span>/script&gt;<span style="color: rgba(0, 0, 0, 1)">
+...</span></pre>
+</div>
+<p>Normally, this array should store many applications. For this problem, you need to check the existence and permissions of /user/history and subdirectories on HDFS.</p>
+<blockquote>
+<p>$ hdfs dfs - mkdir /user/history<br/>$ hdfs dfs - chmod 777 /user/history</p>
+</blockquote>
+<p>Under normal circumstances, jobhistory will load application information from the directory below HDFS</p>
+<blockquote>
+<p>/user/history/done/$year/$month/$day/<br/>/user/history/done_intermediate/$user/</p>
+</blockquote>
+<p> </p>
+<p>4) An error occurs when viewing the application from the jobhistory server</p>
+<blockquote>
+<p>2019-04-01 16:04:16,115 WARN org.apache.oozie.command.wf.ActionCheckXCommand: SERVER[cdp-test-server-04.bj] USER[impala] GROUP[-] TOKEN[] APP[test_sh_wf] JOB[0000008-190330171215585-oozie-oozi-W] ACTION[0000008-190330171215585-oozie-oozi-W@test_sh_action] Exception while executing check(). Error Code [JA009], Message[JA009: org.apache.hadoop.yarn.exceptions.YarnRuntimeException: Could not load history file hdfs://hdfs:8020/user/history/done_intermediate/impala/job_1553937093273_0018-1554105820398-impala-oozie%3Alauncher%3AT%3Dshell%3AW%3Dtest_sh_wf%3AA%3Dtest_sh_acti-1554105833651-1-0-SUCCEEDED-root.users.impala-1554105825680.jhist<br/>...<br/>Caused by: org.apache.hadoop.security.AccessControlException: Permission denied: user=mapred, access=READ, inode="/user/history/done_intermediate/impala/job_1553937093273_0018-1554105820398-impala-oozie%3Alauncher%3AT%3Dshell%3AW%3Dtest_sh_wf%3AA%3Dtest_sh_acti-1554105833651-1-0-SUCCEEDED-root.users.impala-1554105825680.jhist":impala:supergroup:-rwxrwx---</p>
+</blockquote>
+<p>The supergroup configuration in HDFS is as follows:</p>
+<blockquote>
+<p>dfs.permissions.supergroup=supergroup<br/>dfs.permissions.superusergroup=supergroup</p>
+</blockquote>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201904/1509647-20190401173505995-289502632.png"/></p>
+<p>Solution:</p>
+<blockquote>
+<p># groupadd supergroup<br/># usermod - a - G supergroup mapred<br/># usermod - a - G supergroup hdfs<br/># usermod - a - G supergroup yarn</p>
+</blockquote>
+<p> </p>
+<p>Reference: https://community.hortonworks.com/questions/23914/requested-user-Hive-is-not-whitelisted-and-has-id.html</p>
+<p> </p>
+</div>
+</div>
+<!-- Post Footer -->
+<div class="post-footer">
+<div class="post-navigation">
+<a class="nav-button" href="../blog.html">← Back to Home</a>
+<a class="nav-button" href="0156.html">Next Post →</a>
+</div>
+</div>
+</article>
+</div>
+</body>
+</html>

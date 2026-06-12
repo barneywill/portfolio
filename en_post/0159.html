@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Hadoop 3 - YARN data collection and monitoring</title>
+<link href="../css/style3.css" rel="stylesheet"/>
+</head>
+<body>
+<div class="container">
+<!-- Header Navigation -->
+<div class="header">
+<h1><a href="../blog.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+</div>
+<!-- Post Container -->
+<article class="post">
+<!-- Post Header -->
+<div class="post-header">
+<h1>Hadoop 3 - YARN data collection and monitoring</h1>
+<div class="post-meta">
+<div class="post-meta-item">
+<span class="meta-icon">📅</span>
+<span>March 27, 2019</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">📖</span>
+<span>33 min read</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">👁️</span>
+<span>3584 views</span>
+</div>
+</div>
+</div>
+<!-- Post Content -->
+<div class="post-content">
+<div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<h1>YARN commonly used rest API</h1>
+<h2>1 metrics</h2>
+<blockquote>
+<p># curl http://localhost:8088/ws/v1/cluster/metrics</p>
+</blockquote>
+<p>The cluster metrics resource provides some overall metrics about the cluster. More detailed metrics should be retrieved from the jmx interface.</p>
+<div class="cnblogs_code">
+<pre><span style="color: rgba(0, 0, 0, 1)">{
+  </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">clusterMetrics</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">:
+  {
+    </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">appsSubmitted</span><span style="color: rgba(128, 0, 0, 1)">"</span>:0<span style="color: rgba(0, 0, 0, 1)">,
+    </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">appsCompleted</span><span style="color: rgba(128, 0, 0, 1)">"</span>:0<span style="color: rgba(0, 0, 0, 1)">,
+    </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">appsPending</span><span style="color: rgba(128, 0, 0, 1)">"</span>:0<span style="color: rgba(0, 0, 0, 1)">,
+    </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">appsRunning</span><span style="color: rgba(128, 0, 0, 1)">"</span>:0<span style="color: rgba(0, 0, 0, 1)">,
+    </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">appsFailed</span><span style="color: rgba(128, 0, 0, 1)">"</span>:0<span style="color: rgba(0, 0, 0, 1)">,
+    </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">appsKilled</span><span style="color: rgba(128, 0, 0, 1)">"</span>:0<span style="color: rgba(0, 0, 0, 1)">,
+    </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">reservedMB</span><span style="color: rgba(128, 0, 0, 1)">"</span>:0<span style="color: rgba(0, 0, 0, 1)">,
+    </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">availableMB</span><span style="color: rgba(128, 0, 0, 1)">"</span>:17408<span style="color: rgba(0, 0, 0, 1)">,
+    </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">allocatedMB</span><span style="color: rgba(128, 0, 0, 1)">"</span>:0<span style="color: rgba(0, 0, 0, 1)">,
+    </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">reservedVirtualCores</span><span style="color: rgba(128, 0, 0, 1)">"</span>:0<span style="color: rgba(0, 0, 0, 1)">,
+    </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">availableVirtualCores</span><span style="color: rgba(128, 0, 0, 1)">"</span>:7<span style="color: rgba(0, 0, 0, 1)">,
+    </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">allocatedVirtualCores</span><span style="color: rgba(128, 0, 0, 1)">"</span>:1<span style="color: rgba(0, 0, 0, 1)">,
+    </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">containersAllocated</span><span style="color: rgba(128, 0, 0, 1)">"</span>:0<span style="color: rgba(0, 0, 0, 1)">,
+    </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">containersReserved</span><span style="color: rgba(128, 0, 0, 1)">"</span>:0<span style="color: rgba(0, 0, 0, 1)">,
+    </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">containersPending</span><span style="color: rgba(128, 0, 0, 1)">"</span>:0<span style="color: rgba(0, 0, 0, 1)">,
+    </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">totalMB</span><span style="color: rgba(128, 0, 0, 1)">"</span>:17408<span style="color: rgba(0, 0, 0, 1)">,
+    </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">totalVirtualCores</span><span style="color: rgba(128, 0, 0, 1)">"</span>:8<span style="color: rgba(0, 0, 0, 1)">,
+    </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">totalNodes</span><span style="color: rgba(128, 0, 0, 1)">"</span>:1<span style="color: rgba(0, 0, 0, 1)">,
+    </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">lostNodes</span><span style="color: rgba(128, 0, 0, 1)">"</span>:0<span style="color: rgba(0, 0, 0, 1)">,
+    </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">unhealthyNodes</span><span style="color: rgba(128, 0, 0, 1)">"</span>:0<span style="color: rgba(0, 0, 0, 1)">,
+    </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">decommissionedNodes</span><span style="color: rgba(128, 0, 0, 1)">"</span>:0<span style="color: rgba(0, 0, 0, 1)">,
+    </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">rebootedNodes</span><span style="color: rgba(128, 0, 0, 1)">"</span>:0<span style="color: rgba(0, 0, 0, 1)">,
+    </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">activeNodes</span><span style="color: rgba(128, 0, 0, 1)">"</span>:1<span style="color: rgba(0, 0, 0, 1)">
+  }
+}</span></pre>
+</div>
+<h2>2 scheduler</h2>
+<blockquote>
+<p># curl http://localhost:8088/ws/v1/cluster/scheduler</p>
+</blockquote>
+<p>A scheduler resource contains information about the current scheduler configured in a cluster. It currently supports both the Fifo and Capacity Scheduler. You will get different information depending on which scheduler is configured so be sure to look at the type information.</p>
+<div class="cnblogs_code">
+<pre><span style="color: rgba(0, 0, 0, 1)">{
+    </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">scheduler</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">: {
+        </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">schedulerInfo</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">: {
+            </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">capacity</span><span style="color: rgba(128, 0, 0, 1)">"</span>: 100.0<span style="color: rgba(0, 0, 0, 1)">, 
+            </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">maxCapacity</span><span style="color: rgba(128, 0, 0, 1)">"</span>: 100.0<span style="color: rgba(0, 0, 0, 1)">, 
+            </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">queueName</span><span style="color: rgba(128, 0, 0, 1)">"</span>: <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">root</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">, 
+            </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">queues</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">: {
+                </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">queue</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">: [
+                    {
+                        </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">absoluteCapacity</span><span style="color: rgba(128, 0, 0, 1)">"</span>: 10.5<span style="color: rgba(0, 0, 0, 1)">, 
+                        </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">absoluteMaxCapacity</span><span style="color: rgba(128, 0, 0, 1)">"</span>: 50.0<span style="color: rgba(0, 0, 0, 1)">, 
+                        </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">absoluteUsedCapacity</span><span style="color: rgba(128, 0, 0, 1)">"</span>: 0.0<span style="color: rgba(0, 0, 0, 1)">, 
+                        </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">capacity</span><span style="color: rgba(128, 0, 0, 1)">"</span>: 10.5<span style="color: rgba(0, 0, 0, 1)">, 
+                        </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">maxCapacity</span><span style="color: rgba(128, 0, 0, 1)">"</span>: 50.0<span style="color: rgba(0, 0, 0, 1)">, 
+                        </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">numApplications</span><span style="color: rgba(128, 0, 0, 1)">"</span>: 0<span style="color: rgba(0, 0, 0, 1)">, 
+                        </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">queueName</span><span style="color: rgba(128, 0, 0, 1)">"</span>: <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">a</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">, 
+                        </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">queues</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">: {
+                            </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">queue</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">: [
+                                {
+                                    </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">absoluteCapacity</span><span style="color: rgba(128, 0, 0, 1)">"</span>: 3.15<span style="color: rgba(0, 0, 0, 1)">, 
+                                    </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">absoluteMaxCapacity</span><span style="color: rgba(128, 0, 0, 1)">"</span>: 25.0<span style="color: rgba(0, 0, 0, 1)">, 
+                                    </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">absoluteUsedCapacity</span><span style="color: rgba(128, 0, 0, 1)">"</span>: 0.0<span style="color: rgba(0, 0, 0, 1)">, 
+                                    </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">capacity</span><span style="color: rgba(128, 0, 0, 1)">"</span>: 30.000002<span style="color: rgba(0, 0, 0, 1)">, 
+                                    </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">maxCapacity</span><span style="color: rgba(128, 0, 0, 1)">"</span>: 50.0<span style="color: rgba(0, 0, 0, 1)">, 
+                                    </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">numApplications</span><span style="color: rgba(128, 0, 0, 1)">"</span>: 0<span style="color: rgba(0, 0, 0, 1)">, 
+                                    </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">queueName</span><span style="color: rgba(128, 0, 0, 1)">"</span>: <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">a1</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">,
+...</span></pre>
+</div>
+<h2>3 apps</h2>
+<blockquote>
+<p># curl http://localhost:8088/ws/v1/cluster/apps</p>
+</blockquote>
+<p>With the Applications API, you can obtain a collection of resources, each of which represents an application. When you run a GET operation on this resource, you obtain a collection of Application Objects.</p>
+<p>Support parameters:</p>
+<blockquote>
+<p> * state [deprecated] - state of the application<br/>  * states - applications matching the given application states, specified as a comma-separated list.<br/>  * finalStatus - the final status of the application - reported by the application itself<br/>  * user - user name<br/>  * queue - queue name<br/>  * limit - total number of app objects to be returned<br/>  * startedTimeBegin - applications with start time beginning with this time, specified in ms since epoch<br/>  * startedTimeEnd - applications with start time ending with this time, specified in ms since epoch<br/>  * finishedTimeBegin - applications with finish time beginning with this time, specified in ms since epoch<br/>  * finishedTimeEnd - applications with finish time ending with this time, specified in ms since epoch<br/>  * applicationTypes - applications matching the given application types, specified as a comma-separated list.<br/>  * applicationTags - applications matching any of the given application tags, specified as a comma-separated list.</p>
+</blockquote>
+<p> </p>
+<div class="cnblogs_code">
+<pre><span style="color: rgba(0, 0, 0, 1)">{
+  </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">apps</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">:
+  {
+    </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">app</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">:
+    [
+       {
+          </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">finishedTime</span><span style="color: rgba(128, 0, 0, 1)">"</span> : 1326815598530<span style="color: rgba(0, 0, 0, 1)">,
+          </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">amContainerLogs</span><span style="color: rgba(128, 0, 0, 1)">"</span> : <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">http://host.domain.com:8042/node/containerlogs/container_1326815542473_0001_01_000001</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">,
+          </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">trackingUI</span><span style="color: rgba(128, 0, 0, 1)">"</span> : <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">History</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">,
+          </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">state</span><span style="color: rgba(128, 0, 0, 1)">"</span> : <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">FINISHED</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">,
+          </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">user</span><span style="color: rgba(128, 0, 0, 1)">"</span> : <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">user1</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">,
+          </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">id</span><span style="color: rgba(128, 0, 0, 1)">"</span> : <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">application_1326815542473_0001</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">,
+          </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">clusterId</span><span style="color: rgba(128, 0, 0, 1)">"</span> : 1326815542473<span style="color: rgba(0, 0, 0, 1)">,
+          </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">finalStatus</span><span style="color: rgba(128, 0, 0, 1)">"</span> : <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">SUCCEEDED</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">,
+          </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">amHostHttpAddress</span><span style="color: rgba(128, 0, 0, 1)">"</span> : <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">host.domain.com:8042</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">,
+          </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">progress</span><span style="color: rgba(128, 0, 0, 1)">"</span> : 100<span style="color: rgba(0, 0, 0, 1)">,
+          </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">name</span><span style="color: rgba(128, 0, 0, 1)">"</span> : <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">word count</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">,
+          </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">startedTime</span><span style="color: rgba(128, 0, 0, 1)">"</span> : 1326815573334<span style="color: rgba(0, 0, 0, 1)">,
+          </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">elapsedTime</span><span style="color: rgba(128, 0, 0, 1)">"</span> : 25196<span style="color: rgba(0, 0, 0, 1)">,
+          </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">diagnostics</span><span style="color: rgba(128, 0, 0, 1)">"</span> : <span style="color: rgba(128, 0, 0, 1)">""</span><span style="color: rgba(0, 0, 0, 1)">,
+          </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">trackingUrl</span><span style="color: rgba(128, 0, 0, 1)">"</span> : <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">http://host.domain.com:8088/proxy/application_1326815542473_0001/jobhistory/job/job_1326815542473_1_1</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">,
+          </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">queue</span><span style="color: rgba(128, 0, 0, 1)">"</span> : <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">default</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">,
+          </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">allocatedMB</span><span style="color: rgba(128, 0, 0, 1)">"</span> : 0<span style="color: rgba(0, 0, 0, 1)">,
+          </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">allocatedVCores</span><span style="color: rgba(128, 0, 0, 1)">"</span> : 0<span style="color: rgba(0, 0, 0, 1)">,
+          </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">runningContainers</span><span style="color: rgba(128, 0, 0, 1)">"</span> : 0<span style="color: rgba(0, 0, 0, 1)">,
+          </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">memorySeconds</span><span style="color: rgba(128, 0, 0, 1)">"</span> : 151730<span style="color: rgba(0, 0, 0, 1)">,
+          </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">vcoreSeconds</span><span style="color: rgba(128, 0, 0, 1)">"</span> : 103<span style="color: rgba(0, 0, 0, 1)">
+       },
+       {
+          </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">finishedTime</span><span style="color: rgba(128, 0, 0, 1)">"</span> : 1326815789546<span style="color: rgba(0, 0, 0, 1)">,
+          </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">amContainerLogs</span><span style="color: rgba(128, 0, 0, 1)">"</span> : <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">http://host.domain.com:8042/node/containerlogs/container_1326815542473_0002_01_000001</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">,
+          </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">trackingUI</span><span style="color: rgba(128, 0, 0, 1)">"</span> : <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">History</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">,
+          </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">state</span><span style="color: rgba(128, 0, 0, 1)">"</span> : <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">FINISHED</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">,
+          </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">user</span><span style="color: rgba(128, 0, 0, 1)">"</span> : <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">user1</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">,
+          </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">id</span><span style="color: rgba(128, 0, 0, 1)">"</span> : <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">application_1326815542473_0002</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">,
+          </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">clusterId</span><span style="color: rgba(128, 0, 0, 1)">"</span> : 1326815542473<span style="color: rgba(0, 0, 0, 1)">,
+          </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">finalStatus</span><span style="color: rgba(128, 0, 0, 1)">"</span> : <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">SUCCEEDED</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">,
+          </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">amHostHttpAddress</span><span style="color: rgba(128, 0, 0, 1)">"</span> : <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">host.domain.com:8042</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">,
+          </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">progress</span><span style="color: rgba(128, 0, 0, 1)">"</span> : 100<span style="color: rgba(0, 0, 0, 1)">,
+          </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">name</span><span style="color: rgba(128, 0, 0, 1)">"</span> : <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">Sleep job</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">,
+          </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">startedTime</span><span style="color: rgba(128, 0, 0, 1)">"</span> : 1326815641380<span style="color: rgba(0, 0, 0, 1)">,
+          </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">elapsedTime</span><span style="color: rgba(128, 0, 0, 1)">"</span> : 148166<span style="color: rgba(0, 0, 0, 1)">,
+          </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">diagnostics</span><span style="color: rgba(128, 0, 0, 1)">"</span> : <span style="color: rgba(128, 0, 0, 1)">""</span><span style="color: rgba(0, 0, 0, 1)">,
+          </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">trackingUrl</span><span style="color: rgba(128, 0, 0, 1)">"</span> : <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">http://host.domain.com:8088/proxy/application_1326815542473_0002/jobhistory/job/job_1326815542473_2_2</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">,
+          </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">queue</span><span style="color: rgba(128, 0, 0, 1)">"</span> : <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">default</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">,
+          </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">allocatedMB</span><span style="color: rgba(128, 0, 0, 1)">"</span> : 0<span style="color: rgba(0, 0, 0, 1)">,
+          </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">allocatedVCores</span><span style="color: rgba(128, 0, 0, 1)">"</span> : 0<span style="color: rgba(0, 0, 0, 1)">,
+          </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">runningContainers</span><span style="color: rgba(128, 0, 0, 1)">"</span> : 1<span style="color: rgba(0, 0, 0, 1)">,
+          </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">memorySeconds</span><span style="color: rgba(128, 0, 0, 1)">"</span> : 640064<span style="color: rgba(0, 0, 0, 1)">,
+          </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">vcoreSeconds</span><span style="color: rgba(128, 0, 0, 1)">"</span> : 442<span style="color: rgba(0, 0, 0, 1)">
+       } 
+    ]
+  }
+}</span></pre>
+</div>
+<p> </p>
+<h1>Collection of Shell script examples</h1>
+<h2>metrics</h2>
+<div class="cnblogs_code">
+<pre><span style="color: rgba(0, 128, 0, 1)">#</span><span style="color: rgba(0, 128, 0, 1)">!/bin/sh</span>
+<span style="color: rgba(0, 0, 0, 1)">
+cluster_name</span>=<span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">c1</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">
+rms</span>=<span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">192.168.0.1 192.168.0.2</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">
+
+url_path</span>=<span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">/ws/v1/cluster/metrics</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">
+keyword</span>=<span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">clusterMetrics</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">
+log_name</span>=<span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">metrics.log</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">
+
+base_dir</span>=<span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">/tmp</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">
+log_path</span>=<span style="color: rgba(128, 0, 128, 1)">${base_dir}</span>/<span style="color: rgba(128, 0, 128, 1)">${log_name}</span><span style="color: rgba(0, 0, 0, 1)">
+
+echo </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">`date +'%Y-%m-%d %H:%M:%S'`"
+for rm in $rms
+do
+        url=</span><span style="color: rgba(128, 0, 0, 1)">"</span>http://<span style="color: rgba(128, 0, 128, 1)">${rm}</span>:8088<span style="color: rgba(128, 0, 128, 1)">${url_path}</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">
+        echo $url
+        content=`curl $url`
+        echo $content
+        if [[ </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 128, 1)">$content</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)"> == *</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 128, 1)">$keyword</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">* ]]; then
+                break
+        fi
+done
+if [[ </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 128, 1)">$content</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)"> == *</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 128, 1)">$keyword</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">* ]]; then
+        modified=</span><span style="color: rgba(128, 0, 0, 1)">"</span>${content:0:$((${<span style="color: rgba(0, 128, 0, 1)">#</span><span style="color: rgba(0, 128, 0, 1)">content}-1))},\"currentTime\":`date +%s`,\"clusterName\":\"${cluster_name}\"}"</span>
+        echo <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">$modified</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">
+        echo </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">$modified</span><span style="color: rgba(128, 0, 0, 1)">"</span> &gt;&gt; <span style="color: rgba(128, 0, 128, 1)">$log_path</span>
+<span style="color: rgba(0, 0, 255, 1)">else</span><span style="color: rgba(0, 0, 0, 1)">
+        echo </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">gather metrics failed from : ${rms}, ${url_path}, ${keyword}</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">
+fi</span></pre>
+</div>
+<p> </p>
+<h2>apps</h2>
+<div class="cnblogs_code">
+<pre><span style="color: rgba(0, 128, 0, 1)">#</span><span style="color: rgba(0, 128, 0, 1)">!/bin/sh</span>
+<span style="color: rgba(0, 0, 0, 1)">
+cluster_name</span>=<span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">c1</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">
+rms</span>=<span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">192.168.0.1 192.168.0.2</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">
+
+url_path</span>=<span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">/ws/v1/cluster/apps?states=RUNNING</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">
+keyword</span>=<span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">apps</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">
+log_name</span>=<span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">apps.log</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">
+
+base_dir</span>=<span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">/tmp</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">
+log_path</span>=<span style="color: rgba(128, 0, 128, 1)">${base_dir}</span>/<span style="color: rgba(128, 0, 128, 1)">${log_name}</span><span style="color: rgba(0, 0, 0, 1)">
+
+echo </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">`date +'%Y-%m-%d %H:%M:%S'`"
+for rm in $rms
+do
+        url=</span><span style="color: rgba(128, 0, 0, 1)">"</span>http://<span style="color: rgba(128, 0, 128, 1)">${rm}</span>:8088<span style="color: rgba(128, 0, 128, 1)">${url_path}</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">
+        echo $url
+        content=`curl $url`
+        echo $content
+        if [[ </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 128, 1)">$content</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)"> == *</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 128, 1)">$keyword</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">* ]]; then
+                break
+        fi
+done
+if [[ </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 128, 1)">$content</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)"> == *</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 128, 1)">$keyword</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">* ]]; then
+        if [[ </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 128, 1)">$content</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)"> == *</span><span style="color: rgba(128, 0, 0, 1)">"</span>application_<span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">* ]]; then
+                postfix=</span><span style="color: rgba(128, 0, 0, 1)">"</span>,\<span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">currentTime\</span><span style="color: rgba(128, 0, 0, 1)">"</span>:`date +%s`,\<span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">clusterName\</span><span style="color: rgba(128, 0, 0, 1)">"</span>:\<span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">${cluster_name}\</span><span style="color: rgba(128, 0, 0, 1)">"</span>}<span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">
+                modified=</span><span style="color: rgba(128, 0, 0, 1)">"</span>${content:16:$((${<span style="color: rgba(0, 128, 0, 1)">#</span><span style="color: rgba(0, 128, 0, 1)">content}-20))}"</span>
+                echo <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">${modified//\</span><span style="color: rgba(128, 0, 0, 1)">"</span>/\\\<span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">}</span><span style="color: rgba(128, 0, 0, 1)">"</span>|awk '{split(<span style="color: rgba(128, 0, 128, 1)">$0</span>,arr,<span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">},</span><span style="color: rgba(128, 0, 0, 1)">"</span>); <span style="color: rgba(0, 0, 255, 1)">for</span> (i <span style="color: rgba(0, 0, 255, 1)">in</span> arr) {print arr[i]}}'|xargs -i echo <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">{}$postfix</span><span style="color: rgba(128, 0, 0, 1)">"</span> &gt;&gt; <span style="color: rgba(128, 0, 128, 1)">$log_path</span>
+        <span style="color: rgba(0, 0, 255, 1)">else</span><span style="color: rgba(0, 0, 0, 1)">
+                echo </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">no apps is running</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">
+        fi
+</span><span style="color: rgba(0, 0, 255, 1)">else</span><span style="color: rgba(0, 0, 0, 1)">
+        echo </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">gather metrics failed from : ${rms}, ${url_path}, ${keyword}</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">
+fi</span></pre>
+</div>
+<p> </p>
+<p>Then connect to ELK</p>
+<p> </p>
+<h1>ELK</h1>
+<h2>Logstash configuration example</h2>
+<h3>metrics1：input json+filter mutate rename</h3>
+<div class="cnblogs_code">
+<pre><span style="color: rgba(0, 0, 0, 1)">input {
+  file {
+    path </span>=&gt; <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">/tmp/metrics.log</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">
+    codec </span>=&gt; <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">json</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">
+  }
+}
+</span><span style="color: rgba(0, 0, 255, 1)">filter</span><span style="color: rgba(0, 0, 0, 1)"> {
+  mutate {
+    rename </span>=&gt;<span style="color: rgba(0, 0, 0, 1)"> { 
+      </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">[clusterMetrics][appsSubmitted]</span><span style="color: rgba(128, 0, 0, 1)">"</span> =&gt; <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">[appsSubmitted]</span><span style="color: rgba(128, 0, 0, 1)">"</span>
+      <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">[clusterMetrics][appsCompleted]</span><span style="color: rgba(128, 0, 0, 1)">"</span> =&gt; <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">[appsCompleted]</span><span style="color: rgba(128, 0, 0, 1)">"</span>
+      <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">[clusterMetrics][appsPending]</span><span style="color: rgba(128, 0, 0, 1)">"</span> =&gt; <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">[appsPending]</span><span style="color: rgba(128, 0, 0, 1)">"</span>
+      <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">[clusterMetrics][appsRunning]</span><span style="color: rgba(128, 0, 0, 1)">"</span> =&gt; <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">[appsRunning]</span><span style="color: rgba(128, 0, 0, 1)">"</span>
+      <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">[clusterMetrics][appsFailed]</span><span style="color: rgba(128, 0, 0, 1)">"</span> =&gt; <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">[appsFailed]</span><span style="color: rgba(128, 0, 0, 1)">"</span>
+      <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">[clusterMetrics][appsKilled]</span><span style="color: rgba(128, 0, 0, 1)">"</span> =&gt; <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">[appsKilled]</span><span style="color: rgba(128, 0, 0, 1)">"</span>
+      <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">[clusterMetrics][reservedMB]</span><span style="color: rgba(128, 0, 0, 1)">"</span> =&gt; <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">[reservedMB]</span><span style="color: rgba(128, 0, 0, 1)">"</span>
+      <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">[clusterMetrics][availableMB]</span><span style="color: rgba(128, 0, 0, 1)">"</span> =&gt; <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">[availableMB]</span><span style="color: rgba(128, 0, 0, 1)">"</span>
+      <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">[clusterMetrics][allocatedMB]</span><span style="color: rgba(128, 0, 0, 1)">"</span> =&gt; <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">[allocatedMB]</span><span style="color: rgba(128, 0, 0, 1)">"</span>
+      <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">[clusterMetrics][reservedVirtualCores]</span><span style="color: rgba(128, 0, 0, 1)">"</span> =&gt; <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">[reservedVirtualCores]</span><span style="color: rgba(128, 0, 0, 1)">"</span>
+      <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">[clusterMetrics][availableVirtualCores]</span><span style="color: rgba(128, 0, 0, 1)">"</span> =&gt; <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">[availableVirtualCores]</span><span style="color: rgba(128, 0, 0, 1)">"</span>
+      <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">[clusterMetrics][allocatedVirtualCores]</span><span style="color: rgba(128, 0, 0, 1)">"</span> =&gt; <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">[allocatedVirtualCores]</span><span style="color: rgba(128, 0, 0, 1)">"</span>
+      <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">[clusterMetrics][containersAllocated]</span><span style="color: rgba(128, 0, 0, 1)">"</span> =&gt; <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">[containersAllocated]</span><span style="color: rgba(128, 0, 0, 1)">"</span>
+      <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">[clusterMetrics][containersReserved]</span><span style="color: rgba(128, 0, 0, 1)">"</span> =&gt; <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">[containersReserved]</span><span style="color: rgba(128, 0, 0, 1)">"</span>
+      <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">[clusterMetrics][containersPending]</span><span style="color: rgba(128, 0, 0, 1)">"</span> =&gt; <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">[containersPending]</span><span style="color: rgba(128, 0, 0, 1)">"</span>
+      <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">[clusterMetrics][totalMB]</span><span style="color: rgba(128, 0, 0, 1)">"</span> =&gt; <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">[totalMB]</span><span style="color: rgba(128, 0, 0, 1)">"</span>
+      <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">[clusterMetrics][totalVirtualCores]</span><span style="color: rgba(128, 0, 0, 1)">"</span> =&gt; <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">[totalVirtualCores]</span><span style="color: rgba(128, 0, 0, 1)">"</span>
+      <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">[clusterMetrics][totalNodes]</span><span style="color: rgba(128, 0, 0, 1)">"</span> =&gt; <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">[totalNodes]</span><span style="color: rgba(128, 0, 0, 1)">"</span>
+      <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">[clusterMetrics][lostNodes]</span><span style="color: rgba(128, 0, 0, 1)">"</span> =&gt; <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">[lostNodes]</span><span style="color: rgba(128, 0, 0, 1)">"</span>
+      <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">[clusterMetrics][unhealthyNodes]</span><span style="color: rgba(128, 0, 0, 1)">"</span> =&gt; <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">[unhealthyNodes]</span><span style="color: rgba(128, 0, 0, 1)">"</span>
+      <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">[clusterMetrics][decommissionedNodes]</span><span style="color: rgba(128, 0, 0, 1)">"</span> =&gt; <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">[decommissionedNodes]</span><span style="color: rgba(128, 0, 0, 1)">"</span>
+      <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">[clusterMetrics][rebootedNodes]</span><span style="color: rgba(128, 0, 0, 1)">"</span> =&gt; <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">[rebootedNodes]</span><span style="color: rgba(128, 0, 0, 1)">"</span>
+      <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">[clusterMetrics][activeNodes]</span><span style="color: rgba(128, 0, 0, 1)">"</span> =&gt; <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">[activeNodes]</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">
+    }
+    remove_field </span>=&gt; [<span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">clusterMetrics</span><span style="color: rgba(128, 0, 0, 1)">"</span>, <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">path</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">]
+  }
+</span><span style="color: rgba(0, 128, 0, 1)">#</span><span style="color: rgba(0, 128, 0, 1)">  ruby {</span><span style="color: rgba(0, 128, 0, 1)">
+#</span><span style="color: rgba(0, 128, 0, 1)">    code =&gt; "event.set('@timestamp', LogStash::Timestamp.at(event.get('currentTime') + 28800))"</span><span style="color: rgba(0, 128, 0, 1)">
+#</span><span style="color: rgba(0, 128, 0, 1)">  }</span>
+<span style="color: rgba(0, 0, 0, 1)">  date {
+    match </span>=&gt; [ <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">currentTime</span><span style="color: rgba(128, 0, 0, 1)">"</span>,<span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">UNIX</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">]
+    target </span>=&gt; <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">@timestamp</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">
+  }
+}</span></pre>
+</div>
+<p> </p>
+<h3>metrics2：filter json+filter mutate add_field</h3>
+<div class="cnblogs_code">
+<pre><span style="color: rgba(0, 0, 0, 1)">input {
+  file {
+    path </span>=&gt; <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">/tmp/metrics.log</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">
+  }
+}
+</span><span style="color: rgba(0, 0, 255, 1)">filter</span><span style="color: rgba(0, 0, 0, 1)"> {
+  json {
+    source </span>=&gt; <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">message</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">
+  }
+  mutate {
+    add_field </span>=&gt;<span style="color: rgba(0, 0, 0, 1)"> {
+      </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">appsSubmitted</span><span style="color: rgba(128, 0, 0, 1)">"</span> =&gt; <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">%{[clusterMetrics][appsSubmitted]}</span><span style="color: rgba(128, 0, 0, 1)">"</span>
+      <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">appsCompleted</span><span style="color: rgba(128, 0, 0, 1)">"</span> =&gt; <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">%{[clusterMetrics][appsCompleted]}</span><span style="color: rgba(128, 0, 0, 1)">"</span>
+      <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">appsPending</span><span style="color: rgba(128, 0, 0, 1)">"</span> =&gt; <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">%{[clusterMetrics][appsPending]}</span><span style="color: rgba(128, 0, 0, 1)">"</span>
+      <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">appsRunning</span><span style="color: rgba(128, 0, 0, 1)">"</span> =&gt; <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">%{[clusterMetrics][appsRunning]}</span><span style="color: rgba(128, 0, 0, 1)">"</span>
+      <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">appsFailed</span><span style="color: rgba(128, 0, 0, 1)">"</span> =&gt; <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">%{[clusterMetrics][appsFailed]}</span><span style="color: rgba(128, 0, 0, 1)">"</span>
+      <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">appsKilled</span><span style="color: rgba(128, 0, 0, 1)">"</span> =&gt; <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">%{[clusterMetrics][appsKilled]}</span><span style="color: rgba(128, 0, 0, 1)">"</span>
+      <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">reservedMB</span><span style="color: rgba(128, 0, 0, 1)">"</span> =&gt; <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">%{[clusterMetrics][reservedMB]}</span><span style="color: rgba(128, 0, 0, 1)">"</span>
+      <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">availableMB</span><span style="color: rgba(128, 0, 0, 1)">"</span> =&gt; <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">%{[clusterMetrics][availableMB]}</span><span style="color: rgba(128, 0, 0, 1)">"</span>
+      <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">allocatedMB</span><span style="color: rgba(128, 0, 0, 1)">"</span> =&gt; <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">%{[clusterMetrics][allocatedMB]}</span><span style="color: rgba(128, 0, 0, 1)">"</span>
+      <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">reservedVirtualCores</span><span style="color: rgba(128, 0, 0, 1)">"</span> =&gt; <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">%{[clusterMetrics][reservedVirtualCores]}</span><span style="color: rgba(128, 0, 0, 1)">"</span>
+      <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">availableVirtualCores</span><span style="color: rgba(128, 0, 0, 1)">"</span> =&gt; <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">%{[clusterMetrics][availableVirtualCores]}</span><span style="color: rgba(128, 0, 0, 1)">"</span>
+      <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">allocatedVirtualCores</span><span style="color: rgba(128, 0, 0, 1)">"</span> =&gt; <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">%{[clusterMetrics][allocatedVirtualCores]}</span><span style="color: rgba(128, 0, 0, 1)">"</span>
+      <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">containersAllocated</span><span style="color: rgba(128, 0, 0, 1)">"</span> =&gt; <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">%{[clusterMetrics][containersAllocated]}</span><span style="color: rgba(128, 0, 0, 1)">"</span>
+      <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">containersReserved</span><span style="color: rgba(128, 0, 0, 1)">"</span> =&gt; <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">%{[clusterMetrics][containersReserved]}</span><span style="color: rgba(128, 0, 0, 1)">"</span>
+      <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">containersPending</span><span style="color: rgba(128, 0, 0, 1)">"</span> =&gt; <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">%{[clusterMetrics][containersPending]}</span><span style="color: rgba(128, 0, 0, 1)">"</span>
+      <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">totalMB</span><span style="color: rgba(128, 0, 0, 1)">"</span> =&gt; <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">%{[clusterMetrics][totalMB]}</span><span style="color: rgba(128, 0, 0, 1)">"</span>
+      <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">totalVirtualCores</span><span style="color: rgba(128, 0, 0, 1)">"</span> =&gt; <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">%{[clusterMetrics][totalVirtualCores]}</span><span style="color: rgba(128, 0, 0, 1)">"</span>
+      <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">totalNodes</span><span style="color: rgba(128, 0, 0, 1)">"</span> =&gt; <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">%{[clusterMetrics][totalNodes]}</span><span style="color: rgba(128, 0, 0, 1)">"</span>
+      <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">lostNodes</span><span style="color: rgba(128, 0, 0, 1)">"</span> =&gt; <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">%{[clusterMetrics][lostNodes]}</span><span style="color: rgba(128, 0, 0, 1)">"</span>
+      <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">unhealthyNodes</span><span style="color: rgba(128, 0, 0, 1)">"</span> =&gt; <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">%{[clusterMetrics][unhealthyNodes]}</span><span style="color: rgba(128, 0, 0, 1)">"</span>
+      <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">decommissionedNodes</span><span style="color: rgba(128, 0, 0, 1)">"</span> =&gt; <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">%{[clusterMetrics][decommissionedNodes]}</span><span style="color: rgba(128, 0, 0, 1)">"</span>
+      <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">rebootedNodes</span><span style="color: rgba(128, 0, 0, 1)">"</span> =&gt; <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">%{[clusterMetrics][rebootedNodes]}</span><span style="color: rgba(128, 0, 0, 1)">"</span>
+      <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">activeNodes</span><span style="color: rgba(128, 0, 0, 1)">"</span> =&gt; <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">%{[clusterMetrics][activeNodes]}</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">
+    }
+    convert </span>=&gt;<span style="color: rgba(0, 0, 0, 1)"> {
+      </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">appsSubmitted</span><span style="color: rgba(128, 0, 0, 1)">"</span> =&gt; <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">integer</span><span style="color: rgba(128, 0, 0, 1)">"</span>
+      <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">appsCompleted</span><span style="color: rgba(128, 0, 0, 1)">"</span> =&gt; <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">integer</span><span style="color: rgba(128, 0, 0, 1)">"</span>
+      <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">appsPending</span><span style="color: rgba(128, 0, 0, 1)">"</span> =&gt; <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">integer</span><span style="color: rgba(128, 0, 0, 1)">"</span>
+      <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">appsRunning</span><span style="color: rgba(128, 0, 0, 1)">"</span> =&gt; <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">integer</span><span style="color: rgba(128, 0, 0, 1)">"</span>
+      <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">appsFailed</span><span style="color: rgba(128, 0, 0, 1)">"</span> =&gt; <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">integer</span><span style="color: rgba(128, 0, 0, 1)">"</span>
+      <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">appsKilled</span><span style="color: rgba(128, 0, 0, 1)">"</span> =&gt; <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">integer</span><span style="color: rgba(128, 0, 0, 1)">"</span>
+      <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">reservedMB</span><span style="color: rgba(128, 0, 0, 1)">"</span> =&gt; <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">integer</span><span style="color: rgba(128, 0, 0, 1)">"</span>
+      <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">availableMB</span><span style="color: rgba(128, 0, 0, 1)">"</span> =&gt; <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">integer</span><span style="color: rgba(128, 0, 0, 1)">"</span>
+      <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">allocatedMB</span><span style="color: rgba(128, 0, 0, 1)">"</span> =&gt; <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">integer</span><span style="color: rgba(128, 0, 0, 1)">"</span>
+      <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">reservedVirtualCores</span><span style="color: rgba(128, 0, 0, 1)">"</span> =&gt; <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">integer</span><span style="color: rgba(128, 0, 0, 1)">"</span>
+      <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">availableVirtualCores</span><span style="color: rgba(128, 0, 0, 1)">"</span> =&gt; <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">integer</span><span style="color: rgba(128, 0, 0, 1)">"</span>
+      <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">allocatedVirtualCores</span><span style="color: rgba(128, 0, 0, 1)">"</span> =&gt; <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">integer</span><span style="color: rgba(128, 0, 0, 1)">"</span>
+      <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">containersAllocated</span><span style="color: rgba(128, 0, 0, 1)">"</span> =&gt; <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">integer</span><span style="color: rgba(128, 0, 0, 1)">"</span>
+      <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">containersReserved</span><span style="color: rgba(128, 0, 0, 1)">"</span> =&gt; <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">integer</span><span style="color: rgba(128, 0, 0, 1)">"</span>
+      <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">containersPending</span><span style="color: rgba(128, 0, 0, 1)">"</span> =&gt; <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">integer</span><span style="color: rgba(128, 0, 0, 1)">"</span>
+      <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">totalMB</span><span style="color: rgba(128, 0, 0, 1)">"</span> =&gt; <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">integer</span><span style="color: rgba(128, 0, 0, 1)">"</span>
+      <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">totalVirtualCores</span><span style="color: rgba(128, 0, 0, 1)">"</span> =&gt; <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">integer</span><span style="color: rgba(128, 0, 0, 1)">"</span>
+      <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">totalNodes</span><span style="color: rgba(128, 0, 0, 1)">"</span> =&gt; <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">integer</span><span style="color: rgba(128, 0, 0, 1)">"</span>
+      <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">lostNodes</span><span style="color: rgba(128, 0, 0, 1)">"</span> =&gt; <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">integer</span><span style="color: rgba(128, 0, 0, 1)">"</span>
+      <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">unhealthyNodes</span><span style="color: rgba(128, 0, 0, 1)">"</span> =&gt; <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">integer</span><span style="color: rgba(128, 0, 0, 1)">"</span>
+      <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">decommissionedNodes</span><span style="color: rgba(128, 0, 0, 1)">"</span> =&gt; <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">integer</span><span style="color: rgba(128, 0, 0, 1)">"</span>
+      <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">rebootedNodes</span><span style="color: rgba(128, 0, 0, 1)">"</span> =&gt; <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">integer</span><span style="color: rgba(128, 0, 0, 1)">"</span>
+      <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">activeNodes</span><span style="color: rgba(128, 0, 0, 1)">"</span> =&gt; <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">integer</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">
+    }
+    remove_field </span>=&gt; [<span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">message</span><span style="color: rgba(128, 0, 0, 1)">"</span>, <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">clusterMetrics</span><span style="color: rgba(128, 0, 0, 1)">"</span>, <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">path</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">]
+  }
+</span><span style="color: rgba(0, 128, 0, 1)">#</span><span style="color: rgba(0, 128, 0, 1)">  ruby {</span><span style="color: rgba(0, 128, 0, 1)">
+#</span><span style="color: rgba(0, 128, 0, 1)">    code =&gt; "event.set('@timestamp', LogStash::Timestamp.at(event.get('currentTime') + 28800))"</span><span style="color: rgba(0, 128, 0, 1)">
+#</span><span style="color: rgba(0, 128, 0, 1)">  }</span>
+<span style="color: rgba(0, 0, 0, 1)">  date {
+    match </span>=&gt; [ <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">currentTime</span><span style="color: rgba(128, 0, 0, 1)">"</span>,<span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">UNIX</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">]
+    target </span>=&gt; <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">@timestamp</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">
+  }
+}</span></pre>
+</div>
+<p> </p>
+<h3>app：input json</h3>
+<div class="cnblogs_code">
+<pre><span style="color: rgba(0, 0, 0, 1)">input {
+  file {
+    path </span>=&gt; <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">/tmp/apps.log</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">
+    codec </span>=&gt; <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">json</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">
+  }
+}
+</span><span style="color: rgba(0, 0, 255, 1)">filter</span><span style="color: rgba(0, 0, 0, 1)"> {
+</span><span style="color: rgba(0, 128, 0, 1)">#</span><span style="color: rgba(0, 128, 0, 1)">  ruby {</span><span style="color: rgba(0, 128, 0, 1)">
+#</span><span style="color: rgba(0, 128, 0, 1)">    code =&gt; "event.set('@timestamp', LogStash::Timestamp.at(event.get('currentTime') + 28800))"</span><span style="color: rgba(0, 128, 0, 1)">
+#</span><span style="color: rgba(0, 128, 0, 1)">  }</span>
+<span style="color: rgba(0, 0, 0, 1)">  date {
+    match </span>=&gt; [ <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">currentTime</span><span style="color: rgba(128, 0, 0, 1)">"</span>,<span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">UNIX</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">]
+    target </span>=&gt; <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">@timestamp</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">
+  }
+}</span></pre>
+</div>
+<p> </p>
+<p>Notice:</p>
+<p>The timestamp obtained by the date plug-in is the UTC time zone.</p>
+<p>1) If it is stored in Elasticsearch and then displayed using kibana (kibana will automatically offset it according to the browser time zone), just use the UTC time zone directly;</p>
+<p>2) If it is stored in other storage and you want to directly store the time in the current time zone, you need to specify timezone. However, when the date plug-in uses UNIX format, timezone will not take effect and the system default time zone will be used, so use the Ruby ​​plug-in to convert the time zone;</p>
+<p>Unix timestamps (i.e. seconds since the epoch) are by definition always UTC and @timestamp is also always UTC. The timezone option indicates the timezone of the source timestamp, but doesn't really apply when the UNIX or UNIX_MS patterns are used.</p>
+<p>All timezones: http://joda-time.sourceforge.net/timezones.html</p>
+<p> </p>
+<h2>Kibana display example</h2>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201903/1509647-20190329182743168-1034733036.png"/></p>
+<p> </p>
+<p>refer to:</p>
+<p>https://hadoop.apache.org/docs/r2.7.3/hadoop-yarn/hadoop-yarn-site/ResourceManagerRest.html</p>
+<p>https://discuss.elastic.co/t/new-timestamp-using-dynamic-timezone-not-working/97166</p>
+<p> </p>
+</div>
+</div>
+<!-- Post Footer -->
+<div class="post-footer">
+<div class="post-navigation">
+<a class="nav-button" href="../blog.html">← Back to Home</a>
+<a class="nav-button" href="0160.html">Next Post →</a>
+</div>
+</div>
+</article>
+</div>
+</body>
+</html>

@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>cdh5 uses the existing metastore database to deploy Hive</title>
+<link href="../css/style3.css" rel="stylesheet"/>
+</head>
+<body>
+<div class="container">
+<!-- Header Navigation -->
+<div class="header">
+<h1><a href="../blog.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+</div>
+<!-- Post Container -->
+<article class="post">
+<!-- Post Header -->
+<div class="post-header">
+<h1>cdh5 uses the existing metastore database to deploy Hive</h1>
+<div class="post-meta">
+<div class="post-meta-item">
+<span class="meta-icon">📅</span>
+<span>February 17, 2019</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">📖</span>
+<span>1 min read</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">👁️</span>
+<span>1058 views</span>
+</div>
+</div>
+</div>
+<!-- Post Content -->
+<div class="post-content">
+<div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<p>The Hive version used by cdh5.16.1 is Hive-1.1.0+cdh5.16.1+1431. For details, see: https://www.cloudera.com/documentation/enterprise/release-notes/topics/cdh_vd_cdh_package_tarball_516.html<br/>If you want to directly use the existing Hive metastore database, such as hive1.2, do the following:</p>
+<p>1) Modify the version of metadata</p>
+<blockquote>
+<p>mysql&gt; update VERSION set schema_version = '1.1.0';</p>
+</blockquote>
+<p>After modifying the version, deploying Hive will still report an error:</p>
+<blockquote>
+<p>Table(s) [ [metastore_db_properties] ] are missing from the metastore database schema.</p>
+</blockquote>
+<p>This table metastore_db_properties does not exist in apache Hive. You need to find it in CDH Hive.</p>
+<blockquote>
+<p># grep - i metastore_db_properties /opt/cloudera/parcels/CDH-5.16.1-1.cdh5.16.1.p0.3/lib/hive/scripts/metastore/upgrade/mysql/*<br/>/opt/cloudera/parcels/CDH-5.16.1-1.cdh5.16.1.p0.3/lib/hive/scripts/metastore/upgrade/mysql/041-HIVE-16556.mysql.sql:-- Table structure for table METASTORE_DB_PROPERTIES<br/>/opt/cloudera/parcels/CDH-5.16.1-1.cdh5.16.1.p0.3/lib/hive/scripts/metastore/upgrade/mysql/041-HIVE-16556.mysql.sql:CREATE TABLE IF NOT EXISTS `METASTORE_DB_PROPERTIES` (</p>
+</blockquote>
+<p>2) Create table metastore_db_properties</p>
+<blockquote>
+<p>mysql&gt; CREATE TABLE IF NOT EXISTS `METASTORE_DB_PROPERTIES` (<br/>  `PROPERTY_KEY` varchar(255) NOT NULL,<br/>  `PROPERTY_VALUE` varchar(1000) NOT NULL,<br/>  `DESCRIPTION` varchar(1000),<br/> PRIMARY KEY(`PROPERTY_KEY`)<br/>) ENGINE=InnoDB DEFAULT CHARSET=latin1;</p>
+</blockquote>
+<p>The deployment also reported an error:</p>
+<blockquote>
+<p>com.mysql.jdbc.exceptions.jdbc4.MySQLSyntaxErrorException: Unknown column 'A0.SCHEMA_VERSION_V2' in 'field list'</p>
+</blockquote>
+<p>Find</p>
+<blockquote>
+<p># grep - i SCHEMA_VERSION_V2 /opt/cloudera/parcels/CDH-5.16.1-1.cdh5.16.1.p0.3/lib/hive/scripts/metastore/upgrade/mysql/*</p>
+</blockquote>
+<p>3) Modify the table structure version</p>
+<blockquote>
+<p>mysql&gt; ALTER TABLE VERSION ADD COLUMN SCHEMA_VERSION_V2 VARCHAR(255);<br/>mysql&gt; UPDATE VERSION SET SCHEMA_VERSION='1.1.0', VERSION_COMMENT='Hive release version 1.1.0', SCHEMA_VERSION_V2='1.1.0-cdh5.16.1' where VER_ID=1;</p>
+</blockquote>
+<p>There are also abnormalities</p>
+<blockquote>
+<p>com.mysql.jdbc.exceptions.jdbc4.MySQLSyntaxErrorException: Unknown column 'A0.OWNER_TYPE' in 'field list'</p>
+</blockquote>
+<p>Find</p>
+<blockquote>
+<p># grep - i OWNER_TYPE /opt/cloudera/parcels/CDH-5.16.1-1.cdh5.16.1.p0.3/lib/hive/scripts/metastore/upgrade/mysql/*</p>
+</blockquote>
+<p>4) Modify the table structure</p>
+<blockquote>
+<p>ALTER TABLE `DBS` ADD `OWNER_TYPE` varchar(10);<br/>ALTER TABLE `TBLS` ADD COLUMN `OWNER_TYPE` VARCHAR(10) CHARACTER SET latin1 COLLATE latin1_bin DEFAULT NULL;</p>
+</blockquote>
+<p>Then CDH's Hive can be deployed successfully, using the previous metastore database directly, and the Hive function is normal;</p>
+<p> </p>
+</div>
+</div>
+<!-- Post Footer -->
+<div class="post-footer">
+<div class="post-navigation">
+<a class="nav-button" href="../blog.html">← Back to Home</a>
+<a class="nav-button" href="0219.html">Next Post →</a>
+</div>
+</div>
+</article>
+</div>
+</body>
+</html>

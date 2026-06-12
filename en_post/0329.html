@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Drill 2 - Drill1.14+Hive2.1.1 running</title>
+<link href="../css/style3.css" rel="stylesheet"/>
+</head>
+<body>
+<div class="container">
+<!-- Header Navigation -->
+<div class="header">
+<h1><a href="../blog.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+</div>
+<!-- Post Container -->
+<article class="post">
+<!-- Post Header -->
+<div class="post-header">
+<h1>Drill 2 - Drill1.14+Hive2.1.1 running</h1>
+<div class="post-meta">
+<div class="post-meta-item">
+<span class="meta-icon">📅</span>
+<span>December 12, 2018</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">📖</span>
+<span>1 min read</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">👁️</span>
+<span>1943 views</span>
+</div>
+</div>
+</div>
+<!-- Post Content -->
+<div class="post-content">
+<div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<h1 id="section-0329-1">question</h1>
+<p>The latest version of Drill is 1.14. Starting from 1.13, the version of Drill that supports Hive has been upgraded to 2.3.2. For details, please see the release notes of 1.13.</p>
+<ul>
+<li>
+<blockquote>The Hive client for Drill is updated to version 2.3.2. With the update, Drill supports queries on transactional (ACID) and non-transactional Hive bucketed ORC tables. The updated libraries are backward compatible with earlier versions of the Hive server and metastore. (<a class="external-link" href="https://issues.apache.org/jira/browse/DRILL-5978" rel="noopener nofollow">DRILL-5978</a>)</blockquote>
+</li>
+</ul>
+<p>Forcibly using Drill 1.14 to connect to Hive 2.1.1 will cause problems due to changes in the metastore thrift interface. Specifically, the show tables are empty, and the specific error is as follows:</p>
+<blockquote>
+<p>2018-10-10 13:03:54,355 [244277c5-ba8c-b6c8-8f99-2cdde9f3c4d8:frag:0:0] WARN  o.a.d.e.s.h.DrillHiveMetaStoreClient - Failure while attempting to get hive table. Retries once.</p>
+<p>org.apache.thrift.TApplicationException: <strong>Invalid method name: 'get_table_req'</strong></p>
+<p>        at org.apache.thrift.TApplicationException.read(TApplicationException.java:111) ~[drill-hive-exec-shaded-1.14.0.jar:1.14.0]</p>
+<p>        at org.apache.drill.exec.store.hive.DrillHiveMetaStoreClient$TableLoader.load(DrillHiveMetaStoreClient.java:531) [drill-storage-hive-core-1.14.0.jar:1.14.0]</p>
+<p>        at com.google.common.cache.LocalCache$LoadingValueReference.loadFuture(LocalCache.java:3527) [guava-18.0.jar:na]</p>
+<p>        at com.google.common.cache.LocalCache$Segment.loadSync(LocalCache.java:2319) [guava-18.0.jar:na]</p>
+<p>        at com.google.common.cache.LocalCache$Segment.lockedGetOrLoad(LocalCache.java:2282) [guava-18.0.jar:na]</p>
+<p>        at com.google.common.cache.LocalCache$Segment.get(LocalCache.java:2197) [guava-18.0.jar:na]</p>
+<p>        at com.google.common.cache.LocalCache.get(LocalCache.java:3937) [guava-18.0.jar:na]</p>
+<p>        at com.google.common.cache.LocalCache.getOrLoad(LocalCache.java:3941) [guava-18.0.jar:na]</p>
+<p>        at com.google.common.cache.LocalCache$LocalLoadingCache.get(LocalCache.java:4824) [guava-18.0.jar:na]</p>
+<p>        at org.apache.drill.exec.store.hive.DrillHiveMetaStoreClient$HiveClientWithCaching.getHiveReadEntry(DrillHiveMetaStoreClient.java:495) [drill-storage-hive-core-1.14.0.jar:1.14.0]</p>
+<p>        at org.apache.drill.exec.store.hive.schema.HiveSchemaFactory$HiveSchema.getSelectionBaseOnName(HiveSchemaFactory.java:230) [drill-storage-hive-core-1.14.0.jar:1.14.0]</p>
+<p>        at org.apache.drill.exec.store.hive.schema.HiveSchemaFactory$HiveSchema.getDrillTable(HiveSchemaFactory.java:210) [drill-storage-hive-core-1.14.0.jar:1.14.0]</p>
+<p>        at org.apache.drill.exec.store.hive.schema.HiveDatabaseSchema.getTable(HiveDatabaseSchema.java:62) [drill-storage-hive-core-1.14.0.jar:1.14.0]</p>
+<p>        at org.apache.drill.exec.store.AbstractSchema.getTablesByNames(AbstractSchema.java:239) [drill-java-exec-1.14.0.jar:1.14.0]</p>
+<p>        at org.apache.drill.exec.store.AbstractSchema.getTableNamesAndTypes(AbstractSchema.java:257) [drill-java-exec-1.14.0.jar:1.14.0]</p>
+<p>        at org.apache.drill.exec.store.ischema.InfoSchemaRecordGenerator$Tables.visitTables(InfoSchemaRecordGenerator.java:301) [drill-java-exec-1.14.0.jar:1.14.0]</p>
+<p>        at org.apache.drill.exec.store.ischema.InfoSchemaRecordGenerator.scanSchema(InfoSchemaRecordGenerator.java:216) [drill-java-exec-1.14.0.jar:1.14.0]</p>
+<p>        at org.apache.drill.exec.store.ischema.InfoSchemaRecordGenerator.scanSchema(InfoSchemaRecordGenerator.java:209) [drill-java-exec-1.14.0.jar:1.14.0]</p>
+<p>        at org.apache.drill.exec.store.ischema.InfoSchemaRecordGenerator.scanSchema(InfoSchemaRecordGenerator.java:209) [drill-java-exec-1.14.0.jar:1.14.0]</p>
+<p>        at org.apache.drill.exec.store.ischema.InfoSchemaRecordGenerator.scanSchema(InfoSchemaRecordGenerator.java:196) [drill-java-exec-1.14.0.jar:1.14.0]</p>
+<p>        at org.apache.drill.exec.store.ischema.InfoSchemaTableType.getRecordReader(InfoSchemaTableType.java:58) [drill-java-exec-1.14.0.jar:1.14.0]</p>
+<p>        at org.apache.drill.exec.store.ischema.InfoSchemaBatchCreator.getBatch(InfoSchemaBatchCreator.java:34) [drill-java-exec-1.14.0.jar:1.14.0]</p>
+<p>        at org.apache.drill.exec.store.ischema.InfoSchemaBatchCreator.getBatch(InfoSchemaBatchCreator.java:30) [drill-java-exec-1.14.0.jar:1.14.0]</p>
+<p>        at org.apache.drill.exec.physical.impl.ImplCreator.getRecordBatch(ImplCreator.java:159) [drill-java-exec-1.14.0.jar:1.14.0]</p>
+<p>        at org.apache.drill.exec.physical.impl.ImplCreator.getChildren(ImplCreator.java:182) [drill-java-exec-1.14.0.jar:1.14.0]</p>
+<p>        at org.apache.drill.exec.physical.impl.ImplCreator.getRecordBatch(ImplCreator.java:137) [drill-java-exec-1.14.0.jar:1.14.0]</p>
+<p>        at org.apache.drill.exec.physical.impl.ImplCreator.getChildren(ImplCreator.java:182) [drill-java-exec-1.14.0.jar:1.14.0]</p>
+<p>        at org.apache.drill.exec.physical.impl.ImplCreator.getRootExec(ImplCreator.java:110) [drill-java-exec-1.14.0.jar:1.14.0]</p>
+<p>        at org.apache.drill.exec.physical.impl.ImplCreator.getExec(ImplCreator.java:87) [drill-java-exec-1.14.0.jar:1.14.0]</p>
+<p>        at org.apache.drill.exec.work.fragment.FragmentExecutor.run(FragmentExecutor.java:261) [drill-java-exec-1.14.0.jar:1.14.0]</p>
+<p>        at org.apache.drill.common.SelfCleaningRunnable.run(SelfCleaningRunnable.java:38) [drill-common-1.14.0.jar:1.14.0]</p>
+<p>        at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1142) [na:1.8.0_60]</p>
+<p>        at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:617) [na:1.8.0_60]</p>
+<p>        at java.lang.Thread.run(Thread.java:745) [na:1.8.0_60]</p>
+</blockquote>
+<p> </p>
+<h1 id="section-0329-2">compile</h1>
+<p>So I tried to recompile Drill1.14, dropped the dependent Hive version to 2.1.1, and downloaded the code</p>
+<p><a class="external-link" href="http://mirror.bit.edu.cn/apache/drill/drill-1.14.0/apache-drill-1.14.0-src.tar.gz" rel="noopener nofollow">http://mirror.bit.edu.cn/apache/drill/drill-1.14.0/apache-drill-1.14.0-src.tar.gz</a></p>
+<p> </p>
+<h1 id="Drill1.14+Hive2.1.1-POM">POM</h1>
+<p>Modify Hive version in pom</p>
+<blockquote>
+<p>&lt;hive.version&gt;2.3.2&lt;/hive.version&gt;</p>
+</blockquote>
+<p>Modify to &lt;Hive.version&gt;2.1.1&lt;/Hive.version&gt;</p>
+<p>After recompiling and packaging, it was found that the problem remained. After checking, it was found that after the modified version, only three Hive-related jars under jars/3rdparty were changed from 2.3.2 to 2.1.1.</p>
+<blockquote>
+<p>hive-contrib-2.1.1.jar<br/>hive-hbase-handler-2.1.1.jar<br/>hive-metastore-2.1.1.jar</p>
+</blockquote>
+<p>The jar that reported the error is drill-Hive-exec-shaded-1.14.0.jar. This jar package contains Hive-exec and its dependencies.</p>
+<blockquote>
+<p>        &lt;artifactId&gt;maven-shade-plugin&lt;/artifactId&gt;</p>
+<p>        &lt;configuration&gt;</p>
+<p>          &lt;artifactSet&gt;</p>
+<p>            &lt;includes&gt;</p>
+<p>              &lt;include&gt;org.apache.hive:hive-exec&lt;/include&gt;</p>
+</blockquote>
+<p>And the configured Hive.version is not used</p>
+<blockquote>
+<p>    &lt;dependency&gt;</p>
+<p>      &lt;groupId&gt;org.apache.hive&lt;/groupId&gt;</p>
+<p>      &lt;artifactId&gt;hive-exec&lt;/artifactId&gt;</p>
+<p>      &lt;scope&gt;compile&lt;/scope&gt;</p>
+</blockquote>
+<p>As a result, the Hive-exec included in the jar package is version 2.3.2, and the Hive.version configuration is added.</p>
+<blockquote>
+<p>    &lt;dependency&gt;</p>
+<p>      &lt;groupId&gt;org.apache.hive&lt;/groupId&gt;</p>
+<p>      &lt;artifactId&gt;hive-exec&lt;/artifactId&gt;</p>
+<p><strong>      &lt;version&gt;${hive.version}&lt;/version&gt;</strong></p>
+<p>      &lt;scope&gt;compile&lt;/scope&gt;</p>
+</blockquote>
+<p>After packaging again, the problem disappears and the show tables are normal;</p>
+<h1 id="Drill1.14+Hive2.1.1-HadoopLocation">Hadoop Location</h1>
+<p>The official documentation explains as follows:</p>
+<blockquote>
+<p>Apache Drill users must tell Drill-on-YARN the location of your Hadoop install. Set the HADOOP_HOME environment variable in $DRILL_SITE/drillenv.sh to point to your Hadoop installation:</p>
+<pre><code class="language-text">export HADOOP_HOME= /path/to/hadoop-home  </code></pre>
+</blockquote>
+<p>But there are still problems after configuration:</p>
+<p>1) Report an error</p>
+<blockquote>
+<p>Diagnostics: File file:/user/drill/site.tar.gz does not exist<br/>java.io.FileNotFoundException: File file:/user/drill/site.tar.gz does not exist</p>
+</blockquote>
+<p>Need to add link</p>
+<blockquote>
+<p>ln -s $HADOOP_HOME/etc/hadoop/core-site.xml $DRILL_SITE/core-site.xml</p>
+</blockquote>
+<p>2) During the actual query, an error will be reported and hdfs_name cannot be found. You need to add a link.</p>
+<blockquote>
+<p>ln -s $HADOOP_HOME/etc/hadoop/hdfs-site.xml $DRILL_SITE/hdfs-site.xml</p>
+</blockquote>
+<p> </p>
+</div>
+</div>
+<!-- Post Footer -->
+<div class="post-footer">
+<div class="post-navigation">
+<a class="nav-button" href="../blog.html">← Back to Home</a>
+<a class="nav-button" href="0330.html">Next Post →</a>
+</div>
+</div>
+</article>
+</div>
+</body>
+</html>

@@ -1,0 +1,577 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Spark executes insert overwrite very slowly, even slower than Hive</title>
+<link href="../css/style3.css" rel="stylesheet"/>
+</head>
+<body>
+<div class="container">
+<!-- Header Navigation -->
+<div class="header">
+<h1><a href="../blog.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+</div>
+<!-- Post Container -->
+<article class="post">
+<!-- Post Header -->
+<div class="post-header">
+<h1>Spark executes insert overwrite very slowly, even slower than Hive</h1>
+<div class="post-meta">
+<div class="post-meta-item">
+<span class="meta-icon">📅</span>
+<span>December 21, 2018</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">📖</span>
+<span>23 min read</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">👁️</span>
+<span>8654 views</span>
+</div>
+</div>
+</div>
+<!-- Post Content -->
+<div class="post-content">
+<div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<p>Recently, I changed some SQL execution from Hive to Spark, and found that the execution is slower. The SQL is mainly some insert overwrite operations. From the execution plan, I can see that InsertIntoHiveTable is used.</p>
+<blockquote>
+<p>spark-sql&gt; explain insert overwrite table test2 select * from test1;<br/>== Physical Plan ==<br/>InsertIntoHiveTable MetastoreRelation temp, test2, true, false<br/>+- HiveTableScan [id#20], MetastoreRelation temp, test1<br/>Time taken: 0.404 seconds, Fetched 1 row(s)</p>
+</blockquote>
+<p>Follow up code<br/>org.apache.spark.sql.hive.execution.InsertIntoHiveTable</p>
+<div class="cnblogs_code">
+<pre>  <span style="color: rgba(0, 0, 255, 1)">protected</span> override def doExecute(): RDD[InternalRow] =<span style="color: rgba(0, 0, 0, 1)"> {
+    sqlContext.sparkContext.parallelize(sideEffectResult.asInstanceOf[Seq[InternalRow]], </span>1<span style="color: rgba(0, 0, 0, 1)">)
+  }
+
+  </span><span style="color: rgba(0, 128, 0, 1)">/**</span><span style="color: rgba(0, 128, 0, 1)">
+   * Inserts all the rows in the table into Hive.  Row objects are properly serialized with the
+   * `org.apache.hadoop.hive.serde2.SerDe` and the
+   * `org.apache.hadoop.mapred.OutputFormat` provided by the table definition.
+   *
+   * Note: this is run once and then kept to avoid double insertions.
+   </span><span style="color: rgba(0, 128, 0, 1)">*/</span>
+  <span style="color: rgba(0, 0, 255, 1)">protected</span>[sql] lazy val sideEffectResult: Seq[InternalRow] =<span style="color: rgba(0, 0, 0, 1)"> {
+    </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> Have to pass the TableDesc object to RDD.mapPartitions and then instantiate new serializer
+    </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> instances within the closure, since Serializer is not serializable while TableDesc is.</span>
+    val tableDesc =<span style="color: rgba(0, 0, 0, 1)"> table.tableDesc
+    val tableLocation </span>=<span style="color: rgba(0, 0, 0, 1)"> table.hiveQlTable.getDataLocation
+    val tmpLocation </span>=<span style="color: rgba(0, 0, 0, 1)"> getExternalTmpPath(tableLocation)
+    val fileSinkConf </span>= <span style="color: rgba(0, 0, 255, 1)">new</span> FileSinkDesc(tmpLocation.toString, tableDesc, <span style="color: rgba(0, 0, 255, 1)">false</span><span style="color: rgba(0, 0, 0, 1)">)
+    val isCompressed </span>= hadoopConf.get("hive.exec.compress.output", "false"<span style="color: rgba(0, 0, 0, 1)">).toBoolean
+
+    </span><span style="color: rgba(0, 0, 255, 1)">if</span><span style="color: rgba(0, 0, 0, 1)"> (isCompressed) {
+      </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> Please note that isCompressed, "mapred.output.compress", "mapred.output.compression.codec",
+      </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> and "mapred.output.compression.type" have no impact on ORC because it uses table properties
+      </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> to store compression information.</span>
+      hadoopConf.set("mapred.output.compress", "true"<span style="color: rgba(0, 0, 0, 1)">)
+      fileSinkConf.setCompressed(</span><span style="color: rgba(0, 0, 255, 1)">true</span><span style="color: rgba(0, 0, 0, 1)">)
+      fileSinkConf.setCompressCodec(hadoopConf.get(</span>"mapred.output.compression.codec"<span style="color: rgba(0, 0, 0, 1)">))
+      fileSinkConf.setCompressType(hadoopConf.get(</span>"mapred.output.compression.type"<span style="color: rgba(0, 0, 0, 1)">))
+    }
+
+    val numDynamicPartitions </span>=<span style="color: rgba(0, 0, 0, 1)"> partition.values.count(_.isEmpty)
+    val numStaticPartitions </span>=<span style="color: rgba(0, 0, 0, 1)"> partition.values.count(_.nonEmpty)
+    val partitionSpec </span>=<span style="color: rgba(0, 0, 0, 1)"> partition.map {
+      </span><span style="color: rgba(0, 0, 255, 1)">case</span> (key, Some(value)) =&gt; key - &gt;<span style="color: rgba(0, 0, 0, 1)"> value
+      </span><span style="color: rgba(0, 0, 255, 1)">case</span> (key, None) =&gt; key - &gt; ""<span style="color: rgba(0, 0, 0, 1)">
+    }
+
+    </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> All partition column names in the format of "&lt;column name 1&gt;/&lt;column name 2&gt;/..."</span>
+    val partitionColumns = fileSinkConf.getTableInfo.getProperties.getProperty("partition_columns"<span style="color: rgba(0, 0, 0, 1)">)
+    val partitionColumnNames </span>= Option(partitionColumns).map(_.split("/"<span style="color: rgba(0, 0, 0, 1)">)).getOrElse(Array.empty)
+
+    </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> By this time, the partition map must match the table's partition columns</span>
+    <span style="color: rgba(0, 0, 255, 1)">if</span> (partitionColumnNames.toSet !=<span style="color: rgba(0, 0, 0, 1)"> partition.keySet) {
+      </span><span style="color: rgba(0, 0, 255, 1)">throw</span> <span style="color: rgba(0, 0, 255, 1)">new</span><span style="color: rgba(0, 0, 0, 1)"> SparkException(
+        s</span>"""Requested partitioning does not match the ${table.tableName} table:
+           |Requested partitions: ${partition.keys.mkString(","<span style="color: rgba(0, 0, 0, 1)">)}
+           </span>|Table partitions: ${table.partitionKeys.map(_.name).mkString(",")}""".stripMargin)
+<span style="color: rgba(0, 0, 0, 1)">    }
+
+    </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> Validate partition spec if there exist any dynamic partitions</span>
+    <span style="color: rgba(0, 0, 255, 1)">if</span> (numDynamicPartitions &gt; 0<span style="color: rgba(0, 0, 0, 1)">) {
+      </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> Report error if dynamic partitioning is not enabled</span>
+      <span style="color: rgba(0, 0, 255, 1)">if</span> (!hadoopConf.get("hive.exec.dynamic.partition", "true"<span style="color: rgba(0, 0, 0, 1)">).toBoolean) {
+        </span><span style="color: rgba(0, 0, 255, 1)">throw</span> <span style="color: rgba(0, 0, 255, 1)">new</span><span style="color: rgba(0, 0, 0, 1)"> SparkException(ErrorMsg.DYNAMIC_PARTITION_DISABLED.getMsg)
+      }
+
+      </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> Report error if dynamic partition strict mode is on but no static partition is found</span>
+      <span style="color: rgba(0, 0, 255, 1)">if</span> (numStaticPartitions == 0 &amp;&amp;<span style="color: rgba(0, 0, 0, 1)">
+        hadoopConf.get(</span>"hive.exec.dynamic.partition.mode", "strict").equalsIgnoreCase("strict"<span style="color: rgba(0, 0, 0, 1)">)) {
+        </span><span style="color: rgba(0, 0, 255, 1)">throw</span> <span style="color: rgba(0, 0, 255, 1)">new</span><span style="color: rgba(0, 0, 0, 1)"> SparkException(ErrorMsg.DYNAMIC_PARTITION_STRICT_MODE.getMsg)
+      }
+
+      </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> Report error if any static partition appears after a dynamic partition</span>
+      val isDynamic =<span style="color: rgba(0, 0, 0, 1)"> partitionColumnNames.map(partitionSpec(_).isEmpty)
+      </span><span style="color: rgba(0, 0, 255, 1)">if</span> (isDynamic.init.zip(isDynamic.tail).contains((<span style="color: rgba(0, 0, 255, 1)">true</span>, <span style="color: rgba(0, 0, 255, 1)">false</span><span style="color: rgba(0, 0, 0, 1)">))) {
+        </span><span style="color: rgba(0, 0, 255, 1)">throw</span> <span style="color: rgba(0, 0, 255, 1)">new</span><span style="color: rgba(0, 0, 0, 1)"> AnalysisException(ErrorMsg.PARTITION_DYN_STA_ORDER.getMsg)
+      }
+    }
+
+    val jobConf </span>= <span style="color: rgba(0, 0, 255, 1)">new</span><span style="color: rgba(0, 0, 0, 1)"> JobConf(hadoopConf)
+    val jobConfSer </span>= <span style="color: rgba(0, 0, 255, 1)">new</span><span style="color: rgba(0, 0, 0, 1)"> SerializableJobConf(jobConf)
+
+    </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> When speculation is on and output committer class name contains "Direct", we should warn
+    </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> users that they may loss data if they are using a direct output committer.</span>
+    val speculationEnabled = sqlContext.sparkContext.conf.getBoolean("spark.speculation", <span style="color: rgba(0, 0, 255, 1)">false</span><span style="color: rgba(0, 0, 0, 1)">)
+    val outputCommitterClass </span>= jobConf.get("mapred.output.committer.class", ""<span style="color: rgba(0, 0, 0, 1)">)
+    </span><span style="color: rgba(0, 0, 255, 1)">if</span> (speculationEnabled &amp;&amp; outputCommitterClass.contains("Direct"<span style="color: rgba(0, 0, 0, 1)">)) {
+      val warningMessage </span>=<span style="color: rgba(0, 0, 0, 1)">
+        s</span>"$outputCommitterClass may be an output committer that writes data directly to " +
+          "the final location. Because speculation is enabled, this output committer may " +
+          "cause data loss (see the case in SPARK-10063). If possible, please use an output " +
+          "committer that does not have this behavior (e.g. FileOutputCommitter)."<span style="color: rgba(0, 0, 0, 1)">
+      logWarning(warningMessage)
+    }
+
+    val writerContainer </span>= <span style="color: rgba(0, 0, 255, 1)">if</span> (numDynamicPartitions &gt; 0<span style="color: rgba(0, 0, 0, 1)">) {
+      val dynamicPartColNames </span>=<span style="color: rgba(0, 0, 0, 1)"> partitionColumnNames.takeRight(numDynamicPartitions)
+      </span><span style="color: rgba(0, 0, 255, 1)">new</span><span style="color: rgba(0, 0, 0, 1)"> SparkHiveDynamicPartitionWriterContainer(
+        jobConf,
+        fileSinkConf,
+        dynamicPartColNames,
+        child.output)
+    } </span><span style="color: rgba(0, 0, 255, 1)">else</span><span style="color: rgba(0, 0, 0, 1)"> {
+      </span><span style="color: rgba(0, 0, 255, 1)">new</span><span style="color: rgba(0, 0, 0, 1)"> SparkHiveWriterContainer(
+        jobConf,
+        fileSinkConf,
+        child.output)
+    }
+
+    @</span><span style="color: rgba(0, 0, 255, 1)">transient</span> val outputClass =<span style="color: rgba(0, 0, 0, 1)"> writerContainer.newSerializer(table.tableDesc).getSerializedClass
+    saveAsHiveFile(child.execute(), outputClass, fileSinkConf, jobConfSer, writerContainer)
+
+    val outputPath </span>=<span style="color: rgba(0, 0, 0, 1)"> FileOutputFormat.getOutputPath(jobConf)
+    </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> TODO: Correctly set holdDDLTime.
+    </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> In most of the time, we should have holdDDLTime = false.
+    </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> holdDDLTime will be true when TOK_HOLD_DDLTIME presents in the query as a hint.</span>
+    val holdDDLTime = <span style="color: rgba(0, 0, 255, 1)">false</span>
+    <span style="color: rgba(0, 0, 255, 1)">if</span><span style="color: rgba(0, 0, 0, 1)"> (partition.nonEmpty) {
+      </span><span style="color: rgba(0, 0, 255, 1)">if</span> (numDynamicPartitions &gt; 0<span style="color: rgba(0, 0, 0, 1)">) {
+        externalCatalog.loadDynamicPartitions(
+          db </span>=<span style="color: rgba(0, 0, 0, 1)"> table.catalogTable.database,
+          table </span>=<span style="color: rgba(0, 0, 0, 1)"> table.catalogTable.identifier.table,
+          outputPath.toString,
+          partitionSpec,
+          overwrite,
+          numDynamicPartitions,
+          holdDDLTime </span>=<span style="color: rgba(0, 0, 0, 1)"> holdDDLTime)
+      } </span><span style="color: rgba(0, 0, 255, 1)">else</span><span style="color: rgba(0, 0, 0, 1)"> {
+        </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> scalastyle:off
+        </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> ifNotExists is only valid with static partition, refer to
+        </span><span style="color: rgba(0, 128, 0, 1)">//</span> <span style="color: rgba(0, 128, 0, 1); text-decoration: underline">https://cwiki.apache.org/confluence/display/Hive/LanguageManual</span><span style="color: rgba(0, 128, 0, 1)">+DML#LanguageManualDML-InsertingdataintoHiveTablesfromqueries
+        </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> scalastyle:on</span>
+        val oldPart =<span style="color: rgba(0, 0, 0, 1)">
+          externalCatalog.getPartitionOption(
+            table.catalogTable.database,
+            table.catalogTable.identifier.table,
+            partitionSpec)
+
+        var doHiveOverwrite </span>=<span style="color: rgba(0, 0, 0, 1)"> overwrite
+
+        </span><span style="color: rgba(0, 0, 255, 1)">if</span> (oldPart.isEmpty || !<span style="color: rgba(0, 0, 0, 1)">ifNotExists) {
+          </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> SPARK-18107: Insert overwrite runs much slower than hive-client.
+          </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> Newer Hive largely improves insert overwrite performance. As Spark uses older Hive
+          </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> version and we may not want to catch up new Hive version every time. We delete the
+          </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> Hive partition first and then load data file into the Hive partition.</span>
+          <span style="color: rgba(0, 0, 255, 1)">if</span> (oldPart.nonEmpty &amp;&amp;<span style="color: rgba(0, 0, 0, 1)"> overwrite) {
+            oldPart.get.storage.locationUri.foreach { uri </span>=&gt;<span style="color: rgba(0, 0, 0, 1)">
+              val partitionPath </span>= <span style="color: rgba(0, 0, 255, 1)">new</span><span style="color: rgba(0, 0, 0, 1)"> Path(uri)
+              val fs </span>=<span style="color: rgba(0, 0, 0, 1)"> partitionPath.getFileSystem(hadoopConf)
+              </span><span style="color: rgba(0, 0, 255, 1)">if</span><span style="color: rgba(0, 0, 0, 1)"> (fs.exists(partitionPath)) {
+                </span><span style="color: rgba(0, 0, 255, 1)">if</span> (!fs.delete(partitionPath, <span style="color: rgba(0, 0, 255, 1)">true</span><span style="color: rgba(0, 0, 0, 1)">)) {
+                  </span><span style="color: rgba(0, 0, 255, 1)">throw</span> <span style="color: rgba(0, 0, 255, 1)">new</span><span style="color: rgba(0, 0, 0, 1)"> RuntimeException(
+                    </span>"Cannot remove partition directory '" +<span style="color: rgba(0, 0, 0, 1)"> partitionPath.toString)
+                }
+                </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> Don't let Hive do overwrite operation since it is slower.</span>
+                doHiveOverwrite = <span style="color: rgba(0, 0, 255, 1)">false</span><span style="color: rgba(0, 0, 0, 1)">
+              }
+            }
+          }
+
+          </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> inheritTableSpecs is set to true. It should be set to false for an IMPORT query
+          </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> which is currently considered as a Hive native command.</span>
+          val inheritTableSpecs = <span style="color: rgba(0, 0, 255, 1)">true</span><span style="color: rgba(0, 0, 0, 1)">
+          externalCatalog.loadPartition(
+            table.catalogTable.database,
+            table.catalogTable.identifier.table,
+            outputPath.toString,
+            partitionSpec,
+            isOverwrite </span>=<span style="color: rgba(0, 0, 0, 1)"> doHiveOverwrite,
+            holdDDLTime </span>=<span style="color: rgba(0, 0, 0, 1)"> holdDDLTime,
+            inheritTableSpecs </span>=<span style="color: rgba(0, 0, 0, 1)"> inheritTableSpecs)
+        }
+      }
+    } </span><span style="color: rgba(0, 0, 255, 1)">else</span><span style="color: rgba(0, 0, 0, 1)"> {
+      externalCatalog.loadTable(
+        table.catalogTable.database,
+        table.catalogTable.identifier.table,
+        outputPath.toString, </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> TODO: URI</span>
+<span style="color: rgba(0, 0, 0, 1)">        overwrite,
+        holdDDLTime)
+    }
+
+    </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> Attempt to delete the staging directory and the inclusive files. If failed, the files are
+    </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> expected to be dropped at the normal termination of VM since deleteOnExit is used.</span>
+    <span style="color: rgba(0, 0, 255, 1)">try</span><span style="color: rgba(0, 0, 0, 1)"> {
+      createdTempDir.foreach { path </span>=&gt; path.getFileSystem(hadoopConf).delete(path, <span style="color: rgba(0, 0, 255, 1)">true</span><span style="color: rgba(0, 0, 0, 1)">) }
+    } </span><span style="color: rgba(0, 0, 255, 1)">catch</span><span style="color: rgba(0, 0, 0, 1)"> {
+      </span><span style="color: rgba(0, 0, 255, 1)">case</span> NonFatal(e) =&gt;<span style="color: rgba(0, 0, 0, 1)">
+        logWarning(s</span>"Unable to delete staging directory: $stagingDir.\n" +<span style="color: rgba(0, 0, 0, 1)"> e)
+    }
+
+    </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> un-cache this table.</span>
+<span style="color: rgba(0, 0, 0, 1)">    sqlContext.sparkSession.catalog.uncacheTable(table.catalogTable.identifier.quotedString)
+    sqlContext.sessionState.catalog.refreshTable(table.catalogTable.identifier)
+
+    </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> It would be nice to just return the childRdd unchanged so insert operations could be chained,
+    </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> however for now we return an empty list to simplify compatibility checks with hive, which
+    </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> does not return anything for insert operations.
+    </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> TODO: implement hive compatibility as rules.</span>
+<span style="color: rgba(0, 0, 0, 1)">    Seq.empty[InternalRow]
+  }</span></pre>
+</div>
+<p>The execution of insert overwrite is divided into three steps, one is select, one is write, and one is load. There is no problem with the first two steps, mainly the last step of load. Take loadPartition as an example to see the execution process:</p>
+<p>org.apache.spark.sql.hive.HiveExternalCatalog</p>
+<div class="cnblogs_code">
+<pre><span style="color: rgba(0, 0, 0, 1)">  override def loadPartition(
+      db: String,
+      table: String,
+      loadPath: String,
+      partition: TablePartitionSpec,
+      isOverwrite: Boolean,
+      holdDDLTime: Boolean,
+      inheritTableSpecs: Boolean): Unit </span>=<span style="color: rgba(0, 0, 0, 1)"> withClient {
+    requireTableExists(db, table)
+
+    val orderedPartitionSpec </span>= <span style="color: rgba(0, 0, 255, 1)">new</span><span style="color: rgba(0, 0, 0, 1)"> util.LinkedHashMap[String, String]()
+    getTable(db, table).partitionColumnNames.foreach { colName </span>=&gt;
+      <span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> Hive metastore is not case preserving and keeps partition columns with lower cased names,
+      </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> and Hive will validate the column names in partition spec to make sure they are partition
+      </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> columns. Here we Lowercase the column names before passing the partition spec to Hive
+      </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> client, to satisfy Hive.</span>
+<span style="color: rgba(0, 0, 0, 1)">      orderedPartitionSpec.put(colName.toLowerCase, partition(colName))
+    }
+
+    client.loadPartition(
+      loadPath,
+      db,
+      table,
+      orderedPartitionSpec,
+      isOverwrite,
+      holdDDLTime,
+      inheritTableSpecs)
+  }</span></pre>
+</div>
+<p>HiveClientImpl.loadPartition will be called here</p>
+<p>org.apache.spark.sql.hive.client.HiveClientImpl</p>
+<div class="cnblogs_code">
+<pre><span style="color: rgba(0, 0, 0, 1)">  def loadPartition(
+      loadPath: String,
+      dbName: String,
+      tableName: String,
+      partSpec: java.util.LinkedHashMap[String, String],
+      replace: Boolean,
+      holdDDLTime: Boolean,
+      inheritTableSpecs: Boolean): Unit </span>=<span style="color: rgba(0, 0, 0, 1)"> withHiveState {
+    val hiveTable </span>= client.getTable(dbName, tableName, <span style="color: rgba(0, 0, 255, 1)">true</span> <span style="color: rgba(0, 128, 0, 1)">/*</span><span style="color: rgba(0, 128, 0, 1)"> throw exception </span><span style="color: rgba(0, 128, 0, 1)">*/</span><span style="color: rgba(0, 0, 0, 1)">)
+    shim.loadPartition(
+      client,
+      </span><span style="color: rgba(0, 0, 255, 1)">new</span> Path(loadPath), <span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> TODO: Use URI</span>
+      s"$dbName.$tableName"<span style="color: rgba(0, 0, 0, 1)">,
+      partSpec,
+      replace,
+      holdDDLTime,
+      inheritTableSpecs,
+      isSkewedStoreAsSubdir </span>=<span style="color: rgba(0, 0, 0, 1)"> hiveTable.isStoredAsSubDirectories)
+  }</span></pre>
+</div>
+<p>Shim_v0_12.loadPartition will be called here</p>
+<p>org.apache.spark.sql.hive.client.Shim_v0_12</p>
+<div class="cnblogs_code">
+<pre><span style="color: rgba(0, 0, 0, 1)">  override def loadPartition(
+      hive: Hive,
+      loadPath: Path,
+      tableName: String,
+      partSpec: JMap[String, String],
+      replace: Boolean,
+      holdDDLTime: Boolean,
+      inheritTableSpecs: Boolean,
+      isSkewedStoreAsSubdir: Boolean): Unit </span>=<span style="color: rgba(0, 0, 0, 1)"> {
+    loadPartitionMethod.invoke(hive, loadPath, tableName, partSpec, replace: JBoolean,
+      holdDDLTime: JBoolean, inheritTableSpecs: JBoolean, isSkewedStoreAsSubdir: JBoolean)
+  }
+
+  </span><span style="color: rgba(0, 0, 255, 1)">private</span> lazy val loadPartitionMethod =<span style="color: rgba(0, 0, 0, 1)">
+    findMethod(
+      classOf[Hive],
+      </span>"loadPartition"<span style="color: rgba(0, 0, 0, 1)">,
+      classOf[Path],
+      classOf[String],
+      classOf[JMap[String, String]],
+      JBoolean.TYPE,
+      JBoolean.TYPE,
+      JBoolean.TYPE,
+      JBoolean.TYPE)</span></pre>
+</div>
+<p>This will reflect the call to Hive's class Hive.loadPartition</p>
+<p>org.apache.hadoop.Hive.ql.metadata.Hive (version 1.2)</p>
+<div class="cnblogs_code">
+<pre>    <span style="color: rgba(0, 0, 255, 1)">public</span> <span style="color: rgba(0, 0, 255, 1)">void</span> loadPartition(Path loadPath, String tableName, Map&lt;String, String&gt; partSpec, <span style="color: rgba(0, 0, 255, 1)">boolean</span> replace, <span style="color: rgba(0, 0, 255, 1)">boolean</span> holdDDLTime, <span style="color: rgba(0, 0, 255, 1)">boolean</span> inheritTableSpecs, <span style="color: rgba(0, 0, 255, 1)">boolean</span> isSkewedStoreAsSubdir, <span style="color: rgba(0, 0, 255, 1)">boolean</span> isSrcLocal, <span style="color: rgba(0, 0, 255, 1)">boolean</span> isAcid) <span style="color: rgba(0, 0, 255, 1)">throws</span><span style="color: rgba(0, 0, 0, 1)"> HiveException {
+        Table tbl </span>= <span style="color: rgba(0, 0, 255, 1)">this</span><span style="color: rgba(0, 0, 0, 1)">.getTable(tableName);
+        </span><span style="color: rgba(0, 0, 255, 1)">this</span><span style="color: rgba(0, 0, 0, 1)">.loadPartition(loadPath, tbl, partSpec, replace, holdDDLTime, inheritTableSpecs, isSkewedStoreAsSubdir, isSrcLocal, isAcid);
+    }
+
+    </span><span style="color: rgba(0, 0, 255, 1)">public</span> Partition loadPartition(Path loadPath, Table tbl, Map&lt;String, String&gt; partSpec, <span style="color: rgba(0, 0, 255, 1)">boolean</span> replace, <span style="color: rgba(0, 0, 255, 1)">boolean</span> holdDDLTime, <span style="color: rgba(0, 0, 255, 1)">boolean</span> inheritTableSpecs, <span style="color: rgba(0, 0, 255, 1)">boolean</span> isSkewedStoreAsSubdir, <span style="color: rgba(0, 0, 255, 1)">boolean</span> isSrcLocal, <span style="color: rgba(0, 0, 255, 1)">boolean</span> isAcid) <span style="color: rgba(0, 0, 255, 1)">throws</span><span style="color: rgba(0, 0, 0, 1)"> HiveException {
+        Path tblDataLocationPath </span>=<span style="color: rgba(0, 0, 0, 1)"> tbl.getDataLocation();
+        Partition newTPart </span>= <span style="color: rgba(0, 0, 255, 1)">null</span><span style="color: rgba(0, 0, 0, 1)">;
+
+        </span><span style="color: rgba(0, 0, 255, 1)">try</span><span style="color: rgba(0, 0, 0, 1)"> {
+            Partition oldPart </span>= <span style="color: rgba(0, 0, 255, 1)">this</span>.getPartition(tbl, partSpec, <span style="color: rgba(0, 0, 255, 1)">false</span><span style="color: rgba(0, 0, 0, 1)">);
+            Path oldPartPath </span>= <span style="color: rgba(0, 0, 255, 1)">null</span><span style="color: rgba(0, 0, 0, 1)">;
+            </span><span style="color: rgba(0, 0, 255, 1)">if</span> (oldPart != <span style="color: rgba(0, 0, 255, 1)">null</span><span style="color: rgba(0, 0, 0, 1)">) {
+                oldPartPath </span>=<span style="color: rgba(0, 0, 0, 1)"> oldPart.getDataLocation();
+            }
+
+            Path newPartPath </span>= <span style="color: rgba(0, 0, 255, 1)">null</span><span style="color: rgba(0, 0, 0, 1)">;
+            FileSystem oldPartPathFS;
+            </span><span style="color: rgba(0, 0, 255, 1)">if</span><span style="color: rgba(0, 0, 0, 1)"> (inheritTableSpecs) {
+                Path partPath </span>= <span style="color: rgba(0, 0, 255, 1)">new</span><span style="color: rgba(0, 0, 0, 1)"> Path(tbl.getDataLocation(), Warehouse.makePartPath(partSpec));
+                newPartPath </span>= <span style="color: rgba(0, 0, 255, 1)">new</span><span style="color: rgba(0, 0, 0, 1)"> Path(tblDataLocationPath.toUri().getScheme(), tblDataLocationPath.toUri().getAuthority(), partPath.toUri().getPath());
+                </span><span style="color: rgba(0, 0, 255, 1)">if</span> (oldPart != <span style="color: rgba(0, 0, 255, 1)">null</span><span style="color: rgba(0, 0, 0, 1)">) {
+                    oldPartPathFS </span>= oldPartPath.getFileSystem(<span style="color: rgba(0, 0, 255, 1)">this</span><span style="color: rgba(0, 0, 0, 1)">.getConf());
+                    FileSystem loadPathFS </span>= loadPath.getFileSystem(<span style="color: rgba(0, 0, 255, 1)">this</span><span style="color: rgba(0, 0, 0, 1)">.getConf());
+                    </span><span style="color: rgba(0, 0, 255, 1)">if</span><span style="color: rgba(0, 0, 0, 1)"> (FileUtils.equalsFileSystem(oldPartPathFS, loadPathFS)) {
+                        newPartPath </span>=<span style="color: rgba(0, 0, 0, 1)"> oldPartPath;
+                    }
+                }
+            } </span><span style="color: rgba(0, 0, 255, 1)">else</span><span style="color: rgba(0, 0, 0, 1)"> {
+                newPartPath </span>=<span style="color: rgba(0, 0, 0, 1)"> oldPartPath;
+            }
+
+            List</span>&lt;Path&gt; newFiles = <span style="color: rgba(0, 0, 255, 1)">null</span><span style="color: rgba(0, 0, 0, 1)">;
+            </span><span style="color: rgba(0, 0, 255, 1)">if</span><span style="color: rgba(0, 0, 0, 1)"> (replace) {
+                replaceFiles(tbl.getPath(), loadPath, newPartPath, oldPartPath, </span><span style="color: rgba(0, 0, 255, 1)">this</span><span style="color: rgba(0, 0, 0, 1)">.getConf(), isSrcLocal);
+            } </span><span style="color: rgba(0, 0, 255, 1)">else</span><span style="color: rgba(0, 0, 0, 1)"> {
+                newFiles </span>= <span style="color: rgba(0, 0, 255, 1)">new</span><span style="color: rgba(0, 0, 0, 1)"> ArrayList();
+                oldPartPathFS </span>= tbl.getDataLocation().getFileSystem(<span style="color: rgba(0, 0, 255, 1)">this</span><span style="color: rgba(0, 0, 0, 1)">.conf);
+                copyFiles(</span><span style="color: rgba(0, 0, 255, 1)">this</span><span style="color: rgba(0, 0, 0, 1)">.conf, loadPath, newPartPath, oldPartPathFS, isSrcLocal, isAcid, newFiles);
+            }
+
+            </span><span style="color: rgba(0, 0, 255, 1)">boolean</span> forceCreate = !<span style="color: rgba(0, 0, 0, 1)">holdDDLTime;
+            newTPart </span>= <span style="color: rgba(0, 0, 255, 1)">this</span><span style="color: rgba(0, 0, 0, 1)">.getPartition(tbl, partSpec, forceCreate, newPartPath.toString(), inheritTableSpecs, newFiles);
+            </span><span style="color: rgba(0, 0, 255, 1)">if</span> (!holdDDLTime &amp;&amp;<span style="color: rgba(0, 0, 0, 1)"> isSkewedStoreAsSubdir) {
+                org.apache.hadoop.hive.metastore.api.Partition newCreatedTpart </span>=<span style="color: rgba(0, 0, 0, 1)"> newTPart.getTPartition();
+                SkewedInfo skewedInfo </span>=<span style="color: rgba(0, 0, 0, 1)"> newCreatedTpart.getSd().getSkewedInfo();
+                Map</span>&lt;List&lt;String&gt;, String&gt; skewedColValueLocationMaps = <span style="color: rgba(0, 0, 255, 1)">this</span><span style="color: rgba(0, 0, 0, 1)">.constructListBucketingLocationMap(newPartPath, skewedInfo);
+                skewedInfo.setSkewedColValueLocationMaps(skewedColValueLocationMaps);
+                newCreatedTpart.getSd().setSkewedInfo(skewedInfo);
+                </span><span style="color: rgba(0, 0, 255, 1)">this</span>.alterPartition(tbl.getDbName(), tbl.getTableName(), <span style="color: rgba(0, 0, 255, 1)">new</span><span style="color: rgba(0, 0, 0, 1)"> Partition(tbl, newCreatedTpart));
+                </span><span style="color: rgba(0, 0, 255, 1)">this</span>.getPartition(tbl, partSpec, <span style="color: rgba(0, 0, 255, 1)">true</span><span style="color: rgba(0, 0, 0, 1)">, newPartPath.toString(), inheritTableSpecs, newFiles);
+                </span><span style="color: rgba(0, 0, 255, 1)">return</span> <span style="color: rgba(0, 0, 255, 1)">new</span><span style="color: rgba(0, 0, 0, 1)"> Partition(tbl, newCreatedTpart);
+            } </span><span style="color: rgba(0, 0, 255, 1)">else</span><span style="color: rgba(0, 0, 0, 1)"> {
+                </span><span style="color: rgba(0, 0, 255, 1)">return</span><span style="color: rgba(0, 0, 0, 1)"> newTPart;
+            }
+        } </span><span style="color: rgba(0, 0, 255, 1)">catch</span><span style="color: rgba(0, 0, 0, 1)"> (IOException var20) {
+            LOG.error(StringUtils.stringifyException(var20));
+            </span><span style="color: rgba(0, 0, 255, 1)">throw</span> <span style="color: rgba(0, 0, 255, 1)">new</span><span style="color: rgba(0, 0, 0, 1)"> HiveException(var20);
+        } </span><span style="color: rgba(0, 0, 255, 1)">catch</span><span style="color: rgba(0, 0, 0, 1)"> (MetaException var21) {
+            LOG.error(StringUtils.stringifyException(var21));
+            </span><span style="color: rgba(0, 0, 255, 1)">throw</span> <span style="color: rgba(0, 0, 255, 1)">new</span><span style="color: rgba(0, 0, 0, 1)"> HiveException(var21);
+        } </span><span style="color: rgba(0, 0, 255, 1)">catch</span><span style="color: rgba(0, 0, 0, 1)"> (InvalidOperationException var22) {
+            LOG.error(StringUtils.stringifyException(var22));
+            </span><span style="color: rgba(0, 0, 255, 1)">throw</span> <span style="color: rgba(0, 0, 255, 1)">new</span><span style="color: rgba(0, 0, 0, 1)"> HiveException(var22);
+        }
+    }
+
+    </span><span style="color: rgba(0, 0, 255, 1)">protected</span> <span style="color: rgba(0, 0, 255, 1)">static</span> <span style="color: rgba(0, 0, 255, 1)">void</span> replaceFiles(Path tablePath, Path srcf, Path destf, Path oldPath, HiveConf conf, <span style="color: rgba(0, 0, 255, 1)">boolean</span> isSrcLocal) <span style="color: rgba(0, 0, 255, 1)">throws</span><span style="color: rgba(0, 0, 0, 1)"> HiveException {
+        </span><span style="color: rgba(0, 0, 255, 1)">try</span><span style="color: rgba(0, 0, 0, 1)"> {
+            FileSystem destFs </span>=<span style="color: rgba(0, 0, 0, 1)"> destf.getFileSystem(conf);
+            </span><span style="color: rgba(0, 0, 255, 1)">boolean</span> inheritPerms =<span style="color: rgba(0, 0, 0, 1)"> HiveConf.getBoolVar(conf, ConfVars.HIVE_WAREHOUSE_SUBDIR_INHERIT_PERMS);
+
+            FileSystem srcFs;
+            FileStatus[] srcs;
+            </span><span style="color: rgba(0, 0, 255, 1)">try</span><span style="color: rgba(0, 0, 0, 1)"> {
+                srcFs </span>=<span style="color: rgba(0, 0, 0, 1)"> srcf.getFileSystem(conf);
+                srcs </span>=<span style="color: rgba(0, 0, 0, 1)"> srcFs.globStatus(srcf);
+            } </span><span style="color: rgba(0, 0, 255, 1)">catch</span><span style="color: rgba(0, 0, 0, 1)"> (IOException var20) {
+                </span><span style="color: rgba(0, 0, 255, 1)">throw</span> <span style="color: rgba(0, 0, 255, 1)">new</span> HiveException("Getting globStatus " +<span style="color: rgba(0, 0, 0, 1)"> srcf.toString(), var20);
+            }
+
+            </span><span style="color: rgba(0, 0, 255, 1)">if</span> (srcs == <span style="color: rgba(0, 0, 255, 1)">null</span><span style="color: rgba(0, 0, 0, 1)">) {
+                LOG.info(</span>"No sources specified to move: " +<span style="color: rgba(0, 0, 0, 1)"> srcf);
+            } </span><span style="color: rgba(0, 0, 255, 1)">else</span><span style="color: rgba(0, 0, 0, 1)"> {
+                List</span>&lt;List&lt;Path[]&gt;&gt; result = checkPaths(conf, destFs, srcs, srcFs, destf, <span style="color: rgba(0, 0, 255, 1)">true</span><span style="color: rgba(0, 0, 0, 1)">);
+                </span><span style="color: rgba(0, 0, 255, 1)">if</span> (oldPath != <span style="color: rgba(0, 0, 255, 1)">null</span><span style="color: rgba(0, 0, 0, 1)">) {
+                    </span><span style="color: rgba(0, 0, 255, 1)">try</span><span style="color: rgba(0, 0, 0, 1)"> {
+                        FileSystem fs2 </span>=<span style="color: rgba(0, 0, 0, 1)"> oldPath.getFileSystem(conf);
+                        </span><span style="color: rgba(0, 0, 255, 1)">if</span><span style="color: rgba(0, 0, 0, 1)"> (fs2.exists(oldPath)) {
+                            </span><span style="color: rgba(0, 0, 255, 1)">if</span><span style="color: rgba(0, 0, 0, 1)"> (FileUtils.isSubDir(oldPath, destf, fs2)) {
+                                FileUtils.trashFilesUnderDir(fs2, oldPath, conf);
+                            }
+
+                            </span><span style="color: rgba(0, 0, 255, 1)">if</span><span style="color: rgba(0, 0, 0, 1)"> (inheritPerms) {
+                                inheritFromTable(tablePath, destf, conf, destFs);
+                            }
+                        }
+                    } </span><span style="color: rgba(0, 0, 255, 1)">catch</span><span style="color: rgba(0, 0, 0, 1)"> (Exception var19) {
+                        LOG.warn(</span>"Directory " + oldPath.toString() + " cannot be removed: " +<span style="color: rgba(0, 0, 0, 1)"> var19, var19);
+                    }
+                }
+
+                </span><span style="color: rgba(0, 0, 255, 1)">if</span> (srcs.length == 1 &amp;&amp; srcs[0<span style="color: rgba(0, 0, 0, 1)">].isDir()) {
+                    Path destfp </span>=<span style="color: rgba(0, 0, 0, 1)"> destf.getParent();
+                    </span><span style="color: rgba(0, 0, 255, 1)">if</span> (!<span style="color: rgba(0, 0, 0, 1)">destFs.exists(destfp)) {
+                        </span><span style="color: rgba(0, 0, 255, 1)">boolean</span> success =<span style="color: rgba(0, 0, 0, 1)"> destFs.mkdirs(destfp);
+                        </span><span style="color: rgba(0, 0, 255, 1)">if</span> (!<span style="color: rgba(0, 0, 0, 1)">success) {
+                            LOG.warn(</span>"Error creating directory " +<span style="color: rgba(0, 0, 0, 1)"> destf.toString());
+                        }
+
+                        </span><span style="color: rgba(0, 0, 255, 1)">if</span> (inheritPerms &amp;&amp;<span style="color: rgba(0, 0, 0, 1)"> success) {
+                            inheritFromTable(tablePath, destfp, conf, destFs);
+                        }
+                    }
+
+                    Iterator i$ </span>=<span style="color: rgba(0, 0, 0, 1)"> result.iterator();
+
+                    </span><span style="color: rgba(0, 0, 255, 1)">while</span><span style="color: rgba(0, 0, 0, 1)">(i$.hasNext()) {
+                        List</span>&lt;Path[]&gt; sdpairs =<span style="color: rgba(0, 0, 0, 1)"> (List)i$.next();
+                        Iterator i$ </span>=<span style="color: rgba(0, 0, 0, 1)"> sdpairs.iterator();
+
+                        </span><span style="color: rgba(0, 0, 255, 1)">while</span><span style="color: rgba(0, 0, 0, 1)">(i$.hasNext()) {
+                            Path[] sdpair </span>=<span style="color: rgba(0, 0, 0, 1)"> (Path[])i$.next();
+                            Path destParent </span>= sdpair[1<span style="color: rgba(0, 0, 0, 1)">].getParent();
+                            FileSystem destParentFs </span>=<span style="color: rgba(0, 0, 0, 1)"> destParent.getFileSystem(conf);
+                            </span><span style="color: rgba(0, 0, 255, 1)">if</span> (!<span style="color: rgba(0, 0, 0, 1)">destParentFs.isDirectory(destParent)) {
+                                </span><span style="color: rgba(0, 0, 255, 1)">boolean</span> success =<span style="color: rgba(0, 0, 0, 1)"> destFs.mkdirs(destParent);
+                                </span><span style="color: rgba(0, 0, 255, 1)">if</span> (!<span style="color: rgba(0, 0, 0, 1)">success) {
+                                    LOG.warn(</span>"Error creating directory " +<span style="color: rgba(0, 0, 0, 1)"> destParent);
+                                }
+
+                                </span><span style="color: rgba(0, 0, 255, 1)">if</span> (inheritPerms &amp;&amp;<span style="color: rgba(0, 0, 0, 1)"> success) {
+                                    inheritFromTable(tablePath, destParent, conf, destFs);
+                                }
+                            }
+
+                            </span><span style="color: rgba(0, 0, 255, 1)">if</span> (!moveFile(conf, sdpair[0], sdpair[1], destFs, <span style="color: rgba(0, 0, 255, 1)">true</span><span style="color: rgba(0, 0, 0, 1)">, isSrcLocal)) {
+                                </span><span style="color: rgba(0, 0, 255, 1)">throw</span> <span style="color: rgba(0, 0, 255, 1)">new</span> IOException("Unable to move file/directory from " + sdpair[0] + " to " + sdpair[1<span style="color: rgba(0, 0, 0, 1)">]);
+                            }
+                        }
+                    }
+                } </span><span style="color: rgba(0, 0, 255, 1)">else</span><span style="color: rgba(0, 0, 0, 1)"> {
+                    </span><span style="color: rgba(0, 0, 255, 1)">if</span> (!<span style="color: rgba(0, 0, 0, 1)">destFs.exists(destf)) {
+                        </span><span style="color: rgba(0, 0, 255, 1)">boolean</span> success =<span style="color: rgba(0, 0, 0, 1)"> destFs.mkdirs(destf);
+                        </span><span style="color: rgba(0, 0, 255, 1)">if</span> (!<span style="color: rgba(0, 0, 0, 1)">success) {
+                            LOG.warn(</span>"Error creating directory " +<span style="color: rgba(0, 0, 0, 1)"> destf.toString());
+                        }
+
+                        </span><span style="color: rgba(0, 0, 255, 1)">if</span> (inheritPerms &amp;&amp;<span style="color: rgba(0, 0, 0, 1)"> success) {
+                            inheritFromTable(tablePath, destf, conf, destFs);
+                        }
+                    }
+
+                    Iterator i$ </span>=<span style="color: rgba(0, 0, 0, 1)"> result.iterator();
+
+                    </span><span style="color: rgba(0, 0, 255, 1)">while</span><span style="color: rgba(0, 0, 0, 1)">(i$.hasNext()) {
+                        List</span>&lt;Path[]&gt; sdpairs =<span style="color: rgba(0, 0, 0, 1)"> (List)i$.next();
+                        Iterator i$ </span>=<span style="color: rgba(0, 0, 0, 1)"> sdpairs.iterator();
+
+                        </span><span style="color: rgba(0, 0, 255, 1)">while</span><span style="color: rgba(0, 0, 0, 1)">(i$.hasNext()) {
+                            Path[] sdpair </span>=<span style="color: rgba(0, 0, 0, 1)"> (Path[])i$.next();
+                            </span><span style="color: rgba(0, 0, 255, 1)">if</span> (!moveFile(conf, sdpair[0], sdpair[1], destFs, <span style="color: rgba(0, 0, 255, 1)">true</span><span style="color: rgba(0, 0, 0, 1)">, isSrcLocal)) {
+                                </span><span style="color: rgba(0, 0, 255, 1)">throw</span> <span style="color: rgba(0, 0, 255, 1)">new</span> IOException("Error moving: " + sdpair[0] + " into: " + sdpair[1<span style="color: rgba(0, 0, 0, 1)">]);
+                            }
+                        }
+                    }
+                }
+
+            }
+        } </span><span style="color: rgba(0, 0, 255, 1)">catch</span><span style="color: rgba(0, 0, 0, 1)"> (IOException var21) {
+            </span><span style="color: rgba(0, 0, 255, 1)">throw</span> <span style="color: rgba(0, 0, 255, 1)">new</span><span style="color: rgba(0, 0, 0, 1)"> HiveException(var21.getMessage(), var21);
+        }
+    }
+
+    </span><span style="color: rgba(0, 0, 255, 1)">public</span> <span style="color: rgba(0, 0, 255, 1)">static</span> <span style="color: rgba(0, 0, 255, 1)">boolean</span> trashFilesUnderDir(FileSystem fs, Path f, Configuration conf) <span style="color: rgba(0, 0, 255, 1)">throws</span><span style="color: rgba(0, 0, 0, 1)"> FileNotFoundException, IOException {
+        FileStatus[] statuses </span>=<span style="color: rgba(0, 0, 0, 1)"> fs.listStatus(f, HIDDEN_FILES_PATH_FILTER);
+        </span><span style="color: rgba(0, 0, 255, 1)">boolean</span> result = <span style="color: rgba(0, 0, 255, 1)">true</span><span style="color: rgba(0, 0, 0, 1)">;
+        FileStatus[] arr$ </span>=<span style="color: rgba(0, 0, 0, 1)"> statuses;
+        </span><span style="color: rgba(0, 0, 255, 1)">int</span> len$ =<span style="color: rgba(0, 0, 0, 1)"> statuses.length;
+
+        </span><span style="color: rgba(0, 0, 255, 1)">for</span>(<span style="color: rgba(0, 0, 255, 1)">int</span> i$ = 0; i$ &lt; len$; ++<span style="color: rgba(0, 0, 0, 1)">i$) {
+            FileStatus status </span>=<span style="color: rgba(0, 0, 0, 1)"> arr$[i$];
+            result </span>&amp;=<span style="color: rgba(0, 0, 0, 1)"> moveToTrash(fs, status.getPath(), conf);
+        }
+
+        </span><span style="color: rgba(0, 0, 255, 1)">return</span><span style="color: rgba(0, 0, 0, 1)"> result;
+    }</span></pre>
+</div>
+<p>When Hive executes loadPartition, if the partition directory already exists, replaceFiles will be called, and replaceFiles will call trashFilesUnderDir, which will put the files into the recycle bin one by one;</p>
+<p>When Spark executes loadPartition, it directly reflects the logic of calling Hive. Why is it much slower than Hive execution?</p>
+<p>At this time, I noticed that the version of Hive used is 2.1, and the Hive version that spark2.1.1 relies on is 1.2. Comparing the codes between hive1.2 and hive2.1, we found that there are indeed differences. The following is the code of hive2.1:</p>
+<p>org.apache.hadoop.Hive.ql.metadata.Hive (version 2.1)</p>
+<div class="cnblogs_code">
+<pre>  <span style="color: rgba(0, 128, 0, 1)">/**</span><span style="color: rgba(0, 128, 0, 1)">
+   * Trashes or deletes all files under a directory. Leaves the directory as is.
+   * </span><span style="color: rgba(128, 128, 128, 1)">@param</span><span style="color: rgba(0, 128, 0, 1)"> fs FileSystem to use
+   * </span><span style="color: rgba(128, 128, 128, 1)">@param</span><span style="color: rgba(0, 128, 0, 1)"> f path of directory
+   * </span><span style="color: rgba(128, 128, 128, 1)">@param</span><span style="color: rgba(0, 128, 0, 1)"> conf hive configuration
+   * </span><span style="color: rgba(128, 128, 128, 1)">@param</span><span style="color: rgba(0, 128, 0, 1)"> forceDelete whether to force delete files if trashing does not succeed
+   * </span><span style="color: rgba(128, 128, 128, 1)">@return</span><span style="color: rgba(0, 128, 0, 1)"> true if deletion successful
+   * </span><span style="color: rgba(128, 128, 128, 1)">@throws</span><span style="color: rgba(0, 128, 0, 1)"> IOException
+   </span><span style="color: rgba(0, 128, 0, 1)">*/</span>
+  <span style="color: rgba(0, 0, 255, 1)">private</span> <span style="color: rgba(0, 0, 255, 1)">boolean</span> trashFilesUnderDir(<span style="color: rgba(0, 0, 255, 1)">final</span> FileSystem fs, Path f, <span style="color: rgba(0, 0, 255, 1)">final</span><span style="color: rgba(0, 0, 0, 1)"> Configuration conf)
+      </span><span style="color: rgba(0, 0, 255, 1)">throws</span><span style="color: rgba(0, 0, 0, 1)"> IOException {
+    FileStatus[] statuses </span>=<span style="color: rgba(0, 0, 0, 1)"> fs.listStatus(f, FileUtils.HIDDEN_FILES_PATH_FILTER);
+    </span><span style="color: rgba(0, 0, 255, 1)">boolean</span> result = <span style="color: rgba(0, 0, 255, 1)">true</span><span style="color: rgba(0, 0, 0, 1)">;
+    </span><span style="color: rgba(0, 0, 255, 1)">final</span> List&lt;Future&lt;Boolean&gt;&gt; futures = <span style="color: rgba(0, 0, 255, 1)">new</span> LinkedList&lt;&gt;<span style="color: rgba(0, 0, 0, 1)">();
+    </span><span style="color: rgba(0, 0, 255, 1)">final</span> ExecutorService pool = conf.getInt(ConfVars.HIVE_MOVE_FILES_THREAD_COUNT.varname, 25) &gt; 0 ?<span style="color: rgba(0, 0, 0, 1)">
+        Executors.newFixedThreadPool(conf.getInt(ConfVars.HIVE_MOVE_FILES_THREAD_COUNT.varname, </span>25<span style="color: rgba(0, 0, 0, 1)">),
+        </span><span style="color: rgba(0, 0, 255, 1)">new</span> ThreadFactoryBuilder().setDaemon(<span style="color: rgba(0, 0, 255, 1)">true</span>).setNameFormat("Delete-Thread-%d").build()) : <span style="color: rgba(0, 0, 255, 1)">null</span><span style="color: rgba(0, 0, 0, 1)">;
+    </span><span style="color: rgba(0, 0, 255, 1)">final</span> SessionState parentSession =<span style="color: rgba(0, 0, 0, 1)"> SessionState.get();
+    </span><span style="color: rgba(0, 0, 255, 1)">for</span> (<span style="color: rgba(0, 0, 255, 1)">final</span><span style="color: rgba(0, 0, 0, 1)"> FileStatus status : statuses) {
+      </span><span style="color: rgba(0, 0, 255, 1)">if</span> (<span style="color: rgba(0, 0, 255, 1)">null</span> ==<span style="color: rgba(0, 0, 0, 1)"> pool) {
+        result </span>&amp;=<span style="color: rgba(0, 0, 0, 1)"> FileUtils.moveToTrash(fs, status.getPath(), conf);
+      } </span><span style="color: rgba(0, 0, 255, 1)">else</span><span style="color: rgba(0, 0, 0, 1)"> {
+        futures.add(pool.submit(</span><span style="color: rgba(0, 0, 255, 1)">new</span> Callable&lt;Boolean&gt;<span style="color: rgba(0, 0, 0, 1)">() {
+          @Override
+          </span><span style="color: rgba(0, 0, 255, 1)">public</span> Boolean call() <span style="color: rgba(0, 0, 255, 1)">throws</span><span style="color: rgba(0, 0, 0, 1)"> Exception {
+            SessionState.setCurrentSessionState(parentSession);
+            </span><span style="color: rgba(0, 0, 255, 1)">return</span><span style="color: rgba(0, 0, 0, 1)"> FileUtils.moveToTrash(fs, status.getPath(), conf);
+          }
+        }));
+      }
+    }
+    </span><span style="color: rgba(0, 0, 255, 1)">if</span> (<span style="color: rgba(0, 0, 255, 1)">null</span> !=<span style="color: rgba(0, 0, 0, 1)"> pool) {
+      pool.shutdown();
+      </span><span style="color: rgba(0, 0, 255, 1)">for</span> (Future&lt;Boolean&gt;<span style="color: rgba(0, 0, 0, 1)"> future : futures) {
+        </span><span style="color: rgba(0, 0, 255, 1)">try</span><span style="color: rgba(0, 0, 0, 1)"> {
+          result </span>&amp;=<span style="color: rgba(0, 0, 0, 1)"> future.get();
+        } </span><span style="color: rgba(0, 0, 255, 1)">catch</span> (InterruptedException |<span style="color: rgba(0, 0, 0, 1)"> ExecutionException e) {
+          LOG.error(</span>"Failed to delete: "<span style="color: rgba(0, 0, 0, 1)">,e);
+          pool.shutdownNow();
+          </span><span style="color: rgba(0, 0, 255, 1)">throw</span> <span style="color: rgba(0, 0, 255, 1)">new</span><span style="color: rgba(0, 0, 0, 1)"> IOException(e);
+        }
+      }
+    }
+    </span><span style="color: rgba(0, 0, 255, 1)">return</span><span style="color: rgba(0, 0, 0, 1)"> result;
+  }</span></pre>
+</div>
+<p>It can be seen that the thread pool is used to delete files in hive2.1, while in hive1.2 it is deleted serially in a for loop, so when there are many files, hive2.1 is much faster than hive1.2 (i.e. spark2.1.1);</p>
+<p>The way Spark relies on Hive is direct reflection call. Since the method interfaces of many classes in hive1.2 and hive2.1 have been adjusted, it is difficult to upgrade. Therefore, if you encounter this problem, you can only modify the Hive.trashFilesUnderDir code in Spark, and also change it to the thread pool method to delete files. The problem is solved;</p>
+<p> </p>
+</div>
+</div>
+<!-- Post Footer -->
+<div class="post-footer">
+<div class="post-navigation">
+<a class="nav-button" href="../blog.html">← Back to Home</a>
+<a class="nav-button" href="0302.html">Next Post →</a>
+</div>
+</div>
+</article>
+</div>
+</body>
+</html>

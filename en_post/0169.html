@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Logstash 3 - http application (in and out)</title>
+<link href="../css/style3.css" rel="stylesheet"/>
+</head>
+<body>
+<div class="container">
+<!-- Header Navigation -->
+<div class="header">
+<h1><a href="../blog.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+</div>
+<!-- Post Container -->
+<article class="post">
+<!-- Post Header -->
+<div class="post-header">
+<h1>Logstash 3 - http application (in and out)</h1>
+<div class="post-meta">
+<div class="post-meta-item">
+<span class="meta-icon">📅</span>
+<span>March 19, 2019</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">📖</span>
+<span>1 min read</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">👁️</span>
+<span>2295 views</span>
+</div>
+</div>
+</div>
+<!-- Post Content -->
+<div class="post-content">
+<div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<p>One Logstash can be easily broken into two Logstash through http to achieve cross-server or cross-platform data synchronization. For example, the original process is</p>
+<blockquote>
+<p>logstash: nginx log - &gt; kafka</p>
+</blockquote>
+<p>Break it into two</p>
+<blockquote>
+<p>logstash1: nginx log - &gt; http out</p>
+<p>logstash2: http in - &gt;kafka</p>
+</blockquote>
+<p>Details are as follows</p>
+<h1>http out</h1>
+<div class="cnblogs_code">
+<pre></pre>
+<p>  filter {<br/>    ruby {<br/>      code =&gt; "event.cancel if not event.get('message').include?'something'"<br/>    }<br/>  }</p>
+<pre><span style="color: rgba(0, 0, 0, 1)">output {
+    http {
+      url </span>=&gt; <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">http://test.server:10000</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">
+      codec </span>=&gt; <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">plain</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">
+      format </span>=&gt; <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">json</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">
+      content_type </span>=&gt; <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">application/json</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">
+      http_method </span>=&gt; <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">post</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">
+    }</span><span style="color: rgba(0, 0, 0, 1)">
+}</span></pre>
+</div>
+<p>Unnecessary records can be skipped through filter</p>
+<h1>http in</h1>
+<div class="cnblogs_code">
+<pre><span style="color: rgba(0, 0, 0, 1)">input {
+    http {
+        host </span>=&gt; <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">0.0.0.0</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">
+        port </span>=&gt; 10000<span style="color: rgba(0, 0, 0, 1)">
+        additional_codecs </span>=&gt; {<span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">application/json</span><span style="color: rgba(128, 0, 0, 1)">"</span>=&gt;<span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">json</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">}
+        codec </span>=&gt; <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">plain</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">
+        threads </span>=&gt; 4<span style="color: rgba(0, 0, 0, 1)">
+        ssl </span>=&gt;<span style="color: rgba(0, 0, 0, 1)"> false
+    }
+}</span></pre>
+</div>
+<p> </p>
+<p>http in</p>
+<p>Reference: https://www.elastic.co/guide/en/Logstash/current/plugins-inputs-http.html</p>
+<p>http out</p>
+<p>Reference: https://www.elastic.co/guide/en/Logstash/current/plugins-outputs-http.html</p>
+<p> </p>
+</div>
+</div>
+<!-- Post Footer -->
+<div class="post-footer">
+<div class="post-navigation">
+<a class="nav-button" href="../blog.html">← Back to Home</a>
+<a class="nav-button" href="0170.html">Next Post →</a>
+</div>
+</div>
+</article>
+</div>
+</body>
+</html>

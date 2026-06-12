@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Notes on Big Data</title>
+    <link rel="stylesheet" href="../css/style3.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header Navigation -->
+        <div class="header">
+            <h1><a href="../blog.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+        </div>
+
+        <!-- Post Container -->
+        <article class="post">
+            <!-- Post Header -->
+            <div class="post-header">
+                <h1>Notes on Big Data</h1>
+                <div class="post-meta">
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📅</span>
+                        <span>May 31, 2022</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📖</span>
+                        <span>1 min read</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">👁️</span>
+                        <span>187 views</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Post Content -->
+            <div class="post-content">
+                <div class="blogpost-body cnblogs-markdown" id="cnblogs_post_body">
+<h1 id="fifty-years-of-technology">1. Fifty Years of Technology</h1>
+<table>
+<thead>
+<tr>
+<th>Direction</th>
+<th>Company/Organization</th>
+<th>Period</th>
+<th>Representative Technologies</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Mainframes</td>
+<td>IBM</td>
+<td>1970s</td>
+<td>System z、AIX</td>
+</tr>
+<tr>
+<td>Minicomputers</td>
+<td>DEC、SUN</td>
+<td>1980s</td>
+<td>SPARC、Solaris</td>
+</tr>
+<tr>
+<td>Commodity PCs + fiber optics</td>
+<td>Google</td>
+<td>1990s</td>
+<td>Intel、Seagate</td>
+</tr>
+<tr>
+<td>Big data</td>
+<td>Google</td>
+<td>2003-2004</td>
+<td>GFS、MapReduce、BigTable</td>
+</tr>
+<tr>
+<td>Open source</td>
+<td>Apache</td>
+<td>2006-2007</td>
+<td>Hadoop、HBase</td>
+</tr>
+<tr>
+<td>Artificial intelligence and deep learning</td>
+<td>Google</td>
+<td>2016</td>
+<td>TensorFlow</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p>"When the network becomes as fast as the processor, computers connected to the network will become empty."<br/>
+--Eric Schmidt, Sun CTO, 1993</p>
+</blockquote>
+<blockquote>
+<p>"The internet is about to disappear, and the Internet of Things will become pervasive."<br/>
+--Eric Schmidt, Google CEO, 2015</p>
+</blockquote>
+<h2 id="driving-forces">Driving Forces</h2>
+<h3 id="network-internet-data-explosion-big-data-ai">Network -&gt; Internet -&gt; Data Explosion -&gt; Big Data -&gt; Artificial Intelligence</h3>
+<p><picture>
+  <source srcset="../img/1509647-20220531120046687-404467020.webp" type="image/webp">
+  <img alt="" src="../img/1509647-20220531120046687-404467020.png">
+</picture></p>
+<h1 id="back-to-hardware">2. Back to Hardware</h1>
+<table>
+<thead>
+<tr>
+<th>Hardware</th>
+<th>Details</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>CPU</td>
+<td>SIMD instructions (Single Instruction, Multiple Data) for vectorized queries</td>
+</tr>
+<tr>
+<td>GPU</td>
+<td>Matrix-computation acceleration for algorithms</td>
+</tr>
+<tr>
+<td>Memory</td>
+<td>DDR、JVM-GC</td>
+</tr>
+<tr>
+<td>Disk</td>
+<td>Interfaces: IDE/ATA, SATA, PCIe, SCSI, SAS, FC; categories: HDD and SSD; HDD characteristics: 5,600 RPM, 7,200 RPM, perpendicular recording, shingled recording; access patterns: sequential and random reads/writes; RAID.</td>
+</tr>
+<tr>
+<td>Network card</td>
+<td>Gigabit NICs, 10GbE NICs, switches, and network jitter.</td>
+</tr>
+</tbody>
+</table>
+<h2 id="performance-orders-of-magnitude">Performance Orders of Magnitude</h2>
+<table>
+<thead>
+<tr>
+<th>Target</th>
+<th>Characteristics</th>
+<th>Sequential Read/Write</th>
+<th>Random Read/Write</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Memory</td>
+<td>Small capacity, very expensive, extremely fast reads/writes, no persistence</td>
+<td>10GB/S</td>
+<td>10GB/S</td>
+</tr>
+<tr>
+<td>HDD</td>
+<td>Large capacity, long lifespan, inexpensive, slow reads/writes, especially random access</td>
+<td>100MB/S</td>
+<td>1MB/S</td>
+</tr>
+<tr>
+<td>SSD</td>
+<td>Medium capacity, shorter lifespan, usually expensive, fast reads/writes</td>
+<td>100MB/s</td>
+<td>10MB/s</td>
+</tr>
+</tbody>
+</table>
+<h2 id="performance-examples">Performance Examples</h2>
+<p><a href="https://www.userbenchmark.com/" rel="noopener nofollow" target="_blank">https://www.userbenchmark.com/</a><br/>
+<picture>
+  <source srcset="../img/1509647-20220531120258563-1866756057.webp" type="image/webp">
+  <img alt="" src="../img/1509647-20220531120258563-1866756057.png">
+</picture></p>
+<h3 id="memory">Memory</h3>
+<p><picture>
+  <source srcset="../img/1509647-20220531120316367-647025901.webp" type="image/webp">
+  <img alt="" src="../img/1509647-20220531120316367-647025901.png">
+</picture></p>
+<h3 id="hdd">HDD</h3>
+<p><picture>
+  <source srcset="../img/1509647-20220531120329698-1260072163.webp" type="image/webp">
+  <img alt="" src="../img/1509647-20220531120329698-1260072163.png">
+</picture></p>
+<h3 id="ssd">SSD</h3>
+<p><picture>
+  <source srcset="../img/1509647-20220531120349119-230051710.webp" type="image/webp">
+  <img alt="" src="../img/1509647-20220531120349119-230051710.png">
+</picture></p>
+<h2 id="rules-of-thumb">Rules of Thumb</h2>
+<table>
+<thead>
+<tr>
+<th>Target 1</th>
+<th>Target 2</th>
+<th>Comparison</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>GPU matrix operations</td>
+<td>CPU matrix operations</td>
+<td>More than 10x</td>
+</tr>
+<tr>
+<td>Memory reads/writes</td>
+<td>Disk sequential reads/writes</td>
+<td>100x</td>
+</tr>
+<tr>
+<td>Memory reads/writes</td>
+<td>SSD random reads/writes</td>
+<td>1000x</td>
+</tr>
+<tr>
+<td>Memory reads/writes</td>
+<td>HDD random reads/writes</td>
+<td>10000x</td>
+</tr>
+<tr>
+<td>SSD sequential reads/writes</td>
+<td>SSD random reads/writes</td>
+<td>10x</td>
+</tr>
+<tr>
+<td>HDD sequential reads/writes</td>
+<td>HDD random reads/writes</td>
+<td>100x</td>
+</tr>
+<tr>
+<td>SSD sequential reads/writes</td>
+<td>HDD sequential reads/writes</td>
+<td>Within 10x</td>
+</tr>
+<tr>
+<td>SSD random reads/writes</td>
+<td>HDD random reads/writes</td>
+<td>10x</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li>HDD random I/O bottlenecks: actuator positioning and seek time</li>
+<li>How HDDs fight back: RAID, scale-out capacity, and sequential I/O</li>
+</ul>
+<p>Once these order-of-magnitude differences are clear, it becomes easier to understand why systems for massive real-time writes, such as HBase and Kafka, are designed the way they are.</p>
+<h1 id="evolution">3. Evolution</h1>
+<p><img alt="" src="../img/1509647-20220531120914905-1411560215.jpg"/></p>
+<p>2016: Is Big Data Still a Thing? (The 2016 Big Data Landscape)<br/>
+<a href="https://mattturck.com/big-data-landscape/" rel="noopener nofollow" target="_blank">https://mattturck.com/big-data-landscape/</a></p>
+<p>2017: Firing on All Cylinders: The 2017 Big Data Landscape<br/>
+<a href="https://mattturck.com/bigdata2017/" rel="noopener nofollow" target="_blank">https://mattturck.com/bigdata2017/</a></p>
+<p>2018: Great Power, Great Responsibility: The 2018 Big Data &amp; AI Landscape<br/>
+<a href="https://mattturck.com/bigdata2018/" rel="noopener nofollow" target="_blank">https://mattturck.com/bigdata2018/</a></p>
+<p>2019: A Turbulent Year: The 2019 Data &amp; AI Landscape<br/>
+<a href="https://mattturck.com/data2019/" rel="noopener nofollow" target="_blank">https://mattturck.com/data2019/</a></p>
+<p>2020: Resilience and Vibrancy: The 2020 Data &amp; AI Landscape<br/>
+<a href="https://mattturck.com/data2020/" rel="noopener nofollow" target="_blank">https://mattturck.com/data2020/</a></p>
+<p>2021: Red Hot: The 2021 Machine Learning, AI and Data (MAD) Landscape<br/>
+<a href="https://mattturck.com/data2021/" rel="noopener nofollow" target="_blank">https://mattturck.com/data2021/</a></p>
+</div>
+            </div>
+
+            <!-- Post Footer -->
+            <div class="post-footer">
+                <div class="post-navigation">
+                    <a href="../blog.html" class="nav-button">← Back to Home</a>
+                    <a href="0011.html" class="nav-button">Next Post →</a>
+                </div>
+            </div>
+        </article>
+    </div>
+</body>
+</html>

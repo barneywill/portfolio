@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Mount hard drive</title>
+<link href="../css/style3.css" rel="stylesheet"/>
+</head>
+<body>
+<div class="container">
+<!-- Header Navigation -->
+<div class="header">
+<h1><a href="../blog.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+</div>
+<!-- Post Container -->
+<article class="post">
+<!-- Post Header -->
+<div class="post-header">
+<h1>Mount hard drive</h1>
+<div class="post-meta">
+<div class="post-meta-item">
+<span class="meta-icon">📅</span>
+<span>February 12, 2019</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">📖</span>
+<span>2 min read</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">👁️</span>
+<span>526 views</span>
+</div>
+</div>
+</div>
+<!-- Post Content -->
+<div class="post-content">
+<div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<p>1 Check which hard drives are not mounted</p>
+<blockquote>
+<p># fdisk - l</p>
+<p>Disk /dev/vdb: 107.4 GB, 107374182400 bytes, 209715200 sectors<br/>Units = sectors of 1 * 512 = 512 bytes<br/>Sector size (logical/physical): 512 bytes / 512 bytes<br/>I/O size (minimum/optimal): 512 bytes / 512 bytes</p>
+</blockquote>
+<p>2 Partition the new hard drive</p>
+<blockquote>
+<p># fdisk /dev/sdb<br/>Welcome to fdisk (util-linux 2.23.2).</p>
+<p>Changes will remain in memory only, until you decide to write them.<br/>Be careful before using the write command.</p>
+<p>Device does not contain a recognized partition table<br/>Building a new DOS disklabel with disk identifier 0xd5cf1096.</p>
+<p>Command (m for help): m<br/>Command action<br/>   a   toggle a bootable flag<br/>   b   edit bsd disklabel<br/>   c   toggle the dos compatibility flag<br/>   d   delete a partition<br/>   g   create a new empty GPT partition table<br/>   G   create an IRIX (SGI) partition table<br/>   l   list known partition types<br/>   m   print this menu<br/>   n   add a new partition<br/>   o   create a new empty DOS partition table<br/>   p   print the partition table<br/>   q   quit without saving changes<br/>   s   create a new empty Sun disklabel<br/>   t   change a partition's system id<br/>   u   change display/entry units<br/>   v   verify the partition table<br/>   w   write table to disk and exit<br/>   x   extra functionality (experts only)</p>
+<p>Command (m for help): n<br/>Partition type:<br/>   p   primary (0 primary, 0 extended, 4 free)<br/>   e   extended<br/>Select (default p): p<br/>Partition number (1-4, default 1): 1<br/>First sector (2048-209715199, default 2048): <br/>Using default value 2048<br/>Last sector, +sectors or +size{K,M,G} (2048-209715199, default 209715199): <br/>Using default value 209715199<br/>Partition 1 of type Linux and of size 100 GiB is set</p>
+<p>Command (m for help): p</p>
+<p>Disk /dev/vdb: 107.4 GB, 107374182400 bytes, 209715200 sectors<br/>Units = sectors of 1 * 512 = 512 bytes<br/>Sector size (logical/physical): 512 bytes / 512 bytes<br/>I/O size (minimum/optimal): 512 bytes / 512 bytes<br/>Disk label type: dos<br/>Disk identifier: 0xd5cf1096</p>
+<p>   Device Boot      Start         End      Blocks   Id  System<br/>/dev/vdb1            2048   209715199   104856576   83  Linux</p>
+<p>Command (m for help): w<br/>The partition table has been altered!</p>
+<p>Calling ioctl() to re-read partition table.<br/>Syncing disks.</p>
+</blockquote>
+<p>3 Specify the file system format of the partition</p>
+<p>ext2</p>
+<blockquote>
+<p># mke2fs /dev/sda1</p>
+</blockquote>
+<p>ext3</p>
+<blockquote>
+<p># mke2fs - j /dev/sda1</p>
+</blockquote>
+<p>ext4</p>
+<blockquote>
+<p># mke2fs - t ext4 /dev/sda1</p>
+</blockquote>
+<p>btrfs</p>
+<blockquote>
+<p># mkfs.btrfs - f /dev/sda1</p>
+</blockquote>
+<p>xfs</p>
+<blockquote>
+<p># mkfs.xfs - f /dev/sda1</p>
+</blockquote>
+<p>3.1 View the file system format of each partition</p>
+<blockquote>
+<p># parted - l<br/># file - s /dev/sda1<br/># df - T</p>
+</blockquote>
+<p>4 Mount the partition to the directory</p>
+<blockquote>
+<p># mkdir /test<br/># mount /dev/sda1 /test</p>
+</blockquote>
+<p>4.1 Permanent mounting</p>
+<blockquote>
+<p># vi /etc/fstab</p>
+<p>/dev/sda1       /test      ext4   defaults   1 1</p>
+</blockquote>
+<p>5 View directories and partitions</p>
+<blockquote>
+<p># df - h</p>
+</blockquote>
+<p> </p>
+<p>If you want to mount the disk through uuid, you can view the uuid of each disk partition here</p>
+<blockquote>
+<p># /dev/disk/by-uuid/ </p>
+</blockquote>
+<p> </p>
+</div>
+</div>
+<!-- Post Footer -->
+<div class="post-footer">
+<div class="post-navigation">
+<a class="nav-button" href="../blog.html">← Back to Home</a>
+<a class="nav-button" href="0236.html">Next Post →</a>
+</div>
+</div>
+</article>
+</div>
+</body>
+</html>

@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>ngx.req.get_body_data Returns nil in OpenResty (Nginx + Lua)</title>
+<link href="../css/style3.css" rel="stylesheet"/>
+</head>
+<body>
+<div class="container">
+<!-- Header Navigation -->
+<div class="header">
+<h1><a href="../blog.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+</div>
+<!-- Post Container -->
+<article class="post">
+<!-- Post Header -->
+<div class="post-header">
+<h1>ngx.req.get_body_data Returns nil in OpenResty (Nginx + Lua)</h1>
+<div class="post-meta">
+<div class="post-meta-item">
+<span class="meta-icon">📅</span>
+<span>July 27, 2019</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">📖</span>
+<span>1 min read</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">👁️</span>
+<span>3456 views</span>
+</div>
+</div>
+</div>
+<!-- Post Content -->
+<div class="post-content">
+<div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<p>Post data cannot be obtained in openresty (nginx+lua), ngx.req.get_body_data returns nil</p>
+<p>This function returns nil if</p>
+<ul>
+<li>the request body has not been read,</li>
+<li>the request body has been read into disk temporary files,</li>
+<li>or the request body has zero size.</li>
+</ul>
+<p>Turn on nginx debug log</p>
+<blockquote>
+<p>error_log /var/log/nginx/error.log debug;</p>
+</blockquote>
+<p>Found the following log:</p>
+<blockquote>
+<p>2019/07/26 10:41:43 [warn] 319#319: *3041588 a client request body is buffered to a temporary file /usr/local/openresty/nginx/client_body_temp/0000001574, client: 192.168.0.2, server: localhost, request: "POST /test HTTP/1.1", host: "192.168.0.1"</p>
+</blockquote>
+<p>It can be seen that the body is too large and is buffered into a temporary file. In this case, ngx.req.get_body_file should be used.</p>
+<p>fix code</p>
+<div class="cnblogs_code">
+<pre><span style="color: rgba(0, 0, 255, 1)">function</span><span style="color: rgba(0, 0, 0, 1)"> read_from_file(file_name)
+  </span><span style="color: rgba(0, 0, 255, 1)">local</span> f = <span style="color: rgba(255, 0, 255, 1)">assert</span>(<span style="color: rgba(255, 0, 255, 1)">io.open</span>(file_name, <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">r</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">))
+  </span><span style="color: rgba(0, 0, 255, 1)">local</span> string = f:read(<span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">*all</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">)
+  f:close()
+  </span><span style="color: rgba(0, 0, 255, 1)">return</span><span style="color: rgba(0, 0, 0, 1)"> string
+</span><span style="color: rgba(0, 0, 255, 1)">end</span><span style="color: rgba(0, 0, 0, 1)">
+
+ngx.req.read_body()
+</span><span style="color: rgba(0, 0, 255, 1)">local</span> body =<span style="color: rgba(0, 0, 0, 1)"> ngx.req.get_body_data()
+</span><span style="color: rgba(0, 0, 255, 1)">if</span> (body == <span style="color: rgba(0, 0, 255, 1)">nil</span>) <span style="color: rgba(0, 0, 255, 1)">then</span>
+  <span style="color: rgba(0, 0, 255, 1)">local</span> body_file =<span style="color: rgba(0, 0, 0, 1)"> ngx.req.get_body_file()
+  </span><span style="color: rgba(0, 0, 255, 1)">if</span> body_file <span style="color: rgba(0, 0, 255, 1)">then</span><span style="color: rgba(0, 0, 0, 1)">
+    body </span>=<span style="color: rgba(0, 0, 0, 1)"> read_from_file(body_file)
+  </span><span style="color: rgba(0, 0, 255, 1)">else</span><span style="color: rgba(0, 0, 0, 1)">
+    ngx.status </span>= <span style="color: rgba(128, 0, 128, 1)">500</span><span style="color: rgba(0, 0, 0, 1)">
+    ngx.say(</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">error</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">)
+    </span><span style="color: rgba(0, 0, 255, 1)">return</span>
+  <span style="color: rgba(0, 0, 255, 1)">end</span>
+<span style="color: rgba(0, 0, 255, 1)">end</span></pre>
+</div>
+<p> </p>
+<p>Reference:<br/>https://github.com/openresty/lua-nginx-module#ngxreqget_body_data</p>
+</div>
+</div>
+<!-- Post Footer -->
+<div class="post-footer">
+<div class="post-navigation">
+<a class="nav-button" href="../blog.html">← Back to Home</a>
+<a class="nav-button" href="0099.html">Next Post →</a>
+</div>
+</div>
+</article>
+</div>
+</body>
+</html>

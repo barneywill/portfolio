@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Gobblin 2 - persist Kafka to HDFS</title>
+<link href="../css/style3.css" rel="stylesheet"/>
+</head>
+<body>
+<div class="container">
+<!-- Header Navigation -->
+<div class="header">
+<h1><a href="../blog.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+</div>
+<!-- Post Container -->
+<article class="post">
+<!-- Post Header -->
+<div class="post-header">
+<h1>Gobblin 2 - persist Kafka to HDFS</h1>
+<div class="post-meta">
+<div class="post-meta-item">
+<span class="meta-icon">📅</span>
+<span>June 01, 2019</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">📖</span>
+<span>2 min read</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">👁️</span>
+<span>1696 views</span>
+</div>
+</div>
+</div>
+<!-- Post Content -->
+<div class="post-content">
+<div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<p>gobblin 0.10</p>
+<p>There are many ways to persist Kafka to HDFS, such as Flume, Logstash, and gobblin. Flume and Logstash are streaming, and gobblin is batch processing. Gobblin completes data persistence by triggering scheduled tasks. There is no reading or writing between tasks. This is the biggest difference from Flume and Logstash.</p>
+<p>gobblin has several deployment methods:</p>
+<p>1）standalone+cron；</p>
+<p>2) mr+Oozie/Azkaban, etc.</p>
+<p>3）docker；</p>
+<p>Among them, the third method is the most convenient, because gobblin can write the status of the task to HDFS, so it does not make any difference on which node to start gobblin, and the metadata will only be modified after data synchronization, ensuring that no data will be lost due to Kafka or HDFS or its own failure;</p>
+<h1>1 configuration</h1>
+<div class="cnblogs_code">
+<pre><span style="color: rgba(0, 128, 0, 1)">#</span><span style="color: rgba(0, 128, 0, 1)">job</span>
+job.name=<span style="color: rgba(0, 0, 0, 1)">test_job
+job.group</span>=<span style="color: rgba(0, 0, 0, 1)">test_group
+job.schedule</span>=0 0 */1 * *<span style="color: rgba(0, 0, 0, 1)"> ?
+job.lock.enabled</span>=<span style="color: rgba(0, 0, 0, 1)">false
+
+</span><span style="color: rgba(0, 128, 0, 1)">#</span><span style="color: rgba(0, 128, 0, 1)">source</span>
+source.<span style="color: rgba(0, 0, 255, 1)">class</span>=<span style="color: rgba(0, 0, 0, 1)">gobblin.source.extractor.extract.kafka.KafkaSimpleSource
+extract.namespace</span>=<span style="color: rgba(0, 0, 0, 1)">gobblin.extract.kafka
+kafka.brokers</span>=<span style="color: rgba(0, 0, 0, 1)">$kafka_brokers
+bootstrap.with.offset</span>=<span style="color: rgba(0, 0, 0, 1)">latest
+topic.whitelist</span>=<span style="color: rgba(0, 0, 0, 1)">$kafka_topics
+
+mr.job.max.mappers</span>=1
+
+<span style="color: rgba(0, 128, 0, 1)">#</span><span style="color: rgba(0, 128, 0, 1)">writer</span>
+writer.builder.<span style="color: rgba(0, 0, 255, 1)">class</span>=<span style="color: rgba(0, 0, 0, 1)">gobblin.writer.SimpleDataWriterBuilder
+writer.file.path.type</span>=<span style="color: rgba(0, 0, 0, 1)">tablename
+writer.destination.type</span>=<span style="color: rgba(0, 0, 0, 1)">HDFS
+writer.output.format</span>=<span style="color: rgba(0, 0, 0, 1)">txt
+writer.partitioner.</span><span style="color: rgba(0, 0, 255, 1)">class</span>=<span style="color: rgba(0, 0, 0, 1)">gobblin.writer.partitioner.TimeBasedWriterPartitioner<br/>writer.partition.columns=time
+writer.partition.level</span>=<span style="color: rgba(0, 0, 0, 1)">hourly
+writer.partition.pattern</span>=<span style="color: rgba(0, 0, 0, 1)">yyyyMMdd/HH
+writer.partition.timezone</span>=Asia/<span style="color: rgba(0, 0, 0, 1)">Shanghai
+data.publisher.type</span>=<span style="color: rgba(0, 0, 0, 1)">gobblin.publisher.TimePartitionedDataPublisher
+
+</span><span style="color: rgba(0, 128, 0, 1)">#</span><span style="color: rgba(0, 128, 0, 1)">metrics</span>
+metrics.reporting.file.enabled=<span style="color: rgba(0, 0, 0, 1)">true
+metrics.reporting.file.suffix</span>=<span style="color: rgba(0, 0, 0, 1)">txt
+
+</span><span style="color: rgba(0, 128, 0, 1)">#</span><span style="color: rgba(0, 128, 0, 1)">fs</span>
+fs.uri=hdfs://$name_node:8020<span style="color: rgba(0, 0, 0, 1)">
+writer.fs.uri</span>=<span style="color: rgba(0, 0, 0, 1)">${fs.uri}
+state.store.fs.uri</span>=<span style="color: rgba(0, 0, 0, 1)">${fs.uri}
+
+data.publisher.final.dir</span>=${env:GOBBLIN_WORK_DIR}/job-<span style="color: rgba(0, 0, 0, 1)">output
+metrics.log.dir</span>=${env:GOBBLIN_WORK_DIR}/<span style="color: rgba(0, 0, 0, 1)">metrics
+state.store.dir</span>=${env:GOBBLIN_WORK_DIR}/state-<span style="color: rgba(0, 0, 0, 1)">store
+mr.job.root.dir</span>=${env:GOBBLIN_WORK_DIR}/<span style="color: rgba(0, 0, 0, 1)">working
+task.data.root.dir</span>=${env:GOBBLIN_WORK_DIR}/task-data</pre>
+</div>
+<p>Just modify $kafka_brokers, $kafka_topics, $name_node;</p>
+<p>The configuration here is that standalone is executed once every hour. Each time it is executed, it is formatted into time partitions according to the time field in the data and stored in the specified directory on HDFS;</p>
+<p> </p>
+<h1>2 start</h1>
+<div class="cnblogs_code">
+<pre>export GOBBLIN_JOB_CONFIG_DIR=/opt/gobblin/gobblin-dist/<span style="color: rgba(0, 0, 0, 1)">job_conf
+export GOBBLIN_WORK_DIR</span>=/opt/gobblin/gobblin-dist/<span style="color: rgba(0, 0, 0, 1)">work_dir
+
+bin</span>/gobblin-standalone.sh start</pre>
+</div>
+<p> </p>
+<h1>3 Customization</h1>
+<p>1) Want to time partition according to the current time (rather than the time in the data)</p>
+<div class="cnblogs_code">
+<pre><span>package gobblin.writer.partitioner;
+
+import<span> gobblin.configuration.State;
+
+public class<span> DefaultTimeBasedWriterPartitioner extends TimeBasedWriterPartitioner {
+    public DefaultTimeBasedWriterPartitioner(State state, int numBranches, int branchId) {
+        super(state, numBranches, branchId);
+    }
+    public long getRecordTimestamp(Object record) {
+        return<span> System.currentTimeMillis();
+    }
+}</span></span></span></span></pre>
+</div>
+<p>Configuration:</p>
+<blockquote>
+<p>writer.partitioner.class=gobblin.writer.partitioner.DefaultTimeBasedWriterPartitioner</p>
+</blockquote>
+<p>2) Only save JSON data and add line breaks</p>
+<div class="cnblogs_code">
+<pre><span>package gobblin.source.extractor.extract.kafka;
+
+import<span> gobblin.configuration.WorkUnitState;
+import<span> gobblin.source.extractor.Extractor;
+
+import<span> java.io.IOException;
+
+public class<span> JsonKafkaSimpleSource extends KafkaSimpleSource {
+    public JsonKafkaSimpleSource() {}
+    @Override
+    public Extractor&lt;String, byte[]&gt;<span> getExtractor(WorkUnitState state) throws IOException {
+        return<span> new JsonKafkaSimpleExtractor(state);
+    }
+}</span></span></span></span></span></span></span></pre>
+</div>
+<p> </p>
+<div class="cnblogs_code">
+<pre><span>package gobblin.source.extractor.extract.kafka;
+
+import<span> gobblin.configuration.WorkUnitState;
+import<span> gobblin.kafka.client.ByteArrayBasedKafkaRecord;
+
+import<span> java.io.IOException;
+import<span> java.text.SimpleDateFormat;
+import<span> java.util.Date;
+
+public class<span> JsonKafkaSimpleExtractor extends KafkaSimpleExtractor {
+    public JsonKafkaSimpleExtractor(WorkUnitState state) {
+        super(state);
+    }
+
+    @Override
+    protected byte[] decodeRecord(ByteArrayBasedKafkaRecord kafkaConsumerRecord) throws IOException {
+        byte[] resultBytes =<span> kafkaConsumerRecord.getMessageBytes();
+        String result = new String(resultBytes, "UTF-8"<span>);
+        if (result != null &amp;&amp; result.length() &gt; 2 &amp;&amp; result.charAt(0) == '{' &amp;&amp; result.charAt(result.length() - 1) == '}'<span>)
+            return (result + "\n").getBytes("UTF-8"<span>);
+        else<span> {
+            System.out.println("[" + new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date()) + "]found invalid json : " +<span> result);
+            return ""<span>.getBytes();
+        }
+    }
+}</span></span></span></span></span></span></span></span></span></span></span></span></span></span></pre>
+<p><span> </span></p>
+</div>
+<p>Configuration:</p>
+<blockquote>
+<p>source.class=gobblin.source.extractor.extract.kafka.JsonKafkaSimpleSource</p>
+</blockquote>
+<p> </p>
+<h1>4 docker image</h1>
+<p>https://hub.docker.com/r/gobblin/gobblin-standalone</p>
+<blockquote>
+<p>docker run -d gobblin/gobblin-standalone:ubuntu-gobblin-0.10.0</p>
+</blockquote>
+<p> </p>
+<p>refer to:</p>
+<p>https://gobblin.readthedocs.io/en/latest/case-studies/Kafka-HDFS-Ingestion/</p>
+<p>https://gobblin.readthedocs.io/en/latest/user-guide/Configuration-Properties-Glossary/</p>
+<p> </p>
+</div>
+</div>
+<!-- Post Footer -->
+<div class="post-footer">
+<div class="post-navigation">
+<a class="nav-button" href="../blog.html">← Back to Home</a>
+<a class="nav-button" href="0124.html">Next Post →</a>
+</div>
+</div>
+</article>
+</div>
+</body>
+</html>

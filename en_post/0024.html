@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Kafka Service Restart</title>
+<link href="../css/style3.css" rel="stylesheet"/>
+</head>
+<body>
+<div class="container">
+<!-- Header Navigation -->
+<div class="header">
+<h1><a href="../blog.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+</div>
+<!-- Post Container -->
+<article class="post">
+<!-- Post Header -->
+<div class="post-header">
+<h1>Kafka Service Restart</h1>
+<div class="post-meta">
+<div class="post-meta-item">
+<span class="meta-icon">📅</span>
+<span>May 19, 2022</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">📖</span>
+<span>1 min read</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">👁️</span>
+<span>755 views</span>
+</div>
+</div>
+</div>
+<!-- Post Content -->
+<div class="post-content">
+<div class="blogpost-body cnblogs-markdown" id="cnblogs_post_body">
+<h1 id="section-0024-1">background</h1>
+<p>Some Kafka processes restarted and the error was reported as follows:</p>
+<pre><code>java.io.IOException: Too many open files
+  at sun.nio.ch.ServerSocketChannelImpl.accept(ServerSocketChannelImpl.java:422)
+  at sun.nio.ch.ServerSocketChannelImpl.accept(ServerSocketChannelImpl.java:250)
+  at java.lang.Thread.run(Thread.java:748)
+
+</code></pre>
+<h1 id="section-0024-2">position</h1>
+<p>Check the current user's open files through ulimit -a, which is 65535</p>
+<p><picture>
+<source srcset="../img/1509647-20220519144021260-437063152.webp" type="image/webp"/>
+<img alt="" src="../img/1509647-20220519144021260-437063152.png"/>
+</picture></p>
+<p>Further check the open files of the Kafka process (location/proc/$pid/ulimits) is 4096</p>
+<p><picture>
+<source srcset="../img/1509647-20220519144054666-1981960304.webp" type="image/webp"/>
+<img alt="" src="../img/1509647-20220519144054666-1981960304.png"/>
+</picture></p>
+<p>The two configurations are different because the Kafka process is started by systemd and the configuration used is different from the current user. The configuration file location is:</p>
+<blockquote>
+<p>/usr/lib/systemd/system/kafka.service<br/>
+LimitNOFILE=65535</p>
+</blockquote>
+<p>Reload the systemd configuration after modification</p>
+<blockquote>
+<p>systemctl daemon-reload</p>
+</blockquote>
+<p>Restart Kafka process</p>
+<blockquote>
+<p>systemctl restart kafka</p>
+</blockquote>
+<p>Check /proc/$pid/ulimits to confirm it takes effect.</p>
+</div>
+</div>
+<!-- Post Footer -->
+<div class="post-footer">
+<div class="post-navigation">
+<a class="nav-button" href="../blog.html">← Back to Home</a>
+<a class="nav-button" href="0025.html">Next Post →</a>
+</div>
+</div>
+</article>
+</div>
+</body>
+</html>

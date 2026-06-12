@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Programming Basics: Jenkins</title>
+<link href="../css/style3.css" rel="stylesheet"/>
+</head>
+<body>
+<div class="container">
+<!-- Header Navigation -->
+<div class="header">
+<h1><a href="../blog.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+</div>
+<!-- Post Container -->
+<article class="post">
+<!-- Post Header -->
+<div class="post-header">
+<h1>Programming Basics: Jenkins</h1>
+<div class="post-meta">
+<div class="post-meta-item">
+<span class="meta-icon">📅</span>
+<span>August 07, 2019</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">📖</span>
+<span>1 min read</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">👁️</span>
+<span>492 views</span>
+</div>
+</div>
+</div>
+<!-- Post Content -->
+<div class="post-content">
+<div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<p>Jenkins 2.164.2</p>
+<p><picture>
+<source srcset="../img/1509647-20190507182536828-1807469158.webp" type="image/webp"/>
+<img alt="" src="../img/1509647-20190507182536828-1807469158.png"/>
+</picture></p>
+<p>Official: https://jenkins.io</p>
+<p> </p>
+<h1>1 Introduction </h1>
+<p>Build great things at any scale</p>
+<p>The leading open source automation server, Jenkins provides hundreds of plugins to support building, deploying and automating any project.</p>
+<p>Jenkins supports hundreds of plug-ins to support build, deployment and automation;</p>
+<p>Jenkins is a self-contained, open source automation server which can be used to automate all sorts of tasks related to building, testing, and delivering or deploying software.</p>
+<p>Jenkins can be installed through native system packages, Docker, or even run standalone by any machine with a Java Runtime Environment (JRE) installed.</p>
+<p> </p>
+<p>Any company faces project deployment problems, and project deployment abstractly includes: 1) specifying branches and versions; 2) downloading code from the code base; 3) compiling and packaging; 4) publishing to a remote server; 5) restarting the application; 6) rolling back;</p>
+<p>What is published to the remote server can be a jar, war, docker image or folder as needed;</p>
+<p>Jenkins allows you to accomplish all the above through plug-ins, configurations, and scripts;</p>
+<p> </p>
+<h1>2. Installation</h1>
+<div class="cnblogs_code">
+<pre>sudo wget -O /etc/yum.repos.d/jenkins.repo https://pkg.jenkins.io/redhat-stable/<span style="color: rgba(0, 0, 0, 1)">jenkins.repo
+sudo rpm </span>--<span style="color: rgba(0, 0, 255, 1)">import</span> https://pkg.jenkins.io/redhat-stable/<span style="color: rgba(0, 0, 0, 1)">jenkins.io.key
+yum install jenkins</span></pre>
+</div>
+<p>start up</p>
+<div class="cnblogs_code">
+<pre><span style="color: rgba(0, 0, 0, 1)">systemctl start jenkins
+systemctl enable jenkins
+systemctl status jenkins</span></pre>
+</div>
+<p>Access after startup</p>
+<blockquote>
+<p>http://localhost:8080</p>
+</blockquote>
+<p>If there is a conflict with the default port 8080, you can modify it.</p>
+<div class="cnblogs_code">
+<pre>vi /etc/init.d/<span style="color: rgba(0, 0, 0, 1)">jenkins
+export JENKINS_PORT</span>=8080</pre>
+</div>
+<p>First time login random password is here</p>
+<blockquote>
+<p>/var/lib/jenkins/secrets/initialAdminPassword</p>
+</blockquote>
+<p>Just follow the wizard;</p>
+<h1>Three uses</h1>
+<h2>Commonly used plug-ins</h2>
+<p>Git (code base)</p>
+<p>Maven (build and package)</p>
+<p>Publish Over SSH (copy files remotely and execute commands)</p>
+<p>SSH (remote command execution)</p>
+<p>Zentimestamp (supports ${BUILD_TIMESTAMP})</p>
+<p>Extended Choice Parameter Plug-In (for rollback)</p>
+<h2>Create a new project</h2>
+<p>1 First add the git account and server ssh account and password in Credentials;</p>
+<p>2 Then configure the ssh server related in Manage Jenkins - Configure System;</p>
+<p>3 Create project</p>
+<p>3.1 New Item</p>
+<p>3.2 Freestyle project</p>
+<p>3.3 Config</p>
+<p>3.3.1 Source Code Management</p>
+<p>  Add the git repository url and select the git account just added;</p>
+<p>3.3.2 Build</p>
+<p>  Invoke top-level Maven targets (execute maven goal)</p>
+<p>  Execute shell (local execution shell)</p>
+<p>  Execute shell script on remote host using ssh (remote execution shell)</p>
+<p>3.3.3 Post-build Actions</p>
+<p>  Send build artifacts over SSH (remotely copy files and execute shell)</p>
+<p>Such a simple project deployment is completed</p>
+<p> </p>
+<p>Many Jenkins environment variables can be used in the shell, such as WORKSPACE, JOB_NAME, BUILD_TAG, GIT_COMMIT, etc. For details, see:</p>
+<p>http://localhost:8080/env-vars.html/</p>
+<h2>Directory structure</h2>
+<p>The jenkins directory is located at</p>
+<blockquote>
+<p>/var/lib/jenkins</p>
+</blockquote>
+<p>The workspace directory is located at</p>
+<blockquote>
+<p>/var/lib/jenkins/workspace</p>
+</blockquote>
+<p>The job directory is</p>
+<blockquote>
+<p>/var/lib/jenkins/workspace/${JOB_NAME}</p>
+</blockquote>
+<p>Code downloading, compilation and packaging are all in the job directory, such as the target directory;</p>
+<p> </p>
+<p>Reference:<br/>https://github.com/jenkinsci/docker/blob/master/README.md</p>
+<p>https://pkg.jenkins.io/redhat-stable/</p>
+<p> </p>
+</div>
+</div>
+<!-- Post Footer -->
+<div class="post-footer">
+<div class="post-navigation">
+<a class="nav-button" href="../blog.html">← Back to Home</a>
+<a class="nav-button" href="0094.html">Next Post →</a>
+</div>
+</div>
+</article>
+</div>
+</body>
+</html>

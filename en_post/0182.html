@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Spark cache unpersist cascade operation</title>
+<link href="../css/style3.css" rel="stylesheet"/>
+</head>
+<body>
+<div class="container">
+<!-- Header Navigation -->
+<div class="header">
+<h1><a href="../blog.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+</div>
+<!-- Post Container -->
+<article class="post">
+<!-- Post Header -->
+<div class="post-header">
+<h1>Spark cache unpersist cascade operation</h1>
+<div class="post-meta">
+<div class="post-meta-item">
+<span class="meta-icon">📅</span>
+<span>March 13, 2019</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">📖</span>
+<span>1 min read</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">👁️</span>
+<span>1639 views</span>
+</div>
+</div>
+</div>
+<!-- Post Content -->
+<div class="post-content">
+<div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<p>Question: If there are two DataFrames (or DataSets) in Spark, DataFrameA depends on DataFrameB, and both DataFrames are cached. After DataFrameB is unpersisted, the cache of DataFrameA will also become invalid. The official explanation is as follows:</p>
+<p><em>When invalidating a cache, we invalid other caches dependent on this cache to ensure cached data is up to date. For example, when the underlying table has been modified or the table has been dropped itself, all caches that use this table should be invalidated or refreshed.</em></p>
+<p><em>However, in other cases, like when user simply want to drop a cache to free up memory, we do not need to invalidate dependent caches since no underlying data has been changed. For this reason, we would like to introduce a new cache invalidation mode: the non-cascading cache invalidation.</em></p>
+<p>The previous default mode was regular mode. In this mode, in order to ensure that the cached data is up to date (not expired), the unpersist of the cache will be cascaded, that is, all other caches that depend on the cache will be cleared (including indirect dependencies);<br/>Starting from spark2.4, a new mode has been introduced: non-cascading mode. In this mode, the cache unpersist will not be cascaded;</p>
+<p>The default level for cache operations of DataFrame/DataSet is MEMORY_AND_DISK. Unless MEMORY is manually specified and the memory is confirmed to be sufficient, the cache before unpersist seems unnecessary;</p>
+<p>refer to:<br/>https://issues.apache.org/jira/browse/SPARK-21478<br/>https://issues.apache.org/jira/browse/SPARK-24596<br/>https://issues.apache.org/jira/browse/SPARK-21579</p>
+</div>
+</div>
+<!-- Post Footer -->
+<div class="post-footer">
+<div class="post-navigation">
+<a class="nav-button" href="../blog.html">← Back to Home</a>
+<a class="nav-button" href="0183.html">Next Post →</a>
+</div>
+</div>
+</article>
+</div>
+</body>
+</html>

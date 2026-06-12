@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Doris 1 - Compile, Install, and Start</title>
+<link href="../css/style3.css" rel="stylesheet"/>
+</head>
+<body>
+<div class="container">
+<!-- Header Navigation -->
+<div class="header">
+<h1><a href="../blog.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+</div>
+<!-- Post Container -->
+<article class="post">
+<!-- Post Header -->
+<div class="post-header">
+<h1>Doris 1 - Compile, Install, and Start</h1>
+<div class="post-meta">
+<div class="post-meta-item">
+<span class="meta-icon">📅</span>
+<span>May 25, 2021</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">📖</span>
+<span>3 min read</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">👁️</span>
+<span>3499 views</span>
+</div>
+</div>
+</div>
+<!-- Post Content -->
+<div class="post-content">
+<div class="blogpost-body cnblogs-markdown" id="cnblogs_post_body">
+<h1 id="section-0042-1">1. Compilation</h1>
+<p>There are two ways to compile doris, one is docker compilation, and the other is direct bare metal compilation. It is recommended to use docker compilation, which can avoid a large number of environmental dependency problems.</p>
+<h2 id="section-0042-2">Docker Compilation</h2>
+<h3 id="section-0042-3">1 Install docker</h3>
+<blockquote>
+<p>yum install docker<br/>
+systemctl start docker<br/>
+systemctl enable docker<br/>
+docker pull apachedoris/doris-dev:build-env-1.2</p>
+</blockquote>
+<h3 id="section-0042-4">2 Download source code</h3>
+<blockquote>
+<p>wget <a href="https://mirrors.bfsu.edu.cn/apache/incubator/doris/0.13.0-incubating/apache-doris-0.13.0-incubating-src.tar.gz" rel="noopener nofollow" target="_blank">https://mirrors.bfsu.edu.cn/apache/incubator/doris/0.13.0-incubating/apache-doris-0.13.0-incubating-src.tar.gz</a><br/>
+tar xvf apache-doris-0.13.0-incubating-src.tar.gz</p>
+</blockquote>
+<h3 id="section-0042-5">3 Start the container</h3>
+<blockquote>
+<p>docker run - it - v /root/.m2:/root/.m2 - v /path/to/apache-doris-0.13.0-incubating-src:/root/apache-doris-0.13.0-incubating-src apachedoris/doris-dev:build-env-1.2</p>
+</blockquote>
+<p>Two directory mappings need to be done, one is the maven repository directory, and the other is the doris source code directory to avoid the loss of previously downloaded or compiled content after the container hangs.</p>
+<h3 id="section-0042-6">4 Compile doris</h3>
+<blockquote>
+<p>cd /root/apache-doris-0.13.0-incubating-src<br/>
+sh - x build.sh</p>
+</blockquote>
+<p>After compilation, it is output to the output directory. There are three subdirectories: be, fe, and udf. You only need to copy the output directory to other servers.</p>
+<h4 id="section-0042-7">Error when compiling</h4>
+<p>[ERROR] Plugin net.sourceforge.czt.dev:cup-maven-plugin:1.6-cdh or one of its dependencies could not be resolved: Failed to read artifact descriptor for net.sourceforge.czt.dev:cup-maven-plugin:jar:1.6-cdh: Could not transfer artifact net.sourceforge.czt.dev:cup-maven-plugin:pom:1.6-cdh from/to spring-plugins (<a href="https://repo.spring.io/plugins-release/" rel="noopener nofollow" target="_blank">https://repo.spring.io/plugins-release/</a>): Authentication failed for <a href="https://repo.spring.io/plugins-release/net/sourceforge/czt/dev/cup-maven-plugin/1.6-cdh/cup-maven-plugin-1.6-cdh.pom" rel="noopener nofollow" target="_blank">https://repo.spring.io/plugins-release/net/sourceforge/czt/dev/cup-maven-plugin/1.6-cdh/cup-maven-plugin-1.6-cdh.pom</a> 401 Unauthorized - &gt; [Help 1</p>
+<p>Modify as follows:</p>
+<pre><code>                 &lt;!-- for java-cup --&gt;
+                 &lt;repository&gt;
+                 &lt;!--
+                     &lt;id&gt;cloudera-thirdparty&lt;/id&gt;
+                     &lt;url&gt;https://repository.cloudera.com/content/repositories/third-party/&lt;/url&gt;
+                     --&gt;
+                     &lt;id&gt;cloudera-public&lt;/id&gt;
+                     &lt;url&gt;https://repository.cloudera.com/artifactory/public/&lt;/url&gt;
+                 &lt;/repository&gt;
+
+
+                 &lt;!-- for cup-maven-plugin --&gt;
+                 &lt;pluginRepository&gt;
+                 &lt;!--
+                     &lt;id&gt;spring-plugins&lt;/id&gt;
+                     &lt;url&gt;https://repo.spring.io/plugins-release/&lt;/url&gt;
+                     --&gt;
+                     &lt;id&gt;cloudera-public&lt;/id&gt;
+                     &lt;url&gt;https://repository.cloudera.com/artifactory/public/&lt;/url&gt;
+                 &lt;/pluginRepository&gt;
+</code></pre>
+<h3 id="section-0042-8">5 Compile broker</h3>
+<blockquote>
+<p>cd fs_brokers/apache_hdfs_broker<br/>
+sh - x build.sh</p>
+</blockquote>
+<h3 id="section-0042-9">6 Compile spark connector</h3>
+<blockquote>
+<p>cd extension/spark-doris-connector<br/>
+sh - x build.sh</p>
+</blockquote>
+<h2 id="section-0042-10">Bare metal compilation</h2>
+<h3 id="section-0042-11">1 preparation</h3>
+<p>jdk8+<br/>
+maven</p>
+<blockquote>
+<p>sudo yum groupinstall 'Development Tools' &amp;&amp; sudo yum install maven cmake byacc flex automake libtool bison binutils-devel zip unzip ncurses-devel curl git wget python2 glibc-static libstdc++-static java-1.8.0-openjdk</p>
+</blockquote>
+<p>Among them: gcc defaults to 4.8.5 on CentOS7, cmake defaults to 2.8.12</p>
+<h3 id="section-0042-12">2 Upgrade GCC</h3>
+<blockquote>
+<p>yum install gcc-c++<br/>
+wget <a href="http://ftp.tsukuba.wide.ad.jp/software/gcc/releases/gcc-7.3.0/gcc-7.3.0.tar.gz" rel="noopener nofollow" target="_blank">http://ftp.tsukuba.wide.ad.jp/software/gcc/releases/gcc-7.3.0/gcc-7.3.0.tar.gz</a><br/>
+tar zxvf tar zxvf gcc-7.3.0.tar.gz<br/>
+cd gcc-7.3.0<br/>
+yum install lbzip2<br/>
+./contrib/download_prerequisites<br/>
+mkdir build<br/>
+cd build/<br/>
+../configure --enable-checking=release --enable-languages=c,c++ --disable-multilib<br/>
+make<br/>
+make install</p>
+</blockquote>
+<h3 id="section-0042-13">3 Upgrade CMAKE</h3>
+<blockquote>
+<p>wget <a href="https://cmake.org/files/v3.6/cmake-3.6.2.tar.gz" rel="noopener nofollow" target="_blank">https://cmake.org/files/v3.6/cmake-3.6.2.tar.gz</a><br/>
+tar xvf cmake-3.6.2.tar.gz &amp;&amp; cd cmake-3.6.2/<br/>
+./bootstrap<br/>
+gmake<br/>
+gmake install<br/>
+mv /usr/bin/cmake /usr/bin/cmake.bak<br/>
+ln - s /usr/local/bin/cmake /usr/bin/</p>
+</blockquote>
+<h3 id="section-0042-14">4 compile</h3>
+<blockquote>
+<p>sh - x build.sh</p>
+</blockquote>
+<h4 id="section-0042-15">Error handling</h4>
+<h5 id="section-0042-16">Error 1</h5>
+<blockquote>
+<p>Downloading libevent-20180622-24236aed01798303745470e6c498bf606e88724a.zip from <a href="https://doris-incubating-repo.bj.bcebos.com/thirdparty/libevent-20180622-24236aed01798303745470e6c498bf606e88724a.zip" rel="noopener nofollow" target="_blank">https://doris-incubating-repo.bj.bcebos.com/thirdparty/libevent-20180622-24236aed01798303745470e6c498bf606e88724a.zip</a> to /usr/local/app/doris/thirdparty/src<br/>
+--2021-01-11 09:32:59-- <a href="https://doris-incubating-repo.bj.bcebos.com/thirdparty/libevent-20180622-24236aed01798303745470e6c498bf606e88724a.zip" rel="noopener nofollow" target="_blank">https://doris-incubating-repo.bj.bcebos.com/thirdparty/libevent-20180622-24236aed01798303745470e6c498bf606e88724a.zip</a><br/>
+Resolving doris-incubating-repo.bj.bcebos.com (doris-incubating-repo.bj.bcebos.com)... 2409:8c00:6c21:10ad:0:ff:b00e:67d, 220.181.33.44, 220.181.33.43<br/>
+Connecting to doris-incubating-repo.bj.bcebos.com (doris-incubating-repo.bj.bcebos.com)|2409:8c00:6c21:10ad:0:ff:b00e:67d|:443... connected.<br/>
+HTTP request sent, awaiting response... 404 Not Found<br/>
+2021-01-11 09:32:59 ERROR 404: Not Found.</p>
+</blockquote>
+<p>Because the URL has been modified, please refer to the latest file on git as follows:<br/>
+<a href="https://github.com/apache/incubator-doris/blob/master/thirdparty/vars.sh" rel="noopener nofollow" target="_blank">https://github.com/apache/incubator-doris/blob/master/thirdparty/vars.sh</a></p>
+<p>Solution: Change the url to</p>
+<pre><code>LIBEVENT_DOWNLOAD="https://doris-thirdparty-repo.bj.bcebos.com/thirdparty/libevent-20180622-24236aed01798303745470e6c498bf606e88724a.zip"
+</code></pre>
+<p>Reference:<a href="https://github.com/apache/incubator-doris/issues/5519" rel="noopener nofollow" target="_blank">https://github.com/apache/incubator-doris/issues/5519</a></p>
+<h5 id="section-0042-17">Error 2</h5>
+<p>Error 403 reported when downloading third-party DataTables, access directly<br/>
+<a href="https://datatables.net/download/builder?bs-3.3.7/jq-3.3.1/dt-1.10.22" rel="noopener nofollow" target="_blank">https://datatables.net/download/builder?bs-3.3.7/jq-3.3.1/dt-1.10.22</a><br/>
+hint</p>
+<blockquote>
+<p>Error: Only libraries of the current release version can be used by the. package builder. The library DataTables's current release version is 1.10.24. Please reload the download builder page to have it use the latest libraries.</p>
+</blockquote>
+<p>Solution: Modify thirdparty/vars.sh, change the version to the latest 1.10.24, and modify md5sum at the same time</p>
+<pre><code># datatables, bootstrap 3 and jQuery 3
+#DATATABLES_DOWNLOAD="https://datatables.net/download/builder?bs-3.3.7/jq-3.3.1/dt-1.10.22"
+#DATATABLES_NAME="DataTables.zip"
+#DATATABLES_SOURCE="DataTables-1.10.22"
+#DATATABLES_MD5SUM="62558846fc6a6db1428e7816a2a351f7"
+DATATABLES_DOWNLOAD="https://datatables.net/download/builder?bs-3.3.7/jq-3.3.1/dt-1.10.24"
+DATATABLES_NAME="DataTables.zip"
+DATATABLES_SOURCE="DataTables-1.10.24"
+DATATABLES_MD5SUM="22404292d02cf3c5f4cd9f5a02d4b42c"
+</code></pre>
+<h5 id="section-0042-18">Error 3</h5>
+<blockquote>
+<p>checking how to run the C preprocessor... /usr/lib64/ccache/../bin/cpp<br/>
+configure: error: in `/data/app/apache-doris-0.13.0-incubating-src/thirdparty/src/unixODBC-2.3.7':<br/>
+configure: error: C preprocessor "/usr/lib64/ccache/../bin/cpp" fails sanity check</p>
+</blockquote>
+<p>Solution:</p>
+<blockquote>
+<p>ln - s /usr/local/bin/cpp /usr/lib64/bin/cpp</p>
+</blockquote>
+<h5 id="section-0042-19">Error 4</h5>
+<blockquote>
+<p>./comp_err: error while loading shared libraries: libatomic.so.1: cannot open shared object file: No such file or directory</p>
+</blockquote>
+<p>Solution:</p>
+<blockquote>
+<p>yum - y install  libatomic</p>
+</blockquote>
+<h5 id="section-0042-20">Error 5</h5>
+<blockquote>
+<p>cp: cannot stat ‘./zstd_ep-install/lib/libzstd.a’: No such file or directory</p>
+</blockquote>
+<p>Solution:</p>
+<blockquote>
+<p>cd thirdparty/src/zstd-1.3.7/tests<br/>
+make zstd-staticLib<br/>
+mkdir - p /path/to/apache-doris-0.12.0-incubating-src/thirdparty/src/arrow-apache-arrow-0.15.1/cpp/release/zstd_ep-install/lib64<br/>
+cp ../lib/libzstd.a /path/to/apache-doris-0.12.0-incubating-src/thirdparty/src/arrow-apache-arrow-0.15.1/cpp/release/zstd_ep-install/lib64</p>
+</blockquote>
+<h1 id="section-0042-21">2 start</h1>
+<h2 id="section-0042-22">1 Start FE</h2>
+<blockquote>
+<p>cd output/fe<br/>
+mkdir doris-meta<br/>
+bin/start_fe.sh --daemon</p>
+</blockquote>
+<p>The log is in the log directory</p>
+<p>Notice:</p>
+<ul>
+<li>The default port 8030 may conflict with YARN's resourcemanager</li>
+<li>After startup, check whether the IP of the bound port of fe is correct. If the binding IP is wrong (for example, getting the docker IP after installing docker), be cannot connect to fe. You need to configure priority_networks in fe.conf to the correct network segment.</li>
+</ul>
+<blockquote>
+<p>priority_networks=192.168.1.0/24</p>
+</blockquote>
+<h2 id="section-0042-23">2 Start BE</h2>
+<blockquote>
+<p>cd output/be<br/>
+mkdir /path/to/storage<br/>
+vim conf/be.conf<br/>
+bin/start_be.sh --daemon</p>
+</blockquote>
+<p>The log is in the log directory</p>
+<p>Notice:</p>
+<ul>
+<li>The default port 8040 may conflict with YARN’s nodemanager</li>
+<li>If be fails to start, there may generally be two reasons: one is that the port is occupied, and the other is limit. Check according to the log, such as reporting an error.<br/>
+Doris Be http service did not start correctly. exiting.<br/>
+It is because the port is occupied that the web startup fails.</li>
+</ul>
+<h3 id="section-0042-24">Modify limit</h3>
+<p>Temporary modification</p>
+<blockquote>
+<p>limit - n 65535</p>
+</blockquote>
+<p>Permanent modification</p>
+<pre><code>vim /etc/security/limit.conf
+*               hard    nofile             65535
+*               soft    nofile             65535
+</code></pre>
+<h2 id="section-0042-25">3 Start Broker</h2>
+<blockquote>
+<p>cd fs_brokers/apache_hdfs_broker/output/apache_hdfs_broker<br/>
+bin/start_broker.sh --daemon</p>
+</blockquote>
+<h1 id="section-0042-26">Three uses</h1>
+<h2 id="section-0042-27">1 FE web access</h2>
+<blockquote>
+<p>http://fe_server:8030</p>
+</blockquote>
+<p>Notice:</p>
+<ul>
+<li>The port is http_port</li>
+<li>The default account is root and the password is empty.</li>
+</ul>
+<h2 id="section-0042-28">2 FE command access</h2>
+<blockquote>
+<p>mysql - P9030 - uroot<br/>
+show proc '/frontends';</p>
+</blockquote>
+<p>Notice:</p>
+<ul>
+<li>The port is query_port</li>
+</ul>
+<h2 id="section-0042-29">3 Add or delete FE</h2>
+<blockquote>
+<p>alter system add follower '$host:$port';<br/>
+show proc '/frontends';</p>
+</blockquote>
+<h2 id="section-0042-30">4 Add or delete BE</h2>
+<blockquote>
+<p>alter system add backend '$host:$port';<br/>
+alter system dropp backend '$host:$port';<br/>
+show proc '/backends';</p>
+</blockquote>
+<p>Notice:</p>
+<ul>
+<li>The default port is 9050, which is heartbeat_service_port</li>
+</ul>
+<h2 id="section-0042-31">5 Add or delete Broker</h2>
+<blockquote>
+<p>alter system add broker $broker_name '$host:$port';<br/>
+show proc '/brokers';</p>
+</blockquote>
+<p>Notice:</p>
+<ul>
+<li>The default port is 8000, which is broker ipc_port</li>
+</ul>
+<h1 id="section-0042-32">Four data import</h1>
+<h2 id="section-0042-33">Hive data import</h2>
+<pre><code>create database test;
+CREATE TABLE test.test_user_doris
+(
+  `id` varchar(128) , 
+  `name` varchar(128) , 
+  `country` varchar(128) , 
+  `province` varchar(128) , 
+  `city` varchar(128) ,  
+  `order_count` int SUM
+)
+AGGREGATE KEY(id, name, country, province, city)
+DISTRIBUTED BY HASH(id) BUCKETS 10
+PROPERTIES("replication_num" = "3");
+
+LOAD LABEL load_test_user_doris
+(
+    DATA INFILE("hdfs://nameservice1/user/hive/warehouse/test.db/test_user/*")
+    INTO TABLE `test_user_doris`
+    FORMAT as "parquet"
+)
+WITH BROKER $broker_name 
+(
+    "dfs.nameservices" = "nameservice1",
+    "dfs.ha.namenodes.nameservice1" = "namenode1,namenode2",
+    "dfs.namenode.rpc-address.nameservice1.namenode1" = "nn1:8020",
+    "dfs.namenode.rpc-address.nameservice1.namenode2" = "nn2:8020"
+)
+PROPERTIES
+(
+    "timeout"="36000",
+    "max_filter_ratio"="0.1"
+);
+
+show load;
+</code></pre>
+<h1 id="section-0042-34">Five parameter configuration</h1>
+<blockquote>
+<p>show variables;</p>
+</blockquote>
+<p>Same as MySQL</p>
+<p>Reference:</p>
+<ul>
+<li>compile <a href="http://doris.apache.org/master/en/installing/compilation.html" rel="noopener nofollow" target="_blank">http://doris.apache.org/master/en/installing/compilation.html</a></li>
+<li>start up <a href="http://doris.apache.org/master/en/installing/install-deploy.html" rel="noopener nofollow" target="_blank">http://doris.apache.org/master/en/installing/install-deploy.html</a></li>
+</ul>
+</div>
+</div>
+<!-- Post Footer -->
+<div class="post-footer">
+<div class="post-navigation">
+<a class="nav-button" href="../blog.html">← Back to Home</a>
+<a class="nav-button" href="0043.html">Next Post →</a>
+</div>
+</div>
+</article>
+</div>
+</body>
+</html>

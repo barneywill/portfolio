@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>After Spark on YARN submits the task, the execution progress is always 10%</title>
+<link href="../css/style3.css" rel="stylesheet"/>
+</head>
+<body>
+<div class="container">
+<!-- Header Navigation -->
+<div class="header">
+<h1><a href="../blog.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+</div>
+<!-- Post Container -->
+<article class="post">
+<!-- Post Header -->
+<div class="post-header">
+<h1>After Spark on YARN submits the task, the execution progress is always 10%</h1>
+<div class="post-meta">
+<div class="post-meta-item">
+<span class="meta-icon">📅</span>
+<span>January 10, 2019</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">📖</span>
+<span>3 min read</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">👁️</span>
+<span>2404 views</span>
+</div>
+</div>
+</div>
+<!-- Post Content -->
+<div class="post-content">
+<div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<p>spark 2.1.1</p>
+<p>The system hopes to monitor the execution progress of the Spark on YARN task, but during the monitoring process it is found that the execution progress is always 10% after the task is submitted. Until the execution is successful or fails, the progress will suddenly change to 100%, which is amazing.</p>
+<p> <img alt="" src="https://img2018.cnblogs.com/blog/1509647/201901/1509647-20190110162425953-711360549.png"/></p>
+<p> Let’s look at the Spark on YARN task submission process:</p>
+<p> </p>
+<p>When Spark on YARN submits a task, mainClass will be modified to Client</p>
+<blockquote>
+<p>childMainClass = "org.apache.spark.deploy.yarn.Client"</p>
+</blockquote>
+<p>For details on the Spark-submit process, see:<a href="https://www.cnblogs.com/barneywill/p/9820684.html" target="_blank">https://www.cnblogs.com/barneywill/p/9820684.html</a></p>
+<p> </p>
+<p>Let’s look at the Client execution process:</p>
+<p>org.apache.spark.deploy.yarn.Client</p>
+<div class="cnblogs_code">
+<pre><span style="color: rgba(0, 0, 0, 1)">  def main(argStrings: Array[String]) {
+...
+    val sparkConf </span>= <span style="color: rgba(0, 0, 255, 1)">new</span><span style="color: rgba(0, 0, 0, 1)"> SparkConf
+    </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> SparkSubmit would use yarn cache to distribute files &amp; jars in yarn mode,
+    </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> so remove them from sparkConf here for yarn mode.</span>
+    sparkConf.remove("spark.jars"<span style="color: rgba(0, 0, 0, 1)">)
+    sparkConf.remove(</span>"spark.files"<span style="color: rgba(0, 0, 0, 1)">)
+    val args </span>= <span style="color: rgba(0, 0, 255, 1)">new</span><span style="color: rgba(0, 0, 0, 1)"> ClientArguments(argStrings)
+    </span><span style="color: rgba(0, 0, 255, 1)">new</span><span style="color: rgba(0, 0, 0, 1)"> Client(args, sparkConf).run()
+...
+
+  def run(): Unit </span>=<span style="color: rgba(0, 0, 0, 1)"> {
+    </span><span style="color: rgba(0, 0, 255, 1)">this</span>.appId =<span style="color: rgba(0, 0, 0, 1)"> submitApplication()
+...
+
+  def submitApplication(): ApplicationId </span>=<span style="color: rgba(0, 0, 0, 1)"> {
+...
+      val containerContext </span>=<span style="color: rgba(0, 0, 0, 1)"> createContainerLaunchContext(newAppResponse)
+...
+
+  </span><span style="color: rgba(0, 0, 255, 1)">private</span><span style="color: rgba(0, 0, 0, 1)"> def createContainerLaunchContext(newAppResponse: GetNewApplicationResponse)
+    : ContainerLaunchContext </span>=<span style="color: rgba(0, 0, 0, 1)"> {
+...
+    val amClass </span>=
+      <span style="color: rgba(0, 0, 255, 1)">if</span><span style="color: rgba(0, 0, 0, 1)"> (isClusterMode) {
+        Utils.classForName(</span>"org.apache.spark.deploy.yarn.ApplicationMaster"<span style="color: rgba(0, 0, 0, 1)">).getName
+      } </span><span style="color: rgba(0, 0, 255, 1)">else</span><span style="color: rgba(0, 0, 0, 1)"> {
+        Utils.classForName(</span>"org.apache.spark.deploy.yarn.ExecutorLauncher"<span style="color: rgba(0, 0, 0, 1)">).getName
+      }</span></pre>
+</div>
+<p>The calling process here is Client.main-&gt;run-&gt;submitApplication-&gt;createContainerLaunchContext, and then amClass is set, and eventually ApplicationMaster is called, because ExecutorLauncher also calls ApplicationMaster internally, as follows:</p>
+<p>org.apache.spark.deploy.yarn.ExecutorLauncher</p>
+<div class="cnblogs_code">
+<pre><span style="color: rgba(0, 0, 0, 1)">object ExecutorLauncher {
+
+  def main(args: Array[String]): Unit </span>=<span style="color: rgba(0, 0, 0, 1)"> {
+    ApplicationMaster.main(args)
+  }
+
+}</span></pre>
+</div>
+<p> </p>
+<p>Let’s look at ApplicationMaster:</p>
+<p>org.apache.spark.deploy.yarn.ApplicationMaster</p>
+<div class="cnblogs_code">
+<pre>  def main(args: Array[String]): Unit =<span style="color: rgba(0, 0, 0, 1)"> {
+...
+    SparkHadoopUtil.get.runAsSparkUser { () </span>=&gt;<span style="color: rgba(0, 0, 0, 1)">
+      master </span>= <span style="color: rgba(0, 0, 255, 1)">new</span> ApplicationMaster(amArgs, <span style="color: rgba(0, 0, 255, 1)">new</span><span style="color: rgba(0, 0, 0, 1)"> YarnRMClient)
+      System.exit(master.run())
+    }
+...
+
+  </span><span style="color: rgba(0, 0, 255, 1)">final</span> def run(): Int =<span style="color: rgba(0, 0, 0, 1)"> {
+...
+      </span><span style="color: rgba(0, 0, 255, 1)">if</span><span style="color: rgba(0, 0, 0, 1)"> (isClusterMode) {
+        runDriver(securityMgr)
+      } </span><span style="color: rgba(0, 0, 255, 1)">else</span><span style="color: rgba(0, 0, 0, 1)"> {
+        runExecutorLauncher(securityMgr)
+      }
+...
+
+  </span><span style="color: rgba(0, 0, 255, 1)">private</span><span style="color: rgba(0, 0, 0, 1)"> def registerAM(
+      _sparkConf: SparkConf,
+      _rpcEnv: RpcEnv,
+      driverRef: RpcEndpointRef,
+      uiAddress: String,
+      securityMgr: SecurityManager) </span>=<span style="color: rgba(0, 0, 0, 1)"> {
+...
+    allocator </span>=<span style="color: rgba(0, 0, 0, 1)"> client.register(driverUrl,
+      driverRef,
+      yarnConf,
+      _sparkConf,
+      uiAddress,
+      historyAddress,
+      securityMgr,
+      localResources)
+
+    allocator.allocateResources()
+    reporterThread </span>=<span style="color: rgba(0, 0, 0, 1)"> launchReporterThread()
+...
+  </span><span style="color: rgba(0, 0, 255, 1)">private</span> def launchReporterThread(): Thread =<span style="color: rgba(0, 0, 0, 1)"> {
+    </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> The number of failures in a row until Reporter thread give up</span>
+    val reporterMaxFailures =<span style="color: rgba(0, 0, 0, 1)"> sparkConf.get(MAX_REPORTER_THREAD_FAILURES)
+
+    val t </span>= <span style="color: rgba(0, 0, 255, 1)">new</span><span style="color: rgba(0, 0, 0, 1)"> Thread {
+      override def run() {
+        var failureCount </span>= 0
+        <span style="color: rgba(0, 0, 255, 1)">while</span> (!<span style="color: rgba(0, 0, 0, 1)">finished) {
+          </span><span style="color: rgba(0, 0, 255, 1)">try</span><span style="color: rgba(0, 0, 0, 1)"> {
+            </span><span style="color: rgba(0, 0, 255, 1)">if</span> (allocator.getNumExecutorsFailed &gt;=<span style="color: rgba(0, 0, 0, 1)"> maxNumExecutorFailures) {
+              finish(FinalApplicationStatus.FAILED,
+                ApplicationMaster.EXIT_MAX_EXECUTOR_FAILURES,
+                s</span>"Max number of executor failures ($maxNumExecutorFailures) reached"<span style="color: rgba(0, 0, 0, 1)">)
+            } </span><span style="color: rgba(0, 0, 255, 1)">else</span><span style="color: rgba(0, 0, 0, 1)"> {
+              logDebug(</span>"Sending progress"<span style="color: rgba(0, 0, 0, 1)">)
+              allocator.allocateResources()
+            }
+...</span></pre>
+</div>
+<p>The calling process here is ApplicationMaster.main-&gt;run. RunDriver or runExecutorLauncher will be called in run, and eventually registerAM will be called, which will call YarnAllocator.allocateResources, and then a thread will be started in launchReporterThread, which will also continuously call YarnAllocator.allocateResources. Let's look at YarnAllocator:</p>
+<p>org.apache.spark.deploy.yarn.YarnAllocator</p>
+<div class="cnblogs_code">
+<pre>  def allocateResources(): Unit = <span style="color: rgba(0, 0, 255, 1)">synchronized</span><span style="color: rgba(0, 0, 0, 1)"> {
+    updateResourceRequests()
+
+    val progressIndicator </span>= 0.1f
+    <span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> Poll the ResourceManager. This doubles as a heartbeat if there are no pending container
+    </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> requests.</span>
+    val allocateResponse = amClient.allocate(progressIndicator)</pre>
+</div>
+<p>It can be seen that the progress is set to 0.1, which is 10%, and it is hard-coded, so the execution progress of Spark on YARN is always 10%, so it seems futile to monitor the task progress of Spark on YARN;</p>
+<p> </p>
+</div>
+</div>
+<!-- Post Footer -->
+<div class="post-footer">
+<div class="post-navigation">
+<a class="nav-button" href="../blog.html">← Back to Home</a>
+<a class="nav-button" href="0281.html">Next Post →</a>
+</div>
+</div>
+</article>
+</div>
+</body>
+</html>

@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>ClouderaManager reports error when modifying configuration</title>
+<link href="../css/style3.css" rel="stylesheet"/>
+</head>
+<body>
+<div class="container">
+<!-- Header Navigation -->
+<div class="header">
+<h1><a href="../blog.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+</div>
+<!-- Post Container -->
+<article class="post">
+<!-- Post Header -->
+<div class="post-header">
+<h1>ClouderaManager reports error when modifying configuration</h1>
+<div class="post-meta">
+<div class="post-meta-item">
+<span class="meta-icon">📅</span>
+<span>April 30, 2019</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">📖</span>
+<span>1 min read</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">👁️</span>
+<span>421 views</span>
+</div>
+</div>
+</div>
+<!-- Post Content -->
+<div class="post-content">
+<div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<p>Modifying the configuration in Cloudera Manager may report an error:</p>
+<blockquote>
+<p>Incorrect string value: '\xE7\xA8\x8B\xE5\xBA\x8F...' for column 'MESSAGE' at row 1</p>
+</blockquote>
+<p>This is a MySQL character set problem. It is most likely caused by using the default latin1 encoding when creating the scm database. The tables involved are:</p>
+<blockquote>
+<p>CREATE TABLE `REVISIONS` (<br/>  `REVISION_ID` bigint(20) NOT NULL,<br/>  `OPTIMISTIC_LOCK_VERSION` bigint(20) NOT NULL,<br/>  `USER_ID` bigint(20) DEFAULT NULL,<br/>  `TIMESTAMP` bigint(20) DEFAULT NULL,<br/>  `MESSAGE` longtext,<br/>  PRIMARY KEY (`REVISION_ID`)<br/>) ENGINE=InnoDB DEFAULT CHARSET=latin1 </p>
+</blockquote>
+<p>The solution is:</p>
+<blockquote>
+<p>alter table REVISIONS convert to character set utf8;</p>
+</blockquote>
+<p>If you cannot modify the character set, you can also manually modify the configuration in the database:</p>
+<blockquote>
+<p>update CONFIGS set value = * where config_id = *;</p>
+</blockquote>
+<p>Then restart the corresponding components</p>
+<p> </p>
+</div>
+</div>
+<!-- Post Footer -->
+<div class="post-footer">
+<div class="post-navigation">
+<a class="nav-button" href="../blog.html">← Back to Home</a>
+<a class="nav-button" href="0145.html">Next Post →</a>
+</div>
+</div>
+</article>
+</div>
+</body>
+</html>

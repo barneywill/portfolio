@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Hadoop 4 - HDFS Trash</title>
+<link href="../css/style3.css" rel="stylesheet"/>
+</head>
+<body>
+<div class="container">
+<!-- Header Navigation -->
+<div class="header">
+<h1><a href="../blog.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+</div>
+<!-- Post Container -->
+<article class="post">
+<!-- Post Header -->
+<div class="post-header">
+<h1>Hadoop 4 - HDFS Trash</h1>
+<div class="post-meta">
+<div class="post-meta-item">
+<span class="meta-icon">📅</span>
+<span>April 06, 2022</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">📖</span>
+<span>1 min read</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">👁️</span>
+<span>583 views</span>
+</div>
+</div>
+</div>
+<!-- Post Content -->
+<div class="post-content">
+<div class="blogpost-body cnblogs-markdown" id="cnblogs_post_body">
+<h1 id="section-0029-1">Configuration</h1>
+<h2 id="section-0029-2">Configuration 1</h2>
+<blockquote>
+<p>fs.trash.interval=1440</p>
+</blockquote>
+<p>Deleted files will go into the Recycle Bin and will be kept for 1440 minutes by default before being completely deleted.</p>
+<h2 id="section-0029-3">Configuration 2</h2>
+<blockquote>
+<p>fs.trash.checkpoint.interval=60</p>
+</blockquote>
+<p>Recycle Bin checkpoint mechanism: Files entering the Recycle Bin first enter the Current directory, and then are moved to a timestamp directory regularly, with a regular interval of 60 minutes.</p>
+<h1 id="section-0029-4">process</h1>
+<h2 id="section-0029-5">1 delete command</h2>
+<blockquote>
+<p>hdfs dfs rm /tmp/test</p>
+</blockquote>
+<h2 id="section-0029-6">2 Enter the recycle bin</h2>
+<blockquote>
+<p>hdfs://${nn}/user/${user_name}/.Trash/Current/tmp/test</p>
+</blockquote>
+<h2 id="section-0029-7">3. Regular inspection</h2>
+<blockquote>
+<p>hdfs://${nn}/user/${user_name}/.Trash/Current/tmp/test</p>
+</blockquote>
+<p>move to</p>
+<blockquote>
+<p>hdfs://${nn}/user/${user_name}/.Trash/${yyMMddHH0000}/tmp/test</p>
+</blockquote>
+<h2 id="section-0029-8">4 Regular inspection (after 24 hours)</h2>
+<p>Delete completely</p>
+<h3 id="section-0029-9">Remark</h3>
+<p>Between step 2 and step 3, the data in the recycle bin can be restored at any time by moving it to its original location.</p>
+<p>Special attention should be paid to the fact that in step 2, File Not Exists may be prompted during the operation. Don't panic at this time. The file is not lost. In fact, step 3 has been performed and the file has been moved to another directory.</p>
+</div>
+</div>
+<!-- Post Footer -->
+<div class="post-footer">
+<div class="post-navigation">
+<a class="nav-button" href="../blog.html">← Back to Home</a>
+<a class="nav-button" href="0030.html">Next Post →</a>
+</div>
+</div>
+</article>
+</div>
+</body>
+</html>

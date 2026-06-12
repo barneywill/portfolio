@@ -1,0 +1,4089 @@
+[
+  {
+    "id": 1,
+    "title": "An HBase Region Stuck in RIT (Timeout)",
+    "publish_date": "June 16, 2022",
+    "view_count": 1073,
+    "read_time": "2 min read",
+    "filename": "0001.html",
+    "category": "Big Data",
+    "components": [
+      "HBase"
+    ]
+  },
+  {
+    "id": 2,
+    "title": "An HBase Region Stuck in RIT (No Timeout)",
+    "publish_date": "June 16, 2022",
+    "view_count": 564,
+    "read_time": "1 min read",
+    "filename": "0002.html",
+    "category": "Big Data",
+    "components": [
+      "HBase"
+    ]
+  },
+  {
+    "id": 3,
+    "title": "HBase Master Initialization Failed After Cluster Restart",
+    "publish_date": "June 16, 2022",
+    "view_count": 837,
+    "read_time": "1 min read",
+    "filename": "0003.html",
+    "category": "Big Data",
+    "components": [
+      "HBase"
+    ]
+  },
+  {
+    "id": 4,
+    "title": "Distributed Systems Article Collection",
+    "publish_date": "June 10, 2022",
+    "view_count": 122,
+    "read_time": "1 min read",
+    "filename": "0004.html",
+    "category": "Big Data",
+    "components": []
+  },
+  {
+    "id": 5,
+    "title": "Hive",
+    "publish_date": "May 31, 2022",
+    "view_count": 288,
+    "read_time": "3 min read",
+    "filename": "0005.html",
+    "category": "Big Data",
+    "components": [
+      "Hive"
+    ]
+  },
+  {
+    "id": 6,
+    "title": "SQL and Databases",
+    "publish_date": "May 31, 2022",
+    "view_count": 154,
+    "read_time": "1 min read",
+    "filename": "0006.html",
+    "category": "System Design",
+    "components": []
+  },
+  {
+    "id": 7,
+    "title": "YARN",
+    "publish_date": "May 31, 2022",
+    "view_count": 297,
+    "read_time": "1 min read",
+    "filename": "0007.html",
+    "category": "Big Data",
+    "components": [
+      "YARN"
+    ]
+  },
+  {
+    "id": 8,
+    "title": "HDFS",
+    "publish_date": "May 31, 2022",
+    "view_count": 326,
+    "read_time": "1 min read",
+    "filename": "0008.html",
+    "category": "Big Data",
+    "components": [
+      "HDFS"
+    ]
+  },
+  {
+    "id": 9,
+    "title": "Notes on Algorithm Engineering",
+    "publish_date": "May 31, 2022",
+    "view_count": 111,
+    "read_time": "1 min read",
+    "filename": "0009.html",
+    "category": "System Design",
+    "components": []
+  },
+  {
+    "id": 10,
+    "title": "Notes on Big Data",
+    "publish_date": "May 31, 2022",
+    "view_count": 187,
+    "read_time": "1 min read",
+    "filename": "0010.html",
+    "category": "Big Data",
+    "components": []
+  },
+  {
+    "id": 11,
+    "title": "Elasticsearch Optimization Practices",
+    "publish_date": "May 29, 2022",
+    "view_count": 166,
+    "read_time": "1 min read",
+    "filename": "0011.html",
+    "category": "Big Data",
+    "components": [
+      "Elasticsearch"
+    ]
+  },
+  {
+    "id": 12,
+    "title": "OLAP Engine Benchmark Comparison",
+    "publish_date": "May 20, 2022",
+    "view_count": 547,
+    "read_time": "2 min read",
+    "filename": "0012.html",
+    "category": "Big Data",
+    "components": []
+  },
+  {
+    "id": 13,
+    "title": "Doris and ClickHouse Comparison",
+    "publish_date": "May 20, 2022",
+    "view_count": 2309,
+    "read_time": "2 min read",
+    "filename": "0013.html",
+    "category": "Big Data",
+    "components": [
+      "ClickHouse",
+      "Doris"
+    ]
+  },
+  {
+    "id": 14,
+    "title": "Resetting Kafka Offsets",
+    "publish_date": "May 20, 2022",
+    "view_count": 741,
+    "read_time": "1 min read",
+    "filename": "0014.html",
+    "category": "Big Data",
+    "components": [
+      "Kafka"
+    ]
+  },
+  {
+    "id": 15,
+    "title": "Enabling Compression in Kafka",
+    "publish_date": "May 20, 2022",
+    "view_count": 1289,
+    "read_time": "1 min read",
+    "filename": "0015.html",
+    "category": "Big Data",
+    "components": [
+      "Kafka"
+    ]
+  },
+  {
+    "id": 16,
+    "title": "Impala ORC Query Support",
+    "publish_date": "May 20, 2022",
+    "view_count": 550,
+    "read_time": "1 min read",
+    "filename": "0016.html",
+    "category": "Big Data",
+    "components": [
+      "Impala"
+    ]
+  },
+  {
+    "id": 17,
+    "title": "Enabling LDAP Authentication in Hive",
+    "publish_date": "May 20, 2022",
+    "view_count": 949,
+    "read_time": "1 min read",
+    "filename": "0017.html",
+    "category": "Big Data",
+    "components": [
+      "Hive"
+    ]
+  },
+  {
+    "id": 18,
+    "title": "Message Loss in Some Kafka Topics",
+    "publish_date": "May 20, 2022",
+    "view_count": 2674,
+    "read_time": "2 min read",
+    "filename": "0018.html",
+    "category": "Big Data",
+    "components": [
+      "Kafka"
+    ]
+  },
+  {
+    "id": 19,
+    "title": "Some Kafka Partitions Stay \"is still in progress\" After Reassign",
+    "publish_date": "May 19, 2022",
+    "view_count": 586,
+    "read_time": "2 min read",
+    "filename": "0019.html",
+    "category": "Big Data",
+    "components": [
+      "Kafka"
+    ]
+  },
+  {
+    "id": 20,
+    "title": "spark-sql Error After Upgrading Spark 2.4 to 3.1",
+    "publish_date": "May 19, 2022",
+    "view_count": 1030,
+    "read_time": "1 min read",
+    "filename": "0020.html",
+    "category": "Big Data",
+    "components": [
+      "Spark"
+    ]
+  },
+  {
+    "id": 21,
+    "title": "Garbled Text When Hive Reads gzip Files",
+    "publish_date": "May 19, 2022",
+    "view_count": 599,
+    "read_time": "1 min read",
+    "filename": "0021.html",
+    "category": "Big Data",
+    "components": [
+      "Hive"
+    ]
+  },
+  {
+    "id": 22,
+    "title": "Repairing location in Hive Metadata",
+    "publish_date": "May 19, 2022",
+    "view_count": 400,
+    "read_time": "1 min read",
+    "filename": "0022.html",
+    "category": "Big Data",
+    "components": [
+      "Hive"
+    ]
+  },
+  {
+    "id": 23,
+    "title": "Intermittent UDF Errors in Hive Jobs",
+    "publish_date": "May 19, 2022",
+    "view_count": 423,
+    "read_time": "1 min read",
+    "filename": "0023.html",
+    "category": "Big Data",
+    "components": [
+      "Hive"
+    ]
+  },
+  {
+    "id": 24,
+    "title": "Kafka Service Restart",
+    "publish_date": "May 19, 2022",
+    "view_count": 755,
+    "read_time": "1 min read",
+    "filename": "0024.html",
+    "category": "Big Data",
+    "components": [
+      "Kafka"
+    ]
+  },
+  {
+    "id": 25,
+    "title": "Large-Scale HBase Restarts",
+    "publish_date": "May 19, 2022",
+    "view_count": 1262,
+    "read_time": "1 min read",
+    "filename": "0025.html",
+    "category": "Big Data",
+    "components": [
+      "HBase"
+    ]
+  },
+  {
+    "id": 26,
+    "title": "YARN Exploited to Submit get-shell Mining Jobs",
+    "publish_date": "May 19, 2022",
+    "view_count": 391,
+    "read_time": "1 min read",
+    "filename": "0026.html",
+    "category": "Big Data",
+    "components": [
+      "YARN"
+    ]
+  },
+  {
+    "id": 27,
+    "title": "Logstash Kafka Consumption Lag",
+    "publish_date": "May 18, 2022",
+    "view_count": 512,
+    "read_time": "1 min read",
+    "filename": "0027.html",
+    "category": "Big Data",
+    "components": [
+      "Kafka"
+    ]
+  },
+  {
+    "id": 28,
+    "title": "Bluetooth Failure on Linux",
+    "publish_date": "May 13, 2022",
+    "view_count": 427,
+    "read_time": "1 min read",
+    "filename": "0028.html",
+    "category": "DevOps",
+    "components": []
+  },
+  {
+    "id": 29,
+    "title": "Hadoop 4 - HDFS Trash",
+    "publish_date": "April 06, 2022",
+    "view_count": 583,
+    "read_time": "1 min read",
+    "filename": "0029.html",
+    "category": "Big Data",
+    "components": [
+      "Hadoop",
+      "HDFS"
+    ]
+  },
+  {
+    "id": 30,
+    "title": "PostgreSQL",
+    "publish_date": "September 17, 2021",
+    "view_count": 216,
+    "read_time": "1 min read",
+    "filename": "0030.html",
+    "category": "System Design",
+    "components": [
+      "PostgreSQL"
+    ]
+  },
+  {
+    "id": 31,
+    "title": "fail2ban",
+    "publish_date": "September 12, 2021",
+    "view_count": 516,
+    "read_time": "1 min read",
+    "filename": "0031.html",
+    "category": "Big Data",
+    "components": []
+  },
+  {
+    "id": 32,
+    "title": "IntelliJ IDEA Fails to Start on macOS 12",
+    "publish_date": "September 08, 2021",
+    "view_count": 1892,
+    "read_time": "1 min read",
+    "filename": "0032.html",
+    "category": "Big Data",
+    "components": []
+  },
+  {
+    "id": 33,
+    "title": "Hadoop 3 - HDFS Disk Balancer",
+    "publish_date": "September 04, 2021",
+    "view_count": 661,
+    "read_time": "2 min read",
+    "filename": "0033.html",
+    "category": "Big Data",
+    "components": [
+      "Hadoop",
+      "HDFS"
+    ]
+  },
+  {
+    "id": 34,
+    "title": "supervisor",
+    "publish_date": "August 30, 2021",
+    "view_count": 189,
+    "read_time": "1 min read",
+    "filename": "0034.html",
+    "category": "Big Data",
+    "components": []
+  },
+  {
+    "id": 35,
+    "title": "git pull Failed",
+    "publish_date": "August 02, 2021",
+    "view_count": 674,
+    "read_time": "1 min read",
+    "filename": "0035.html",
+    "category": "Big Data",
+    "components": []
+  },
+  {
+    "id": 36,
+    "title": "UnknownHostException When a Docker Container Accesses HDFS",
+    "publish_date": "July 28, 2021",
+    "view_count": 1886,
+    "read_time": "1 min read",
+    "filename": "0036.html",
+    "category": "Big Data",
+    "components": [
+      "HDFS",
+      "Docker"
+    ]
+  },
+  {
+    "id": 37,
+    "title": "FRP",
+    "publish_date": "July 24, 2021",
+    "view_count": 161,
+    "read_time": "1 min read",
+    "filename": "0037.html",
+    "category": "Big Data",
+    "components": []
+  },
+  {
+    "id": 38,
+    "title": "Kafka Reassign Stuck",
+    "publish_date": "July 17, 2021",
+    "view_count": 1010,
+    "read_time": "1 min read",
+    "filename": "0038.html",
+    "category": "Big Data",
+    "components": [
+      "Kafka"
+    ]
+  },
+  {
+    "id": 39,
+    "title": "Kafka 2 - Reassign Process",
+    "publish_date": "July 17, 2021",
+    "view_count": 1099,
+    "read_time": "11 min read",
+    "filename": "0039.html",
+    "category": "Big Data",
+    "components": [
+      "Kafka"
+    ]
+  },
+  {
+    "id": 40,
+    "title": "Periodic Full GC in Azkaban",
+    "publish_date": "June 10, 2021",
+    "view_count": 262,
+    "read_time": "1 min read",
+    "filename": "0040.html",
+    "category": "Big Data",
+    "components": []
+  },
+  {
+    "id": 41,
+    "title": "MAT Startup Error on macOS",
+    "publish_date": "June 10, 2021",
+    "view_count": 849,
+    "read_time": "1 min read",
+    "filename": "0041.html",
+    "category": "Big Data",
+    "components": []
+  },
+  {
+    "id": 42,
+    "title": "Doris 1 - Compile, Install, and Start",
+    "publish_date": "May 25, 2021",
+    "view_count": 3499,
+    "read_time": "3 min read",
+    "filename": "0042.html",
+    "category": "Big Data",
+    "components": [
+      "Doris"
+    ]
+  },
+  {
+    "id": 44,
+    "title": "Compiling and Installing Impala 3.4",
+    "publish_date": "May 13, 2021",
+    "view_count": 1995,
+    "read_time": "1 min read",
+    "filename": "0044.html",
+    "category": "Big Data",
+    "components": [
+      "Impala"
+    ]
+  },
+  {
+    "id": 45,
+    "title": "HBase HMaster Startup Error",
+    "publish_date": "May 13, 2021",
+    "view_count": 464,
+    "read_time": "1 min read",
+    "filename": "0045.html",
+    "category": "Big Data",
+    "components": [
+      "HBase"
+    ]
+  },
+  {
+    "id": 46,
+    "title": "Bluetooth Devices Frequently Disconnect on Linux",
+    "publish_date": "December 13, 2020",
+    "view_count": 2408,
+    "read_time": "1 min read",
+    "filename": "0046.html",
+    "category": "DevOps",
+    "components": []
+  },
+  {
+    "id": 47,
+    "title": "Managing USB Drives and Portable Disks from the CentOS Command Line",
+    "publish_date": "December 05, 2020",
+    "view_count": 765,
+    "read_time": "1 min read",
+    "filename": "0047.html",
+    "category": "Big Data",
+    "components": []
+  },
+  {
+    "id": 48,
+    "title": "CentOS Boots into Emergency Mode",
+    "publish_date": "December 04, 2020",
+    "view_count": 1141,
+    "read_time": "1 min read",
+    "filename": "0048.html",
+    "category": "Big Data",
+    "components": []
+  },
+  {
+    "id": 49,
+    "title": "Tonghuashun Keyboard Shortcuts",
+    "publish_date": "August 24, 2020",
+    "view_count": 4179,
+    "read_time": "1 min read",
+    "filename": "0049.html",
+    "category": "Big Data",
+    "components": []
+  },
+  {
+    "id": 50,
+    "title": "Keeping SSH Connections Alive",
+    "publish_date": "August 18, 2020",
+    "view_count": 293,
+    "read_time": "1 min read",
+    "filename": "0050.html",
+    "category": "Big Data",
+    "components": []
+  },
+  {
+    "id": 51,
+    "title": "Impala Out-of-Memory Error",
+    "publish_date": "August 10, 2020",
+    "view_count": 3765,
+    "read_time": "2 min read",
+    "filename": "0051.html",
+    "category": "Big Data",
+    "components": [
+      "Impala"
+    ]
+  },
+  {
+    "id": 52,
+    "title": "Occasional NoClassDefFoundError During easyexcel Downloads",
+    "publish_date": "August 10, 2020",
+    "view_count": 5413,
+    "read_time": "2 min read",
+    "filename": "0052.html",
+    "category": "Problem Solving",
+    "components": []
+  },
+  {
+    "id": 53,
+    "title": "Windows Remote Desktop Cannot Connect Because Authorization Is Required",
+    "publish_date": "August 06, 2020",
+    "view_count": 417,
+    "read_time": "1 min read",
+    "filename": "0053.html",
+    "category": "Big Data",
+    "components": []
+  },
+  {
+    "id": 54,
+    "title": "rxvt",
+    "publish_date": "August 01, 2020",
+    "view_count": 378,
+    "read_time": "1 min read",
+    "filename": "0054.html",
+    "category": "Big Data",
+    "components": []
+  },
+  {
+    "id": 55,
+    "title": "Arch Linux + i3wm",
+    "publish_date": "July 27, 2020",
+    "view_count": 1518,
+    "read_time": "1 min read",
+    "filename": "0055.html",
+    "category": "DevOps",
+    "components": []
+  },
+  {
+    "id": 56,
+    "title": "Elasticsearch Optimization Practices",
+    "publish_date": "May 29, 2022",
+    "view_count": 166,
+    "read_time": "1 min read",
+    "filename": "0056.html",
+    "category": "Big Data",
+    "components": [
+      "Elasticsearch"
+    ]
+  },
+  {
+    "id": 58,
+    "title": "VS Code Java Language Server Initialization Failed",
+    "publish_date": "July 20, 2020",
+    "view_count": 4052,
+    "read_time": "1 min read",
+    "filename": "0058.html",
+    "category": "DevOps",
+    "components": []
+  },
+  {
+    "id": 59,
+    "title": "Large-Scale File Changes in Git",
+    "publish_date": "July 20, 2020",
+    "view_count": 282,
+    "read_time": "1 min read",
+    "filename": "0059.html",
+    "category": "Problem Solving",
+    "components": []
+  },
+  {
+    "id": 60,
+    "title": "Markdown Syntax",
+    "publish_date": "June 28, 2020",
+    "view_count": 162,
+    "read_time": "1 min read",
+    "filename": "0060.html",
+    "category": "Big Data",
+    "components": []
+  },
+  {
+    "id": 61,
+    "title": "Upgrading Vim 8 on CentOS",
+    "publish_date": "June 28, 2020",
+    "view_count": 176,
+    "read_time": "1 min read",
+    "filename": "0061.html",
+    "category": "Big Data",
+    "components": []
+  },
+  {
+    "id": 62,
+    "title": "Changing the Terminal Theme on macOS",
+    "publish_date": "June 28, 2020",
+    "view_count": 382,
+    "read_time": "1 min read",
+    "filename": "0062.html",
+    "category": "Big Data",
+    "components": []
+  },
+  {
+    "id": 63,
+    "title": "Using VS Code",
+    "publish_date": "June 27, 2020",
+    "view_count": 857,
+    "read_time": "2 min read",
+    "filename": "0063.html",
+    "category": "Big Data",
+    "components": []
+  },
+  {
+    "id": 64,
+    "title": "Using Emacs",
+    "publish_date": "June 25, 2020",
+    "view_count": 272,
+    "read_time": "1 min read",
+    "filename": "0064.html",
+    "category": "Big Data",
+    "components": []
+  },
+  {
+    "id": 65,
+    "title": "Essential Tools for Programmers",
+    "publish_date": "June 25, 2020",
+    "view_count": 461,
+    "read_time": "2 min read",
+    "filename": "0065.html",
+    "category": "Big Data",
+    "components": []
+  },
+  {
+    "id": 66,
+    "title": "Using zsh",
+    "publish_date": "June 18, 2020",
+    "view_count": 700,
+    "read_time": "1 min read",
+    "filename": "0066.html",
+    "category": "Big Data",
+    "components": []
+  },
+  {
+    "id": 67,
+    "title": "Common Tools Collection",
+    "publish_date": "June 13, 2020",
+    "view_count": 151,
+    "read_time": "1 min read",
+    "filename": "0067.html",
+    "category": "Big Data",
+    "components": []
+  },
+  {
+    "id": 68,
+    "title": "Timezone Offset When Impala Reads parquet Timestamp Fields",
+    "publish_date": "June 08, 2020",
+    "view_count": 1301,
+    "read_time": "1 min read",
+    "filename": "0068.html",
+    "category": "Big Data",
+    "components": [
+      "Impala"
+    ]
+  },
+  {
+    "id": 69,
+    "title": "Common Keyboard Shortcuts",
+    "publish_date": "June 08, 2020",
+    "view_count": 806,
+    "read_time": "2 min read",
+    "filename": "0069.html",
+    "category": "Big Data",
+    "components": []
+  },
+  {
+    "id": 70,
+    "title": "MySQL Startup Failure",
+    "publish_date": "April 07, 2020",
+    "view_count": 601,
+    "read_time": "1 min read",
+    "filename": "0070.html",
+    "category": "System Design",
+    "components": [
+      "MySQL"
+    ]
+  },
+  {
+    "id": 71,
+    "title": "Creating a Self-Signed HTTPS Certificate",
+    "publish_date": "March 28, 2020",
+    "view_count": 588,
+    "read_time": "1 min read",
+    "filename": "0071.html",
+    "category": "Big Data",
+    "components": []
+  },
+  {
+    "id": 72,
+    "title": "lua cjson Converts Numbers to Scientific Notation",
+    "publish_date": "January 15, 2020",
+    "view_count": 2045,
+    "read_time": "1 min read",
+    "filename": "0072.html",
+    "category": "Big Data",
+    "components": []
+  },
+  {
+    "id": 73,
+    "title": "Marathon Repeatedly Restarts",
+    "publish_date": "January 11, 2020",
+    "view_count": 733,
+    "read_time": "1 min read",
+    "filename": "0073.html",
+    "category": "Big Data",
+    "components": []
+  },
+  {
+    "id": 74,
+    "title": "Importing Hive Metadata into Atlas",
+    "publish_date": "January 11, 2020",
+    "view_count": 5864,
+    "read_time": "2 min read",
+    "filename": "0074.html",
+    "category": "Big Data",
+    "components": [
+      "Hive"
+    ]
+  },
+  {
+    "id": 75,
+    "title": "Atlas Overview and Installation",
+    "publish_date": "January 11, 2020",
+    "view_count": 1583,
+    "read_time": "10 min read",
+    "filename": "0075.html",
+    "category": "Big Data",
+    "components": []
+  },
+  {
+    "id": 76,
+    "title": "Mesos Slave Startup Failure",
+    "publish_date": "January 10, 2020",
+    "view_count": 1010,
+    "read_time": "6 min read",
+    "filename": "0076.html",
+    "category": "Big Data",
+    "components": []
+  },
+  {
+    "id": 77,
+    "title": "Installing the Oracle Client on Windows",
+    "publish_date": "December 31, 2019",
+    "view_count": 442,
+    "read_time": "1 min read",
+    "filename": "0077.html",
+    "category": "Big Data",
+    "components": []
+  },
+  {
+    "id": 78,
+    "title": "MySQL Error When Started with Docker",
+    "publish_date": "December 29, 2019",
+    "view_count": 526,
+    "read_time": "1 min read",
+    "filename": "0078.html",
+    "category": "System Design",
+    "components": [
+      "MySQL",
+      "Docker"
+    ]
+  },
+  {
+    "id": 79,
+    "title": "Installing CentOS with KVM from the CentOS Command Line",
+    "publish_date": "December 26, 2019",
+    "view_count": 945,
+    "read_time": "9 min read",
+    "filename": "0079.html",
+    "category": "Big Data",
+    "components": []
+  },
+  {
+    "id": 80,
+    "title": "JDBC Connections to MySQL, SQL Server, and Oracle",
+    "publish_date": "December 19, 2019",
+    "view_count": 673,
+    "read_time": "2 min read",
+    "filename": "0080.html",
+    "category": "System Design",
+    "components": [
+      "MySQL"
+    ]
+  },
+  {
+    "id": 81,
+    "title": "Installing the Oracle Client on CentOS",
+    "publish_date": "December 18, 2019",
+    "view_count": 356,
+    "read_time": "1 min read",
+    "filename": "0081.html",
+    "category": "Big Data",
+    "components": []
+  },
+  {
+    "id": 82,
+    "title": "Expanding Disk Capacity on an Alibaba Cloud Host",
+    "publish_date": "December 15, 2019",
+    "view_count": 418,
+    "read_time": "1 min read",
+    "filename": "0082.html",
+    "category": "Big Data",
+    "components": []
+  },
+  {
+    "id": 83,
+    "title": "High iowait and Load on a Linux Server",
+    "publish_date": "November 11, 2019",
+    "view_count": 1136,
+    "read_time": "2 min read",
+    "filename": "0083.html",
+    "category": "DevOps",
+    "components": []
+  },
+  {
+    "id": 84,
+    "title": "jmap Error in an OpenJDK Docker Container",
+    "publish_date": "November 01, 2019",
+    "view_count": 1817,
+    "read_time": "1 min read",
+    "filename": "0084.html",
+    "category": "DevOps",
+    "components": [
+      "Docker"
+    ]
+  },
+  {
+    "id": 85,
+    "title": "Jenkins Appears Hung",
+    "publish_date": "October 31, 2019",
+    "view_count": 1274,
+    "read_time": "1 min read",
+    "filename": "0085.html",
+    "category": "DevOps",
+    "components": [
+      "Jenkins"
+    ]
+  },
+  {
+    "id": 86,
+    "title": "Service Unavailable During Marathon Application Restart",
+    "publish_date": "October 16, 2019",
+    "view_count": 320,
+    "read_time": "1 min read",
+    "filename": "0086.html",
+    "category": "Big Data",
+    "components": []
+  },
+  {
+    "id": 87,
+    "title": "Importing and Exporting Data Between Hive and MySQL",
+    "publish_date": "October 10, 2019",
+    "view_count": 647,
+    "read_time": "1 min read",
+    "filename": "0087.html",
+    "category": "Big Data",
+    "components": [
+      "Hive",
+      "MySQL"
+    ]
+  },
+  {
+    "id": 88,
+    "title": "Creating and Using SSH Keys",
+    "publish_date": "October 03, 2019",
+    "view_count": 999,
+    "read_time": "1 min read",
+    "filename": "0088.html",
+    "category": "Big Data",
+    "components": []
+  },
+  {
+    "id": 89,
+    "title": "hive.exec.max.dynamic.partitions Does Not Take Effect in Spark SQL",
+    "publish_date": "October 03, 2019",
+    "view_count": 7623,
+    "read_time": "1 min read",
+    "filename": "0089.html",
+    "category": "Big Data",
+    "components": [
+      "Spark",
+      "Hive"
+    ]
+  },
+  {
+    "id": 90,
+    "title": "Running Multiple SELECT DISTINCT Expressions in Impala",
+    "publish_date": "September 28, 2019",
+    "view_count": 5052,
+    "read_time": "1 min read",
+    "filename": "0090.html",
+    "category": "Big Data",
+    "components": [
+      "Impala"
+    ]
+  },
+  {
+    "id": 91,
+    "title": "Running Multiple Configuration Files in One Logstash Instance",
+    "publish_date": "September 22, 2019",
+    "view_count": 2414,
+    "read_time": "1 min read",
+    "filename": "0091.html",
+    "category": "Big Data",
+    "components": []
+  },
+  {
+    "id": 92,
+    "title": "Application Cannot Restart on Marathon",
+    "publish_date": "September 22, 2019",
+    "view_count": 432,
+    "read_time": "2 min read",
+    "filename": "0092.html",
+    "category": "Big Data",
+    "components": []
+  },
+  {
+    "id": 93,
+    "title": "Programming Basics: Jenkins",
+    "publish_date": "August 07, 2019",
+    "view_count": 492,
+    "read_time": "1 min read",
+    "filename": "0093.html",
+    "category": "Big Data",
+    "components": []
+  },
+  {
+    "id": 94,
+    "title": "Sending Email with OpenResty (Nginx + Lua)",
+    "publish_date": "August 05, 2019",
+    "view_count": 938,
+    "read_time": "2 min read",
+    "filename": "0094.html",
+    "category": "Big Data",
+    "components": []
+  },
+  {
+    "id": 95,
+    "title": "MySQL Memory Settings",
+    "publish_date": "July 31, 2019",
+    "view_count": 343,
+    "read_time": "1 min read",
+    "filename": "0095.html",
+    "category": "System Design",
+    "components": [
+      "MySQL"
+    ]
+  },
+  {
+    "id": 96,
+    "title": "Hive Query Error: NoViableAltException",
+    "publish_date": "July 30, 2019",
+    "view_count": 6387,
+    "read_time": "1 min read",
+    "filename": "0096.html",
+    "category": "Big Data",
+    "components": [
+      "Hive"
+    ]
+  },
+  {
+    "id": 97,
+    "title": "Sending HTTP Requests with OpenResty (Nginx + Lua)",
+    "publish_date": "July 29, 2019",
+    "view_count": 1454,
+    "read_time": "1 min read",
+    "filename": "0097.html",
+    "category": "Big Data",
+    "components": []
+  },
+  {
+    "id": 98,
+    "title": "ngx.req.get_body_data Returns nil in OpenResty (Nginx + Lua)",
+    "publish_date": "July 27, 2019",
+    "view_count": 3456,
+    "read_time": "1 min read",
+    "filename": "0098.html",
+    "category": "Big Data",
+    "components": []
+  },
+  {
+    "id": 99,
+    "title": "Confluence and Jira Configuration",
+    "publish_date": "July 10, 2019",
+    "view_count": 1480,
+    "read_time": "1 min read",
+    "filename": "0099.html",
+    "category": "Big Data",
+    "components": []
+  },
+  {
+    "id": 100,
+    "title": "Spring Session Expiration Time",
+    "publish_date": "July 10, 2019",
+    "view_count": 3503,
+    "read_time": "2 min read",
+    "filename": "0100.html",
+    "category": "Big Data",
+    "components": []
+  },
+  {
+    "id": 101,
+    "title": "The content is modified after Spring's RestTemplate requests JSON data",
+    "publish_date": "July 05, 2019",
+    "view_count": 952,
+    "read_time": "7 min read",
+    "filename": "0101.html",
+    "category": "Big Data",
+    "components": []
+  },
+  {
+    "id": 102,
+    "title": "There is a region in HBase that has been in rit state (timeout)",
+    "publish_date": "June 16, 2022",
+    "view_count": 1073,
+    "read_time": "2 min read",
+    "filename": "0102.html",
+    "category": "Big Data",
+    "components": [
+      "HBase"
+    ]
+  },
+  {
+    "id": 103,
+    "title": "Oozie 4 - The Spark version used by Oozie is upgraded",
+    "publish_date": "July 04, 2019",
+    "view_count": 795,
+    "read_time": "1 min read",
+    "filename": "0103.html",
+    "category": "Big Data",
+    "components": [
+      "Spark",
+      "Oozie"
+    ]
+  },
+  {
+    "id": 104,
+    "title": "Common component log cleaning",
+    "publish_date": "July 03, 2019",
+    "view_count": 663,
+    "read_time": "3 min read",
+    "filename": "0104.html",
+    "category": "Big Data",
+    "components": []
+  },
+  {
+    "id": 105,
+    "title": "Nginx accelerates static files",
+    "publish_date": "July 03, 2019",
+    "view_count": 702,
+    "read_time": "1 min read",
+    "filename": "0105.html",
+    "category": "Big Data",
+    "components": []
+  },
+  {
+    "id": 106,
+    "title": "scala akka actor",
+    "publish_date": "June 22, 2019",
+    "view_count": 424,
+    "read_time": "2 min read",
+    "filename": "0106.html",
+    "category": "Big Data",
+    "components": []
+  },
+  {
+    "id": 107,
+    "title": "Logstash 6 - mongo input",
+    "publish_date": "June 20, 2019",
+    "view_count": 1476,
+    "read_time": "2 min read",
+    "filename": "0107.html",
+    "category": "Big Data",
+    "components": []
+  },
+  {
+    "id": 108,
+    "title": "Sqlite",
+    "publish_date": "June 20, 2019",
+    "view_count": 288,
+    "read_time": "2 min read",
+    "filename": "0108.html",
+    "category": "System Design",
+    "components": []
+  },
+  {
+    "id": 109,
+    "title": "MySQL time zone",
+    "publish_date": "June 20, 2019",
+    "view_count": 191,
+    "read_time": "1 min read",
+    "filename": "0109.html",
+    "category": "System Design",
+    "components": [
+      "MySQL"
+    ]
+  },
+  {
+    "id": 110,
+    "title": "Chronos",
+    "publish_date": "June 19, 2019",
+    "view_count": 773,
+    "read_time": "1 min read",
+    "filename": "0110.html",
+    "category": "Big Data",
+    "components": []
+  },
+  {
+    "id": 111,
+    "title": "logrotate",
+    "publish_date": "June 18, 2019",
+    "view_count": 556,
+    "read_time": "3 min read",
+    "filename": "0111.html",
+    "category": "Big Data",
+    "components": []
+  },
+  {
+    "id": 112,
+    "title": "Drill 1 - Introduction, installation and use",
+    "publish_date": "June 16, 2019",
+    "view_count": 2141,
+    "read_time": "9 min read",
+    "filename": "0112.html",
+    "category": "Big Data",
+    "components": []
+  },
+  {
+    "id": 113,
+    "title": "Java basics Nginx cache",
+    "publish_date": "June 16, 2019",
+    "view_count": 869,
+    "read_time": "2 min read",
+    "filename": "0113.html",
+    "category": "Big Data",
+    "components": []
+  },
+  {
+    "id": 114,
+    "title": "Amplify",
+    "publish_date": "June 16, 2019",
+    "view_count": 408,
+    "read_time": "1 min read",
+    "filename": "0114.html",
+    "category": "Big Data",
+    "components": []
+  },
+  {
+    "id": 115,
+    "title": "ETL vs ELT or DataWarehouse vs DataLake",
+    "publish_date": "June 16, 2019",
+    "view_count": 1258,
+    "read_time": "1 min read",
+    "filename": "0115.html",
+    "category": "Big Data",
+    "components": []
+  },
+  {
+    "id": 116,
+    "title": "Using JVM tool in Docker container",
+    "publish_date": "June 15, 2019",
+    "view_count": 1804,
+    "read_time": "3 min read",
+    "filename": "0116.html",
+    "category": "DevOps",
+    "components": [
+      "Docker"
+    ]
+  },
+  {
+    "id": 117,
+    "title": "Marathon has been in the waiting state after restarting the app",
+    "publish_date": "June 14, 2019",
+    "view_count": 917,
+    "read_time": "1 min read",
+    "filename": "0117.html",
+    "category": "Big Data",
+    "components": []
+  },
+  {
+    "id": 118,
+    "title": "Time zone problem when Docker starts Java application",
+    "publish_date": "June 13, 2019",
+    "view_count": 506,
+    "read_time": "1 min read",
+    "filename": "0118.html",
+    "category": "DevOps",
+    "components": [
+      "Docker"
+    ]
+  },
+  {
+    "id": 119,
+    "title": "spring boot startup error",
+    "publish_date": "June 13, 2019",
+    "view_count": 3621,
+    "read_time": "1 min read",
+    "filename": "0119.html",
+    "category": "Big Data",
+    "components": []
+  },
+  {
+    "id": 120,
+    "title": "View jar package dependencies in maven project",
+    "publish_date": "June 13, 2019",
+    "view_count": 500,
+    "read_time": "1 min read",
+    "filename": "0120.html",
+    "category": "Big Data",
+    "components": []
+  },
+  {
+    "id": 121,
+    "title": "Docker starts tomcat without outputting catalina.out",
+    "publish_date": "June 13, 2019",
+    "view_count": 3190,
+    "read_time": "10 min read",
+    "filename": "0121.html",
+    "category": "DevOps",
+    "components": [
+      "Docker"
+    ]
+  },
+  {
+    "id": 122,
+    "title": "ID gets through",
+    "publish_date": "June 07, 2019",
+    "view_count": 557,
+    "read_time": "4 min read",
+    "filename": "0122.html",
+    "category": "Big Data",
+    "components": []
+  },
+  {
+    "id": 123,
+    "title": "Gobblin 2 - persist Kafka to HDFS",
+    "publish_date": "June 01, 2019",
+    "view_count": 1696,
+    "read_time": "2 min read",
+    "filename": "0123.html",
+    "category": "Big Data",
+    "components": [
+      "HDFS",
+      "Kafka"
+    ]
+  },
+  {
+    "id": 124,
+    "title": "Spark cannot read Hive table",
+    "publish_date": "June 01, 2019",
+    "view_count": 5405,
+    "read_time": "4 min read",
+    "filename": "0124.html",
+    "category": "Big Data",
+    "components": [
+      "Spark",
+      "Hive"
+    ]
+  },
+  {
+    "id": 125,
+    "title": "Kudu 6 - Kudu tserver memory usage statistical analysis",
+    "publish_date": "June 01, 2019",
+    "view_count": 3592,
+    "read_time": "1 min read",
+    "filename": "0125.html",
+    "category": "DevOps",
+    "components": []
+  },
+  {
+    "id": 126,
+    "title": "Remove \\r in Windows",
+    "publish_date": "May 30, 2019",
+    "view_count": 2727,
+    "read_time": "1 min read",
+    "filename": "0126.html",
+    "category": "Big Data",
+    "components": []
+  },
+  {
+    "id": 127,
+    "title": "Cloudera Manager agent starts component process process",
+    "publish_date": "May 28, 2019",
+    "view_count": 1936,
+    "read_time": "2 min read",
+    "filename": "0127.html",
+    "category": "Big Data",
+    "components": []
+  },
+  {
+    "id": 128,
+    "title": "kudu vs parquet",
+    "publish_date": "May 27, 2019",
+    "view_count": 1847,
+    "read_time": "1 min read",
+    "filename": "0128.html",
+    "category": "Big Data",
+    "components": []
+  },
+  {
+    "id": 129,
+    "title": "Number of copies of Kudu",
+    "publish_date": "May 27, 2019",
+    "view_count": 2834,
+    "read_time": "1 min read",
+    "filename": "0129.html",
+    "category": "Big Data",
+    "components": []
+  },
+  {
+    "id": 130,
+    "title": "Kudu 6 - Kudu tserver memory usage statistical analysis",
+    "publish_date": "June 01, 2019",
+    "view_count": 3592,
+    "read_time": "1 min read",
+    "filename": "0130.html",
+    "category": "DevOps",
+    "components": []
+  },
+  {
+    "id": 131,
+    "title": "Kudu rebalance error",
+    "publish_date": "May 25, 2019",
+    "view_count": 1307,
+    "read_time": "1 min read",
+    "filename": "0131.html",
+    "category": "Big Data",
+    "components": []
+  },
+  {
+    "id": 132,
+    "title": "Hive and Spark read Kudu table",
+    "publish_date": "May 22, 2019",
+    "view_count": 5440,
+    "read_time": "1 min read",
+    "filename": "0132.html",
+    "category": "Big Data",
+    "components": [
+      "Spark",
+      "Hive"
+    ]
+  },
+  {
+    "id": 133,
+    "title": "Kudu view table size",
+    "publish_date": "May 21, 2019",
+    "view_count": 3215,
+    "read_time": "1 min read",
+    "filename": "0133.html",
+    "category": "Big Data",
+    "components": []
+  },
+  {
+    "id": 134,
+    "title": "Kudu reports an error when writing under high pressure",
+    "publish_date": "May 20, 2019",
+    "view_count": 3922,
+    "read_time": "1 min read",
+    "filename": "0134.html",
+    "category": "Big Data",
+    "components": []
+  },
+  {
+    "id": 135,
+    "title": "Redirect stdout/stderr",
+    "publish_date": "May 20, 2019",
+    "view_count": 1175,
+    "read_time": "1 min read",
+    "filename": "0135.html",
+    "category": "Big Data",
+    "components": []
+  },
+  {
+    "id": 136,
+    "title": "MongoDB 2 - Common query commands",
+    "publish_date": "May 16, 2019",
+    "view_count": 457,
+    "read_time": "1 min read",
+    "filename": "0136.html",
+    "category": "Big Data",
+    "components": [
+      "MongoDB"
+    ]
+  },
+  {
+    "id": 137,
+    "title": "Kudu 4 - Spark read and write Kudu",
+    "publish_date": "May 15, 2019",
+    "view_count": 5269,
+    "read_time": "4 min read",
+    "filename": "0137.html",
+    "category": "Big Data",
+    "components": [
+      "Spark"
+    ]
+  },
+  {
+    "id": 138,
+    "title": "Hue reports error when starting coordinator",
+    "publish_date": "May 13, 2019",
+    "view_count": 946,
+    "read_time": "7 min read",
+    "filename": "0138.html",
+    "category": "Big Data",
+    "components": [
+      "Hue"
+    ]
+  },
+  {
+    "id": 139,
+    "title": "Limit on the number of rows exported by hue",
+    "publish_date": "May 13, 2019",
+    "view_count": 1444,
+    "read_time": "1 min read",
+    "filename": "0139.html",
+    "category": "Big Data",
+    "components": [
+      "Hue"
+    ]
+  },
+  {
+    "id": 140,
+    "title": "Spark connection Kudu error report",
+    "publish_date": "May 09, 2019",
+    "view_count": 3096,
+    "read_time": "3 min read",
+    "filename": "0140.html",
+    "category": "Big Data",
+    "components": [
+      "Spark"
+    ]
+  },
+  {
+    "id": 141,
+    "title": "Nginx 3 - location and rewrite",
+    "publish_date": "May 07, 2019",
+    "view_count": 361,
+    "read_time": "1 min read",
+    "filename": "0141.html",
+    "category": "Big Data",
+    "components": []
+  },
+  {
+    "id": 142,
+    "title": "Flume Kudu sink runs for a while and Kudu client reports an error",
+    "publish_date": "May 06, 2019",
+    "view_count": 1196,
+    "read_time": "8 min read",
+    "filename": "0142.html",
+    "category": "Big Data",
+    "components": [
+      "Flume"
+    ]
+  },
+  {
+    "id": 143,
+    "title": "Kudu reports an error unable to find SASL plugin: PLAIN",
+    "publish_date": "April 30, 2019",
+    "view_count": 1522,
+    "read_time": "1 min read",
+    "filename": "0143.html",
+    "category": "Big Data",
+    "components": []
+  },
+  {
+    "id": 144,
+    "title": "ClouderaManager reports error when modifying configuration",
+    "publish_date": "April 30, 2019",
+    "view_count": 421,
+    "read_time": "1 min read",
+    "filename": "0144.html",
+    "category": "Big Data",
+    "components": []
+  },
+  {
+    "id": 145,
+    "title": "Impala 3 - Partial Tuning",
+    "publish_date": "April 20, 2019",
+    "view_count": 713,
+    "read_time": "1 min read",
+    "filename": "0145.html",
+    "category": "Big Data",
+    "components": [
+      "Impala"
+    ]
+  },
+  {
+    "id": 146,
+    "title": "Kudu 3 - primary key",
+    "publish_date": "April 13, 2019",
+    "view_count": 1928,
+    "read_time": "1 min read",
+    "filename": "0146.html",
+    "category": "Big Data",
+    "components": []
+  },
+  {
+    "id": 147,
+    "title": "Docker reports error Exited (137)",
+    "publish_date": "April 09, 2019",
+    "view_count": 25695,
+    "read_time": "2 min read",
+    "filename": "0147.html",
+    "category": "DevOps",
+    "components": [
+      "Docker"
+    ]
+  },
+  {
+    "id": 148,
+    "title": "Logstash 5 - Monitoring",
+    "publish_date": "April 08, 2019",
+    "view_count": 1930,
+    "read_time": "28 min read",
+    "filename": "0148.html",
+    "category": "Big Data",
+    "components": []
+  },
+  {
+    "id": 149,
+    "title": "Logstash 4 - High Availability",
+    "publish_date": "April 08, 2019",
+    "view_count": 2857,
+    "read_time": "4 min read",
+    "filename": "0149.html",
+    "category": "Big Data",
+    "components": []
+  },
+  {
+    "id": 150,
+    "title": "vi&vim basics",
+    "publish_date": "April 02, 2019",
+    "view_count": 597,
+    "read_time": "4 min read",
+    "filename": "0150.html",
+    "category": "Big Data",
+    "components": []
+  },
+  {
+    "id": 151,
+    "title": "hue access MySQL (librdbms)",
+    "publish_date": "April 02, 2019",
+    "view_count": 1098,
+    "read_time": "3 min read",
+    "filename": "0151.html",
+    "category": "System Design",
+    "components": [
+      "MySQL",
+      "Hue"
+    ]
+  },
+  {
+    "id": 152,
+    "title": "Elasticsearch optimization practice",
+    "publish_date": "May 29, 2022",
+    "view_count": 166,
+    "read_time": "1 min read",
+    "filename": "0152.html",
+    "category": "Big Data",
+    "components": [
+      "Elasticsearch"
+    ]
+  },
+  {
+    "id": 153,
+    "title": "Execute Impala through Shell in Oozie",
+    "publish_date": "April 01, 2019",
+    "view_count": 1282,
+    "read_time": "2 min read",
+    "filename": "0153.html",
+    "category": "Big Data",
+    "components": [
+      "Impala",
+      "Oozie"
+    ]
+  },
+  {
+    "id": 154,
+    "title": "YARN enables log collection",
+    "publish_date": "April 01, 2019",
+    "view_count": 670,
+    "read_time": "1 min read",
+    "filename": "0154.html",
+    "category": "Big Data",
+    "components": [
+      "YARN"
+    ]
+  },
+  {
+    "id": 155,
+    "title": "Users submit tasks to YARN and report errors",
+    "publish_date": "March 30, 2019",
+    "view_count": 3439,
+    "read_time": "2 min read",
+    "filename": "0155.html",
+    "category": "Big Data",
+    "components": [
+      "YARN"
+    ]
+  },
+  {
+    "id": 156,
+    "title": "Oozie 2 - Use",
+    "publish_date": "March 30, 2019",
+    "view_count": 657,
+    "read_time": "4 min read",
+    "filename": "0156.html",
+    "category": "Big Data",
+    "components": [
+      "Oozie"
+    ]
+  },
+  {
+    "id": 157,
+    "title": "kibana gets stuck when adding index pattern and returns 403 Forbidden",
+    "publish_date": "March 29, 2019",
+    "view_count": 4277,
+    "read_time": "1 min read",
+    "filename": "0157.html",
+    "category": "Big Data",
+    "components": []
+  },
+  {
+    "id": 158,
+    "title": "Elasticsearch 5 - Important configuration and tuning",
+    "publish_date": "March 28, 2019",
+    "view_count": 5729,
+    "read_time": "5 min read",
+    "filename": "0158.html",
+    "category": "Big Data",
+    "components": [
+      "Elasticsearch"
+    ]
+  },
+  {
+    "id": 159,
+    "title": "Hadoop 3 - YARN data collection and monitoring",
+    "publish_date": "March 27, 2019",
+    "view_count": 3584,
+    "read_time": "33 min read",
+    "filename": "0159.html",
+    "category": "Big Data",
+    "components": [
+      "Hadoop",
+      "YARN"
+    ]
+  },
+  {
+    "id": 160,
+    "title": "Docker 7 - About Docker latest tag",
+    "publish_date": "March 26, 2019",
+    "view_count": 3523,
+    "read_time": "1 min read",
+    "filename": "0160.html",
+    "category": "DevOps",
+    "components": [
+      "Docker"
+    ]
+  },
+  {
+    "id": 161,
+    "title": "Elasticsearch 4 - Elasticsearch data import process",
+    "publish_date": "March 26, 2019",
+    "view_count": 7351,
+    "read_time": "6 min read",
+    "filename": "0161.html",
+    "category": "Big Data",
+    "components": [
+      "Elasticsearch"
+    ]
+  },
+  {
+    "id": 162,
+    "title": "HDFS copy number",
+    "publish_date": "March 25, 2019",
+    "view_count": 1131,
+    "read_time": "1 min read",
+    "filename": "0162.html",
+    "category": "Big Data",
+    "components": [
+      "HDFS"
+    ]
+  },
+  {
+    "id": 163,
+    "title": "Kudu 2 - Remove dead tsever",
+    "publish_date": "March 22, 2019",
+    "view_count": 3106,
+    "read_time": "2 min read",
+    "filename": "0163.html",
+    "category": "Big Data",
+    "components": []
+  },
+  {
+    "id": 164,
+    "title": "Logstash reports an error after setting jdbc_default_timezone",
+    "publish_date": "March 22, 2019",
+    "view_count": 2156,
+    "read_time": "4 min read",
+    "filename": "0164.html",
+    "category": "Big Data",
+    "components": []
+  },
+  {
+    "id": 165,
+    "title": "Flume 2 - kudu sink",
+    "publish_date": "March 21, 2019",
+    "view_count": 1665,
+    "read_time": "16 min read",
+    "filename": "0165.html",
+    "category": "Big Data",
+    "components": [
+      "Flume"
+    ]
+  },
+  {
+    "id": 166,
+    "title": "Flume 2 - Sink code analysis",
+    "publish_date": "March 21, 2019",
+    "view_count": 1189,
+    "read_time": "5 min read",
+    "filename": "0166.html",
+    "category": "Big Data",
+    "components": [
+      "Flume"
+    ]
+  },
+  {
+    "id": 167,
+    "title": "beeline connects to Presto and reports an error",
+    "publish_date": "March 20, 2019",
+    "view_count": 2848,
+    "read_time": "20 min read",
+    "filename": "0167.html",
+    "category": "Big Data",
+    "components": [
+      "Presto"
+    ]
+  },
+  {
+    "id": 168,
+    "title": "Ruby on Programming Basics",
+    "publish_date": "March 20, 2019",
+    "view_count": 553,
+    "read_time": "3 min read",
+    "filename": "0168.html",
+    "category": "Big Data",
+    "components": []
+  },
+  {
+    "id": 169,
+    "title": "Logstash 3 - http application (in and out)",
+    "publish_date": "March 19, 2019",
+    "view_count": 2295,
+    "read_time": "1 min read",
+    "filename": "0169.html",
+    "category": "Big Data",
+    "components": []
+  },
+  {
+    "id": 170,
+    "title": "Logstash 6 - mongo input",
+    "publish_date": "June 20, 2019",
+    "view_count": 1476,
+    "read_time": "2 min read",
+    "filename": "0170.html",
+    "category": "Big Data",
+    "components": []
+  },
+  {
+    "id": 171,
+    "title": "gz file related operations",
+    "publish_date": "March 19, 2019",
+    "view_count": 1059,
+    "read_time": "1 min read",
+    "filename": "0171.html",
+    "category": "Big Data",
+    "components": []
+  },
+  {
+    "id": 172,
+    "title": "Logstash 1 - Introduction, installation, use",
+    "publish_date": "March 19, 2019",
+    "view_count": 420,
+    "read_time": "2 min read",
+    "filename": "0172.html",
+    "category": "Big Data",
+    "components": []
+  },
+  {
+    "id": 173,
+    "title": "Java basics: simply modify the class in the jar package",
+    "publish_date": "March 18, 2019",
+    "view_count": 5565,
+    "read_time": "3 min read",
+    "filename": "0173.html",
+    "category": "Big Data",
+    "components": []
+  },
+  {
+    "id": 174,
+    "title": "Flume 2 - Application of Kafka-Kudu",
+    "publish_date": "March 16, 2019",
+    "view_count": 1417,
+    "read_time": "3 min read",
+    "filename": "0174.html",
+    "category": "Big Data",
+    "components": [
+      "Kafka",
+      "Flume"
+    ]
+  },
+  {
+    "id": 175,
+    "title": "Cloud host mining virus phenomenon",
+    "publish_date": "March 16, 2019",
+    "view_count": 792,
+    "read_time": "1 min read",
+    "filename": "0175.html",
+    "category": "Big Data",
+    "components": []
+  },
+  {
+    "id": 176,
+    "title": "HDFS close Kerberos",
+    "publish_date": "March 15, 2019",
+    "view_count": 724,
+    "read_time": "1 min read",
+    "filename": "0176.html",
+    "category": "Big Data",
+    "components": [
+      "HDFS"
+    ]
+  },
+  {
+    "id": 177,
+    "title": "HDFS reports error after enabling Kerberos Encryption type AES256 CTS mode with HMAC SHA1-96 is not supported/enabled",
+    "publish_date": "March 15, 2019",
+    "view_count": 3103,
+    "read_time": "1 min read",
+    "filename": "0177.html",
+    "category": "Big Data",
+    "components": [
+      "HDFS"
+    ]
+  },
+  {
+    "id": 178,
+    "title": "MySQL fault recovery",
+    "publish_date": "March 14, 2019",
+    "view_count": 2676,
+    "read_time": "2 min read",
+    "filename": "0178.html",
+    "category": "System Design",
+    "components": [
+      "MySQL"
+    ]
+  },
+  {
+    "id": 179,
+    "title": "Command line browser links",
+    "publish_date": "March 14, 2019",
+    "view_count": 7501,
+    "read_time": "1 min read",
+    "filename": "0179.html",
+    "category": "Big Data",
+    "components": []
+  },
+  {
+    "id": 180,
+    "title": "Presto 1 - Introduction, installation, use",
+    "publish_date": "March 14, 2019",
+    "view_count": 3424,
+    "read_time": "5 min read",
+    "filename": "0180.html",
+    "category": "Big Data",
+    "components": [
+      "Presto"
+    ]
+  },
+  {
+    "id": 181,
+    "title": "Logstash 2 - application MySQL-Kafka",
+    "publish_date": "March 13, 2019",
+    "view_count": 760,
+    "read_time": "3 min read",
+    "filename": "0181.html",
+    "category": "Big Data",
+    "components": [
+      "Kafka",
+      "MySQL"
+    ]
+  },
+  {
+    "id": 182,
+    "title": "Spark cache unpersist cascade operation",
+    "publish_date": "March 13, 2019",
+    "view_count": 1639,
+    "read_time": "1 min read",
+    "filename": "0182.html",
+    "category": "Big Data",
+    "components": [
+      "Spark"
+    ]
+  },
+  {
+    "id": 183,
+    "title": "File encoding",
+    "publish_date": "March 13, 2019",
+    "view_count": 179,
+    "read_time": "1 min read",
+    "filename": "0183.html",
+    "category": "Big Data",
+    "components": []
+  },
+  {
+    "id": 184,
+    "title": "Hive 5 - Performance TuningPerformance Tuning",
+    "publish_date": "March 12, 2019",
+    "view_count": 3778,
+    "read_time": "13 min read",
+    "filename": "0184.html",
+    "category": "Big Data",
+    "components": [
+      "Hive"
+    ]
+  },
+  {
+    "id": 185,
+    "title": "Benchmark 4 - TPC-DS test results (Hive/Hive on Spark/Spark SQL/Impala/Presto)",
+    "publish_date": "March 11, 2019",
+    "view_count": 4638,
+    "read_time": "1 min read",
+    "filename": "0185.html",
+    "category": "Big Data",
+    "components": [
+      "Spark",
+      "Hive",
+      "Impala",
+      "Presto"
+    ]
+  },
+  {
+    "id": 186,
+    "title": "Docker 6 - Performance",
+    "publish_date": "March 11, 2019",
+    "view_count": 1117,
+    "read_time": "1 min read",
+    "filename": "0186.html",
+    "category": "DevOps",
+    "components": [
+      "Docker"
+    ]
+  },
+  {
+    "id": 187,
+    "title": "Test basics http_load 1 - Introduction, installation, use",
+    "publish_date": "March 11, 2019",
+    "view_count": 434,
+    "read_time": "1 min read",
+    "filename": "0187.html",
+    "category": "Big Data",
+    "components": []
+  },
+  {
+    "id": 188,
+    "title": "OpenResty(Nginx+Lua)+Kafka",
+    "publish_date": "March 08, 2019",
+    "view_count": 2137,
+    "read_time": "5 min read",
+    "filename": "0188.html",
+    "category": "Big Data",
+    "components": [
+      "Kafka"
+    ]
+  },
+  {
+    "id": 189,
+    "title": "beeline connects to hiveserver2 and reports an error impersonate",
+    "publish_date": "March 07, 2019",
+    "view_count": 681,
+    "read_time": "1 min read",
+    "filename": "0189.html",
+    "category": "Big Data",
+    "components": [
+      "Hive"
+    ]
+  },
+  {
+    "id": 190,
+    "title": "OpenResty",
+    "publish_date": "March 07, 2019",
+    "view_count": 993,
+    "read_time": "2 min read",
+    "filename": "0190.html",
+    "category": "Big Data",
+    "components": []
+  },
+  {
+    "id": 191,
+    "title": "Benchmark 2 - TPC-DS",
+    "publish_date": "March 05, 2019",
+    "view_count": 6706,
+    "read_time": "23 min read",
+    "filename": "0191.html",
+    "category": "Big Data",
+    "components": []
+  },
+  {
+    "id": 192,
+    "title": "opensuse leap 15",
+    "publish_date": "March 05, 2019",
+    "view_count": 1323,
+    "read_time": "2 min read",
+    "filename": "0192.html",
+    "category": "Big Data",
+    "components": []
+  },
+  {
+    "id": 193,
+    "title": "Windows Linux dual system",
+    "publish_date": "March 05, 2019",
+    "view_count": 806,
+    "read_time": "1 min read",
+    "filename": "0193.html",
+    "category": "DevOps",
+    "components": []
+  },
+  {
+    "id": 194,
+    "title": "Hive 5 - hive on spark",
+    "publish_date": "March 05, 2019",
+    "view_count": 4227,
+    "read_time": "2 min read",
+    "filename": "0194.html",
+    "category": "Big Data",
+    "components": [
+      "Spark",
+      "Hive"
+    ]
+  },
+  {
+    "id": 195,
+    "title": "chkconfig systemd",
+    "publish_date": "March 02, 2019",
+    "view_count": 610,
+    "read_time": "1 min read",
+    "filename": "0195.html",
+    "category": "System Design",
+    "components": []
+  },
+  {
+    "id": 196,
+    "title": "Kerberos 2 - Hive Impala HDFS access",
+    "publish_date": "March 02, 2019",
+    "view_count": 660,
+    "read_time": "1 min read",
+    "filename": "0196.html",
+    "category": "Big Data",
+    "components": [
+      "Hive",
+      "HDFS",
+      "Impala"
+    ]
+  },
+  {
+    "id": 197,
+    "title": "Docker 5 - Docker deployment airflow",
+    "publish_date": "March 01, 2019",
+    "view_count": 3814,
+    "read_time": "1 min read",
+    "filename": "0197.html",
+    "category": "DevOps",
+    "components": [
+      "Airflow",
+      "Docker"
+    ]
+  },
+  {
+    "id": 198,
+    "title": "CM clears disk space",
+    "publish_date": "February 27, 2019",
+    "view_count": 1941,
+    "read_time": "1 min read",
+    "filename": "0198.html",
+    "category": "Big Data",
+    "components": []
+  },
+  {
+    "id": 199,
+    "title": "CM deploys Kafka",
+    "publish_date": "February 26, 2019",
+    "view_count": 939,
+    "read_time": "1 min read",
+    "filename": "0199.html",
+    "category": "Big Data",
+    "components": [
+      "Kafka"
+    ]
+  },
+  {
+    "id": 200,
+    "title": "LZO format support",
+    "publish_date": "February 26, 2019",
+    "view_count": 2159,
+    "read_time": "1 min read",
+    "filename": "0200.html",
+    "category": "Big Data",
+    "components": []
+  },
+  {
+    "id": 201,
+    "title": "Benchmark 1 - HiBench",
+    "publish_date": "February 26, 2019",
+    "view_count": 1976,
+    "read_time": "1 min read",
+    "filename": "0201.html",
+    "category": "Big Data",
+    "components": []
+  },
+  {
+    "id": 202,
+    "title": "Hive Chinese annotation garbled code",
+    "publish_date": "February 26, 2019",
+    "view_count": 819,
+    "read_time": "1 min read",
+    "filename": "0202.html",
+    "category": "Big Data",
+    "components": [
+      "Hive"
+    ]
+  },
+  {
+    "id": 203,
+    "title": "Hive 4 - Hive metadatabase core table structure",
+    "publish_date": "February 26, 2019",
+    "view_count": 841,
+    "read_time": "1 min read",
+    "filename": "0203.html",
+    "category": "Big Data",
+    "components": [
+      "Hive"
+    ]
+  },
+  {
+    "id": 204,
+    "title": "Spark 9 - Spark deployment method YARN/mesos",
+    "publish_date": "February 25, 2019",
+    "view_count": 1062,
+    "read_time": "4 min read",
+    "filename": "0204.html",
+    "category": "Big Data",
+    "components": [
+      "Spark",
+      "YARN"
+    ]
+  },
+  {
+    "id": 205,
+    "title": "Hive select count is 0",
+    "publish_date": "February 25, 2019",
+    "view_count": 3590,
+    "read_time": "1 min read",
+    "filename": "0205.html",
+    "category": "Big Data",
+    "components": [
+      "Hive"
+    ]
+  },
+  {
+    "id": 206,
+    "title": "Hive 3 - the simplest green deployment",
+    "publish_date": "February 25, 2019",
+    "view_count": 286,
+    "read_time": "1 min read",
+    "filename": "0206.html",
+    "category": "Big Data",
+    "components": [
+      "Hive"
+    ]
+  },
+  {
+    "id": 207,
+    "title": "Hadoop 2 - simplest green deployment of HDFS and YARN",
+    "publish_date": "February 25, 2019",
+    "view_count": 343,
+    "read_time": "1 min read",
+    "filename": "0207.html",
+    "category": "Big Data",
+    "components": [
+      "Hadoop",
+      "YARN",
+      "HDFS"
+    ]
+  },
+  {
+    "id": 208,
+    "title": "Docker mounting file modification takes effect",
+    "publish_date": "February 23, 2019",
+    "view_count": 3129,
+    "read_time": "1 min read",
+    "filename": "0208.html",
+    "category": "DevOps",
+    "components": [
+      "Docker"
+    ]
+  },
+  {
+    "id": 209,
+    "title": "Cluster construction",
+    "publish_date": "February 22, 2019",
+    "view_count": 330,
+    "read_time": "2 min read",
+    "filename": "0209.html",
+    "category": "Big Data",
+    "components": []
+  },
+  {
+    "id": 210,
+    "title": "Common commands in Shell scripts",
+    "publish_date": "February 22, 2019",
+    "view_count": 497,
+    "read_time": "3 min read",
+    "filename": "0210.html",
+    "category": "DevOps",
+    "components": []
+  },
+  {
+    "id": 211,
+    "title": "Ansible 2 - offline installation",
+    "publish_date": "February 20, 2019",
+    "view_count": 938,
+    "read_time": "1 min read",
+    "filename": "0211.html",
+    "category": "Big Data",
+    "components": []
+  },
+  {
+    "id": 212,
+    "title": "Airflow 2 - Research on deploying airflow in production environment",
+    "publish_date": "February 20, 2019",
+    "view_count": 3380,
+    "read_time": "1 min read",
+    "filename": "0212.html",
+    "category": "Big Data",
+    "components": [
+      "Airflow"
+    ]
+  },
+  {
+    "id": 213,
+    "title": "CM Canary error report",
+    "publish_date": "February 19, 2019",
+    "view_count": 5362,
+    "read_time": "1 min read",
+    "filename": "0213.html",
+    "category": "Big Data",
+    "components": []
+  },
+  {
+    "id": 214,
+    "title": "Hive metastore error",
+    "publish_date": "February 19, 2019",
+    "view_count": 996,
+    "read_time": "1 min read",
+    "filename": "0214.html",
+    "category": "Big Data",
+    "components": [
+      "Hive"
+    ]
+  },
+  {
+    "id": 215,
+    "title": "CM turns on Kerberos",
+    "publish_date": "February 19, 2019",
+    "view_count": 3142,
+    "read_time": "2 min read",
+    "filename": "0215.html",
+    "category": "Big Data",
+    "components": []
+  },
+  {
+    "id": 216,
+    "title": "Kerberos 1 - Introduction, installation, use",
+    "publish_date": "February 19, 2019",
+    "view_count": 1309,
+    "read_time": "7 min read",
+    "filename": "0216.html",
+    "category": "Big Data",
+    "components": []
+  },
+  {
+    "id": 217,
+    "title": "Marathon 2 - marathon-lb",
+    "publish_date": "February 18, 2019",
+    "view_count": 907,
+    "read_time": "2 min read",
+    "filename": "0217.html",
+    "category": "Big Data",
+    "components": []
+  },
+  {
+    "id": 218,
+    "title": "cdh5 uses the existing metastore database to deploy Hive",
+    "publish_date": "February 17, 2019",
+    "view_count": 1058,
+    "read_time": "1 min read",
+    "filename": "0218.html",
+    "category": "Big Data",
+    "components": [
+      "Hive"
+    ]
+  },
+  {
+    "id": 219,
+    "title": "MySQL 3 -MySQL delete historical binlog",
+    "publish_date": "February 17, 2019",
+    "view_count": 600,
+    "read_time": "1 min read",
+    "filename": "0219.html",
+    "category": "System Design",
+    "components": [
+      "MySQL"
+    ]
+  },
+  {
+    "id": 220,
+    "title": "Test domain name IP port connectivity",
+    "publish_date": "February 16, 2019",
+    "view_count": 6029,
+    "read_time": "1 min read",
+    "filename": "0220.html",
+    "category": "Big Data",
+    "components": []
+  },
+  {
+    "id": 221,
+    "title": "Mesos+Marathon+Docker deploy Nginx",
+    "publish_date": "February 16, 2019",
+    "view_count": 947,
+    "read_time": "2 min read",
+    "filename": "0221.html",
+    "category": "DevOps",
+    "components": [
+      "Docker"
+    ]
+  },
+  {
+    "id": 222,
+    "title": "Failed to perform recovery: Incompatible agent info detected",
+    "publish_date": "February 15, 2019",
+    "view_count": 867,
+    "read_time": "1 min read",
+    "filename": "0222.html",
+    "category": "Big Data",
+    "components": []
+  },
+  {
+    "id": 223,
+    "title": "Marathon 1 - Introduction, installation, use",
+    "publish_date": "February 15, 2019",
+    "view_count": 1527,
+    "read_time": "2 min read",
+    "filename": "0223.html",
+    "category": "Big Data",
+    "components": []
+  },
+  {
+    "id": 224,
+    "title": "DataNode startup error: port 50020 is occupied",
+    "publish_date": "February 15, 2019",
+    "view_count": 1109,
+    "read_time": "1 min read",
+    "filename": "0224.html",
+    "category": "Big Data",
+    "components": []
+  },
+  {
+    "id": 225,
+    "title": "CM5 (Cloudera Manager) + CDH5 offline installation",
+    "publish_date": "February 15, 2019",
+    "view_count": 1770,
+    "read_time": "2 min read",
+    "filename": "0225.html",
+    "category": "Big Data",
+    "components": []
+  },
+  {
+    "id": 226,
+    "title": "Redis 1 - Introduction, installation, use",
+    "publish_date": "February 15, 2019",
+    "view_count": 257,
+    "read_time": "1 min read",
+    "filename": "0226.html",
+    "category": "System Design",
+    "components": [
+      "Redis"
+    ]
+  },
+  {
+    "id": 227,
+    "title": "yum offline environment installation software",
+    "publish_date": "February 15, 2019",
+    "view_count": 540,
+    "read_time": "1 min read",
+    "filename": "0227.html",
+    "category": "Big Data",
+    "components": []
+  },
+  {
+    "id": 228,
+    "title": "Zabbix 1 - Introduction, installation, use",
+    "publish_date": "February 15, 2019",
+    "view_count": 1228,
+    "read_time": "3 min read",
+    "filename": "0228.html",
+    "category": "Big Data",
+    "components": []
+  },
+  {
+    "id": 229,
+    "title": "Docker 4 - utility ctop",
+    "publish_date": "February 14, 2019",
+    "view_count": 1555,
+    "read_time": "1 min read",
+    "filename": "0229.html",
+    "category": "DevOps",
+    "components": [
+      "Docker"
+    ]
+  },
+  {
+    "id": 230,
+    "title": "Docker 2 - deploy ZooKeeper via Docker Nginx tomcat Java Redis kibana/Elasticsearch/Logstash MySQL Kafka mesos/marathon ftp git",
+    "publish_date": "February 14, 2019",
+    "view_count": 673,
+    "read_time": "2 min read",
+    "filename": "0230.html",
+    "category": "Big Data",
+    "components": [
+      "Kafka",
+      "Elasticsearch",
+      "MySQL",
+      "Redis",
+      "Docker",
+      "Zookeeper"
+    ]
+  },
+  {
+    "id": 231,
+    "title": "Elasticsearch 3 - Upgrade",
+    "publish_date": "February 14, 2019",
+    "view_count": 475,
+    "read_time": "1 min read",
+    "filename": "0231.html",
+    "category": "Big Data",
+    "components": [
+      "Elasticsearch"
+    ]
+  },
+  {
+    "id": 232,
+    "title": "SSH jump exception after upgrading openssh to 7.4",
+    "publish_date": "February 13, 2019",
+    "view_count": 7512,
+    "read_time": "3 min read",
+    "filename": "0232.html",
+    "category": "Big Data",
+    "components": []
+  },
+  {
+    "id": 233,
+    "title": "Docker 3 - Build a private warehouse",
+    "publish_date": "February 13, 2019",
+    "view_count": 388,
+    "read_time": "1 min read",
+    "filename": "0233.html",
+    "category": "DevOps",
+    "components": [
+      "Docker"
+    ]
+  },
+  {
+    "id": 234,
+    "title": "Mesos 1 - Introduction, installation, use",
+    "publish_date": "February 12, 2019",
+    "view_count": 1357,
+    "read_time": "4 min read",
+    "filename": "0234.html",
+    "category": "Big Data",
+    "components": []
+  },
+  {
+    "id": 235,
+    "title": "Mount hard drive",
+    "publish_date": "February 12, 2019",
+    "view_count": 526,
+    "read_time": "2 min read",
+    "filename": "0235.html",
+    "category": "Big Data",
+    "components": []
+  },
+  {
+    "id": 236,
+    "title": "Docker 1 - Introduction, installation, use",
+    "publish_date": "February 01, 2019",
+    "view_count": 1254,
+    "read_time": "7 min read",
+    "filename": "0236.html",
+    "category": "DevOps",
+    "components": [
+      "Docker"
+    ]
+  },
+  {
+    "id": 237,
+    "title": "Impala 2 - Implementation details",
+    "publish_date": "January 30, 2019",
+    "view_count": 2087,
+    "read_time": "12 min read",
+    "filename": "0237.html",
+    "category": "Big Data",
+    "components": [
+      "Impala"
+    ]
+  },
+  {
+    "id": 238,
+    "title": "Commonly used JVM tools for Java basics",
+    "publish_date": "January 30, 2019",
+    "view_count": 327,
+    "read_time": "1 min read",
+    "filename": "0238.html",
+    "category": "Big Data",
+    "components": []
+  },
+  {
+    "id": 239,
+    "title": "Common commands",
+    "publish_date": "January 30, 2019",
+    "view_count": 362,
+    "read_time": "2 min read",
+    "filename": "0239.html",
+    "category": "Big Data",
+    "components": []
+  },
+  {
+    "id": 240,
+    "title": "Ambari 5 - Deploy Hue via Ambari",
+    "publish_date": "January 29, 2019",
+    "view_count": 3181,
+    "read_time": "3 min read",
+    "filename": "0240.html",
+    "category": "Big Data",
+    "components": [
+      "Hue"
+    ]
+  },
+  {
+    "id": 241,
+    "title": "SSH Tunneling/Port Forwarding",
+    "publish_date": "January 28, 2019",
+    "view_count": 1790,
+    "read_time": "1 min read",
+    "filename": "0241.html",
+    "category": "Big Data",
+    "components": []
+  },
+  {
+    "id": 242,
+    "title": "keepalived",
+    "publish_date": "January 28, 2019",
+    "view_count": 4442,
+    "read_time": "4 min read",
+    "filename": "0242.html",
+    "category": "Big Data",
+    "components": []
+  },
+  {
+    "id": 243,
+    "title": "MySQL 2 - Master-slave library configuration",
+    "publish_date": "January 28, 2019",
+    "view_count": 305,
+    "read_time": "1 min read",
+    "filename": "0243.html",
+    "category": "System Design",
+    "components": [
+      "MySQL"
+    ]
+  },
+  {
+    "id": 244,
+    "title": "iptables",
+    "publish_date": "January 27, 2019",
+    "view_count": 950,
+    "read_time": "1 min read",
+    "filename": "0244.html",
+    "category": "Big Data",
+    "components": []
+  },
+  {
+    "id": 245,
+    "title": "ELK analyzes Nginx logs",
+    "publish_date": "January 26, 2019",
+    "view_count": 509,
+    "read_time": "1 min read",
+    "filename": "0245.html",
+    "category": "Big Data",
+    "components": []
+  },
+  {
+    "id": 246,
+    "title": "Algorithm Basics Anaconda 1 - Introduction, Installation, and Use",
+    "publish_date": "January 26, 2019",
+    "view_count": 634,
+    "read_time": "1 min read",
+    "filename": "0246.html",
+    "category": "System Design",
+    "components": []
+  },
+  {
+    "id": 247,
+    "title": "Airflow 1 - Introduction, installation, use",
+    "publish_date": "January 26, 2019",
+    "view_count": 4556,
+    "read_time": "11 min read",
+    "filename": "0247.html",
+    "category": "Big Data",
+    "components": [
+      "Airflow"
+    ]
+  },
+  {
+    "id": 248,
+    "title": "rdd.cache in Spark",
+    "publish_date": "January 25, 2019",
+    "view_count": 1735,
+    "read_time": "10 min read",
+    "filename": "0248.html",
+    "category": "Big Data",
+    "components": [
+      "Spark"
+    ]
+  },
+  {
+    "id": 249,
+    "title": "redhat6 upgrade glibc-2.12 to 2.14",
+    "publish_date": "January 24, 2019",
+    "view_count": 4399,
+    "read_time": "1 min read",
+    "filename": "0249.html",
+    "category": "Big Data",
+    "components": []
+  },
+  {
+    "id": 250,
+    "title": "Linux server upgrade glibc failure recovery",
+    "publish_date": "January 24, 2019",
+    "view_count": 6078,
+    "read_time": "1 min read",
+    "filename": "0250.html",
+    "category": "DevOps",
+    "components": []
+  },
+  {
+    "id": 251,
+    "title": "Alluxio 1 - Introduction, installation, use",
+    "publish_date": "January 23, 2019",
+    "view_count": 4712,
+    "read_time": "5 min read",
+    "filename": "0251.html",
+    "category": "Big Data",
+    "components": []
+  },
+  {
+    "id": 252,
+    "title": "Flink 1 - Introduction, installation and use",
+    "publish_date": "January 22, 2019",
+    "view_count": 1528,
+    "read_time": "8 min read",
+    "filename": "0252.html",
+    "category": "Big Data",
+    "components": [
+      "Flink",
+      "Flink"
+    ]
+  },
+  {
+    "id": 253,
+    "title": "Users and groups",
+    "publish_date": "January 22, 2019",
+    "view_count": 481,
+    "read_time": "1 min read",
+    "filename": "0253.html",
+    "category": "Big Data",
+    "components": []
+  },
+  {
+    "id": 254,
+    "title": "Hive reads and writes Elasticsearch data through external tables",
+    "publish_date": "January 21, 2019",
+    "view_count": 3732,
+    "read_time": "1 min read",
+    "filename": "0254.html",
+    "category": "Big Data",
+    "components": [
+      "Hive",
+      "Elasticsearch"
+    ]
+  },
+  {
+    "id": 255,
+    "title": "Hive reads and writes HBase data through external tables",
+    "publish_date": "January 21, 2019",
+    "view_count": 2408,
+    "read_time": "1 min read",
+    "filename": "0255.html",
+    "category": "Big Data",
+    "components": [
+      "HBase",
+      "Hive"
+    ]
+  },
+  {
+    "id": 256,
+    "title": "Several deployment methods of Hive metastore",
+    "publish_date": "January 21, 2019",
+    "view_count": 1288,
+    "read_time": "1 min read",
+    "filename": "0256.html",
+    "category": "Big Data",
+    "components": [
+      "Hive"
+    ]
+  },
+  {
+    "id": 257,
+    "title": "Elasticsearch 1 - Introduction, installation, use",
+    "publish_date": "January 21, 2019",
+    "view_count": 655,
+    "read_time": "6 min read",
+    "filename": "0257.html",
+    "category": "Big Data",
+    "components": [
+      "Elasticsearch"
+    ]
+  },
+  {
+    "id": 258,
+    "title": "Impala 1 - Introduction, installation, use",
+    "publish_date": "January 21, 2019",
+    "view_count": 3329,
+    "read_time": "6 min read",
+    "filename": "0258.html",
+    "category": "Big Data",
+    "components": [
+      "Impala"
+    ]
+  },
+  {
+    "id": 259,
+    "title": "Kudu 1 - Introduction, installation, use",
+    "publish_date": "January 21, 2019",
+    "view_count": 3524,
+    "read_time": "6 min read",
+    "filename": "0259.html",
+    "category": "Big Data",
+    "components": []
+  },
+  {
+    "id": 260,
+    "title": "Elasticsearch 2 - Commonly used APIs organized",
+    "publish_date": "January 20, 2019",
+    "view_count": 2722,
+    "read_time": "37 min read",
+    "filename": "0260.html",
+    "category": "Big Data",
+    "components": [
+      "Elasticsearch"
+    ]
+  },
+  {
+    "id": 261,
+    "title": "Ambari 4 - Deploying Impala via Ambari",
+    "publish_date": "January 19, 2019",
+    "view_count": 5634,
+    "read_time": "3 min read",
+    "filename": "0261.html",
+    "category": "Big Data",
+    "components": [
+      "Impala"
+    ]
+  },
+  {
+    "id": 262,
+    "title": "Ambari 3 - Deploy Airflow via Ambari",
+    "publish_date": "January 17, 2019",
+    "view_count": 2065,
+    "read_time": "1 min read",
+    "filename": "0262.html",
+    "category": "Big Data",
+    "components": [
+      "Airflow"
+    ]
+  },
+  {
+    "id": 263,
+    "title": "Ambari metrics collector built-in standalone HBase fails to start",
+    "publish_date": "January 17, 2019",
+    "view_count": 5040,
+    "read_time": "1 min read",
+    "filename": "0263.html",
+    "category": "Big Data",
+    "components": [
+      "HBase"
+    ]
+  },
+  {
+    "id": 264,
+    "title": "Error when starting HBase in standalone mode",
+    "publish_date": "January 17, 2019",
+    "view_count": 3205,
+    "read_time": "2 min read",
+    "filename": "0264.html",
+    "category": "Big Data",
+    "components": [
+      "HBase"
+    ]
+  },
+  {
+    "id": 265,
+    "title": "Ambari 2 - Deploying Elasticsearch (ELK) via Ambari",
+    "publish_date": "January 17, 2019",
+    "view_count": 6607,
+    "read_time": "3 min read",
+    "filename": "0265.html",
+    "category": "Big Data",
+    "components": [
+      "Elasticsearch"
+    ]
+  },
+  {
+    "id": 266,
+    "title": "curl",
+    "publish_date": "January 16, 2019",
+    "view_count": 553,
+    "read_time": "1 min read",
+    "filename": "0266.html",
+    "category": "Big Data",
+    "components": []
+  },
+  {
+    "id": 267,
+    "title": "Ambari installation wizard gets stuck when clicking next step",
+    "publish_date": "January 15, 2019",
+    "view_count": 2664,
+    "read_time": "2 min read",
+    "filename": "0267.html",
+    "category": "Big Data",
+    "components": []
+  },
+  {
+    "id": 268,
+    "title": "sudo",
+    "publish_date": "January 15, 2019",
+    "view_count": 465,
+    "read_time": "1 min read",
+    "filename": "0268.html",
+    "category": "Big Data",
+    "components": []
+  },
+  {
+    "id": 269,
+    "title": "SSH key login",
+    "publish_date": "January 15, 2019",
+    "view_count": 1260,
+    "read_time": "2 min read",
+    "filename": "0269.html",
+    "category": "Big Data",
+    "components": []
+  },
+  {
+    "id": 270,
+    "title": "Ambari 1 - Introduction, compilation, installation, and use",
+    "publish_date": "January 15, 2019",
+    "view_count": 5971,
+    "read_time": "12 min read",
+    "filename": "0270.html",
+    "category": "Big Data",
+    "components": []
+  },
+  {
+    "id": 271,
+    "title": "MySQL 1 - Common commands",
+    "publish_date": "January 15, 2019",
+    "view_count": 338,
+    "read_time": "1 min read",
+    "filename": "0271.html",
+    "category": "System Design",
+    "components": [
+      "MySQL"
+    ]
+  },
+  {
+    "id": 272,
+    "title": "securecrt connection automatically disconnected",
+    "publish_date": "January 14, 2019",
+    "view_count": 641,
+    "read_time": "1 min read",
+    "filename": "0272.html",
+    "category": "Big Data",
+    "components": []
+  },
+  {
+    "id": 273,
+    "title": "Running in the background",
+    "publish_date": "January 14, 2019",
+    "view_count": 345,
+    "read_time": "1 min read",
+    "filename": "0273.html",
+    "category": "Big Data",
+    "components": []
+  },
+  {
+    "id": 274,
+    "title": "Upload and download",
+    "publish_date": "January 14, 2019",
+    "view_count": 219,
+    "read_time": "1 min read",
+    "filename": "0274.html",
+    "category": "Big Data",
+    "components": []
+  },
+  {
+    "id": 275,
+    "title": "Nginx 1 - Introduction, installation, use",
+    "publish_date": "January 13, 2019",
+    "view_count": 427,
+    "read_time": "3 min read",
+    "filename": "0275.html",
+    "category": "Big Data",
+    "components": []
+  },
+  {
+    "id": 276,
+    "title": "Ansible 1 - Introduction, installation and usage",
+    "publish_date": "January 13, 2019",
+    "view_count": 454,
+    "read_time": "2 min read",
+    "filename": "0276.html",
+    "category": "Big Data",
+    "components": []
+  },
+  {
+    "id": 277,
+    "title": "Hadoop 1 - HA implementation principle",
+    "publish_date": "January 11, 2019",
+    "view_count": 1775,
+    "read_time": "15 min read",
+    "filename": "0277.html",
+    "category": "Big Data",
+    "components": [
+      "Hadoop"
+    ]
+  },
+  {
+    "id": 278,
+    "title": "Check the Linux distribution and kernel version",
+    "publish_date": "January 10, 2019",
+    "view_count": 535,
+    "read_time": "1 min read",
+    "filename": "0278.html",
+    "category": "DevOps",
+    "components": []
+  },
+  {
+    "id": 279,
+    "title": "View the real-time memory and CPU resources occupied by each application in YARN",
+    "publish_date": "January 10, 2019",
+    "view_count": 14798,
+    "read_time": "2 min read",
+    "filename": "0279.html",
+    "category": "Big Data",
+    "components": [
+      "YARN"
+    ]
+  },
+  {
+    "id": 280,
+    "title": "After Spark on YARN submits the task, the execution progress is always 10%",
+    "publish_date": "January 10, 2019",
+    "view_count": 2404,
+    "read_time": "3 min read",
+    "filename": "0280.html",
+    "category": "Big Data",
+    "components": [
+      "Spark",
+      "YARN"
+    ]
+  },
+  {
+    "id": 281,
+    "title": "Spark 8 - Principle of Join implementation in Spark",
+    "publish_date": "January 09, 2019",
+    "view_count": 3485,
+    "read_time": "18 min read",
+    "filename": "0281.html",
+    "category": "Big Data",
+    "components": [
+      "Spark"
+    ]
+  },
+  {
+    "id": 282,
+    "title": "Research on the number of files when inserting Spark SQL into the table",
+    "publish_date": "January 09, 2019",
+    "view_count": 2445,
+    "read_time": "11 min read",
+    "filename": "0282.html",
+    "category": "Big Data",
+    "components": [
+      "Spark"
+    ]
+  },
+  {
+    "id": 283,
+    "title": "least squares method",
+    "publish_date": "January 03, 2019",
+    "view_count": 1217,
+    "read_time": "1 min read",
+    "filename": "0283.html",
+    "category": "Big Data",
+    "components": []
+  },
+  {
+    "id": 284,
+    "title": "Machine Learning Overview",
+    "publish_date": "January 03, 2019",
+    "view_count": 250,
+    "read_time": "1 min read",
+    "filename": "0284.html",
+    "category": "Big Data",
+    "components": []
+  },
+  {
+    "id": 285,
+    "title": "Calculation of common stock indicators",
+    "publish_date": "January 02, 2019",
+    "view_count": 1086,
+    "read_time": "4 min read",
+    "filename": "0285.html",
+    "category": "Big Data",
+    "components": []
+  },
+  {
+    "id": 286,
+    "title": "Positioning analysis-witness the power of Scala",
+    "publish_date": "December 29, 2018",
+    "view_count": 588,
+    "read_time": "2 min read",
+    "filename": "0286.html",
+    "category": "Big Data",
+    "components": []
+  },
+  {
+    "id": 287,
+    "title": "User behavior analysis-witness the power of Scala",
+    "publish_date": "December 29, 2018",
+    "view_count": 955,
+    "read_time": "2 min read",
+    "filename": "0287.html",
+    "category": "Big Data",
+    "components": []
+  },
+  {
+    "id": 288,
+    "title": "Spark 7 - Spark reads file split process (i.e. number of RDD partitions)",
+    "publish_date": "December 28, 2018",
+    "view_count": 8236,
+    "read_time": "11 min read",
+    "filename": "0288.html",
+    "category": "Big Data",
+    "components": [
+      "Spark"
+    ]
+  },
+  {
+    "id": 289,
+    "title": "Spark 6 - Spark Rdd Sort implementation principle",
+    "publish_date": "December 28, 2018",
+    "view_count": 1305,
+    "read_time": "7 min read",
+    "filename": "0289.html",
+    "category": "Big Data",
+    "components": [
+      "Spark"
+    ]
+  },
+  {
+    "id": 290,
+    "title": "Programming Practices Comparison Java vs Scala",
+    "publish_date": "December 28, 2018",
+    "view_count": 635,
+    "read_time": "20 min read",
+    "filename": "0290.html",
+    "category": "Big Data",
+    "components": []
+  },
+  {
+    "id": 291,
+    "title": "Spark will pause for a few minutes between jobs",
+    "publish_date": "December 27, 2018",
+    "view_count": 853,
+    "read_time": "1 min read",
+    "filename": "0291.html",
+    "category": "Big Data",
+    "components": [
+      "Spark"
+    ]
+  },
+  {
+    "id": 292,
+    "title": "Hive 2 - SQL parsing process of Hive SQL execution process",
+    "publish_date": "December 27, 2018",
+    "view_count": 3830,
+    "read_time": "10 min read",
+    "filename": "0292.html",
+    "category": "Big Data",
+    "components": [
+      "Hive"
+    ]
+  },
+  {
+    "id": 293,
+    "title": "After hive2.0, there is no progress information when executing SQL through beeline.",
+    "publish_date": "December 27, 2018",
+    "view_count": 6005,
+    "read_time": "6 min read",
+    "filename": "0293.html",
+    "category": "Big Data",
+    "components": [
+      "Hive"
+    ]
+  },
+  {
+    "id": 294,
+    "title": "Hive executes multiple inserts at the same time and only one of the overwrite tables can be executed.",
+    "publish_date": "December 27, 2018",
+    "view_count": 10207,
+    "read_time": "5 min read",
+    "filename": "0294.html",
+    "category": "Big Data",
+    "components": [
+      "Hive"
+    ]
+  },
+  {
+    "id": 295,
+    "title": "Hive 1 - Code flow of Hive SQL execution process",
+    "publish_date": "December 27, 2018",
+    "view_count": 3784,
+    "read_time": "14 min read",
+    "filename": "0295.html",
+    "category": "Big Data",
+    "components": [
+      "Hive"
+    ]
+  },
+  {
+    "id": 296,
+    "title": "Clustering algorithm DBSCAN",
+    "publish_date": "December 26, 2018",
+    "view_count": 2510,
+    "read_time": "3 min read",
+    "filename": "0296.html",
+    "category": "System Design",
+    "components": []
+  },
+  {
+    "id": 297,
+    "title": "Cardinality Estimate cardinality counting probability algorithm",
+    "publish_date": "December 25, 2018",
+    "view_count": 938,
+    "read_time": "1 min read",
+    "filename": "0297.html",
+    "category": "System Design",
+    "components": []
+  },
+  {
+    "id": 298,
+    "title": "Spark 5 - Shuffle implementation principle and code analysis",
+    "publish_date": "December 21, 2018",
+    "view_count": 1811,
+    "read_time": "21 min read",
+    "filename": "0298.html",
+    "category": "Big Data",
+    "components": [
+      "Spark"
+    ]
+  },
+  {
+    "id": 299,
+    "title": "Spark 9 - Implementation principle of COLLECT and TAKE in Spark",
+    "publish_date": "December 21, 2018",
+    "view_count": 2445,
+    "read_time": "3 min read",
+    "filename": "0299.html",
+    "category": "Big Data",
+    "components": [
+      "Spark"
+    ]
+  },
+  {
+    "id": 300,
+    "title": "Spark SQL limit implementation principle",
+    "publish_date": "December 21, 2018",
+    "view_count": 3666,
+    "read_time": "1 min read",
+    "filename": "0300.html",
+    "category": "Big Data",
+    "components": [
+      "Spark"
+    ]
+  },
+  {
+    "id": 301,
+    "title": "Spark executes insert overwrite very slowly, even slower than Hive",
+    "publish_date": "December 21, 2018",
+    "view_count": 8654,
+    "read_time": "23 min read",
+    "filename": "0301.html",
+    "category": "Big Data",
+    "components": [
+      "Spark",
+      "Hive"
+    ]
+  },
+  {
+    "id": 302,
+    "title": "After Spark on YARN submits the task to the cluster, the Spark-submit process keeps waiting.",
+    "publish_date": "December 21, 2018",
+    "view_count": 2967,
+    "read_time": "1 min read",
+    "filename": "0302.html",
+    "category": "Big Data",
+    "components": [
+      "Spark",
+      "YARN"
+    ]
+  },
+  {
+    "id": 303,
+    "title": "HDFS file create is written normally, but append writes an error",
+    "publish_date": "December 21, 2018",
+    "view_count": 1505,
+    "read_time": "7 min read",
+    "filename": "0303.html",
+    "category": "Big Data",
+    "components": [
+      "HDFS"
+    ]
+  },
+  {
+    "id": 304,
+    "title": "Spark tasks are unevenly distributed among executors",
+    "publish_date": "December 20, 2018",
+    "view_count": 2246,
+    "read_time": "1 min read",
+    "filename": "0304.html",
+    "category": "Big Data",
+    "components": [
+      "Spark"
+    ]
+  },
+  {
+    "id": 305,
+    "title": "Spark 4 - RDD principle and code analysis",
+    "publish_date": "December 20, 2018",
+    "view_count": 1695,
+    "read_time": "35 min read",
+    "filename": "0305.html",
+    "category": "Big Data",
+    "components": [
+      "Spark"
+    ]
+  },
+  {
+    "id": 306,
+    "title": "beeline connection Spark thrift sometimes gets stuck",
+    "publish_date": "December 19, 2018",
+    "view_count": 968,
+    "read_time": "1 min read",
+    "filename": "0306.html",
+    "category": "Big Data",
+    "components": [
+      "Spark"
+    ]
+  },
+  {
+    "id": 307,
+    "title": "Spark occasionally reports NullPointerException when checking data in ORC format",
+    "publish_date": "December 19, 2018",
+    "view_count": 3774,
+    "read_time": "2 min read",
+    "filename": "0307.html",
+    "category": "Big Data",
+    "components": [
+      "Spark"
+    ]
+  },
+  {
+    "id": 308,
+    "title": "Spark running error WARN Utils: Service 'sparkDriver' could not bind on port 0. Attempting port 1.",
+    "publish_date": "December 18, 2018",
+    "view_count": 3865,
+    "read_time": "1 min read",
+    "filename": "0308.html",
+    "category": "Big Data",
+    "components": [
+      "Spark"
+    ]
+  },
+  {
+    "id": 309,
+    "title": "How to programmatically kill SQL submitted to Spark thrift",
+    "publish_date": "December 18, 2018",
+    "view_count": 1400,
+    "read_time": "1 min read",
+    "filename": "0309.html",
+    "category": "Big Data",
+    "components": [
+      "Spark"
+    ]
+  },
+  {
+    "id": 310,
+    "title": "Spark writes data to Hive external table and reports error ClassCastException: org.apache.hadoop.Hive.HBase.HiveHBaseTableOutputFormat cannot be cast to org.apache.hadoop.Hive.ql.io.HiveOutputFormat",
+    "publish_date": "December 18, 2018",
+    "view_count": 2891,
+    "read_time": "1 min read",
+    "filename": "0310.html",
+    "category": "Big Data",
+    "components": [
+      "Spark",
+      "Hadoop",
+      "HBase",
+      "Hive"
+    ]
+  },
+  {
+    "id": 311,
+    "title": "Spark 3 - Spark Thrift implementation principle and code implementation",
+    "publish_date": "December 18, 2018",
+    "view_count": 3589,
+    "read_time": "5 min read",
+    "filename": "0311.html",
+    "category": "Big Data",
+    "components": [
+      "Spark"
+    ]
+  },
+  {
+    "id": 312,
+    "title": "Spark reports error ParquetEncodingException when writing Parquet data: empty fields are illegal, the field should be omited completely instead",
+    "publish_date": "December 18, 2018",
+    "view_count": 4964,
+    "read_time": "10 min read",
+    "filename": "0312.html",
+    "category": "Big Data",
+    "components": [
+      "Spark"
+    ]
+  },
+  {
+    "id": 313,
+    "title": "Python imports a module and reports an error: ImportError: No module named pandas numpy",
+    "publish_date": "December 18, 2018",
+    "view_count": 31822,
+    "read_time": "1 min read",
+    "filename": "0313.html",
+    "category": "Problem Solving",
+    "components": []
+  },
+  {
+    "id": 314,
+    "title": "Free stock quotes interface",
+    "publish_date": "December 18, 2018",
+    "view_count": 6219,
+    "read_time": "1 min read",
+    "filename": "0314.html",
+    "category": "Big Data",
+    "components": []
+  },
+  {
+    "id": 315,
+    "title": "Could not transfer artifact org.apache.maven:maven. from/to central. Received fatal alert: protocol_version",
+    "publish_date": "December 18, 2018",
+    "view_count": 4231,
+    "read_time": "1 min read",
+    "filename": "0315.html",
+    "category": "Big Data",
+    "components": []
+  },
+  {
+    "id": 316,
+    "title": "Context namespace element 'component-scan' and its parser class [org.springframework.context.annotation.ComponentScanBeanDefinitionParser] are only available on JDK 1.5 and higher",
+    "publish_date": "December 17, 2018",
+    "view_count": 2152,
+    "read_time": "2 min read",
+    "filename": "0316.html",
+    "category": "Big Data",
+    "components": []
+  },
+  {
+    "id": 317,
+    "title": "Java Basics Session Mechanism",
+    "publish_date": "December 13, 2018",
+    "view_count": 1459,
+    "read_time": "1 min read",
+    "filename": "0317.html",
+    "category": "Big Data",
+    "components": []
+  },
+  {
+    "id": 318,
+    "title": "Text replacement of commonly used Linux commands",
+    "publish_date": "December 13, 2018",
+    "view_count": 5963,
+    "read_time": "1 min read",
+    "filename": "0318.html",
+    "category": "DevOps",
+    "components": []
+  },
+  {
+    "id": 319,
+    "title": "Word frequency statisticsWord Count",
+    "publish_date": "December 13, 2018",
+    "view_count": 3423,
+    "read_time": "1 min read",
+    "filename": "0319.html",
+    "category": "Big Data",
+    "components": []
+  },
+  {
+    "id": 320,
+    "title": "Copy files between Linux servers",
+    "publish_date": "December 13, 2018",
+    "view_count": 1232,
+    "read_time": "1 min read",
+    "filename": "0320.html",
+    "category": "DevOps",
+    "components": []
+  },
+  {
+    "id": 321,
+    "title": "Oozie 3 - Oozie upgraded from 4.3 to 5.0",
+    "publish_date": "December 13, 2018",
+    "view_count": 596,
+    "read_time": "1 min read",
+    "filename": "0321.html",
+    "category": "Big Data",
+    "components": [
+      "Oozie"
+    ]
+  },
+  {
+    "id": 322,
+    "title": "YARN important configuration YARN.nodemanager.local-dirs",
+    "publish_date": "December 13, 2018",
+    "view_count": 8732,
+    "read_time": "1 min read",
+    "filename": "0322.html",
+    "category": "Big Data",
+    "components": [
+      "YARN"
+    ]
+  },
+  {
+    "id": 323,
+    "title": "HDFS 1 - How to allocate DataNode for newly created files in HDFS",
+    "publish_date": "December 13, 2018",
+    "view_count": 2109,
+    "read_time": "4 min read",
+    "filename": "0323.html",
+    "category": "Big Data",
+    "components": [
+      "HDFS"
+    ]
+  },
+  {
+    "id": 324,
+    "title": "HDFS 2 - HDFS copy number check and replication logic",
+    "publish_date": "December 13, 2018",
+    "view_count": 2762,
+    "read_time": "4 min read",
+    "filename": "0324.html",
+    "category": "Big Data",
+    "components": [
+      "HDFS"
+    ]
+  },
+  {
+    "id": 325,
+    "title": "Kylin frequent OOM problem",
+    "publish_date": "December 13, 2018",
+    "view_count": 946,
+    "read_time": "2 min read",
+    "filename": "0325.html",
+    "category": "Problem Solving",
+    "components": []
+  },
+  {
+    "id": 326,
+    "title": "Introduction to Java Basics ClassLoader Class Loader",
+    "publish_date": "December 12, 2018",
+    "view_count": 357,
+    "read_time": "1 min read",
+    "filename": "0326.html",
+    "category": "Big Data",
+    "components": []
+  },
+  {
+    "id": 327,
+    "title": "13 - HBase Region frequently goes offline",
+    "publish_date": "December 12, 2018",
+    "view_count": 5413,
+    "read_time": "8 min read",
+    "filename": "0327.html",
+    "category": "Big Data",
+    "components": [
+      "HBase"
+    ]
+  },
+  {
+    "id": 328,
+    "title": "Scheduling framework",
+    "publish_date": "December 12, 2018",
+    "view_count": 2517,
+    "read_time": "2 min read",
+    "filename": "0328.html",
+    "category": "Big Data",
+    "components": []
+  },
+  {
+    "id": 329,
+    "title": "Drill 2 - Drill1.14+Hive2.1.1 running",
+    "publish_date": "December 12, 2018",
+    "view_count": 1943,
+    "read_time": "1 min read",
+    "filename": "0329.html",
+    "category": "Big Data",
+    "components": [
+      "Hive"
+    ]
+  },
+  {
+    "id": 330,
+    "title": "Why is Spark in compressed format when saving text type files (text, csv, JSON, etc.) to HDFS?",
+    "publish_date": "December 12, 2018",
+    "view_count": 2191,
+    "read_time": "1 min read",
+    "filename": "0330.html",
+    "category": "Big Data",
+    "components": [
+      "Spark",
+      "HDFS"
+    ]
+  },
+  {
+    "id": 331,
+    "title": "When creating a Hive table, should I use an internal table or an external table?",
+    "publish_date": "December 12, 2018",
+    "view_count": 907,
+    "read_time": "1 min read",
+    "filename": "0331.html",
+    "category": "Big Data",
+    "components": [
+      "Hive"
+    ]
+  },
+  {
+    "id": 332,
+    "title": "How to choose the format when creating a Hive table",
+    "publish_date": "December 12, 2018",
+    "view_count": 2585,
+    "read_time": "8 min read",
+    "filename": "0332.html",
+    "category": "Big Data",
+    "components": [
+      "Hive"
+    ]
+  },
+  {
+    "id": 333,
+    "title": "How does Oozie view task logs submitted to YARN?",
+    "publish_date": "December 12, 2018",
+    "view_count": 2776,
+    "read_time": "1 min read",
+    "filename": "0333.html",
+    "category": "Big Data",
+    "components": [
+      "YARN",
+      "Oozie"
+    ]
+  },
+  {
+    "id": 334,
+    "title": "Why does a Broadcast timeout error appear when adding a limit to a large table subquery in Spark?",
+    "publish_date": "December 12, 2018",
+    "view_count": 7139,
+    "read_time": "3 min read",
+    "filename": "0334.html",
+    "category": "Big Data",
+    "components": [
+      "Spark"
+    ]
+  },
+  {
+    "id": 335,
+    "title": "How to add dependencies when Oozie submits Spark tasks",
+    "publish_date": "December 12, 2018",
+    "view_count": 1660,
+    "read_time": "1 min read",
+    "filename": "0335.html",
+    "category": "Big Data",
+    "components": [
+      "Spark",
+      "Oozie"
+    ]
+  },
+  {
+    "id": 336,
+    "title": "How to implement automatic switching between master and slave on YARN ResourceManager page",
+    "publish_date": "December 12, 2018",
+    "view_count": 1769,
+    "read_time": "1 min read",
+    "filename": "0336.html",
+    "category": "Big Data",
+    "components": [
+      "YARN"
+    ]
+  },
+  {
+    "id": 337,
+    "title": "How to choose HBase client",
+    "publish_date": "December 12, 2018",
+    "view_count": 801,
+    "read_time": "1 min read",
+    "filename": "0337.html",
+    "category": "Big Data",
+    "components": [
+      "HBase"
+    ]
+  },
+  {
+    "id": 338,
+    "title": "Why is Hive so slow to execute limit after adding conditions to a large table?",
+    "publish_date": "December 12, 2018",
+    "view_count": 2798,
+    "read_time": "2 min read",
+    "filename": "0338.html",
+    "category": "Big Data",
+    "components": [
+      "Hive"
+    ]
+  },
+  {
+    "id": 339,
+    "title": "Occasionally an error occurs when submitting a Spark task: org.apache.Spark.SparkException: A master URL must be set in your configuration",
+    "publish_date": "December 12, 2018",
+    "view_count": 3260,
+    "read_time": "4 min read",
+    "filename": "0339.html",
+    "category": "Big Data",
+    "components": [
+      "Spark"
+    ]
+  },
+  {
+    "id": 340,
+    "title": "When Oozie submits a Spark task, it reports Java.lang.NoClassDefFoundError: org/apache/Kafka/clients/producer/KafkaProducer",
+    "publish_date": "December 12, 2018",
+    "view_count": 3747,
+    "read_time": "1 min read",
+    "filename": "0340.html",
+    "category": "Big Data",
+    "components": [
+      "Spark",
+      "Kafka",
+      "Oozie"
+    ]
+  },
+  {
+    "id": 341,
+    "title": "Submit Spark task error Caused by: Java.lang.ClassNotFoundException: org.I0Itec.zkclient.exception.ZkNoNodeException",
+    "publish_date": "December 12, 2018",
+    "view_count": 2905,
+    "read_time": "1 min read",
+    "filename": "0341.html",
+    "category": "Big Data",
+    "components": [
+      "Spark"
+    ]
+  },
+  {
+    "id": 342,
+    "title": "Spark 2 - Spark on YARN: container memory allocation container memory allocation",
+    "publish_date": "December 11, 2018",
+    "view_count": 2955,
+    "read_time": "3 min read",
+    "filename": "0342.html",
+    "category": "Big Data",
+    "components": [
+      "Spark",
+      "YARN"
+    ]
+  },
+  {
+    "id": 343,
+    "title": "View Hive complete execution of SQL on YARN",
+    "publish_date": "December 07, 2018",
+    "view_count": 6271,
+    "read_time": "1 min read",
+    "filename": "0343.html",
+    "category": "Big Data",
+    "components": [
+      "YARN",
+      "Hive"
+    ]
+  },
+  {
+    "id": 344,
+    "title": "Job progress stuck in Spark task",
+    "publish_date": "December 03, 2018",
+    "view_count": 7538,
+    "read_time": "6 min read",
+    "filename": "0344.html",
+    "category": "Big Data",
+    "components": [
+      "Spark"
+    ]
+  },
+  {
+    "id": 345,
+    "title": "Parquet 1 - Introduction",
+    "publish_date": "November 08, 2018",
+    "view_count": 1078,
+    "read_time": "2 min read",
+    "filename": "0345.html",
+    "category": "Big Data",
+    "components": []
+  },
+  {
+    "id": 346,
+    "title": "ORC 1 - Introduction",
+    "publish_date": "November 07, 2018",
+    "view_count": 2415,
+    "read_time": "4 min read",
+    "filename": "0346.html",
+    "category": "Big Data",
+    "components": []
+  },
+  {
+    "id": 347,
+    "title": "Java Basics Freemarker 1 - Template loading and clearing mechanism",
+    "publish_date": "November 07, 2018",
+    "view_count": 3466,
+    "read_time": "1 min read",
+    "filename": "0347.html",
+    "category": "Big Data",
+    "components": []
+  },
+  {
+    "id": 348,
+    "title": "Dubbo monitor service iowait is high and load is high",
+    "publish_date": "November 07, 2018",
+    "view_count": 1274,
+    "read_time": "1 min read",
+    "filename": "0348.html",
+    "category": "Big Data",
+    "components": []
+  },
+  {
+    "id": 349,
+    "title": "Kafka client reports error SocketException: Too many open files There are too many open files",
+    "publish_date": "November 07, 2018",
+    "view_count": 7567,
+    "read_time": "2 min read",
+    "filename": "0349.html",
+    "category": "Big Data",
+    "components": [
+      "Kafka"
+    ]
+  },
+  {
+    "id": 350,
+    "title": "Kafka cluster broker node disappears from ZooKeeper",
+    "publish_date": "November 07, 2018",
+    "view_count": 4170,
+    "read_time": "8 min read",
+    "filename": "0350.html",
+    "category": "Big Data",
+    "components": [
+      "Kafka",
+      "Zookeeper"
+    ]
+  },
+  {
+    "id": 351,
+    "title": "Kafka cluster broker process exits with errors one by one",
+    "publish_date": "November 07, 2018",
+    "view_count": 2377,
+    "read_time": "3 min read",
+    "filename": "0351.html",
+    "category": "Big Data",
+    "components": [
+      "Kafka"
+    ]
+  },
+  {
+    "id": 352,
+    "title": "Kafka 1 - Introduction, installation and use",
+    "publish_date": "November 06, 2018",
+    "view_count": 725,
+    "read_time": "10 min read",
+    "filename": "0352.html",
+    "category": "Big Data",
+    "components": [
+      "Kafka"
+    ]
+  },
+  {
+    "id": 353,
+    "title": "The Spark task has a certain chance of reporting an error Java.lang.NoSuchFieldError: HIVE_MOVE_FILES_THREAD_COUNT",
+    "publish_date": "November 02, 2018",
+    "view_count": 2706,
+    "read_time": "2 min read",
+    "filename": "0353.html",
+    "category": "Big Data",
+    "components": [
+      "Spark",
+      "Hive"
+    ]
+  },
+  {
+    "id": 354,
+    "title": "Quartz 1 - Introduction, source code analysis",
+    "publish_date": "November 02, 2018",
+    "view_count": 649,
+    "read_time": "1 min read",
+    "filename": "0354.html",
+    "category": "Big Data",
+    "components": []
+  },
+  {
+    "id": 355,
+    "title": "Oozie vs Azkaban",
+    "publish_date": "November 02, 2018",
+    "view_count": 1320,
+    "read_time": "1 min read",
+    "filename": "0355.html",
+    "category": "Big Data",
+    "components": [
+      "Oozie"
+    ]
+  },
+  {
+    "id": 356,
+    "title": "Azkaban 1 - Introduction, source code analysis",
+    "publish_date": "November 02, 2018",
+    "view_count": 1987,
+    "read_time": "2 min read",
+    "filename": "0356.html",
+    "category": "Big Data",
+    "components": []
+  },
+  {
+    "id": 357,
+    "title": "Oozie 1 - Introduction, source code analysis",
+    "publish_date": "November 02, 2018",
+    "view_count": 2477,
+    "read_time": "2 min read",
+    "filename": "0357.html",
+    "category": "Big Data",
+    "components": [
+      "Oozie"
+    ]
+  },
+  {
+    "id": 358,
+    "title": "ZooKeeper 4 - application scenarios",
+    "publish_date": "November 02, 2018",
+    "view_count": 319,
+    "read_time": "1 min read",
+    "filename": "0358.html",
+    "category": "Big Data",
+    "components": [
+      "Zookeeper"
+    ]
+  },
+  {
+    "id": 359,
+    "title": "ZooKeeper 3 - Election Algorithm",
+    "publish_date": "November 01, 2018",
+    "view_count": 1083,
+    "read_time": "4 min read",
+    "filename": "0359.html",
+    "category": "System Design",
+    "components": [
+      "Zookeeper"
+    ]
+  },
+  {
+    "id": 360,
+    "title": "ZooKeeper 2 - Source code analysis",
+    "publish_date": "October 31, 2018",
+    "view_count": 574,
+    "read_time": "1 min read",
+    "filename": "0360.html",
+    "category": "Big Data",
+    "components": [
+      "Zookeeper"
+    ]
+  },
+  {
+    "id": 361,
+    "title": "ZooKeeper 1 - Introduction, installation and use",
+    "publish_date": "October 31, 2018",
+    "view_count": 1264,
+    "read_time": "14 min read",
+    "filename": "0361.html",
+    "category": "Big Data",
+    "components": [
+      "Zookeeper"
+    ]
+  },
+  {
+    "id": 362,
+    "title": "On the wealth cultivation of code farmers",
+    "publish_date": "October 29, 2018",
+    "view_count": 251,
+    "read_time": "1 min read",
+    "filename": "0362.html",
+    "category": "Big Data",
+    "components": []
+  },
+  {
+    "id": 363,
+    "title": "How to achieve \"efficiency\" when processing large batches of data while also implementing the \"breakpoint resume\" function",
+    "publish_date": "October 20, 2018",
+    "view_count": 1443,
+    "read_time": "1 min read",
+    "filename": "0363.html",
+    "category": "Big Data",
+    "components": []
+  },
+  {
+    "id": 364,
+    "title": "Spark 1 - Spark Submit is the Spark task submission process",
+    "publish_date": "October 20, 2018",
+    "view_count": 3397,
+    "read_time": "5 min read",
+    "filename": "0364.html",
+    "category": "Big Data",
+    "components": [
+      "Spark"
+    ]
+  },
+  {
+    "id": 365,
+    "title": "HBase RegionServer hangs frequently",
+    "publish_date": "October 18, 2018",
+    "view_count": 3652,
+    "read_time": "3 min read",
+    "filename": "0365.html",
+    "category": "Big Data",
+    "components": [
+      "HBase"
+    ]
+  },
+  {
+    "id": 366,
+    "title": "User population positioning solution based on address location",
+    "publish_date": "October 17, 2018",
+    "view_count": 885,
+    "read_time": "1 min read",
+    "filename": "0366.html",
+    "category": "Big Data",
+    "components": []
+  },
+  {
+    "id": 367,
+    "title": "Thinking in BigData 1 - Introduction to Big Data",
+    "publish_date": "October 16, 2018",
+    "view_count": 572,
+    "read_time": "3 min read",
+    "filename": "0367.html",
+    "category": "Big Data",
+    "components": []
+  },
+  {
+    "id": 368,
+    "title": "Process standardization",
+    "publish_date": "October 13, 2018",
+    "view_count": 297,
+    "read_time": "1 min read",
+    "filename": "0368.html",
+    "category": "Big Data",
+    "components": []
+  }
+]

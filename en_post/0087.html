@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Importing and Exporting Data Between Hive and MySQL</title>
+<link href="../css/style3.css" rel="stylesheet"/>
+</head>
+<body>
+<div class="container">
+<!-- Header Navigation -->
+<div class="header">
+<h1><a href="../blog.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+</div>
+<!-- Post Container -->
+<article class="post">
+<!-- Post Header -->
+<div class="post-header">
+<h1>Importing and Exporting Data Between Hive and MySQL</h1>
+<div class="post-meta">
+<div class="post-meta-item">
+<span class="meta-icon">📅</span>
+<span>October 10, 2019</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">📖</span>
+<span>1 min read</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">👁️</span>
+<span>647 views</span>
+</div>
+</div>
+</div>
+<!-- Post Content -->
+<div class="post-content">
+<div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<p>Hive and MySQL data mutually guide each other. The first thing that comes to mind is sqoop, and it can be configured with scheduling frameworks (such as oozie, etc.) to configure scheduled tasks. Another simpler way is through spark-SQL:</p>
+<div class="cnblogs_code">
+<pre><span style="color: rgba(0, 0, 0, 1)">CREATE OR REPLACE TEMPORARY VIEW tmp_tbl_test
+USING org.apache.spark.sql.jdbc OPTIONS (
+url </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">jdbc:mysql://1.1.1.1:3306/db_test?useUnicode=true&amp;characterEncoding=utf-8&amp;tinyInt1isBit=false&amp;zeroDateTimeBehavior=convertToNull</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">,
+dbtable </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">tbl_test</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">,
+user </span><span style="color: rgba(128, 0, 0, 1)">'</span><span style="color: rgba(128, 0, 0, 1)">root</span><span style="color: rgba(128, 0, 0, 1)">'</span><span style="color: rgba(0, 0, 0, 1)">,
+password </span><span style="color: rgba(128, 0, 0, 1)">'</span><span style="color: rgba(128, 0, 0, 1)">123456</span><span style="color: rgba(128, 0, 0, 1)">'</span>);</pre>
+</div>
+<p>Then you can read or write tmp_tbl_test in spark-SQL, which is equivalent to reading or writing MySQL directly.<br/>If you only need to read, you don’t even need to pass the data from MySQL to Hive, but read MySQL directly;</p>
+<p> </p>
+<p>If concurrent reading is required, you can add parameters</p>
+<div class="cnblogs_code">
+<pre>partitionColumn <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">id</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">, 
+lowerBound </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">10000</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">, 
+upperBound </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">20000</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">, 
+numPartitions </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">4</span><span style="color: rgba(128, 0, 0, 1)">"</span></pre>
+</div>
+<p>Also note that if the query conditions in where are improperly set, it may result in a full table scan. This can be confirmed by explaining the query plan, such as common time types:</p>
+<blockquote>
+<p>select * from test_table where create_time &gt; '2019-01-01'</p>
+</blockquote>
+<div class="cnblogs_code">
+<pre>== Physical Plan ==
+*(2) HashAggregate(keys=[], functions=[count(1<span style="color: rgba(0, 0, 0, 1)">)])
+</span>+-<span style="color: rgba(0, 0, 0, 1)"> Exchange SinglePartition
+   </span>+- *(1) HashAggregate(keys=[], functions=[partial_count(1<span style="color: rgba(0, 0, 0, 1)">)])
+      </span>+- *(1<span style="color: rgba(0, 0, 0, 1)">) Project
+         </span>+- *(1) Filter (cast(create_time#2 as string) &gt; 2019-01-01)
+            +- *(1) Scan JDBCRelation(test_table) [numPartitions=1] [create_time<span style="color: rgba(0, 128, 0, 1)">#</span><span style="color: rgba(0, 128, 0, 1)">1643] PushedFilters: [], ReadSchema: struct&lt;create_time:timestamp&gt;</span>
+Time taken: 0.034 seconds, Fetched 1 row(s)</pre>
+</div>
+<p>The above query plan will scan the entire test_table into spark and then filter create_time, instead of pushing the query conditions down into the scan. Obviously this is not the expected behavior. Modify the query conditions as</p>
+<blockquote>
+<p>select * from test_table where create_time &gt; date_sub(now(), 100)</p>
+</blockquote>
+<p>then the problem can be solved; </p>
+<p> </p>
+<p>Also note:</p>
+<p>1) tinyInt1isBit=false in the connection string. Since both spark-SQL and sqoop are based on JDBC to read MySQL, JDBC will default the field type tinyint of MySQL as java.SQL.Types.BIT, and what is read is not a digital int, but a Boolean value. If this default behavior is not required, you need to add tinyInt1isBit=false to the connection string;</p>
+<p>2) zeroDateTimeBehavior=convertToNull in the connection string, if the MySQL date field value is 0000-00-00 00:00:00, an error will be reported when reading from spark:</p>
+<p>java.sql.SQLException: Value '0000-00-00 00:00:00' can not be represented as java.sql.Timestamp</p>
+<p>Set the zeroDateTimeBehavior property. When encountering a DATETIME value consisting entirely of 0s, the final valid value can be set to an exception (exception), an approximate value (round), or the value can be converted to null (convertToNull).</p>
+<p> </p>
+<p>Reference:</p>
+<p>https://github.com/apache/spark/blob/master/sql/core/src/main/scala/org/apache/spark/sql/execution/datasources/jdbc/JDBCRelation.scala</p>
+<p> </p>
+</div>
+</div>
+<!-- Post Footer -->
+<div class="post-footer">
+<div class="post-navigation">
+<a class="nav-button" href="../blog.html">← Back to Home</a>
+<a class="nav-button" href="0088.html">Next Post →</a>
+</div>
+</div>
+</article>
+</div>
+</body>
+</html>

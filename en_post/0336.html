@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>How to implement automatic switching between master and slave on YARN ResourceManager page</title>
+<link href="../css/style3.css" rel="stylesheet"/>
+</head>
+<body>
+<div class="container">
+<!-- Header Navigation -->
+<div class="header">
+<h1><a href="../blog.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+</div>
+<!-- Post Container -->
+<article class="post">
+<!-- Post Header -->
+<div class="post-header">
+<h1>How to implement automatic switching between master and slave on YARN ResourceManager page</h1>
+<div class="post-meta">
+<div class="post-meta-item">
+<span class="meta-icon">📅</span>
+<span>December 12, 2018</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">📖</span>
+<span>1 min read</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">👁️</span>
+<span>1769 views</span>
+</div>
+</div>
+</div>
+<!-- Post Content -->
+<div class="post-content">
+<div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<p>The components of HDFS, YARN, and HBase support multiple masters to achieve automatic active-standby switching. HDFS and HBase can access the page normally regardless of whether they access the primary master or the standby master. However, YARN is special. Only the primary master's page can be accessed. The standby master will return Refresh and redirect after 3 seconds;</p>
+<p>One way is to provide two domain names, corresponding to the masters of the two yarns. Once the master is switched, you need to manually switch to the other one. Is there a better way?</p>
+<p> </p>
+<p>The process of accessing the standby master is as follows:</p>
+<blockquote>
+<p>curl <a class="external-link" href="http://172.27.12.134:8088/cluster" rel="noopener nofollow">http://standby_ip:8088/cluster</a> -v</p>
+<p>* About to connect() to <a class="external-link" href="http://172.27.12.134:8088/cluster" rel="noopener nofollow">standby_ip</a> port 8088 (#0)</p>
+<p>*   Trying <a class="external-link" href="http://172.27.12.134:8088/cluster" rel="noopener nofollow">standby_ip</a>...</p>
+<p>* Connected to <a class="external-link" href="http://172.27.12.134:8088/cluster" rel="noopener nofollow">standby_ip</a> (<a class="external-link" href="http://172.27.12.134:8088/cluster" rel="noopener nofollow">standby_ip</a>) port 8088 (#0)</p>
+<p>&gt; GET /cluster HTTP/1.1</p>
+<p>&gt; User-Agent: curl/7.29.0</p>
+<p>&gt; Host: <a class="external-link" href="http://172.27.12.134:8088/cluster" rel="noopener nofollow">standby_ip</a>:8088</p>
+<p>&gt; Accept: */*</p>
+<p>&gt;</p>
+<p><strong>&lt; HTTP/1.1 200 OK</strong></p>
+<p>&lt; Cache-Control: no-cache</p>
+<p>&lt; Expires: Tue, 25 Sep 2018 03:59:22 GMT</p>
+<p>&lt; Date: Tue, 25 Sep 2018 03:59:22 GMT</p>
+<p>&lt; Pragma: no-cache</p>
+<p>&lt; Expires: Tue, 25 Sep 2018 03:59:22 GMT</p>
+<p>&lt; Date: Tue, 25 Sep 2018 03:59:22 GMT</p>
+<p>&lt; Pragma: no-cache</p>
+<p>&lt; Content-Type: text/plain; charset=UTF-8</p>
+<p><strong>&lt; Refresh: 3; url=<a class="external-link" href="http://a03-r07-i12-133.jd.local:8088/cluster" rel="noopener nofollow">http://active_ip:8088/cluster</a></strong></p>
+<p>&lt; Content-Length: 103</p>
+<p>&lt; Server: Jetty(6.1.26)</p>
+<p>&lt;</p>
+<p><strong>This is standby RM. Redirecting to the current active RM: <a class="external-link" href="http://a03-r07-i12-133.jd.local:8088/cluster" rel="noopener nofollow">http://active_ip:8088/cluster</a></strong></p>
+<p>* Connection #0 to host <a class="external-link" href="http://172.27.12.134:8088/cluster" rel="noopener nofollow">standby_ip</a> left intact</p>
+</blockquote>
+<p>It can be seen that the backup master response http status is 200, including the Refresh header, and the body is<strong>This is standby RM. Redirecting to the current active RM:***</strong></p>
+<p>Is it possible to configure automatic switching on the load balancer (such as Nginx)? The illegal response here needs to determine whether the header contains 'Refresh' or the body contains 'This is standby RM'</p>
+<p> </p>
+<p>1) Passive switching, supports http status and timeout and other judgments, not satisfied</p>
+<p><a class="external-link" href="http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_next_upstream" rel="noopener nofollow">http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_next_upstream</a></p>
+<p>proxy_next_upstream error | timeout | invalid_header | http_500 | http_502 | http_503 | http_504 | http_403 | http_404 | http_429 | non_idempotent | off ...;</p>
+<p> </p>
+<p>2) Active health check, the most commonly used open source module, only supports http status level health check, which is not satisfactory</p>
+<p><a class="external-link" href="https://github.com/yaoweibin/nginx_upstream_check_module" rel="noopener nofollow">https://github.com/yaoweibin/nginx_upstream_check_module</a></p>
+<p>  check_http_expect_alive</p>
+<p>    syntax: *check_http_expect_alive [ http_2xx | http_3xx | http_4xx |</p>
+<p>    http_5xx ]*</p>
+<p>    default: *http_2xx | http_3xx*</p>
+<p>    context: *upstream*</p>
+<p>    description: These status codes indicate the upstream server's http</p>
+<p>    response is ok, the backend is alive.</p>
+<p> </p>
+<p>3) The paid version of Nginx ngx_http_upstream_hc_module supports the judgment of header and body, which can satisfy</p>
+<p>Dynamically configurable group with periodic health checks is available as part of our commercial subscription:</p>
+<p><a class="external-link" href="http://nginx.org/en/docs/http/ngx_http_upstream_hc_module.html" rel="noopener nofollow">http://nginx.org/en/docs/http/ngx_http_upstream_hc_module.html</a></p>
+<p>    match active {</p>
+<p>        body !~ "This is standby RM";</p>
+<p>    }</p>
+<p> </p>
+</div>
+</div>
+<!-- Post Footer -->
+<div class="post-footer">
+<div class="post-navigation">
+<a class="nav-button" href="../blog.html">← Back to Home</a>
+<a class="nav-button" href="0337.html">Next Post →</a>
+</div>
+</div>
+</article>
+</div>
+</body>
+</html>

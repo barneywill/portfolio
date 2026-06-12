@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Spark 6 - Spark Rdd Sort implementation principle</title>
+<link href="../css/style3.css" rel="stylesheet"/>
+</head>
+<body>
+<div class="container">
+<!-- Header Navigation -->
+<div class="header">
+<h1><a href="../blog.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+</div>
+<!-- Post Container -->
+<article class="post">
+<!-- Post Header -->
+<div class="post-header">
+<h1>Spark 6 - Spark Rdd Sort implementation principle</h1>
+<div class="post-meta">
+<div class="post-meta-item">
+<span class="meta-icon">📅</span>
+<span>December 28, 2018</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">📖</span>
+<span>7 min read</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">👁️</span>
+<span>1305 views</span>
+</div>
+</div>
+</div>
+<!-- Post Content -->
+<div class="post-content">
+<div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<p>spark 2.1.1</p>
+<p>Distributed data can be sorted through RDD.sortBy in Spark. How is it implemented? Let’s look at the code:</p>
+<p>org.apache.spark.rdd.RDD</p>
+<div class="cnblogs_code">
+<pre>  <span style="color: rgba(0, 128, 0, 1)">/**</span><span style="color: rgba(0, 128, 0, 1)">
+   * Return this RDD sorted by the given key function.
+   </span><span style="color: rgba(0, 128, 0, 1)">*/</span><span style="color: rgba(0, 0, 0, 1)">
+  def sortBy[K](
+      f: (T) </span>=&gt;<span style="color: rgba(0, 0, 0, 1)"> K,
+      ascending: Boolean </span>= <span style="color: rgba(0, 0, 255, 1)">true</span><span style="color: rgba(0, 0, 0, 1)">,
+      numPartitions: Int </span>= <span style="color: rgba(0, 0, 255, 1)">this</span><span style="color: rgba(0, 0, 0, 1)">.partitions.length)
+      (implicit ord: Ordering[K], ctag: ClassTag[K]): RDD[T] </span>=<span style="color: rgba(0, 0, 0, 1)"> withScope {
+    </span><span style="color: rgba(0, 0, 255, 1)">this</span><span style="color: rgba(0, 0, 0, 1)">.keyBy[K](f)
+        .sortByKey(ascending, numPartitions)
+        .values
+  }
+  
+  </span><span style="color: rgba(0, 128, 0, 1)">/**</span><span style="color: rgba(0, 128, 0, 1)">
+   * Creates tuples of the elements in this RDD by applying `f`.
+   </span><span style="color: rgba(0, 128, 0, 1)">*/</span><span style="color: rgba(0, 0, 0, 1)">
+  def keyBy[K](f: T </span>=&gt; K): RDD[(K, T)] =<span style="color: rgba(0, 0, 0, 1)"> withScope {
+    val cleanedF </span>=<span style="color: rgba(0, 0, 0, 1)"> sc.clean(f)
+    map(x </span>=&gt;<span style="color: rgba(0, 0, 0, 1)"> (cleanedF(x), x))
+  }
+  
+  </span><span style="color: rgba(0, 128, 0, 1)">/**</span><span style="color: rgba(0, 128, 0, 1)">
+   * Sort the RDD by key, so that each partition contains a sorted range of the elements. Calling
+   * `collect` or `save` on the resulting RDD will return or output an ordered list of records
+   * (in the `save` case, they will be written to multiple `part-X` files in the filesystem, in
+   * order of the keys).
+   </span><span style="color: rgba(0, 128, 0, 1)">*/</span>
+  <span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> TODO: this currently doesn't work on P other than Tuple2!</span>
+  def sortByKey(ascending: Boolean = <span style="color: rgba(0, 0, 255, 1)">true</span>, numPartitions: Int =<span style="color: rgba(0, 0, 0, 1)"> self.partitions.length)
+      : RDD[(K, V)] </span>=<span style="color: rgba(0, 0, 0, 1)"> self.withScope
+  {
+    val part </span>= <span style="color: rgba(0, 0, 255, 1)">new</span><span style="color: rgba(0, 0, 0, 1)"> RangePartitioner(numPartitions, self, ascending)
+    </span><span style="color: rgba(0, 0, 255, 1)">new</span><span style="color: rgba(0, 0, 0, 1)"> ShuffledRDD[K, V, V](self, part)
+      .setKeyOrdering(</span><span style="color: rgba(0, 0, 255, 1)">if</span> (ascending) ordering <span style="color: rgba(0, 0, 255, 1)">else</span><span style="color: rgba(0, 0, 0, 1)"> ordering.reverse)
+  }</span></pre>
+</div>
+<p>The code is relatively simple: sort is a transformation operation. You need to define a keyBy, that is, what to sort by, and then do a one-step map, that is, item -&gt; (keyBy(item), item), and then define a Partitioner, which is the partitioning strategy (how many partitions, ascending and descending order, etc.), and finally return a ShuffledRDD;</p>
+<p>For details on the principle of ShuffledRDD, see <a href="https://www.cnblogs.com/barneywill/p/10158457.html" target="_blank">https://www.cnblogs.com/barneywill/p/10158457.html</a></p>
+<p>Here we focus on RangePartitioner:</p>
+<p>org.apache.spark.RangePartitioner</p>
+<div class="cnblogs_code">
+<pre><span style="color: rgba(0, 128, 0, 1)">/**</span><span style="color: rgba(0, 128, 0, 1)">
+ * A [[org.apache.spark.Partitioner]] that partitions sortable records by range into roughly
+ * equal ranges. The ranges are determined by sampling the content of the RDD passed in.
+ *
+ * @note The actual number of partitions created by the RangePartitioner might not be the same
+ * as the `partitions` parameter, in the case where the number of sampled records is less than
+ * the value of `partitions`.
+ </span><span style="color: rgba(0, 128, 0, 1)">*/</span>
+<span style="color: rgba(0, 0, 255, 1)">class</span><span style="color: rgba(0, 0, 0, 1)"> RangePartitioner[K : Ordering : ClassTag, V](
+    partitions: Int,
+    rdd: RDD[_ </span>&lt;<span style="color: rgba(0, 0, 0, 1)">: Product2[K, V]],
+    </span><span style="color: rgba(0, 0, 255, 1)">private</span> var ascending: Boolean = <span style="color: rgba(0, 0, 255, 1)">true</span><span style="color: rgba(0, 0, 0, 1)">)
+  </span><span style="color: rgba(0, 0, 255, 1)">extends</span><span style="color: rgba(0, 0, 0, 1)"> Partitioner {
+
+  </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> We allow partitions = 0, which happens when sorting an empty RDD under the default settings.</span>
+  require(partitions &gt;= 0, s"Number of partitions cannot be negative but found $partitions."<span style="color: rgba(0, 0, 0, 1)">)
+
+  </span><span style="color: rgba(0, 0, 255, 1)">private</span> var ordering =<span style="color: rgba(0, 0, 0, 1)"> implicitly[Ordering[K]]
+
+  </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> An array of upper bounds for the first (partitions - 1) partitions</span>
+  <span style="color: rgba(0, 0, 255, 1)">private</span> var rangeBounds: Array[K] =<span style="color: rgba(0, 0, 0, 1)"> {
+    </span><span style="color: rgba(0, 0, 255, 1)">if</span> (partitions &lt;= 1<span style="color: rgba(0, 0, 0, 1)">) {
+      Array.empty
+    } </span><span style="color: rgba(0, 0, 255, 1)">else</span><span style="color: rgba(0, 0, 0, 1)"> {
+      </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> This is the sample size we need to have roughly balanced output partitions, capped at 1M.</span>
+      val sampleSize = math.min(20.0 *<span style="color: rgba(0, 0, 0, 1)"> partitions, 1e6)
+      </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> Assume the input partitions are roughly balanced and over-sample a little bit.</span>
+      val sampleSizePerPartition = math.ceil(3.0 * sampleSize /<span style="color: rgba(0, 0, 0, 1)"> rdd.partitions.length).toInt
+      val (numItems, sketched) </span>=<span style="color: rgba(0, 0, 0, 1)"> RangePartitioner.sketch(rdd.map(_._1), sampleSizePerPartition)
+      </span><span style="color: rgba(0, 0, 255, 1)">if</span> (numItems == 0L<span style="color: rgba(0, 0, 0, 1)">) {
+        Array.empty
+      } </span><span style="color: rgba(0, 0, 255, 1)">else</span><span style="color: rgba(0, 0, 0, 1)"> {
+        </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> If a partition contains much more than the average number of items, we re-sample from it
+        </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> to ensure that enough items are collected from that partition.</span>
+        val fraction = math.min(sampleSize / math.max(numItems, 1L), 1.0<span style="color: rgba(0, 0, 0, 1)">)
+        val candidates </span>=<span style="color: rgba(0, 0, 0, 1)"> ArrayBuffer.empty[(K, Float)]
+        val imbalancedPartitions </span>=<span style="color: rgba(0, 0, 0, 1)"> mutable.Set.empty[Int]
+        sketched.foreach { </span><span style="color: rgba(0, 0, 255, 1)">case</span> (idx, n, sample) =&gt;
+          <span style="color: rgba(0, 0, 255, 1)">if</span> (fraction * n &gt;<span style="color: rgba(0, 0, 0, 1)"> sampleSizePerPartition) {
+            imbalancedPartitions </span>+=<span style="color: rgba(0, 0, 0, 1)"> idx
+          } </span><span style="color: rgba(0, 0, 255, 1)">else</span><span style="color: rgba(0, 0, 0, 1)"> {
+            </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> The weight is 1 over the sampling probability.</span>
+            val weight = (n.toDouble /<span style="color: rgba(0, 0, 0, 1)"> sample.length).toFloat
+            </span><span style="color: rgba(0, 0, 255, 1)">for</span> (key &lt;-<span style="color: rgba(0, 0, 0, 1)"> sample) {
+              candidates </span>+=<span style="color: rgba(0, 0, 0, 1)"> ((key, weight))
+            }
+          }
+        }
+        </span><span style="color: rgba(0, 0, 255, 1)">if</span><span style="color: rgba(0, 0, 0, 1)"> (imbalancedPartitions.nonEmpty) {
+          </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> Re-sample imbalanced partitions with the desired sampling probability.</span>
+          val imbalanced = <span style="color: rgba(0, 0, 255, 1)">new</span><span style="color: rgba(0, 0, 0, 1)"> PartitionPruningRDD(rdd.map(_._1), imbalancedPartitions.contains)
+          val seed </span>= byteswap32(-rdd.id - 1<span style="color: rgba(0, 0, 0, 1)">)
+          val reSampled </span>= imbalanced.sample(withReplacement = <span style="color: rgba(0, 0, 255, 1)">false</span><span style="color: rgba(0, 0, 0, 1)">, fraction, seed).collect()
+          val weight </span>= (1.0 /<span style="color: rgba(0, 0, 0, 1)"> fraction).toFloat
+          candidates </span>++= reSampled.map(x =&gt;<span style="color: rgba(0, 0, 0, 1)"> (x, weight))
+        }
+        RangePartitioner.determineBounds(candidates, partitions)
+      }
+    }
+  }
+
+  def numPartitions: Int </span>= rangeBounds.length + 1
+
+  <span style="color: rgba(0, 0, 255, 1)">private</span> var binarySearch: ((Array[K], K) =&gt; Int) =<span style="color: rgba(0, 0, 0, 1)"> CollectionsUtils.makeBinarySearch[K]
+
+  def getPartition(key: Any): Int </span>=<span style="color: rgba(0, 0, 0, 1)"> {
+    val k </span>=<span style="color: rgba(0, 0, 0, 1)"> key.asInstanceOf[K]
+    var partition </span>= 0
+    <span style="color: rgba(0, 0, 255, 1)">if</span> (rangeBounds.length &lt;= 128<span style="color: rgba(0, 0, 0, 1)">) {
+      </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> If we have less than 128 partitions naive search</span>
+      <span style="color: rgba(0, 0, 255, 1)">while</span> (partition &lt; rangeBounds.length &amp;&amp;<span style="color: rgba(0, 0, 0, 1)"> ordering.gt(k, rangeBounds(partition))) {
+        partition </span>+= 1<span style="color: rgba(0, 0, 0, 1)">
+      }
+    } </span><span style="color: rgba(0, 0, 255, 1)">else</span><span style="color: rgba(0, 0, 0, 1)"> {
+      </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> Determine which binary search method to use only once.</span>
+      partition =<span style="color: rgba(0, 0, 0, 1)"> binarySearch(rangeBounds, k)
+      </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> binarySearch either returns the match location or -[insertion point]-1</span>
+      <span style="color: rgba(0, 0, 255, 1)">if</span> (partition &lt; 0<span style="color: rgba(0, 0, 0, 1)">) {
+        partition </span>= -partition-1<span style="color: rgba(0, 0, 0, 1)">
+      }
+      </span><span style="color: rgba(0, 0, 255, 1)">if</span> (partition &gt;<span style="color: rgba(0, 0, 0, 1)"> rangeBounds.length) {
+        partition </span>=<span style="color: rgba(0, 0, 0, 1)"> rangeBounds.length
+      }
+    }
+    </span><span style="color: rgba(0, 0, 255, 1)">if</span><span style="color: rgba(0, 0, 0, 1)"> (ascending) {
+      partition
+    } </span><span style="color: rgba(0, 0, 255, 1)">else</span><span style="color: rgba(0, 0, 0, 1)"> {
+      rangeBounds.length </span>-<span style="color: rgba(0, 0, 0, 1)"> partition
+    }
+  }</span></pre>
+</div>
+<p>The rangeBounds will be determined based on the number of partitions. The rangeBounds is very similar to the pivot in QuickSort.</p>
+<p>For example: the cluster now has 10 nodes and is sorting 100 million data. The number of partitions is 100. The ideal situation is that the 100 million data are divided into 100 parts evenly, and then each node stores 10 parts, and then they can be sorted separately without data skew;<br/>But this is difficult to achieve. It should be noted that the process of bisection here is actually the process of dividing boundaries, that is, determining the minimum and maximum boundaries of each portion, which can only be accurately achieved after traversing and counting all data;</p>
+<p>Spark uses a method to understand the data distribution through data sampling and finally achieve approximate accuracy. The specific implementation is to sample sampleSize data from all the data, and each partition samples sampleSizePerPartition. If some partitions are large, the number of samples will be added, so as to ensure that the sampling process is as average as possible, and then detect and divide the boundaries of the sampled data to obtain rangeBounds. With rangeBounds, you can know which new partition each of the 100 million data is in;</p>
+<p> </p>
+<p>Another question: If collected to the driver after sorting, will the array data remain sorted?</p>
+<p>org.apache.spark.rdd.RDD</p>
+<div class="cnblogs_code">
+<pre>  <span style="color: rgba(0, 128, 0, 1)">/**</span><span style="color: rgba(0, 128, 0, 1)">
+   * Return an array that contains all of the elements in this RDD.
+   *
+   * @note This method should only be used if the resulting array is expected to be small, as
+   * all the data is loaded into the driver's memory.
+   </span><span style="color: rgba(0, 128, 0, 1)">*/</span><span style="color: rgba(0, 0, 0, 1)">
+  def collect(): Array[T] </span>=<span style="color: rgba(0, 0, 0, 1)"> withScope {
+    val results </span>= sc.runJob(<span style="color: rgba(0, 0, 255, 1)">this</span>, (iter: Iterator[T]) =&gt;<span style="color: rgba(0, 0, 0, 1)"> iter.toArray)
+    Array.concat(results: _</span>*<span style="color: rgba(0, 0, 0, 1)">)
+  }</span></pre>
+</div>
+<p>The answer is yes;</p>
+<p> </p>
+</div>
+</div>
+<!-- Post Footer -->
+<div class="post-footer">
+<div class="post-navigation">
+<a class="nav-button" href="../blog.html">← Back to Home</a>
+<a class="nav-button" href="0290.html">Next Post →</a>
+</div>
+</div>
+</article>
+</div>
+</body>
+</html>

@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Spark tasks are unevenly distributed among executors</title>
+<link href="../css/style3.css" rel="stylesheet"/>
+</head>
+<body>
+<div class="container">
+<!-- Header Navigation -->
+<div class="header">
+<h1><a href="../blog.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+</div>
+<!-- Post Container -->
+<article class="post">
+<!-- Post Header -->
+<div class="post-header">
+<h1>Spark tasks are unevenly distributed among executors</h1>
+<div class="post-meta">
+<div class="post-meta-item">
+<span class="meta-icon">📅</span>
+<span>December 20, 2018</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">📖</span>
+<span>1 min read</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">👁️</span>
+<span>2246 views</span>
+</div>
+</div>
+</div>
+<!-- Post Content -->
+<div class="post-content">
+<div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<p>I recently submitted a Spark application and found that the execution was very slow. After clicking on the Spark web ui, I found that it was stuck on a stage of a job. This stage has 100,000 tasks, but most of the tasks are assigned to two executors, and the other executors are very idle. What happened?</p>
+<p>Looking at the Spark task allocation logic, we found that there is a feature of data locality, which is data locality. For details, see <a href="https://www.cnblogs.com/barneywill/p/10152497.html" target="_blank" title="[Original] Spark (4) RDD principle and code analysis of big data foundation">https://www.cnblogs.com/barneywill/p/10152497.html</a><br/>That is, tasks will be allocated according to the priority of the locality level. The priorities of data locality are: PROCESS_LOCAL, NODE_LOCAL, NO_PREF, RACK_LOCAL, ANY, and there is a delay between the priorities.</p>
+<blockquote>
+<p>spark.locality.wait</p>
+</blockquote>
+<p>After further checking the current cluster deployment structure, we found that DataNode and nodemanager were not deployed together. Therefore, when Spark allocates NODE_LOCAL type tasks, only two executors meet the conditions, so most tasks are allocated to these two executors. By setting</p>
+<blockquote>
+<p>spark.locality.wait=0</p>
+</blockquote>
+<p>solve problems;</p>
+<p>ps: Storage and computing (i.e. DataNode and nodemanager) should either be deployed completely separately or completely together. Do not deploy some separately and some together. If this must be done, do not enable the data localization feature;</p>
+</div>
+</div>
+<!-- Post Footer -->
+<div class="post-footer">
+<div class="post-navigation">
+<a class="nav-button" href="../blog.html">← Back to Home</a>
+<a class="nav-button" href="0305.html">Next Post →</a>
+</div>
+</div>
+</article>
+</div>
+</body>
+</html>

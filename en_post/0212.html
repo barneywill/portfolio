@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Airflow 2 - Research on deploying airflow in production environment</title>
+<link href="../css/style3.css" rel="stylesheet"/>
+</head>
+<body>
+<div class="container">
+<!-- Header Navigation -->
+<div class="header">
+<h1><a href="../blog.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+</div>
+<!-- Post Container -->
+<article class="post">
+<!-- Post Header -->
+<div class="post-header">
+<h1>Airflow 2 - Research on deploying airflow in production environment</h1>
+<div class="post-meta">
+<div class="post-meta-item">
+<span class="meta-icon">📅</span>
+<span>February 20, 2019</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">📖</span>
+<span>1 min read</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">👁️</span>
+<span>3380 views</span>
+</div>
+</div>
+</div>
+<!-- Post Content -->
+<div class="post-content">
+<div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<h1>1 official</h1>
+<h2>airflow official distributed deployment structure diagram</h2>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201902/1509647-20190220004325814-429647563.png"/></p>
+<h2>airflow process</h2>
+<ul>
+<li>webserver</li>
+<li>scheduler</li>
+<li>flower (optional)</li>
+<li>worker</li>
+</ul>
+<h2>Disadvantages of airflow</h2>
+<ul>
+<li>scheduler single point</li>
+<li>Submit the process by changing the dag file in the scheduler's dags directory</li>
+</ul>
+<h2>Official distributed deployment solution</h2>
+<ul>
+<li>multiple webservers</li>
+<li>multiple workers
+<ul>
+<li>CeleryExecutor (depends on Redis or rabbitmq)</li>
+<li>MesosExecutor (depends on mesos)</li>
+</ul>
+</li>
+</ul>
+<h2>Third-party open source solution ASFC</h2>
+<p>For the scheduler single point problem, there is a third-party solution: https://github.com/teamclairvoyant/airflow-scheduler-failover-controller</p>
+<p> </p>
+<p>The Airflow Scheduler Failover Controller (ASFC) is a mechanism that ensures that only one Scheduler instance is running in an Airflow Cluster at a time. This way you don't come across the issues we described in the "Motivation" section above.</p>
+<p>You will first need to startup the ASFC on each of the instances you want the scheduler to be running on. When you start up multiple instances of the ASFC one of them takes on the Active state and the other takes on a Standby state. There is a heart beat mechanism setup to track if the Active ASFC is still active. If the Active ASFC misses multiple heart beats, the Standby ASFC becomes active.</p>
+<p>The Active ASFC will poll every 10 seconds to see if the scheduler is running on the desired node. If it is not, the ASFC will try to restart the daemon. If the scheduler daemons still doesn't startup, the daemon is started on another node in the cluster.</p>
+<p> </p>
+<p>Airflow Scheduler Failover Controller (ASFC) is implemented as follows: only one of multiple instances is in the active state. The instance in the active state will check whether the scheduler process is alive every 10 seconds and restart the process as needed;</p>
+<p>The bad news is that this solution is not compatible with the new version of airflow 1.10</p>
+<h1>2. Research on airflow production environment deployment plan based on mesos+HDFS</h1>
+<h2>Same part</h2>
+<p>consistent with official</p>
+<ul>
+<li>Use MySQL database as metabase</li>
+</ul>
+<p>Inconsistent with the official 1</p>
+<ul>
+<li>All modifications to the dags directory are synchronized to HDFS to ensure the high availability of the dags directory.</li>
+<li>Use HDFS NFSGateway to mount HDFS on all possible scheduler nodes. No matter which node the scheduler is deployed on, use the same dags directory.</li>
+<li>Use Nginx+marathon-lb to expose airflow's webserver to the outside world, and you can operate the process or view the execution of the process, etc.</li>
+</ul>
+<h2>1 airflow single instance container deployment solution</h2>
+<p>Inconsistent with official 2</p>
+<ul>
+<li>The webserver, scheduler, and worker run as Docker containers, and only one instance is deployed on multiple nodes. Marathon ensures availability, and marathon-lb does service discovery.</li>
+<li>Workers use LocalExecutor, that is, all tasks are executed using child processes.
+<ul>
+<li>In order to enable the LocalExecutor of the worker in the container to access external cluster functions, a feasible way is to mount the parent directories of various components into the container (for example, each component directory is /app/Java, /app/Hive, /app/Spark, /app/h dfs, then mount the /app directory into the container), and then all task scripts will be introduced to execute a common script to initialize environment variables at the beginning, set various Home and Path, and then you can use clients of various components in the container, such as Java, Hive, Spark, HDFS, etc.</li>
+</ul>
+</li>
+</ul>
+<h2>2 airflow distributed container deployment solution</h2>
+<p>Inconsistent with official 2</p>
+<ul>
+<li>The webserver and scheduler run as Docker containers. Only one instance is deployed on multiple nodes. Marathon ensures availability and marathon-lb does service discovery.</li>
+<li>Workers use MesosExecutor:</li>
+<ul>
+<li>The advantage of executing airflow tasks directly on mesos agent is that it can ensure that specific tasks can access cluster functions, such as Impala/flink. The disadvantage is that airflow needs to be deployed on the hosts of all mesos agent nodes.</li>
+<li>Deploy the Docker container of airflow worker on mesos agent, and then execute the airflow task in the container. The advantage is that the deployment cost is zero. The disadvantage is that the Docker container only contains workers and cannot use the functions of external clusters. However, this shortcoming can be solved using the same method as LocalExecutor in the previous solution.</li>
+</ul>
+</ul>
+<p> </p>
+<p>airflow docker image：https://github.com/puckel/docker-airflow </p>
+<p> </p>
+</div>
+</div>
+<!-- Post Footer -->
+<div class="post-footer">
+<div class="post-navigation">
+<a class="nav-button" href="../blog.html">← Back to Home</a>
+<a class="nav-button" href="0213.html">Next Post →</a>
+</div>
+</div>
+</article>
+</div>
+</body>
+</html>

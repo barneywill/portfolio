@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Resetting Kafka Offsets</title>
+<link href="../css/style3.css" rel="stylesheet"/>
+</head>
+<body>
+<div class="container">
+<!-- Header Navigation -->
+<div class="header">
+<h1><a href="../blog.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+</div>
+<!-- Post Container -->
+<article class="post">
+<!-- Post Header -->
+<div class="post-header">
+<h1>Resetting Kafka Offsets</h1>
+<div class="post-meta">
+<div class="post-meta-item">
+<span class="meta-icon">📅</span>
+<span>May 20, 2022</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">📖</span>
+<span>1 min read</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">👁️</span>
+<span>741 views</span>
+</div>
+</div>
+</div>
+<!-- Post Content -->
+<div class="post-content">
+<div class="blogpost-body cnblogs-markdown" id="cnblogs_post_body">
+<p>All options are as follows:</p>
+<p><picture>
+<source srcset="../img/1509647-20220520175419029-1447819128.webp" type="image/webp"/>
+<img alt="" src="../img/1509647-20220520175419029-1447819128.png"/>
+</picture></p>
+<p>Command examples are as follows:</p>
+<blockquote>
+<p>bin/kafka-consumer-groups.sh<br/>
+--bootstrap-server  kafka_1:9092,kafka_2:9092,kafka_3:9092,kafka_4:9092,kafka_5:9092<br/>
+--group group_name<br/>
+--reset-offsets --topic topic_name<br/>
+--to-datetime 2022-04-25T12:00:00.000<br/>
+--execute</p>
+</blockquote>
+</div>
+</div>
+<!-- Post Footer -->
+<div class="post-footer">
+<div class="post-navigation">
+<a class="nav-button" href="../blog.html">← Back to Home</a>
+<a class="nav-button" href="0015.html">Next Post →</a>
+</div>
+</div>
+</article>
+</div>
+</body>
+</html>

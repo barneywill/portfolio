@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Enabling LDAP Authentication in Hive</title>
+<link href="../css/style3.css" rel="stylesheet"/>
+</head>
+<body>
+<div class="container">
+<!-- Header Navigation -->
+<div class="header">
+<h1><a href="../blog.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+</div>
+<!-- Post Container -->
+<article class="post">
+<!-- Post Header -->
+<div class="post-header">
+<h1>Enabling LDAP Authentication in Hive</h1>
+<div class="post-meta">
+<div class="post-meta-item">
+<span class="meta-icon">📅</span>
+<span>May 20, 2022</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">📖</span>
+<span>1 min read</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">👁️</span>
+<span>949 views</span>
+</div>
+</div>
+</div>
+<!-- Post Content -->
+<div class="post-content">
+<div class="blogpost-body cnblogs-markdown" id="cnblogs_post_body">
+<h1 id="hive-sitexml">hive-site.xml</h1>
+<h3 id="section-0017-1">1 Access LDAP or ad domain</h3>
+<pre><code>&lt;property&gt;
+    &lt;name&gt;hive.server2.authentication&lt;/name&gt;
+    &lt;value&gt;LDAP&lt;/value&gt;
+&lt;/property&gt;
+&lt;property&gt;
+    &lt;name&gt;hive.server2.authentication.ldap.url&lt;/name&gt;
+&lt;value&gt;ldap://test.com&lt;/value&gt;
+&lt;/property&gt;
+&lt;property&gt;
+    &lt;name&gt;hive.server2.authentication.ldap.Domain&lt;/name&gt;
+    &lt;value&gt;test.com&lt;/value&gt;
+&lt;/property&gt;
+</code></pre>
+<h3 id="section-0017-2">2 When executing SQL, use the login account instead of the Hive process to start the account</h3>
+<pre><code>&lt;property&gt;
+    &lt;name&gt;hive.server2.enable.doAs&lt;/name&gt;
+    &lt;value&gt;true&lt;/value&gt;
+&lt;/property&gt;
+</code></pre>
+<h3 id="section-0017-3">3 Add account to admin</h3>
+<pre><code>&lt;property&gt;
+    &lt;name&gt;hive.users.in.admin.role&lt;/name&gt;
+    &lt;value&gt;username&lt;/value&gt;
+&lt;/property&gt;
+</code></pre>
+<h3 id="section-0017-4">4 Change to SQL authorization</h3>
+<pre><code>&lt;property&gt;
+    &lt;name&gt;hive.security.authorization.manager&lt;/name&gt;
+    &lt;value&gt;org.apache.hadoop.hive.ql.security.authorization.plugin.sqlstd.SQLStdConfOnlyAuthorizerFactory&lt;/value&gt;
+&lt;/property&gt;
+</code></pre>
+<p>After making the above changes, restart the Hive server.</p>
+<h1 id="core-sitexml">core-site.xml</h1>
+<h3 id="section-0017-5">1 Allow Hive process startup account to switch to login account</h3>
+<pre><code>&lt;property&gt;
+   &lt;name&gt;hadoop.proxyuser.hive.hosts&lt;/name&gt;
+   &lt;value&gt;*&lt;/value&gt;
+&lt;/property&gt;
+&lt;property&gt;
+   &lt;name&gt;hadoop.proxyuser.hive.groups&lt;/name&gt;
+   &lt;value&gt;*&lt;/value&gt;
+&lt;/property&gt;
+</code></pre>
+<p>After making the above changes, restart the NameNode.</p>
+<h1 id="section-0017-6">client connection</h1>
+<p>Advanced beeline, using the !connect command to connect</p>
+<pre><code># beeline
+beeline&gt; !connect jdbc:hive2://$server:10000
+Connecting to jdbc:hive2://$server:10000
+Enter username for jdbc:hive2://$server:10000: username
+Enter password for jdbc:hive2://$server:10000: *********
+Connected to: Apache Hive (version 2.3.8)
+Driver: Hive JDBC (version 2.3.8)
+Transaction isolation: TRANSACTION_REPEATABLE_READ
+ 
+0: jdbc:hive2://$server:10000&gt; set role admin
+</code></pre>
+<p>Reference:<br/>
+<a href="https://cwiki.apache.org/confluence/display/hive/languagemanual+authorization" rel="noopener nofollow" target="_blank">https://cwiki.apache.org/confluence/display/hive/languagemanual+authorization</a><br/>
+<a href="https://cwiki.apache.org/confluence/display/Hive/Setting+Up+HiveServer2#SettingUpHiveServer2-Authentication/SecurityConfiguration" rel="noopener nofollow" target="_blank">https://cwiki.apache.org/confluence/display/Hive/Setting+Up+HiveServer2#SettingUpHiveServer2-Authentication/SecurityConfiguration</a><br/>
+<a href="https://cwiki.apache.org/confluence/display/Hive/SQL+Standard+Based+Hive+Authorization" rel="noopener nofollow" target="_blank">https://cwiki.apache.org/confluence/display/Hive/SQL+Standard+Based+Hive+Authorization</a><br/>
+<a href="https://docs.cloudera.com/HDPDocuments/HDP2/HDP-2.6.5/bk_data-access/content/ch02s05s02.html" rel="noopener nofollow" target="_blank">https://docs.cloudera.com/HDPDocuments/HDP2/HDP-2.6.5/bk_data-access/content/ch02s05s02.html</a></p>
+</div>
+</div>
+<!-- Post Footer -->
+<div class="post-footer">
+<div class="post-navigation">
+<a class="nav-button" href="../blog.html">← Back to Home</a>
+<a class="nav-button" href="0018.html">Next Post →</a>
+</div>
+</div>
+</article>
+</div>
+</body>
+</html>

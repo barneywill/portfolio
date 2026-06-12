@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>ID gets through</title>
+<link href="../css/style3.css" rel="stylesheet"/>
+</head>
+<body>
+<div class="container">
+<!-- Header Navigation -->
+<div class="header">
+<h1><a href="../blog.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+</div>
+<!-- Post Container -->
+<article class="post">
+<!-- Post Header -->
+<div class="post-header">
+<h1>ID gets through</h1>
+<div class="post-meta">
+<div class="post-meta-item">
+<span class="meta-icon">📅</span>
+<span>June 07, 2019</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">📖</span>
+<span>4 min read</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">👁️</span>
+<span>557 views</span>
+</div>
+</div>
+</div>
+<!-- Post Content -->
+<div class="post-content">
+<div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<p>There are often scenarios where ID access is required, such as user ID access, etc.</p>
+<p>The abstraction of the problem is that each piece of data can parse one or more kv pairs: (id_type, id), and then multiple pieces of data matching a certain kv pair need to be merged;</p>
+<p>for example:</p>
+<blockquote>
+<p>data1: Array(('type1', 'id1'), ('type2', 'id2'))</p>
+<p>data2: Array(('type1', 'id1'), ('type3', 'id3'))</p>
+<p>data3: Array(('type2', 'id2'), ('type4', 'id4'))</p>
+</blockquote>
+<p>Among them, data1 and data2 are connected through ('type1', 'id1'), data1 and data3 are connected through ('type2', 'id2'), and finally data1, data2, and data3 are connected into one data</p>
+<blockquote>
+<p>data_union: Array(('type1', 'id1'), ('type2', 'id2'), , ('type3', 'id3'), , ('type4', 'id4'))</p>
+</blockquote>
+<p>Define basic classes and methods first</p>
+<div class="cnblogs_code">
+<pre>  <span style="color: rgba(0, 0, 255, 1)">class</span><span style="color: rgba(0, 0, 0, 1)"> Data {
+    </span><span style="color: rgba(0, 0, 255, 1)">def</span> getId : String = <span style="color: rgba(128, 0, 0, 1)">""</span><span style="color: rgba(0, 0, 0, 1)">
+  }
+
+  </span><span style="color: rgba(0, 0, 255, 1)">def</span> merge(dataArr : Array[(Map[Byte, String], Data)]) : (Map[Byte, String], Data) =<span style="color: rgba(0, 0, 0, 1)"> dataArr.head
+  </span><span style="color: rgba(0, 0, 255, 1)">def</span> generateUUID : String = <span style="color: rgba(128, 0, 0, 1)">""</span></pre>
+</div>
+<p>in</p>
+<p>1) Data represents data abstraction, and each piece of data has an id;</p>
+<p>2) Map[Byte, String] represents the kv pair in the data, that is, Map[id_type, id]</p>
+<p>3) merge merges multiple pieces of data into one piece of data;</p>
+<p>Let’s look at the simplest recursive implementation first</p>
+<div class="cnblogs_code">
+<pre>  <span style="color: rgba(0, 0, 255, 1)">def</span> unionDataRDD1(rdd : RDD[(Map[Byte, String], Data)]) : RDD[(Map[Byte, String], Data)] =<span style="color: rgba(0, 0, 0, 1)"> {
+    var result </span>= rdd.keyBy(_._2.getId).groupByKey.map(item =&gt;<span style="color: rgba(0, 0, 0, 1)"> merge(item._2.toArray)).cache
+    </span>//<span style="color: rgba(0, 0, 0, 1)">Array[id_type]
+    val idTypes </span>= result.flatMap(item =&gt;<span style="color: rgba(0, 0, 0, 1)"> item._1.keys).distinct.collect
+    idTypes.foreach(item </span>=&gt; result = result.filter(_._1.contains(item)).keyBy(_._1.get(item).get).groupByKey.map(item =&gt;<span style="color: rgba(0, 0, 0, 1)"> merge(item._2.toArray)).union(result.filter(!_._1.contains(item))))
+    result
+  }</span></pre>
+</div>
+<p> </p>
+<p>The performance is not very good, let’s look at the optimized non-recursive implementation</p>
+<div class="cnblogs_code">
+<pre>  <span style="color: rgba(0, 0, 255, 1)">def</span> unionDataRDD2(rdd : RDD[(Map[Byte, String], Data)]) : RDD[(Map[Byte, String], Data)] =<span style="color: rgba(0, 0, 0, 1)"> {
+    val result </span>= rdd.keyBy(_._2.getId).groupByKey.map(item =&gt;<span style="color: rgba(0, 0, 0, 1)"> merge(item._2.toArray)).cache
+
+    </span>//<span style="color: rgba(0, 0, 0, 1)">((id_type, id), group)
+    val idGroupRDD </span>= result.flatMap(item =&gt; {val uuid = generateUUID; item._1.toArray.map(entry =&gt;<span style="color: rgba(0, 0, 0, 1)"> (entry, uuid))}).cache
+    </span>//<span style="color: rgba(0, 0, 0, 1)">Array(Array(group))
+    val unionMap </span>= idGroupRDD.groupByKey.map(_._2.toArray.distinct).filter(_.length &gt; 1<span style="color: rgba(0, 0, 0, 1)">).collect
+      </span>//Map(group - &gt;<span style="color: rgba(0, 0, 0, 1)"> union_group)
+      .foldLeft(Map[String, String]())((resultUnion, arr) </span>=&gt;<span style="color: rgba(0, 0, 0, 1)"> {
+      val existingGroupMap </span>= arr.collect({case group : String <span style="color: rgba(0, 0, 255, 1)">if</span> resultUnion.contains(group) =&gt;<span style="color: rgba(0, 0, 0, 1)"> (group, resultUnion.get(group).get)}).toMap
+      </span><span style="color: rgba(0, 0, 255, 1)">if</span> (existingGroupMap == null || existingGroupMap.isEmpty) resultUnion ++ arr.collect({case group : String =&gt; (group - &gt;<span style="color: rgba(0, 0, 0, 1)"> arr.head)}).toMap
+      </span><span style="color: rgba(0, 0, 255, 1)">else</span> <span style="color: rgba(0, 0, 255, 1)">if</span> (existingGroupMap.size == 1) resultUnion ++ arr.collect({case group : String =&gt; (group - &gt;<span style="color: rgba(0, 0, 0, 1)"> existingGroupMap.head._2)}).toMap
+      </span><span style="color: rgba(0, 0, 255, 1)">else</span><span style="color: rgba(0, 0, 0, 1)"> {
+        val newUnionMap </span>= existingGroupMap.map(_._2).collect({case group : String =&gt; (group - &gt;<span style="color: rgba(0, 0, 0, 1)"> existingGroupMap.head._2)}).toMap
+        resultUnion.collect({case entry : (String, String) </span>=&gt; <span style="color: rgba(0, 0, 255, 1)">if</span> (newUnionMap.contains(entry._2)) (entry._1, newUnionMap.get(entry._2).get) <span style="color: rgba(0, 0, 255, 1)">else</span> entry}) ++ arr.collect({case group : String =&gt; (group - &gt;<span style="color: rgba(0, 0, 0, 1)"> newUnionMap.head._2)}).toMap
+      }
+    })
+
+    </span>//<span style="color: rgba(0, 0, 0, 1)">((id_type, id), union_group)
+    val groupMap </span>= idGroupRDD.map(item =&gt; (item._1, <span style="color: rgba(0, 0, 255, 1)">if</span> (unionMap.contains(item._2)) unionMap.get(item._2).get <span style="color: rgba(0, 0, 255, 1)">else</span> null)).filter(_._2 !=<span style="color: rgba(0, 0, 0, 1)"> null).collect.toMap
+    </span>//<span style="color: rgba(0, 0, 0, 1)">(union_group, data)
+    val groupRDDWithUnion </span>= result.map(item =&gt; (item._1.collectFirst({case entry : (Byte, String) <span style="color: rgba(0, 0, 255, 1)">if</span> groupMap.contains(entry) =&gt;<span style="color: rgba(0, 0, 0, 1)"> groupMap.get(entry).get}), item)).cache
+    groupRDDWithUnion.filter(_._1 </span>!= None).groupByKey.map(item =&gt; merge(item._2.toArray)).union(groupRDDWithUnion.filter(_._1 ==<span style="color: rgba(0, 0, 0, 1)"> None).map(_._2))
+  }</span></pre>
+</div>
+<p> </p>
+<p>Second version optimization</p>
+<div class="cnblogs_code">
+<pre>  <span style="color: rgba(0, 0, 255, 1)">def</span> unionDataRDD3(rdd : RDD[(Map[Byte, String], Data)]) : RDD[(Map[Byte, String], Data)] =<span style="color: rgba(0, 0, 0, 1)"> {
+    val result </span>= rdd.keyBy(_._2.getId).groupByKey.map(item =&gt;<span style="color: rgba(0, 0, 0, 1)"> merge(item._2.toArray)).cache
+
+    </span>//<span style="color: rgba(0, 0, 0, 1)">((id_type, id), Set[group])
+    val idGroupArray </span>= result.zipWithUniqueId().flatMap(item =&gt; item._1._1.toArray.map(entry =&gt; (entry, item._2.toString))).aggregateByKey(Set[String]())((result, item) =&gt; result + item, (result1, result2) =&gt; result1 ++<span style="color: rgba(0, 0, 0, 1)"> result2).collect
+
+    </span>//<span style="color: rgba(0, 0, 0, 1)">Array(Array(group))
+    val unionMap </span>= idGroupArray.map(_._2).foldLeft(Map[String, String]())((resultUnion, arr) =&gt;<span style="color: rgba(0, 0, 0, 1)"> {
+      val existingGroupMap </span>= arr.collect({case group : String <span style="color: rgba(0, 0, 255, 1)">if</span> resultUnion.contains(group) =&gt;<span style="color: rgba(0, 0, 0, 1)"> (group, resultUnion.get(group).get)}).toMap
+      </span><span style="color: rgba(0, 0, 255, 1)">if</span> (existingGroupMap == null || existingGroupMap.isEmpty) resultUnion ++ arr.collect({case group : String =&gt; (group - &gt;<span style="color: rgba(0, 0, 0, 1)"> arr.head)}).toMap
+      </span><span style="color: rgba(0, 0, 255, 1)">else</span> <span style="color: rgba(0, 0, 255, 1)">if</span> (existingGroupMap.size == 1) resultUnion ++ arr.collect({case group : String =&gt; (group - &gt;<span style="color: rgba(0, 0, 0, 1)"> existingGroupMap.head._2)}).toMap
+      </span><span style="color: rgba(0, 0, 255, 1)">else</span><span style="color: rgba(0, 0, 0, 1)"> {
+        val newUnionMap </span>= existingGroupMap.map(_._2).collect({case group : String =&gt; (group - &gt;<span style="color: rgba(0, 0, 0, 1)"> existingGroupMap.head._2)}).toMap
+        resultUnion.collect({case entry : (String, String) </span>=&gt; <span style="color: rgba(0, 0, 255, 1)">if</span> (newUnionMap.contains(entry._2)) (entry._1, newUnionMap.get(entry._2).get) <span style="color: rgba(0, 0, 255, 1)">else</span> entry}) ++ arr.collect({case group : String =&gt; (group - &gt;<span style="color: rgba(0, 0, 0, 1)"> newUnionMap.head._2)}).toMap
+      }
+    })
+
+    </span>//<span style="color: rgba(0, 0, 0, 1)">(id_type, (id, union_group))
+    val groupMap </span>= idGroupArray.foldLeft(Map[Byte, Map[String, String]]())((result, item) =&gt; <span style="color: rgba(0, 0, 255, 1)">if</span> (!result.contains(item._1._1)) result + (item._1._1 - &gt; Map(item._1._2 - &gt; unionMap.get(item._2.head).get)) <span style="color: rgba(0, 0, 255, 1)">else</span> result + (item._1._1 - &gt; (result.get(item._1._1).get + (item._1._2 - &gt;<span style="color: rgba(0, 0, 0, 1)"> unionMap.get(item._2.head).get))))
+    </span>//<span style="color: rgba(0, 0, 0, 1)">(union_group, order)
+    result.map(item </span>=&gt; (item._1.collectFirst({case entry : (Byte, String) <span style="color: rgba(0, 0, 255, 1)">if</span> groupMap.contains(entry._1) &amp;&amp; groupMap.get(entry._1).get.contains(entry._2) =&gt; groupMap.get(entry._1).get.get(entry._2).get}), item)).groupByKey.map(item =&gt;<span style="color: rgba(0, 0, 0, 1)"> merge(item._2.toArray))
+  }</span></pre>
+</div>
+<p> </p>
+</div>
+</div>
+<!-- Post Footer -->
+<div class="post-footer">
+<div class="post-navigation">
+<a class="nav-button" href="../blog.html">← Back to Home</a>
+<a class="nav-button" href="0123.html">Next Post →</a>
+</div>
+</div>
+</article>
+</div>
+</body>
+</html>

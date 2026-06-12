@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Service Unavailable During Marathon Application Restart</title>
+<link href="../css/style3.css" rel="stylesheet"/>
+</head>
+<body>
+<div class="container">
+<!-- Header Navigation -->
+<div class="header">
+<h1><a href="../blog.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+</div>
+<!-- Post Container -->
+<article class="post">
+<!-- Post Header -->
+<div class="post-header">
+<h1>Service Unavailable During Marathon Application Restart</h1>
+<div class="post-meta">
+<div class="post-meta-item">
+<span class="meta-icon">📅</span>
+<span>October 16, 2019</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">📖</span>
+<span>1 min read</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">👁️</span>
+<span>320 views</span>
+</div>
+</div>
+</div>
+<!-- Post Content -->
+<div class="post-content">
+<div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<p>Marathon provides a variety of health check methods</p>
+<p><picture>
+<source srcset="../img/1509647-20191016220310602-1819992976.webp" type="image/webp"/>
+<img alt="" src="../img/1509647-20191016220310602-1819992976.png"/>
+</picture></p>
+<p> </p>
+<p>Commonly used ones are TCP and HTTP.</p>
+<p>TCP checks whether the port exists. If it exists, the instance is considered healthy;</p>
+<p>HTTP checks the HTTP return code of the specified URL. If the return code is normal (2xx, 3xx), the instance is considered healthy;</p>
+<p> </p>
+<p>There will be differences between these two methods during the restart process:</p>
+<p>1) TCP: Since there is a period of time between the existence of the port and the availability of the service, the new instance is considered "healthy" during this period, but it cannot respond to the service. At the same time, the old instance is stopped, resulting in a period of time when the service is unavailable;</p>
+<p> 2) HTTP: The prerequisite for normal return code is that the service is available;</p>
+<p>If you want the restart process service to be always available, you need to use HTTP to do health checks;</p>
+<p> </p>
+</div>
+</div>
+<!-- Post Footer -->
+<div class="post-footer">
+<div class="post-navigation">
+<a class="nav-button" href="../blog.html">← Back to Home</a>
+<a class="nav-button" href="0087.html">Next Post →</a>
+</div>
+</div>
+</article>
+</div>
+</body>
+</html>

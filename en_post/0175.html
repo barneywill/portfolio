@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Cloud host mining virus phenomenon</title>
+<link href="../css/style3.css" rel="stylesheet"/>
+</head>
+<body>
+<div class="container">
+<!-- Header Navigation -->
+<div class="header">
+<h1><a href="../blog.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+</div>
+<!-- Post Container -->
+<article class="post">
+<!-- Post Header -->
+<div class="post-header">
+<h1>Cloud host mining virus phenomenon</h1>
+<div class="post-meta">
+<div class="post-meta-item">
+<span class="meta-icon">📅</span>
+<span>March 16, 2019</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">📖</span>
+<span>1 min read</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">👁️</span>
+<span>792 views</span>
+</div>
+</div>
+</div>
+<!-- Post Content -->
+<div class="post-content">
+<div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<p>Cloud host CPU usage suddenly becomes very high</p>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201903/1509647-20190316113828492-127993698.png"/></p>
+<p>Check the server and find exceptions</p>
+<h1>1 crontab</h1>
+<blockquote>
+<p># crontab - l<br/>* * * * * /tmp/.dns/y2kupdate &gt;/dev/null 2&gt;&amp;1</p>
+</blockquote>
+<h1>2 iptables</h1>
+<blockquote>
+<p># iptables - nL<br/>Chain INPUT (policy DROP)<br/>target     prot opt source               destination         <br/>ACCEPT     tcp  --  0.0.0.0/0            0.0.0.0/0            tcp dpt:6667</p>
+</blockquote>
+<h1>3 top</h1>
+<blockquote>
+<p># top<br/>...<br/>  PID USER      PR  NI    VIRT    RES    SHR S  %CPU %MEM     TIME+ COMMAND                                                                                                                                           <br/>13627 root      20   0  117936  16420    428 S 693.0  0.1  63521:36 /tmp/.       - u 45z52tWbwt5ZaQr4yQ8Na78aRihkWJJXVPtaMeHkLcKMS182U4vvLqyZaDeyZR7nDAE3Fp2WMutEVE9XwrTjA1hwHJm7E5F.10000+cn2 - o 0x36246e41:7777 - p x+</p>
+</blockquote>
+<p>P Sort by CPU<br/>c View detailed startup commands</p>
+<h1>4 port</h1>
+<blockquote>
+<p># netstat - natp|grep 13627<br/>tcp        0      0 192.168.0.56:38044      54.36.110.65:7777       ESTABLISHED 13627/.</p>
+</blockquote>
+<h1>5 confirm</h1>
+<blockquote>
+<p># curl http://54.36.110.65:7777<br/>mining server online</p>
+</blockquote>
+<p>The process will connect to the mining server</p>
+<p> </p>
+</div>
+</div>
+<!-- Post Footer -->
+<div class="post-footer">
+<div class="post-navigation">
+<a class="nav-button" href="../blog.html">← Back to Home</a>
+<a class="nav-button" href="0176.html">Next Post →</a>
+</div>
+</div>
+</article>
+</div>
+</body>
+</html>

@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Spark SQL limit implementation principle</title>
+<link href="../css/style3.css" rel="stylesheet"/>
+</head>
+<body>
+<div class="container">
+<!-- Header Navigation -->
+<div class="header">
+<h1><a href="../blog.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+</div>
+<!-- Post Container -->
+<article class="post">
+<!-- Post Header -->
+<div class="post-header">
+<h1>Spark SQL limit implementation principle</h1>
+<div class="post-meta">
+<div class="post-meta-item">
+<span class="meta-icon">📅</span>
+<span>December 21, 2018</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">📖</span>
+<span>1 min read</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">👁️</span>
+<span>3666 views</span>
+</div>
+</div>
+</div>
+<!-- Post Content -->
+<div class="post-content">
+<div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<p>The implementation of limit in Hive has been discussed before. For details, see <a href="https://www.cnblogs.com/barneywill/p/10109217.html" target="_blank" title="[Original] Experience Sharing (2) Why is it so slow for Hive to execute limit after adding conditions to a large table?">https://www.cnblogs.com/barneywill/p/10109217.html</a><br/>Let’s look at the implementation of limit in Spark SQL. First, look at the execution plan:</p>
+<blockquote>
+<p>spark-sql&gt; explain select * from test1 limit 10;<br/>== Physical Plan ==<br/>CollectLimit 10<br/>+- HiveTableScan [id#35], MetastoreRelation temp, test1<br/>Time taken: 0.201 seconds, Fetched 1 row(s)</p>
+</blockquote>
+<p>CollectLimit corresponding to limit, the corresponding implementation class is</p>
+<p>org.apache.spark.sql.execution.CollectLimitExec</p>
+<div class="cnblogs_code">
+<pre><span style="color: rgba(0, 0, 255, 1)">case</span> <span style="color: rgba(0, 0, 255, 1)">class</span> CollectLimitExec(limit: Int, child: SparkPlan) <span style="color: rgba(0, 0, 255, 1)">extends</span><span style="color: rgba(0, 0, 0, 1)"> UnaryExecNode {
+...
+  </span><span style="color: rgba(0, 0, 255, 1)">protected</span> override def doExecute(): RDD[InternalRow] =<span style="color: rgba(0, 0, 0, 1)"> {
+    val locallyLimited </span>=<span style="color: rgba(0, 0, 0, 1)"> child.execute().mapPartitionsInternal(_.take(limit))
+    val shuffled </span>= <span style="color: rgba(0, 0, 255, 1)">new</span><span style="color: rgba(0, 0, 0, 1)"> ShuffledRowRDD(
+      ShuffleExchange.prepareShuffleDependency(
+        locallyLimited, child.output, SinglePartition, serializer))
+    shuffled.mapPartitionsInternal(_.take(limit))
+  }</span></pre>
+</div>
+<p>It can be seen that the implementation is very simple. First, call SparkPlan.execute to get the RDD of the result, then take the first limit rows from each partition to get a new RDD, then turn this new RDD into a partition, and then take the first limit rows, so as to get the final result.</p>
+<p> </p>
+</div>
+</div>
+<!-- Post Footer -->
+<div class="post-footer">
+<div class="post-navigation">
+<a class="nav-button" href="../blog.html">← Back to Home</a>
+<a class="nav-button" href="0301.html">Next Post →</a>
+</div>
+</div>
+</article>
+</div>
+</body>
+</html>

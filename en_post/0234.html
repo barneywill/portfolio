@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Mesos 1 - Introduction, installation, use</title>
+<link href="../css/style3.css" rel="stylesheet"/>
+</head>
+<body>
+<div class="container">
+<!-- Header Navigation -->
+<div class="header">
+<h1><a href="../blog.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+</div>
+<!-- Post Container -->
+<article class="post">
+<!-- Post Header -->
+<div class="post-header">
+<h1>Mesos 1 - Introduction, installation, use</h1>
+<div class="post-meta">
+<div class="post-meta-item">
+<span class="meta-icon">📅</span>
+<span>February 12, 2019</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">📖</span>
+<span>4 min read</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">👁️</span>
+<span>1357 views</span>
+</div>
+</div>
+</div>
+<!-- Post Content -->
+<div class="post-content">
+<div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<p>Mesos 1.7.1</p>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201901/1509647-20190126172822486-1412113342.png"/></p>
+<p>Official: http://mesos.apache.org/</p>
+<p> </p>
+<h1>1 Introduction</h1>
+<p>Program against your datacenter like it’s a single pool of resources</p>
+<p><em>Mesos makes the data center (a huge server cluster) look like a pool of resources (CPU, memory, storage, network bandwidth, ports, etc.);</em></p>
+<p>Apache Mesos abstracts CPU, memory, storage, and other compute resources away from machines (physical or virtual), enabling fault-tolerant and elastic distributed systems to easily be built and run effectively.</p>
+<p><em>Mesos abstracts the resources (CPU, memory, storage, network bandwidth, ports, etc.) of the server (physical machine or virtual machine);</em></p>
+<p>What is Mesos? A distributed systems kernel</p>
+<p>Mesos is built using the same principles as the Linux kernel, only at a different level of abstraction. The Mesos kernel runs on every machine and provides applications (e.g., Hadoop, Spark, Kafka, Elasticsearch) with API’s for resource management and scheduling across entire datacenter and cloud environments.</p>
+<p><em>Mesos is designed and built using the same principles as the Linux kernel. Mesos runs on each server, allowing various applications (hadoop, Spark, Kafka, Elasticsearch, etc.) to manage and schedule resources through APIs, whether in the data center or the cloud;</em></p>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201902/1509647-20190212151146145-691624382.png"/></p>
+<p>The above figure shows the main components of Mesos. Mesos consists of a master daemon that manages agent daemons running on each cluster node, and Mesos frameworks that run tasks on these agents.</p>
+<p><em>Mesos consists of master and agent, where agent runs on each server in the cluster; mesos framework (applications, such as hadoop, Spark, etc.) will run tasks on the agent;</em></p>
+<h2>Role</h2>
+<h3>master &amp; agent</h3>
+<p>The master enables fine-grained sharing of resources (CPU, RAM, …) across frameworks by making them resource offers. Each resource offer contains a list of &lt;agent ID, resource1: amount1, resource2: amount2, ...&gt;. The master decides how many resources to offer to each framework according to a given organizational policy, such as fair sharing or strict priority. To support a diverse set of policies, the master employs a modular architecture that makes it easy to add new allocation modules via a plugin mechanism.</p>
+<p><em>The master implements fine-grained resource sharing between frameworks through resource offers; each resource offer contains a list, and each element looks like &lt;agent ID, resource1: amount1, resource2: amount2, ...&gt;, that is, the remaining resources of an agent; the master determines how many resources to provide for each framework based on a given grouping strategy (such as fair sharing or strict priority); the master also provides a plug-in mechanism to meet customization needs;</em></p>
+<h2>concept</h2>
+<h3>1 framework（scheduler &amp; executor）</h3>
+<p>A framework running on top of Mesos consists of two components: a scheduler that registers with the master to be offered resources, and an executor process that is launched on agent nodes to run the framework’s tasks. While the master determines how many resources are offered to each framework, the frameworks' schedulers select which of the offered resources to use. When a framework accepts offered resources, it passes to Mesos a description of the tasks it wants to run on them. In turn, Mesos launches the tasks on the corresponding agents.</p>
+<p><em>A framework runs on Mesos and consists of two parts: 1) the scheduler registers with the Mesos master and receives resource offers; 2) the executor is started on the Mesos agent to run the task;</em><br/><em>When the scheduler receives the resource offer, it can choose which resources to use (or reject). If some resources are confirmed to be used, the scheduler will send mesos a task description that it hopes to run on these resources, and then mesos will start the task on the corresponding agent;</em></p>
+<h3>2 resource offer</h3>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201902/1509647-20190212151309645-1164976095.png"/></p>
+<p> </p>
+<p>To ensure that such failures are handled appropriately, production deployments of Mesos typically use a <em>process supervisor</em> (such as systemd or supervisord) to detect when Mesos processes exit. The supervisor can be configured to restart the failed process automatically and/or to notify the cluster operator to investigate the situation.</p>
+<h1>2. Installation</h1>
+<h2>rpm installation</h2>
+<blockquote>
+<p># yum install libevent libevent-devel cyrus-sasl cyrus-sasl-devel cyrus-sasl-md5 subversion-devel</p>
+</blockquote>
+<blockquote>
+<p>$ wget http://repos.mesosphere.com/el/7/x86_64/RPMS/mesos-1.7.1-2.0.1.el7.x86_64.rpm<br/>$ rpm - ivh mesos-1.7.1-2.0.1.el7.x86_64.rpm</p>
+</blockquote>
+<h2>Manual compilation and installation</h2>
+<h3>1 Environment preparation</h3>
+<blockquote>
+<p>$ wget http://repos.fedorapeople.org/repos/dchen/apache-maven/epel-apache-maven.repo - O /etc/yum.repos.d/epel-apache-maven.repo<br/>$ yum install - y epel-release<br/>$ bash - c 'cat &gt; /etc/yum.repos.d/wandisco-svn.repo &lt;&lt;EOF<br/>[WANdiscoSVN]<br/>name=WANdisco SVN Repo 1.9<br/>enabled=1<br/>baseurl=http://opensource.wandisco.com/centos/7/svn-1.9/RPMS/\$basearch/<br/>gpgcheck=1<br/>gpgkey=http://opensource.wandisco.com/RPM-GPG-KEY-WANdisco<br/>EOF'<br/>$ yum update systemd<br/>$ yum groupinstall - y "Development Tools"<br/>$ yum install - y apache-maven python-devel python-six python-virtualenv java-1.8.0-openjdk-devel zlib-devel libcurl-devel openssl-devel cyrus-sasl-devel cyrus-sasl-md5 apr-devel subversion-devel apr-util-devel</p>
+</blockquote>
+<p>The above is the preparation process for centos7. For details on other systems, please refer to the compilation process reference.</p>
+<h3>2 Download, compile and install</h3>
+<blockquote>
+<p>$ wget http://www.apache.org/dist/mesos/1.7.1/mesos-1.7.1.tar.gz<br/>$ tar - zxf mesos-1.7.1.tar.gz<br/>$ cd mesos-1.7.1<br/>$ mkdir build<br/>$ cd build<br/>$ ../configure<br/>$ make<br/>$ make check<br/>$ make install</p>
+</blockquote>
+<h2>start up</h2>
+<h3>1 Stand-alone startup</h3>
+<blockquote>
+<p>$ ./bin/mesos-master.sh --ip=127.0.0.1 --work_dir=/var/lib/mesos<br/>$ ./bin/mesos-agent.sh --master=127.0.0.1:5050 --work_dir=/var/lib/mesos</p>
+</blockquote>
+<p>Visit http://127.0.0.1:5050</p>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201902/1509647-20190212183859168-1841356668.png"/></p>
+<p> </p>
+<h3>2 Cluster startup</h3>
+<blockquote>
+<p>$ ./bin/mesos-master.sh --work_dir=/var/lib/mesos --zk=zk://host1:port1,host2:port2,.../path<br/>$ ./bin/mesos-agent.sh --work_dir=/var/lib/mesos --master=zk://host1:port1,host2:port2,.../path</p>
+</blockquote>
+<p>If it is rpm installation, you can modify the configuration file</p>
+<blockquote>
+<p>$ vi /etc/mesos/zk </p>
+</blockquote>
+<p>Then start through service</p>
+<blockquote>
+<p># service mesos-master start<br/># service mesos-slave start</p>
+<p>or</p>
+<p># systemctl start mesos-master<br/># systemctl start mesos-slave</p>
+</blockquote>
+<p>Other configuration modifications</p>
+<blockquote>
+<p>$ vi /etc/mesos-master/quorum <br/>$ vi /etc/mesos-master/work_dir<br/>$ vi /etc/mesos-slave/work_dir</p>
+</blockquote>
+<h3>3. Start up</h3>
+<blockquote>
+<p>$ systemctl enable mesos-master<br/>$ systemctl enable mesos-slave</p>
+</blockquote>
+<p> </p>
+<p>Compilation process reference:<br/>http://mesos.apache.org/documentation/latest/building/</p>
+<p>Startup parameter reference:<br/>http://mesos.apache.org/documentation/latest/configuration/master-and-agent/<br/>http://mesos.apache.org/documentation/latest/configuration/master/<br/>http://mesos.apache.org/documentation/latest/configuration/agent/</p>
+<p><br/>Attachment: During the mesos compilation process, an error may be reported in the ../configure step.</p>
+<blockquote>
+<p>checking for python... /data/anaconda2/bin/python<br/>checking for python version... 2.7<br/>checking for python platform... linux2<br/>checking for python script directory... ${prefix}/lib/python2.7/site-packages<br/>checking for python extension module directory... ${exec_prefix}/lib/python2.7/site-packages<br/>checking for python2.7... (cached) /data/anaconda2/bin/python<br/>checking for a version of Python &gt;= '2.1.0'... yes<br/>checking for a version of Python &gt;= '2.6'... yes<br/>checking for the distutils Python package... yes<br/>checking for Python include path... - I/data/anaconda2/include/python2.7<br/>checking for Python library path... - L/data/anaconda2/lib - lpython2.7<br/>checking for Python site-packages path... /data/anaconda2/lib/python2.7/site-packages<br/>checking python extra libraries... - lpthread - ldl - lutil - lm<br/>checking python extra linking flags... - Xlinker - export-dynamic<br/>checking consistency of all components of python development environment... no<br/>configure: error: in `/data/mesos-1.7.0/build':<br/>configure: error: <br/>  Could not link test program to Python. Maybe the main Python library has been<br/>  installed in some non-standard library path. If so, pass it to configure,<br/>  via the LDFLAGS environment variable.<br/>  Example: ./configure LDFLAGS="-L/usr/non-standard-path/python/lib"<br/>  ============================================================================<br/>   ERROR!<br/>   You probably have to install the development version of the Python package<br/>   for your distribution.  The exact name of this package varies among them.<br/>  ============================================================================</p>
+<p>See `config.log' for more details</p>
+</blockquote>
+<p>At this time, check whether Python-devel is installed first, and then try configure again after installation.</p>
+<blockquote>
+<p>$ yum install python-devel</p>
+</blockquote>
+<p>If you have already installed Python-devel and still get the same error, it is most likely caused by the existence of multiple Python versions (for example, the system comes with a Python, and anaconda comes with a Python). At this time, after installing Python-devel through conda, you still get the same error.</p>
+<blockquote>
+<p>$ conda create --name dev python=[version here]</p>
+</blockquote>
+<p>It can be temporarily solved by restoring the system default Python</p>
+<blockquote>
+<p>$ vi ~/.bashrc</p>
+</blockquote>
+<p>After installing anaconda, the current user's .bashrc will be modified by default. Just comment out the following parts.</p>
+<blockquote>
+<p># added by Anaconda2 2018.12 installer<br/># &gt;&gt;&gt; conda init &gt;&gt;&gt;<br/>...<br/># &lt;&lt;&lt; conda init &lt;&lt;&lt;</p>
+</blockquote>
+<h1>Three uses</h1>
+<p>Configuration file</p>
+<p>~/.mesos/config.toml</p>
+<p>Order</p>
+<blockquote>
+<p>$ mesos help</p>
+</blockquote>
+<p>View the framework running on mesos</p>
+<blockquote>
+<p># mesos ps --master=localhost:5050</p>
+</blockquote>
+<p>Stop framework</p>
+<blockquote>
+<p># curl http://localhost:5050/master/teardown - H 'Content-Type: application/json' - d "frameworkId=2a0fb98b-f8df-44e8-965c-54ad7203fa45-0010" - v</p>
+</blockquote>
+<p> </p>
+</div>
+</div>
+<!-- Post Footer -->
+<div class="post-footer">
+<div class="post-navigation">
+<a class="nav-button" href="../blog.html">← Back to Home</a>
+<a class="nav-button" href="0235.html">Next Post →</a>
+</div>
+</div>
+</article>
+</div>
+</body>
+</html>

@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Docker 2 - deploy ZooKeeper via Docker Nginx tomcat Java Redis kibana/Elasticsearch/Logstash MySQL Kafka mesos/marathon ftp git</title>
+<link href="../css/style3.css" rel="stylesheet"/>
+</head>
+<body>
+<div class="container">
+<!-- Header Navigation -->
+<div class="header">
+<h1><a href="../blog.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+</div>
+<!-- Post Container -->
+<article class="post">
+<!-- Post Header -->
+<div class="post-header">
+<h1>Docker 2 - deploy ZooKeeper via Docker Nginx tomcat Java Redis kibana/Elasticsearch/Logstash MySQL Kafka mesos/marathon ftp git</h1>
+<div class="post-meta">
+<div class="post-meta-item">
+<span class="meta-icon">📅</span>
+<span>February 14, 2019</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">📖</span>
+<span>2 min read</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">👁️</span>
+<span>673 views</span>
+</div>
+</div>
+</div>
+<!-- Post Content -->
+<div class="post-content">
+<div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<p>Through Docker, you can build a cluster from scratch, or you can smoothly migrate existing clusters (configuration and data) to Docker deployment;</p>
+<h1>1 Docker deploy ZooKeeper</h1>
+<blockquote>
+<p># usermod -G docker zookeeper<br/># mkdir /data<br/># chown zookeeper.zookeeper /data<br/># echo 1 &gt; /data/myid<br/># su - zookeeper<br/>$ docker run --name zookeeper --restart always -p 2181:2181 -p 2888:2888 -p 3888:3888 -e ZOO_LOG4J_PROP="INFO,ROLLINGFILE" -v /var/log/zookeeper:/logs -v /conf/zoo.cfg:/conf/zoo.cfg -v /data:/data -v /etc/hosts:/etc/hosts:ro -d zookeeper</p>
+</blockquote>
+<p>Among them, zoo.cfg can use normal cluster configuration. It needs to mount configuration files, log directories, data directories, host files, etc.</p>
+<p>Notice:</p>
+<p>1) The server.* configuration in zoo.cfg can be replaced by -e ZOO_SERVERS=server.1=0.0.0.0:2888:3888 server.2=zoo2:2888:3888 server.3=zoo3:2888:3888. The local IP must be configured as 0.0.0.0, otherwise the port binding will fail during startup.</p>
+<p>2) The /data/myid file can also be replaced by -e ZOO_MY_ID=1</p>
+<p> </p>
+<p>Reference: https://docs.Docker.com/samples/library/ZooKeeper/</p>
+<p> </p>
+<h1>2 Docker deploy Nginx</h1>
+<blockquote>
+<p># docker run --name nginx --restart always -p 80:80 -v /etc/nginx/nginx.conf:/etc/nginx/nginx.conf:ro -v /etc/nginx/passwd:/etc/nginx/passwd:ro -v /var/log/nginx:/var/log/nginx -d nginx</p>
+</blockquote>
+<p>Among them, Nginx.conf can use normal configuration. It needs to mount configuration files, log directories, password files, etc. If necessary, you can also mount the html directory -v /some/content:/usr/share/Nginx/html:ro;</p>
+<p> </p>
+<p>Reference: https://docs.Docker.com/samples/library/Nginx/</p>
+<p> </p>
+<h1>3 Docker deploy tomcat</h1>
+<blockquote>
+<p>$ docker run -d --name tomcat -p 8080:8080 -v /dir/webapps:/usr/local/tomcat/webapps -v /dir/logs:/usr/local/tomcat/logs tomcat:8.0</p>
+</blockquote>
+<p> </p>
+<p>Reference: https://docs.Docker.com/samples/library/tomcat/</p>
+<p> </p>
+<h1>4 Docker deployment Redis</h1>
+<blockquote>
+<p>$ docker run -d --name redis -p 6379:6379 -v /redis/data/dir:/data redis redis-server --appendonly yes</p>
+</blockquote>
+<p> </p>
+<p>Reference: https://docs.Docker.com/samples/library/Redis/</p>
+<p> </p>
+<h1>5 Docker deploys Java applications</h1>
+<blockquote>
+<p>$ docker run -d --name java_app -v /dir/app:/app openjdk java -cp /app/app.jar app.AppClass</p>
+</blockquote>
+<p>Reference: https://hub.Docker.com/_/openjdk</p>
+<p> </p>
+<h1>6 Docker deploy elk</h1>
+<p>Since kibana, Elasticsearch, and Logstash are started with their own users internally, and the uid and gid are both 1000, in order to avoid conflicts, use a new elk group with a gid of 1000, and add all three users to the group to ensure write permissions to the directory.</p>
+<blockquote>
+<p># groupadd -g 1000 elk<br/># usermod -G elk elasticsearch<br/># usermod -G elk logstash<br/># usermod -G elk kibana<br/># chgrp elk $dir</p>
+</blockquote>
+<h2>kibana</h2>
+<blockquote>
+<p># usermod -G docker kibana<br/># su - kibana<br/>$ docker run --name kibana -p 5601:5601 -v /var/log/kibana:/usr/share/kibana/log -v /etc/kibana/kibana.yml:/usr/share/kibana/config/kibana.yml -d kibana:6.6.0</p>
+</blockquote>
+<p>Among them, kibana.yml can use normal configuration and needs to mount configuration files, etc.;</p>
+<p>If the allocated memory is too small, the kibana process may disappear directly, and no logs can be found, at least 512m or more;</p>
+<p> </p>
+<p>refer to:</p>
+<p>https://docs.docker.com/samples/library/kibana/</p>
+<p>https://www.elastic.co/guide/en/kibana/current/docker.html </p>
+<h2>elasticsearch</h2>
+<blockquote>
+<p># usermod -G docker elasticsearch<br/># chgrp -R elk /opt/lmm/es_data/<br/># su - elasticsearch<br/>$ docker run -d --name logstash -p 9600:9600 -v /var/log/nginx:/var/log/nginx:ro -v /var/log/logstash:/usr/share/logstash/logs -v /etc/logstash/GeoLite2-City.mmdb:/usr/share/logstash/config/GeoLite2-City.mmdb -v /etc/logstash/nginx_access.conf:/usr/share/logstash/pipeline/logstash.conf docker.elastic.co/logstash/logstash:6.6.0</p>
+</blockquote>
+<p>Among them, Elasticsearch.yml can be configured normally. You need to set the host IP, mount the configuration file, data directory, log directory, etc.;</p>
+<p>Notice:<br/>1) Be sure to ensure that the owner or group ID of the index directory is 1000 (set the group to 1000 here), otherwise failed to obtain node locks or AccessDeniedException will be reported.<br/>2) Be sure to set network.publish_host to the host IP</p>
+<p>The container runs Elasticsearch as user elasticsearch using uid:gid 1000:1000. Bind mounted host directories and files, such as custom_elasticsearch.yml above, need to be accessible by this user. For the data and log dirs, such as /usr/share/elasticsearch/data, write access is required as well.</p>
+<p> </p>
+<p>refer to:</p>
+<p>https://docs.docker.com/samples/library/elasticsearch/</p>
+<p>https://www.elastic.co/guide/en/elasticsearch/reference/6.6/docker.html</p>
+<h2>logstash</h2>
+<blockquote>
+<p># usermod -G docker logstash<br/># chgrp -R elk /var/log/logstash<br/># su - logstash<br/>$ docker run -d --name logstash -p 9600:9600 -v /var/log/nginx:/var/log/nginx:ro -v /var/log/logstash:/usr/share/logstash/logs -v /etc/logstash/GeoLite2-City.mmdb:/usr/share/logstash/config/GeoLite2-City.mmdb -v /etc/logstash/nginx_access.conf:/usr/share/logstash/pipeline/logstash.conf docker.elastic.co/logstash/logstash:6.6.0</p>
+</blockquote>
+<p>Among them, Logstash.conf can use normal configuration; make sure the log directory is writable;</p>
+<p>Bind-mounted configuration files will retain the same permissions and ownership within the container that they have on the host system. Be sure to set permissions such that the files will be readable and, ideally, not writeable by the container’s logstash user (UID 1000). </p>
+<p> </p>
+<p>refer to:</p>
+<p>https://docs.docker.com/samples/library/logstash/</p>
+<p>https://www.elastic.co/guide/en/logstash/current/docker-config.html</p>
+<p> </p>
+<h1>7 Docker deploy MySQL</h1>
+<blockquote>
+<p>$ docker run -d --name mysql -p 3306:3306 -v /var/lib/mysql:/var/lib/mysql -v /etc/my.cnf:/etc/mysql/my.cnf -e MYSQL_ROOT_PASSWORD=my-secret-pw mysql:5.7.25</p>
+</blockquote>
+<p>Among them, my.cnf can be configured normally, and the data directory needs to be mounted;</p>
+<p> </p>
+<p>Reference: https://docs.Docker.com/samples/library/MySQL/</p>
+<p> </p>
+<h1>8 Docker deploy Kafka</h1>
+<blockquote>
+<p>$ docker run -d --name kafka -p 9092:9092 -e KAFKA_BROKER_ID=1 -e KAFKA_LOG_DIRS=/kafka/kafka-logs -e KAFKA_ZOOKEEPER_CONNECT=$zk_server:2181 -e KAFKA_ADVERTISED_HOST_NAME=$host_ip -e KAFKA_AUTO_CREATE_TOPICS_ENABLE=true -v /data/kafka-logs:/kafka/kafka-logs wurstmeister/kafka</p>
+</blockquote>
+<p>No configuration file is used, the configuration is passed through parameters, and the data directory needs to be mounted;</p>
+<p> </p>
+<p>Reference: https://hub.Docker.com/r/wurstmeister/Kafka</p>
+<p> </p>
+<h1>9 Docker deployment mesos</h1>
+<h2>mesos-master</h2>
+<blockquote>
+<p>$ docker run -d --name mesos-master1 --net=host --restart=always -p 5050:5050 -e MESOS_HOSTNAME=192.168.0.1 -e MESOS_IP=192.168.0.1 -e MESOS_ZK=zk://192.168.0.1:2181,192.168.0.2:2181,192.168.0.3:2181/mesos -e MESOS_PORT=5050 -e MESOS_LOG_DIR=/var/log/mesos -e MESOS_QUORUM=1 -e MESOS_REGISTRY=in_memory -e MESOS_WORK_DIR=/var/lib/mesos mesoscloud/mesos-master</p>
+</blockquote>
+<p>Modify MESOS_HOSTNAME and MESOS_IP one by one</p>
+<p> </p>
+<p>Reference: https://hub.Docker.com/r/mesosphere/mesos-master</p>
+<h2>mesos-slave</h2>
+<blockquote>
+<p>$ docker run -d --name=mesos-slave1 --net=host --restart=always --pid=host --privileged=true -e MESOS_HOSTNAME=192.168.0.1 -e MESOS_IP=192.168.0.1 -e MESOS_MASTER=zk://192.168.0.1:2181,192.168.0.2:2181,192.168.0.3:2181/mesos -e MESOS_CONTAINERIZERS=docker,mesos -v /usr/bin/docker:/usr/bin/docker -v /dev:/dev -v /var/run/docker.sock:/var/run/docker.sock -v /var/log/mesos:/var/log/mesos -v /tmp/mesos:/tmp/mesos mesoscloud/mesos-slave</p>
+</blockquote>
+<p>Modify MESOS_HOSTNAME and MESOS_IP one by one</p>
+<p> </p>
+<p>Reference: https://hub.Docker.com/r/mesosphere/mesos-slave</p>
+<h2>marathon</h2>
+<blockquote>
+<p>$ docker run -d --name marathon --net host --restart=always -e MARATHON_HOSTNAME=192.168.0.1 -e MARATHON_HTTPS_ADDRESS=192.168.0.1 -e MARATHON_HTTP_ADDRESS=192.168.0.1 -e MARATHON_MASTER=zk://192.168.0.1:2181,192.168.0.2:2181,192.168.0.3:2181/mesos -e MARATHON_ZK=zk://192.168.0.1:2181,192.168.0.2:2181,192.168.0.3:2181/marathon mesoscloud/marathon</p>
+</blockquote>
+<p>Modify MARATHON_HOSTNAME, MARATHON_HTTPS_ADDRESS, MARATHON_HTTP_ADDRESS one by one</p>
+<p> </p>
+<p>Reference: https://hub.Docker.com/r/mesosphere/marathon</p>
+<p> </p>
+<h1>10 Docker deployment ftp</h1>
+<blockquote>
+<p>$ docker run -d --name ftp --restart always -v $ftp_dir:/home/vsftpd -p 20:20 -p 21:21 -p 47400-47470:47400-47470 -e FTP_USER=user -e FTP_PASS=pass -e PASV_ADDRESS=$ip bogem/ftp</p>
+</blockquote>
+<p> </p>
+<p>Reference: https://hub.Docker.com/r/bogem/ftp</p>
+<p> </p>
+<h1>11 Docker deployment git</h1>
+<p>docker pull store/gitlab/gitlab-ce:11.10.4-ce.0</p>
+<p>refer to:</p>
+<p>https://hub.docker.com/_/gitlab-community-edition?tab=description</p>
+<p> </p>
+<h1>12 others</h1>
+<p>https://docs.docker.com/samples/library/cassandra/</p>
+<p>https://docs.docker.com/samples/library/flink/</p>
+<p>https://docs.docker.com/samples/library/influxdb/</p>
+<p>https://docs.docker.com/samples/library/alpine/</p>
+<p> </p>
+</div>
+</div>
+<!-- Post Footer -->
+<div class="post-footer">
+<div class="post-navigation">
+<a class="nav-button" href="../blog.html">← Back to Home</a>
+<a class="nav-button" href="0231.html">Next Post →</a>
+</div>
+</div>
+</article>
+</div>
+</body>
+</html>

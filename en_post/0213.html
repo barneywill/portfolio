@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>CM Canary error report</title>
+<link href="../css/style3.css" rel="stylesheet"/>
+</head>
+<body>
+<div class="container">
+<!-- Header Navigation -->
+<div class="header">
+<h1><a href="../blog.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+</div>
+<!-- Post Container -->
+<article class="post">
+<!-- Post Header -->
+<div class="post-header">
+<h1>CM Canary error report</h1>
+<div class="post-meta">
+<div class="post-meta-item">
+<span class="meta-icon">📅</span>
+<span>February 19, 2019</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">📖</span>
+<span>1 min read</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">👁️</span>
+<span>5362 views</span>
+</div>
+</div>
+</div>
+<!-- Post Content -->
+<div class="post-content">
+<div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<p>CM Canary error report</p>
+<blockquote>
+<p>1 HDFS Canary<br/>Canary tests cannot create a parent directory for /tmp/.cloudera_health_monitoring_canary_files.</p>
+<p>2 Hive Metastore Canary<br/>Hive Metastore canary failed to create hue HDFS home directory.</p>
+</blockquote>
+<p>examine:</p>
+<p>1) Whether HDFS is in safemode, normal is off</p>
+<blockquote>
+<p># hdfs dfsadmin -safemode get<br/>Safe mode is OFF</p>
+</blockquote>
+<p>2) Check whether the HDFS DataNode is healthy and whether the disk space is free. You can upload files to test by yourself.</p>
+<blockquote>
+<p># hdfs dfsadmin -report</p>
+</blockquote>
+<p>3) Check the directory permissions according to the error prompt. If there is any problem, change it to 777</p>
+<blockquote>
+<p># hdfs dfs -ls /tmp<br/>Found 3 items<br/>d---------   - hdfs   supergroup          0 2019-02-18 23:57 /tmp/.cloudera_health_monitoring_canary_files<br/># hdfs dfs -chmod 777 /tmp/.cloudera_health_monitoring_canary_files</p>
+</blockquote>
+<p>If you have confirmed everything and still get an error, please restart cloudera-scm-server.</p>
+</div>
+</div>
+<!-- Post Footer -->
+<div class="post-footer">
+<div class="post-navigation">
+<a class="nav-button" href="../blog.html">← Back to Home</a>
+<a class="nav-button" href="0214.html">Next Post →</a>
+</div>
+</div>
+</article>
+</div>
+</body>
+</html>

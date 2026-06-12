@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>SSH Tunneling/Port Forwarding</title>
+<link href="../css/style3.css" rel="stylesheet"/>
+</head>
+<body>
+<div class="container">
+<!-- Header Navigation -->
+<div class="header">
+<h1><a href="../blog.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+</div>
+<!-- Post Container -->
+<article class="post">
+<!-- Post Header -->
+<div class="post-header">
+<h1>SSH Tunneling/Port Forwarding</h1>
+<div class="post-meta">
+<div class="post-meta-item">
+<span class="meta-icon">📅</span>
+<span>January 28, 2019</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">📖</span>
+<span>1 min read</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">👁️</span>
+<span>1790 views</span>
+</div>
+</div>
+</div>
+<!-- Post Content -->
+<div class="post-content">
+<div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<p>Format</p>
+<blockquote>
+<p>ssh - L &lt;local port&gt;:&lt;remote host&gt;:&lt;remote port&gt; &lt;SSH servername&gt;</p>
+</blockquote>
+<p>Example</p>
+<blockquote>
+<p># ssh - L 3307:$server2:3306 user@$server1</p>
+</blockquote>
+<p>The effect achieved is to use user to log in to $server1 and then establish a tunnel from the local 3307 port to the remote $server2:3306 port, and access the remote $server2:3306 port by accessing the local 3307 port. The premise is that $server1 can access the $server2:3306 port;</p>
+<p> </p>
+<p>Windows xshell is configured like this</p>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201901/1509647-20190128183430629-508957827.png"/></p>
+<p> </p>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201901/1509647-20190128183514692-940908997.png"/></p>
+<p> </p>
+<p>putty settings</p>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201906/1509647-20190613222455963-559148942.png"/></p>
+<p> </p>
+<p>If you need to automatically reconnect, use autossh</p>
+<blockquote>
+<p># yum install autossh</p>
+<p># autossh - M 0 - L 0.0.0.0:$local_port:127.0.0.1:$report_port $remote_user@$remote_ip - o "ServerAliveInterval 60" - o "ServerAliveCountMax 3"</p>
+</blockquote>
+<p> </p>
+</div>
+</div>
+<!-- Post Footer -->
+<div class="post-footer">
+<div class="post-navigation">
+<a class="nav-button" href="../blog.html">← Back to Home</a>
+<a class="nav-button" href="0242.html">Next Post →</a>
+</div>
+</div>
+</article>
+</div>
+</body>
+</html>

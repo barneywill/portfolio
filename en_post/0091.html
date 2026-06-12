@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Running Multiple Configuration Files in One Logstash Instance</title>
+<link href="../css/style3.css" rel="stylesheet"/>
+</head>
+<body>
+<div class="container">
+<!-- Header Navigation -->
+<div class="header">
+<h1><a href="../blog.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+</div>
+<!-- Post Container -->
+<article class="post">
+<!-- Post Header -->
+<div class="post-header">
+<h1>Running Multiple Configuration Files in One Logstash Instance</h1>
+<div class="post-meta">
+<div class="post-meta-item">
+<span class="meta-icon">📅</span>
+<span>September 22, 2019</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">📖</span>
+<span>1 min read</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">👁️</span>
+<span>2414 views</span>
+</div>
+</div>
+</div>
+<!-- Post Content -->
+<div class="post-content">
+<div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<p>One instance of logstash runs multiple configuration files. Just put all configuration files in the following directory.</p>
+<p>/usr/share/logstash/pipeline</p>
+<p>However, the default behavior is not that each configuration file runs independently, but as a whole, each input will match all filters, and then match all outputs, which may cause data to be processed incorrectly and sent to the wrong place;</p>
+<p> </p>
+<p>Solution one:</p>
+<p>Set a variable in input and judge the variable in filter and output so that each configuration file can run independently without affecting each other. Which variable should be used?</p>
+<p>Input has many common parameters by default, but only type is available. The official description is as follows:</p>
+<blockquote>
+<p>Add a <code class="literal">type</code> field to all events handled by this input.</p>
+<p>Types are used mainly for filter activation.</p>
+<p>The type is stored as part of the event itself, so you can also use the type to search for it in Kibana.</p>
+</blockquote>
+<p>The type parameter in the input will be added to the event, so it can be used in both filter and output later, but other parameters will not work. The configuration is as follows:</p>
+<div class="cnblogs_code">
+<pre><span style="color: rgba(0, 0, 0, 1)">input {
+  jdbc {
+    ...
+    type </span>=&gt; <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">some_type</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">
+  }
+}
+filter {
+  </span><span style="color: rgba(0, 0, 255, 1)">if</span> [type] == <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">some_type</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)"> {
+    ...
+  }
+}
+output {
+  </span><span style="color: rgba(0, 0, 255, 1)">if</span> [type] == <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">some_type</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)"> {
+    ...
+  }
+}</span></pre>
+</div>
+<p>If everything is normal, congratulations. If there are still problems, it is possible that there is a type field in your event, and then you assign a value, and a type array will appear (append rather than overwrite). At this time, there are two problems:</p>
+<p>1) If the if judgment in filter and output is invalid, your data will not be processed or sent out at all;</p>
+<p>2) The type field in your data has been changed;</p>
+<p> </p>
+<p>Solution two:</p>
+<p>Manually add a variable in the event, such as my_type, and configure it as follows:</p>
+<div class="cnblogs_code">
+<pre><span style="color: rgba(0, 0, 0, 1)">input {
+  jdbc {
+    ...
+    statement </span>=&gt; <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">select *, 'some_type' my_type from my_table where update_time &gt; :sql_last_value</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">
+    ...
+  }
+}
+filter {
+  </span><span style="color: rgba(0, 0, 255, 1)">if</span> [my_type] == <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">some_type</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)"> {
+    ...
+  }
+}
+output {
+  </span><span style="color: rgba(0, 0, 255, 1)">if</span> [my_type] == <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">some_type</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)"> {
+    ...
+  }
+}</span></pre>
+</div>
+<p> </p>
+<p>For other solutions, please refer to the official documents cited below, including various if judgments and the use of @metadata variables; </p>
+<p> </p>
+<p>Reference:</p>
+<p>jdbc input</p>
+<p>https://www.elastic.co/guide/en/logstash/6.3/plugins-inputs-jdbc.html</p>
+<p>event dependent configuration</p>
+<p>https://www.elastic.co/guide/en/logstash/6.7/event-dependent-configuration.html</p>
+</div>
+</div>
+<!-- Post Footer -->
+<div class="post-footer">
+<div class="post-navigation">
+<a class="nav-button" href="../blog.html">← Back to Home</a>
+<a class="nav-button" href="0092.html">Next Post →</a>
+</div>
+</div>
+</article>
+</div>
+</body>
+</html>

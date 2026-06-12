@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Hive 4 - Hive metadatabase core table structure</title>
+<link href="../css/style3.css" rel="stylesheet"/>
+</head>
+<body>
+<div class="container">
+<!-- Header Navigation -->
+<div class="header">
+<h1><a href="../blog.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+</div>
+<!-- Post Container -->
+<article class="post">
+<!-- Post Header -->
+<div class="post-header">
+<h1>Hive 4 - Hive metadatabase core table structure</h1>
+<div class="post-meta">
+<div class="post-meta-item">
+<span class="meta-icon">📅</span>
+<span>February 26, 2019</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">📖</span>
+<span>1 min read</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">👁️</span>
+<span>841 views</span>
+</div>
+</div>
+</div>
+<!-- Post Content -->
+<div class="post-content">
+<div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<h1>1 dbs</h1>
+<p>+-------+-----------------------+----------------------------------------------+------------+------------+------------+<br/>| DB_ID | DESC                  | DB_LOCATION_URI                              | NAME       | OWNER_NAME | OWNER_TYPE |<br/>+-------+-----------------------+----------------------------------------------+------------+------------+------------+<br/>key columns：DB_ID</p>
+<p>1.1 database_params</p>
+<h1>2 tbls</h1>
+<p>+--------+-------------+-------+------------------+-----------+-----------+-------+---------------------------+----------------+--------------------+--------------------+--------------------+<br/>| TBL_ID | CREATE_TIME | DB_ID | LAST_ACCESS_TIME | OWNER     | RETENTION | SD_ID | TBL_NAME                  | TBL_TYPE       | VIEW_EXPANDED_TEXT | VIEW_ORIGINAL_TEXT | IS_REWRITE_ENABLED |<br/>+--------+-------------+-------+------------------+-----------+-----------+-------+---------------------------+----------------+--------------------+--------------------+--------------------+<br/>key columns：TBL_ID, DB_ID, SD_ID</p>
+<p>2.1 table_params</p>
+<p>+--------+-----------------------------+-------------+<br/>| TBL_ID | PARAM_KEY                   | PARAM_VALUE |<br/>+--------+-----------------------------+-------------+</p>
+<h1>3 partitions</h1>
+<p>+---------+-------------+------------------+-------------+-------+--------+<br/>| PART_ID | CREATE_TIME | LAST_ACCESS_TIME | PART_NAME   | SD_ID | TBL_ID |<br/>+---------+-------------+------------------+-------------+-------+--------+<br/>key columns：PART_ID, SD_ID, TBL_ID</p>
+<p>3.1 partition_params</p>
+<h1>4 sds</h1>
+<p>+-------+-------+--------------------------------------------------+---------------+---------------------------+-----------------------------------------------------------------+-------------+------------------------------------------------------------+----------+<br/>| SD_ID | CD_ID | INPUT_FORMAT                                     | IS_COMPRESSED | IS_STOREDASSUBDIRECTORIES | LOCATION                                                        | NUM_BUCKETS | OUTPUT_FORMAT                                              | SERDE_ID |<br/>+-------+-------+--------------------------------------------------+---------------+---------------------------+-----------------------------------------------------------------+-------------+------------------------------------------------------------+----------+<br/>key columns：SD_ID, CD_ID, SERDE_ID</p>
+<p>4.1 sd_params</p>
+<h1>5 serdes</h1>
+<p>+----------+------+----------------------------------------------------+<br/>| SERDE_ID | NAME | SLIB                                               |<br/>+----------+------+----------------------------------------------------+<br/>key columns：SERDE_ID</p>
+<p>5.1 serde_params</p>
+<h1>6 cds</h1>
+<p>+-------+<br/>| CD_ID |<br/>+-------+<br/>key columns：CD_ID</p>
+<h1>7 column2_v2</h1>
+<p>+-------+---------+-------------+-----------+-------------+<br/>| CD_ID | COMMENT | COLUMN_NAME | TYPE_NAME | INTEGER_IDX |<br/>+-------+---------+-------------+-----------+-------------+<br/>key columns：CD_ID</p>
+<h1>8 version</h1>
+<p>+--------+----------------+---------------------------------------+<br/>| VER_ID | SCHEMA_VERSION | VERSION_COMMENT                       |<br/>+--------+----------------+---------------------------------------+</p>
+<h1>9 all tables</h1>
+<p>+--------------------------------+<br/>| aux_table                      |<br/>| bucketing_cols                 |<br/>| cds                            |<br/>| columns_v2                     |<br/>| compaction_queue               |<br/>| completed_compactions          |<br/>| completed_txn_components       |<br/>| database_params                |<br/>| db_privs                       |<br/>| dbs                            |<br/>| delegation_tokens              |<br/>| func_ru                        |<br/>| funcs                          |<br/>| global_privs                   |<br/>| hadoopfslsr                    |<br/>| hive_locks                     |<br/>| idxs                           |<br/>| index_params                   |<br/>| key_constraints                |<br/>| master_keys                    |<br/>| next_compaction_queue_id       |<br/>| next_lock_id                   |<br/>| next_txn_id                    |<br/>| notification_log               |<br/>| notification_sequence          |<br/>| nucleus_tables                 |<br/>| part_col_privs                 |<br/>| part_col_stats                 |<br/>| part_privs                     |<br/>| partition_events               |<br/>| partition_key_vals             |<br/>| partition_keys                 |<br/>| partition_params               |<br/>| partitions                     |<br/>| role_map                       |<br/>| roles                          |<br/>| sd_params                      |<br/>| sds                            |<br/>| sequence_table                 |<br/>| serde_params                   |<br/>| serdes                         |<br/>| skewed_col_names               |<br/>| skewed_col_value_loc_map       |<br/>| skewed_string_list             |<br/>| skewed_string_list_values      |<br/>| skewed_values                  |<br/>| sort_cols                      |<br/>| tab_col_stats                  |<br/>| table_params                   |<br/>| tbl_col_privs                  |<br/>| tbl_privs                      |<br/>| tbls                           |<br/>| txn_components                 |<br/>| txns                           |<br/>| type_fields                    |<br/>| types                          |<br/>| v_du_sh                        |<br/>| version                        |<br/>| write_set                      |<br/>+--------------------------------+</p>
+</div>
+</div>
+<!-- Post Footer -->
+<div class="post-footer">
+<div class="post-navigation">
+<a class="nav-button" href="../blog.html">← Back to Home</a>
+<a class="nav-button" href="0204.html">Next Post →</a>
+</div>
+</div>
+</article>
+</div>
+</body>
+</html>

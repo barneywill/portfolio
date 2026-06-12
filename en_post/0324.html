@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>HDFS 2 - HDFS copy number check and replication logic</title>
+<link href="../css/style3.css" rel="stylesheet"/>
+</head>
+<body>
+<div class="container">
+<!-- Header Navigation -->
+<div class="header">
+<h1><a href="../blog.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+</div>
+<!-- Post Container -->
+<article class="post">
+<!-- Post Header -->
+<div class="post-header">
+<h1>HDFS 2 - HDFS copy number check and replication logic</h1>
+<div class="post-meta">
+<div class="post-meta-item">
+<span class="meta-icon">📅</span>
+<span>December 13, 2018</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">📖</span>
+<span>4 min read</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">👁️</span>
+<span>2762 views</span>
+</div>
+</div>
+</div>
+<!-- Post Content -->
+<div class="post-content">
+<div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<p>HDFS will periodically check whether any files are missing copies and trigger the copy replication logic to reach the configured number of copies.</p>
+<blockquote>
+<p>  &lt;property&gt;</p>
+<p>    &lt;name&gt;dfs.replication&lt;/name&gt;</p>
+<p>    &lt;value&gt;3&lt;/value&gt;</p>
+<p>  &lt;/property&gt;</p>
+</blockquote>
+<p>The specific implementation is to start the thread ReplicationMonitor in BlockManager to complete:</p>
+<p>org.apache.hadoop.hdfs.server.blockmanagement.BlockManager</p>
+<div class="cnblogs_code">
+<pre>  <span style="color: rgba(0, 128, 0, 1)">/**</span><span style="color: rgba(0, 128, 0, 1)">
+   * Periodically calls computeReplicationWork().
+   </span><span style="color: rgba(0, 128, 0, 1)">*/</span>
+  <span style="color: rgba(0, 0, 255, 1)">private</span> <span style="color: rgba(0, 0, 255, 1)">class</span> ReplicationMonitor <span style="color: rgba(0, 0, 255, 1)">implements</span><span style="color: rgba(0, 0, 0, 1)"> Runnable {
+
+    @Override
+    </span><span style="color: rgba(0, 0, 255, 1)">public</span> <span style="color: rgba(0, 0, 255, 1)">void</span><span style="color: rgba(0, 0, 0, 1)"> run() {
+      </span><span style="color: rgba(0, 0, 255, 1)">while</span><span style="color: rgba(0, 0, 0, 1)"> (namesystem.isRunning()) {
+        </span><span style="color: rgba(0, 0, 255, 1)">try</span><span style="color: rgba(0, 0, 0, 1)"> {
+          </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> Process replication work only when active NN is out of safe mode.</span>
+          <span style="color: rgba(0, 0, 255, 1)">if</span><span style="color: rgba(0, 0, 0, 1)"> (namesystem.isPopulatingReplQueues()) {
+            computeDatanodeWork();
+            processPendingReplications();
+          }
+          Thread.sleep(replicationRecheckInterval);
+        } </span><span style="color: rgba(0, 0, 255, 1)">catch</span> (Throwable t) {</pre>
+</div>
+<p>Note: The sleep interval replicationRecheckInterval takes the configuration dfs.NameNode.replication.interval. The default is 3, which is 3s.</p>
+<p> </p>
+<div class="cnblogs_code">
+<pre>  <span style="color: rgba(0, 128, 0, 1)">/**</span><span style="color: rgba(0, 128, 0, 1)">
+   * Compute block replication and block invalidation work that can be scheduled
+   * on data-nodes. The datanode will be informed of this work at the next
+   * heartbeat.
+   * 
+   * </span><span style="color: rgba(128, 128, 128, 1)">@return</span><span style="color: rgba(0, 128, 0, 1)"> number of blocks scheduled for replication or removal.
+   </span><span style="color: rgba(0, 128, 0, 1)">*/</span>
+  <span style="color: rgba(0, 0, 255, 1)">int</span><span style="color: rgba(0, 0, 0, 1)"> computeDatanodeWork() {
+    </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> Blocks should not be replicated or removed if in safe mode.
+    </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> It's OK to check safe mode here w/o holding lock, in the worst
+    </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> case extra replications will be scheduled, and these will get
+    </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> fixed up later.</span>
+    <span style="color: rgba(0, 0, 255, 1)">if</span><span style="color: rgba(0, 0, 0, 1)"> (namesystem.isInSafeMode()) {
+      </span><span style="color: rgba(0, 0, 255, 1)">return</span> 0<span style="color: rgba(0, 0, 0, 1)">;
+    }
+
+    </span><span style="color: rgba(0, 0, 255, 1)">final</span> <span style="color: rgba(0, 0, 255, 1)">int</span> numlive =<span style="color: rgba(0, 0, 0, 1)"> heartbeatManager.getLiveDatanodeCount();
+    </span><span style="color: rgba(0, 0, 255, 1)">final</span> <span style="color: rgba(0, 0, 255, 1)">int</span> blocksToProcess =<span style="color: rgba(0, 0, 0, 1)"> numlive
+        </span>* <span style="color: rgba(0, 0, 255, 1)">this</span><span style="color: rgba(0, 0, 0, 1)">.blocksReplWorkMultiplier;
+    </span><span style="color: rgba(0, 0, 255, 1)">final</span> <span style="color: rgba(0, 0, 255, 1)">int</span> nodesToProcess = (<span style="color: rgba(0, 0, 255, 1)">int</span><span style="color: rgba(0, 0, 0, 1)">) Math.ceil(numlive
+        </span>* <span style="color: rgba(0, 0, 255, 1)">this</span><span style="color: rgba(0, 0, 0, 1)">.blocksInvalidateWorkPct);
+
+    </span><span style="color: rgba(0, 0, 255, 1)">int</span> workFound = <span style="color: rgba(0, 0, 255, 1)">this</span>.computeReplicationWork(blocksToProcess);</pre>
+</div>
+<p>Note: Multiple blocksReplWorkMultiplier takes the configuration dfs.NameNode.replication.work.multiplier.per.iteration, and the default is 2, that is, the number of datanodes processed each time * 2 blocks;</p>
+<p> </p>
+<div class="cnblogs_code">
+<pre>  <span style="color: rgba(0, 128, 0, 1)">/**</span><span style="color: rgba(0, 128, 0, 1)">
+   * Scan blocks in {</span><span style="color: rgba(128, 128, 128, 1)">@link</span><span style="color: rgba(0, 128, 0, 1)"> #neededReplications} and assign replication
+   * work to data-nodes they belong to.
+   *
+   * The number of process blocks equals either twice the number of live
+   * data-nodes or the number of under-replicated blocks whichever is less.
+   *
+   * </span><span style="color: rgba(128, 128, 128, 1)">@return</span><span style="color: rgba(0, 128, 0, 1)"> number of blocks scheduled for replication during this iteration.
+   </span><span style="color: rgba(0, 128, 0, 1)">*/</span>
+  <span style="color: rgba(0, 0, 255, 1)">int</span> computeReplicationWork(<span style="color: rgba(0, 0, 255, 1)">int</span><span style="color: rgba(0, 0, 0, 1)"> blocksToProcess) {
+    List</span>&lt;List&lt;Block&gt;&gt; blocksToReplicate = <span style="color: rgba(0, 0, 255, 1)">null</span><span style="color: rgba(0, 0, 0, 1)">;
+    namesystem.writeLock();
+    </span><span style="color: rgba(0, 0, 255, 1)">try</span><span style="color: rgba(0, 0, 0, 1)"> {
+      </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> Choose the blocks to be replicated</span>
+      blocksToReplicate =<span style="color: rgba(0, 0, 0, 1)"> neededReplications
+          .chooseUnderReplicatedBlocks(blocksToProcess);
+    } </span><span style="color: rgba(0, 0, 255, 1)">finally</span><span style="color: rgba(0, 0, 0, 1)"> {
+      namesystem.writeUnlock();
+    }
+    </span><span style="color: rgba(0, 0, 255, 1)">return</span><span style="color: rgba(0, 0, 0, 1)"> computeReplicationWorkForBlocks(blocksToReplicate);
+  }
+
+  </span><span style="color: rgba(0, 0, 255, 1)">int</span> computeReplicationWorkForBlocks(List&lt;List&lt;Block&gt;&gt;<span style="color: rgba(0, 0, 0, 1)"> blocksToReplicate) {
+...
+          </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> Add block to the to be replicated list</span>
+<span style="color: rgba(0, 0, 0, 1)">          rw.srcNode.addBlockToBeReplicated(block, targets);
+          scheduledWork</span>++;</pre>
+</div>
+<p>Note: The specific process is to add the block to be copied to the corresponding original DataNode;</p>
+<p> </p>
+<p>Look at the DatanodeManager code below:</p>
+<p>org.apache.hadoop.hdfs.server.blockmanagement.DatanodeManager</p>
+<div class="cnblogs_code">
+<pre>  <span style="color: rgba(0, 0, 255, 1)">public</span><span style="color: rgba(0, 0, 0, 1)"> DatanodeCommand[] handleHeartbeat(DatanodeRegistration nodeReg,
+      StorageReport[] reports, </span><span style="color: rgba(0, 0, 255, 1)">final</span><span style="color: rgba(0, 0, 0, 1)"> String blockPoolId,
+      </span><span style="color: rgba(0, 0, 255, 1)">long</span> cacheCapacity, <span style="color: rgba(0, 0, 255, 1)">long</span> cacheUsed, <span style="color: rgba(0, 0, 255, 1)">int</span><span style="color: rgba(0, 0, 0, 1)"> xceiverCount, 
+      </span><span style="color: rgba(0, 0, 255, 1)">int</span> maxTransfers, <span style="color: rgba(0, 0, 255, 1)">int</span><span style="color: rgba(0, 0, 0, 1)"> failedVolumes
+      ) </span><span style="color: rgba(0, 0, 255, 1)">throws</span><span style="color: rgba(0, 0, 0, 1)"> IOException {
+...
+        </span><span style="color: rgba(0, 0, 255, 1)">final</span> List&lt;DatanodeCommand&gt; cmds = <span style="color: rgba(0, 0, 255, 1)">new</span> ArrayList&lt;DatanodeCommand&gt;<span style="color: rgba(0, 0, 0, 1)">();
+        </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)">check pending replication</span>
+        List&lt;BlockTargetPair&gt; pendingList =<span style="color: rgba(0, 0, 0, 1)"> nodeinfo.getReplicationCommand(
+              maxTransfers);
+        </span><span style="color: rgba(0, 0, 255, 1)">if</span> (pendingList != <span style="color: rgba(0, 0, 255, 1)">null</span><span style="color: rgba(0, 0, 0, 1)">) {
+          cmds.add(</span><span style="color: rgba(0, 0, 255, 1)">new</span><span style="color: rgba(0, 0, 0, 1)"> BlockCommand(DatanodeProtocol.DNA_TRANSFER, blockPoolId,
+              pendingList));
+        }</span></pre>
+</div>
+<p>Note: Then when processing the heartbeat in the DatanodeManager, the copied block information is sent to the corresponding original DataNode; the value of maxTransfer is</p>
+<div class="cnblogs_code">
+<pre>      <span style="color: rgba(0, 0, 255, 1)">final</span> <span style="color: rgba(0, 0, 255, 1)">int</span> maxTransfer =<span style="color: rgba(0, 0, 0, 1)"> blockManager.getMaxReplicationStreams()
+          </span>- xmitsInProgress;</pre>
+</div>
+<p>getMaxReplicationStreams takes the configuration dfs.NameNode.replication.max-streams, the default is 2, that is, a DataNode can have up to 2 blocks replicating at the same time;</p>
+<p> </p>
+</div>
+</div>
+<!-- Post Footer -->
+<div class="post-footer">
+<div class="post-navigation">
+<a class="nav-button" href="../blog.html">← Back to Home</a>
+<a class="nav-button" href="0325.html">Next Post →</a>
+</div>
+</div>
+</article>
+</div>
+</body>
+</html>

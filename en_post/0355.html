@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Oozie vs Azkaban</title>
+<link href="../css/style3.css" rel="stylesheet"/>
+</head>
+<body>
+<div class="container">
+<!-- Header Navigation -->
+<div class="header">
+<h1><a href="../blog.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+</div>
+<!-- Post Container -->
+<article class="post">
+<!-- Post Header -->
+<div class="post-header">
+<h1>Oozie vs Azkaban</h1>
+<div class="post-meta">
+<div class="post-meta-item">
+<span class="meta-icon">📅</span>
+<span>November 02, 2018</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">📖</span>
+<span>1 min read</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">👁️</span>
+<span>1320 views</span>
+</div>
+</div>
+</div>
+<!-- Post Content -->
+<div class="post-content">
+<div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<h1>generalize</h1>
+<p>Azkaban is a very lightweight open source scheduling framework, suitable for secondary development, but it cannot be used directly in production environments. It has fatal flaws (for example, AzkabanWebServer is a single point and has not been repaired for more than a year). In some scenarios, its behavior is simple and crude (such as restarting AzkabanExecutorSe rver will cause all processes running on the server to fail), and manual intervention is often required. To reach the reliability level of the production environment, at least a lot of secondary development, and the official code is updated very quickly. Merging the code has a great risk of conflict. It is suitable for some small companies that do not have high reliability requirements and can get started quickly. It is not recommended to use;</p>
+<p> </p>
+<p>As a top-level Apache project, Oozie is widely used, has rich functions, high code quality, is mature and reliable, but the code and deployment are relatively complex, so it is recommended to use it;</p>
+<p> </p>
+<table class="confluenceTable">
+<tbody>
+<tr>
+<td class="confluenceTd">
+<p><strong> </strong></p>
+</td>
+<td class="confluenceTd">
+<p><strong>Oozie</strong></p>
+</td>
+<td class="confluenceTd">
+<p><strong>Azkaban</strong></p>
+</td>
+</tr>
+<tr>
+<td class="confluenceTd">
+<p><strong>Version</strong></p>
+</td>
+<td class="confluenceTd">
+<p><strong>4.3</strong></p>
+</td>
+<td class="confluenceTd">
+<p><strong>3.45</strong></p>
+</td>
+</tr>
+<tr>
+<td class="confluenceTd">
+<p><strong>development language</strong></p>
+</td>
+<td class="confluenceTd">
+<p>Java</p>
+</td>
+<td class="confluenceTd">
+<p>Java</p>
+</td>
+</tr>
+<tr>
+<td class="confluenceTd">
+<p><strong>Task configuration</strong></p>
+</td>
+<td class="confluenceTd">
+<p>XML file (stored in HDFS)</p>
+<p>Properties file</p>
+</td>
+<td class="confluenceTd">
+<p>Properties file (make it into Zip and store it in DB after uploading)</p>
+</td>
+</tr>
+<tr>
+<td class="confluenceTd">
+<p><strong>Add task</strong></p>
+</td>
+<td class="confluenceTd">
+<p>After HDFS uploads the XML file, the client submits it through the Properties file</p>
+</td>
+<td class="confluenceTd">
+<p>webuploadZip</p>
+<p>AJAX upload Zip</p>
+</td>
+</tr>
+<tr>
+<td class="confluenceTd">
+<p><strong>task run</strong></p>
+</td>
+<td class="confluenceTd">
+<p>Yarn</p>
+</td>
+<td class="confluenceTd">
+<p>AzkabanExecutorServer execution</p>
+</td>
+</tr>
+<tr>
+<td class="confluenceTd">
+<p><strong>Allocation granularity</strong></p>
+</td>
+<td class="confluenceTd">
+<p>Task</p>
+</td>
+<td class="confluenceTd">
+<p>Workflow</p>
+</td>
+</tr>
+<tr>
+<td class="confluenceTd">
+<p><strong>Retry on failure</strong></p>
+</td>
+<td class="confluenceTd">
+<p>support</p>
+</td>
+<td class="confluenceTd">
+<p>support</p>
+</td>
+</tr>
+<tr>
+<td class="confluenceTd">
+<p><strong>Scalability</strong></p>
+</td>
+<td class="confluenceTd">
+<p>OK, support service expansion and task expansion</p>
+</td>
+<td class="confluenceTd">
+<p>Good, supports plug-in and task expansion</p>
+</td>
+</tr>
+<tr>
+<td class="confluenceTd">
+<p><strong>interface</strong></p>
+</td>
+<td class="confluenceTd">
+<p>command line</p>
+<p>Java API</p>
+</td>
+<td class="confluenceTd">
+<p>Web page</p>
+<p>AJAX API</p>
+</td>
+</tr>
+<tr>
+<td class="confluenceTd">
+<p><strong>Supported task types</strong></p>
+</td>
+<td class="confluenceTd">
+<p>HDFS、MapReduce、Java、Shell、SSH、Pig、Hive、E-Mail、Sub-Workflow、Sqoop、Distcp</p>
+</td>
+<td class="confluenceTd">
+<p>Shell、Java</p>
+<p>Others require plug-in support</p>
+</td>
+</tr>
+<tr>
+<td class="confluenceTd">
+<p><strong>deploy</strong></p>
+</td>
+<td class="confluenceTd">
+<p>relatively complex</p>
+</td>
+<td class="confluenceTd">
+<p>Simple</p>
+</td>
+</tr>
+<tr>
+<td class="confluenceTd">
+<p><strong>GUI</strong></p>
+</td>
+<td class="confluenceTd">
+<p>Open source Hue provides GUI mode for editing process definitions</p>
+</td>
+<td class="confluenceTd">
+<p>Does not provide GUI editing process definition</p>
+</td>
+</tr>
+<tr>
+<td class="confluenceTd">
+<p><strong>reliability</strong></p>
+</td>
+<td class="confluenceTd">
+<p>reliable</p>
+<p>Implementing HA through ZooKeeper</p>
+</td>
+<td class="confluenceTd">
+<p>unreliable</p>
+<p>AzkabanWebServer is a single point. The community mentioned this problem in March 2017, but it has not been fixed after more than a year.</p>
+<p><a href="https://github.com/azkaban/azkaban/issues/952" rel="noopener nofollow">https://github.com/azkaban/azkaban/issues/952</a></p>
+</td>
+</tr>
+<tr>
+<td class="confluenceTd">
+<p><strong>Restart impact</strong></p>
+</td>
+<td class="confluenceTd">
+<p>none</p>
+</td>
+<td class="confluenceTd">
+<p>Restarting AzkabanExecutorServer will cause all processes running on the server to fail, and may also require refreshing the executors status.</p>
+</td>
+</tr>
+<tr>
+<td class="confluenceTd">
+<p><strong>Code quality</strong></p>
+</td>
+<td class="confluenceTd">
+<p>very good</p>
+</td>
+<td class="confluenceTd">
+<p>General, and there are many TODOs in the code</p>
+</td>
+</tr>
+<tr>
+<td class="confluenceTd">
+<p><strong>code update</strong></p>
+</td>
+<td class="confluenceTd">
+<p>slow</p>
+</td>
+<td class="confluenceTd">
+<p>Soon, there will be many small versions</p>
+</td>
+</tr>
+<tr>
+<td class="confluenceTd">
+<p><strong>Risk of repeated tasks</strong></p>
+</td>
+<td class="confluenceTd">
+<p>none</p>
+</td>
+<td class="confluenceTd">
+<p>have</p>
+</td>
+</tr>
+<tr>
+<td class="confluenceTd" colspan="1">
+<p><strong>SLA</strong></p>
+</td>
+<td class="confluenceTd" colspan="1">
+<p>support</p>
+</td>
+<td class="confluenceTd" colspan="1">
+<p>support</p>
+</td>
+</tr>
+<tr>
+<td class="confluenceTd">
+<p><strong>monitor</strong></p>
+</td>
+<td class="confluenceTd">
+<p>web-services API</p>
+<p>instrumentation log</p>
+</td>
+<td class="confluenceTd">
+<p>Not supported</p>
+</td>
+</tr>
+<tr>
+<td class="confluenceTd">
+<p><strong>Process status callback</strong></p>
+</td>
+<td class="confluenceTd">
+<p>JMS</p>
+<p>or</p>
+<p>oozie.coord.action.notification.url</p>
+<p><a href="http://oozie.wf" rel="noopener nofollow">oozie.wf</a>.workflow.notification.url</p>
+<p><a href="http://oozie.wf" rel="noopener nofollow">oozie.wf</a>.action.notification.url</p>
+</td>
+<td class="confluenceTd">
+<p>Not supported</p>
+<p> </p>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<!-- Post Footer -->
+<div class="post-footer">
+<div class="post-navigation">
+<a class="nav-button" href="../blog.html">← Back to Home</a>
+<a class="nav-button" href="0356.html">Next Post →</a>
+</div>
+</div>
+</article>
+</div>
+</body>
+</html>

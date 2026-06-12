@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Dubbo monitor service iowait is high and load is high</title>
+<link href="../css/style3.css" rel="stylesheet"/>
+</head>
+<body>
+<div class="container">
+<!-- Header Navigation -->
+<div class="header">
+<h1><a href="../blog.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+</div>
+<!-- Post Container -->
+<article class="post">
+<!-- Post Header -->
+<div class="post-header">
+<h1>Dubbo monitor service iowait is high and load is high</h1>
+<div class="post-meta">
+<div class="post-meta-item">
+<span class="meta-icon">📅</span>
+<span>November 07, 2018</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">📖</span>
+<span>1 min read</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">👁️</span>
+<span>1274 views</span>
+</div>
+</div>
+</div>
+<!-- Post Content -->
+<div class="post-content">
+<div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<h1>1 question</h1>
+<p>The status of the server where Dubbo monitor is located is abnormal. iowait has always been very high, and load has also been very high. The monitoring is as follows:</p>
+<p>iowait is shown in the figure:</p>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201811/1509647-20181107170337744-1476229994.png"/></p>
+<p>load as shown:</p>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201811/1509647-20181107170418265-2073144103.png"/></p>
+<p> </p>
+<h1>2 Analysis</h1>
+<p>You can use the iotop command to check the disk IO situation in the current system and the disk IO occupied by the process.</p>
+<p> <img alt="" src="https://img2018.cnblogs.com/blog/1509647/201811/1509647-20181107170601722-211892826.png"/></p>
+<p>From this, you can locate the pid of the io process;</p>
+<p>pass</p>
+<blockquote>
+<p>cat /proc/${pid}/io</p>
+</blockquote>
+<p>You can check the specific reading and writing status of a process;</p>
+<p>pass</p>
+<blockquote>
+<p>ps aux|grep ${pid}</p>
+</blockquote>
+<p>You can find the specific commands of this process;</p>
+<p> </p>
+<p>Use the above command to locate the monitor process whose process is dubbo. Use jstack to print the thread stack and find that the process in RUNNABLE is except</p>
+<blockquote>
+<p>java.lang.Thread.State: RUNNABLE</p>
+<p>       at sun.nio.ch.EPollArrayWrapper.epollWait(Native Method)</p>
+</blockquote>
+<p> </p>
+<p>In addition, there are two threads that are very suspicious</p>
+<p> </p>
+<blockquote>
+<p>"DubboMonitorTimer-thread-1" daemon prio=10 tid=0x00007f53b0593000 nid=0x363e runnable [0x00007f53ac36d000]</p>
+<p>   java.lang.Thread.State: RUNNABLE</p>
+<p>       at java.io.FileInputStream.readBytes(Native Method)</p>
+<p>       at java.io.FileInputStream.read(FileInputStream.java:272)</p>
+<p>       at sun.nio.cs.StreamDecoder.readBytes(StreamDecoder.java:283)</p>
+<p>       at sun.nio.cs.StreamDecoder.implRead(StreamDecoder.java:325)</p>
+<p>       at sun.nio.cs.StreamDecoder.read(StreamDecoder.java:177)</p>
+<p>       - locked &lt;0x0000000779d506f8&gt; (a java.io.FileReader)</p>
+<p>       at java.io.InputStreamReader.read(InputStreamReader.java:184)</p>
+<p>       at java.io.BufferedReader.fill(BufferedReader.java:154)</p>
+<p>       at java.io.BufferedReader.readLine(BufferedReader.java:317)</p>
+<p>       - locked &lt;0x0000000779d506f8&gt; (a java.io.FileReader)</p>
+<p>       at java.io.BufferedReader.readLine(BufferedReader.java:382)</p>
+<p>       at com.alibaba.dubbo.monitor.simple.SimpleMonitorService.appendData(SimpleMonitorService.java:322)</p>
+<p>       at com.alibaba.dubbo.monitor.simple.SimpleMonitorService.draw(SimpleMonitorService.java:263)</p>
+<p>       at com.alibaba.dubbo.monitor.simple.SimpleMonitorService.access$300(SimpleMonitorService.java:64)</p>
+<p>       at com.alibaba.dubbo.monitor.simple.SimpleMonitorService$2.run(SimpleMonitorService.java:137)</p>
+<p>       at java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:471)</p>
+<p>       at java.util.concurrent.FutureTask.runAndReset(FutureTask.java:304)</p>
+<p>       at java.util.concurrent.ScheduledThreadPoolExecutor$ScheduledFutureTask.access$301(ScheduledThreadPoolExecutor.java:178)</p>
+<p>       at java.util.concurrent.ScheduledThreadPoolExecutor$ScheduledFutureTask.run(ScheduledThreadPoolExecutor.java:293)</p>
+<p>       at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1145)</p>
+<p>       at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:615)</p>
+<p>       at java.lang.Thread.run(Thread.java:744)</p>
+<p> </p>
+<p>   Locked ownable synchronizers:</p>
+<p>       - &lt;0x0000000788104268&gt; (a java.util.concurrent.ThreadPoolExecutor$Worker)</p>
+</blockquote>
+<p> </p>
+<blockquote>
+<p>"DubboMonitorAsyncWriteLogThread" daemon prio=10 tid=0x00007f53b05ba000 nid=0x363d runnable [0x00007f53ac3af000]</p>
+<p>   java.lang.Thread.State: RUNNABLE</p>
+<p>       at java.io.FileOutputStream.writeBytes(Native Method)</p>
+<p>       at java.io.FileOutputStream.write(FileOutputStream.java:345)</p>
+<p>       at sun.nio.cs.StreamEncoder.writeBytes(StreamEncoder.java:221)</p>
+<p>       at sun.nio.cs.StreamEncoder.implFlushBuffer(StreamEncoder.java:291)</p>
+<p>       at sun.nio.cs.StreamEncoder.implFlush(StreamEncoder.java:295)</p>
+<p>       at sun.nio.cs.StreamEncoder.flush(StreamEncoder.java:141)</p>
+<p>       - locked &lt;0x000000077a028918&gt; (a java.io.FileWriter)</p>
+<p>       at java.io.OutputStreamWriter.flush(OutputStreamWriter.java:229)</p>
+<p>       at com.alibaba.dubbo.monitor.simple.SimpleMonitorService.write(SimpleMonitorService.java:213)</p>
+<p>       at com.alibaba.dubbo.monitor.simple.SimpleMonitorService.access$100(SimpleMonitorService.java:64)</p>
+<p>       at com.alibaba.dubbo.monitor.simple.SimpleMonitorService$1.run(SimpleMonitorService.java:120)</p>
+<p>       at java.lang.Thread.run(Thread.java:744)</p>
+<p> </p>
+<p>   Locked ownable synchronizers:</p>
+<p>       - None</p>
+</blockquote>
+<p> </p>
+<p>One of these two threads is reading and the other is writing. Looking at the source code of dubbo monitor, we found:</p>
+<p> <img alt="" src="https://img2018.cnblogs.com/blog/1509647/201811/1509647-20181107170656170-208327560.png"/></p>
+<p>There will be two threads in the monitor, one keeps writing statistical logs, and the other performs draw operations every 300s;</p>
+<p>Every day's logs in the monitor will be saved in a log directory. Enter one day's log directory to view the log size:</p>
+<p>I found that the daily log is only tens of MB, and the result of the above iotop view is that the read is 1520K/s and the write is 3.43M/s, so to rule out the write problem, the problem should be with draw. Looking at the source code of draw, I found that draw will continuously read the statistical log and perform drawing operations at the same time.</p>
+<p> <img alt="" src="https://img2018.cnblogs.com/blog/1509647/201811/1509647-20181107170822808-1380118919.png"/></p>
+<p>The log directory will be traversed in draw, and the log reading operation will be performed in the appendData method. Since the monitor has been running for a long time, there are many directories saved on a daily basis. Each draw needs to traverse these directories and read files. The historical data has not changed but log reading and drawing will continue to be performed again. The problem should be here;</p>
+<p> </p>
+<h1>Three solutions</h1>
+<p>Modify the code as follows</p>
+<p> <img alt="" src="https://img2018.cnblogs.com/blog/1509647/201811/1509647-20181107170917692-279454730.png"/></p>
+<p>That is, let draw only process the log of the day. After modification, the server iowait is as shown below:</p>
+<p> <img alt="" src="https://img2018.cnblogs.com/blog/1509647/201811/1509647-20181107170942903-1690897401.png"/></p>
+<p>load as shown:</p>
+<p> <img alt="" src="https://img2018.cnblogs.com/blog/1509647/201811/1509647-20181107171010512-2103888152.png"/></p>
+<p>problem solving</p>
+<p> </p>
+</div>
+</div>
+<!-- Post Footer -->
+<div class="post-footer">
+<div class="post-navigation">
+<a class="nav-button" href="../blog.html">← Back to Home</a>
+<a class="nav-button" href="0349.html">Next Post →</a>
+</div>
+</div>
+</article>
+</div>
+</body>
+</html>

@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Java Basics Freemarker 1 - Template loading and clearing mechanism</title>
+<link href="../css/style3.css" rel="stylesheet"/>
+</head>
+<body>
+<div class="container">
+<!-- Header Navigation -->
+<div class="header">
+<h1><a href="../blog.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+</div>
+<!-- Post Container -->
+<article class="post">
+<!-- Post Header -->
+<div class="post-header">
+<h1>Java Basics Freemarker 1 - Template loading and clearing mechanism</h1>
+<div class="post-meta">
+<div class="post-meta-item">
+<span class="meta-icon">📅</span>
+<span>November 07, 2018</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">📖</span>
+<span>1 min read</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">👁️</span>
+<span>3466 views</span>
+</div>
+</div>
+</div>
+<!-- Post Content -->
+<div class="post-content">
+<div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<h1>1 Freemarker loading template mechanism</h1>
+<p>The configuration item template_update_delay in freemarker indicates the cache time of the template, the unit is s. If the cache time exceeds, the latest template will be loaded from the disk. The specific details are as follows:</p>
+<p>1) The method of obtaining templates in freemarker is in Configuration:</p>
+<p> <img alt="" src="https://img2018.cnblogs.com/blog/1509647/201811/1509647-20181107172226160-240783676.png"/></p>
+<p>2) Configuration’s getTemplate method directly delegates to TemplateCache:</p>
+<p> <img alt="" src="https://img2018.cnblogs.com/blog/1509647/201811/1509647-20181107172241778-2034310978.png"/></p>
+<p>3) TemplateCache will first try to load the template from the cache:</p>
+<p> <img alt="" src="https://img2018.cnblogs.com/blog/1509647/201811/1509647-20181107172259572-476141683.png"/></p>
+<p>Then use template_update_delay to determine whether the template in the cache needs to be refreshed;</p>
+<p> <img alt="" src="https://img2018.cnblogs.com/blog/1509647/201811/1509647-20181107172325315-769495802.png"/></p>
+<p><strong> </strong></p>
+<h1>2. Freemarker comes with refresh interface</h1>
+<p>The refresh interface provided by Freemarker itself is Configuration<strong>clearTemplateCache</strong>Method, which can be used to clear all template caches;</p>
+<h2>1 Using spring mvc</h2>
+<h3>1.1 Configure template_update_delay</h3>
+<p> <img alt="" src="https://img2018.cnblogs.com/blog/1509647/201811/1509647-20181107172348530-1704731241.png"/></p>
+<h3>1.2 Manual refresh</h3>
+<p> <img alt="" src="https://img2018.cnblogs.com/blog/1509647/201811/1509647-20181107172400727-1289748336.png"/></p>
+<p> </p>
+<h2>2 Use freemarker directly</h2>
+<h3>2.1 Configure template_update_delay</h3>
+<p> <img alt="" src="https://img2018.cnblogs.com/blog/1509647/201811/1509647-20181107172414541-136297871.png"/></p>
+<h3>2.2 Manual refresh</h3>
+<p> <img alt="" src="https://img2018.cnblogs.com/blog/1509647/201811/1509647-20181107172425949-607091647.png"/></p>
+<p> The advantage of the above manual refresh method is that it does not require modifying the source code and directly uses the original functions of freemarker. The disadvantage is that all template caches will be refreshed; if you want to refresh only the specified template, you can only develop it twice;</p>
+</div>
+</div>
+<!-- Post Footer -->
+<div class="post-footer">
+<div class="post-navigation">
+<a class="nav-button" href="../blog.html">← Back to Home</a>
+<a class="nav-button" href="0348.html">Next Post →</a>
+</div>
+</div>
+</article>
+</div>
+</body>
+</html>

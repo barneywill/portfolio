@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>ZooKeeper 4 - application scenarios</title>
+<link href="../css/style3.css" rel="stylesheet"/>
+</head>
+<body>
+<div class="container">
+<!-- Header Navigation -->
+<div class="header">
+<h1><a href="../blog.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+</div>
+<!-- Post Container -->
+<article class="post">
+<!-- Post Header -->
+<div class="post-header">
+<h1>ZooKeeper 4 - application scenarios</h1>
+<div class="post-meta">
+<div class="post-meta-item">
+<span class="meta-icon">📅</span>
+<span>November 02, 2018</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">📖</span>
+<span>1 min read</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">👁️</span>
+<span>319 views</span>
+</div>
+</div>
+</div>
+<!-- Post Content -->
+<div class="post-content">
+<div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<h1>1 Cluster configuration management</h1>
+<p>The configuration of the application server is usually placed in the properties file, in the format:</p>
+<blockquote>
+<p>system1.module2.prop3=value4</p>
+</blockquote>
+<p>Then it is loaded at startup. The problem this brings is that it cannot be modified after startup. If you want to modify it, you must restart the application server;</p>
+<ul>
+<li>A simple alternative is to store it in a database, and the application server loads the configuration from the database each time. The problem with this is that the database is an expensive resource and reduces performance;</li>
+<li>A simple improvement method is to store it in the database and then store it in the cache. The application server loads the configuration from the cache each time. The problems to be solved at this time are the data consistency problem between the database and the cache, the reliability of the cache, and a considerable increase in network IO (cache read operations);</li>
+<li>A simple improvement method is that the application server also stores a configuration locally, loads the configuration from the cache each time or loads the configuration from the cache regularly, and uses the local configuration when the cache read times out;</li>
+</ul>
+<p>Looking back, the configuration name is a standard tree structure, and all configurations and values ​​can be directly placed into ZooKeeper.</p>
+<blockquote>
+<p>/config/system1/module2/prop3=value4</p>
+</blockquote>
+<p>Since ZooKeeper stores all data in memory, the read operation is very fast. After the application server is started, all configurations are stored locally in ZooKeeper. In addition, using ZooKeeper's watcher, all application servers can receive notifications when the configuration is modified and modify the local configuration synchronously. The effect achieved is that if the configuration is not updated (a high probability event), all configuration readings are local operations (no network IO); if the configuration is updated (a very small probability event), all application servers can receive notifications in time and update the local configuration;</p>
+<h1>2 Server grouping and dynamic update</h1>
+<p>In large-scale clusters, there are usually servers with many types of roles. In this case, the servers will be grouped according to the types of roles, and then the changes of the servers in the group can be dynamically monitored and further processed;</p>
+<p>For example, in Dubbo, producer servers are grouped. When the producer server changes, the consumer side will receive updates in time to facilitate balance. This enables dynamic increase and decrease of producer servers and automatic discovery;</p>
+<p>For example, in Kafka, consumer servers are grouped, and rebalance is also triggered when the consumer server changes;</p>
+<p>In addition, it can also be used to monitor and alarm the survival of servers in the group;</p>
+<h1>3 Master main and backup</h1>
+<p>Many open source software, such as Hadoop (HDFS, YARN), HBase, Spark Standalone, Oozie, etc., all use ZooKeeper to implement master HA and master-slave switching;</p>
+<p>for example:</p>
+<blockquote>
+<p>/hadoop-ha/$hdfs_name/ActiveStandbyElectorLock</p>
+<p>/yarn-leader-election/$yarn_name/ActiveStandbyElectorLock</p>
+<p>/hbase/master</p>
+</blockquote>
+<h1>4 Distributed lock</h1>
+<p>In a distributed environment, coordination between servers is sometimes required. For example, a task is only allowed to run on one server in the cluster. A common method is to use database locks, which are divided into two implementations: optimistic locking and pessimistic locking;</p>
+<p>For example, Quartz’s distributed deployment uses database locks;</p>
+<p>There are some problems with using database locks. 1. Database resources are expensive and have concurrency limits. Pessimistic locks will directly occupy the number of connections. Optimistic locks may cause the lock to be released due to the full database connection pool. Pessimistic locks may cause stuck due to the full database connection pool. 2. Database connections have timeout limits;</p>
+<p>Distributed locks can be easily implemented using ZooKeeper's Ephemeral Node+Sequence Node+watch. Sequence Node can ensure that only one node can get the lock. Ephemeral Node+watch can ensure that once the lock holder hangs up, other nodes waiting for the lock can receive notifications immediately. At the same time, Sequence Node can be used to ensure that the next node can get the lock;</p>
+<p> </p>
+</div>
+</div>
+<!-- Post Footer -->
+<div class="post-footer">
+<div class="post-navigation">
+<a class="nav-button" href="../blog.html">← Back to Home</a>
+<a class="nav-button" href="0359.html">Next Post →</a>
+</div>
+</div>
+</article>
+</div>
+</body>
+</html>

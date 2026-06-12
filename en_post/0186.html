@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Docker 6 - Performance</title>
+<link href="../css/style3.css" rel="stylesheet"/>
+</head>
+<body>
+<div class="container">
+<!-- Header Navigation -->
+<div class="header">
+<h1><a href="../blog.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+</div>
+<!-- Post Container -->
+<article class="post">
+<!-- Post Header -->
+<div class="post-header">
+<h1>Docker 6 - Performance</h1>
+<div class="post-meta">
+<div class="post-meta-item">
+<span class="meta-icon">📅</span>
+<span>March 11, 2019</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">📖</span>
+<span>1 min read</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">👁️</span>
+<span>1117 views</span>
+</div>
+</div>
+</div>
+<!-- Post Content -->
+<div class="post-content">
+<div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<p>The general result is that Docker is nearly identical to Native performance and faster than KVM in every category.</p>
+<h1>1 CPU</h1>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201903/1509647-20190311151511324-260632098.png"/></p>
+<h1>2 Memory</h1>
+<p> <img alt="" src="https://img2018.cnblogs.com/blog/1509647/201903/1509647-20190311151631326-412103917.png"/></p>
+<h1>3 Network</h1>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201903/1509647-20190311150201710-1582798089.png"/></p>
+<p> </p>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201903/1509647-20190311150230754-953805761.png"/></p>
+<p>Docker’s use of bridging and NAT noticeably increases the transmit path length; vhost-net is fairly efficient at transmitting but has high overhead on the receive side. Containers that do not use NAT have identical performance to native Linux.</p>
+<p> </p>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201903/1509647-20190311150245638-1532718653.png"/></p>
+<p>NAT, as used in Docker, doubles latency in this test. KVM adds 30µs of overhead to each transaction compared to the non-virtualized network stack, an increase of 80%.</p>
+<p> </p>
+<h1>4 Disk</h1>
+<p> <img alt="" src="https://img2018.cnblogs.com/blog/1509647/201903/1509647-20190311150311648-939623587.png"/></p>
+<p> </p>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201903/1509647-20190311150327313-1214849814.png"/></p>
+<p> </p>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201903/1509647-20190311150342528-1106741873.png"/></p>
+<p> </p>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201903/1509647-20190311150418089-815172831.png"/></p>
+<h1>5 Other</h1>
+<h2>5.1 redis</h2>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201903/1509647-20190311150604608-2134744049.png"/></p>
+<p> </p>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201903/1509647-20190311150732338-1195033194.png"/></p>
+<h2>5.2 mysql</h2>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201903/1509647-20190311150753575-489799259.png"/></p>
+<p> </p>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201903/1509647-20190311150809435-1030818576.png"/></p>
+<p> </p>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201903/1509647-20190311150821617-128528700.png"/></p>
+<p> </p>
+<p>It can be seen that except for Network, Docker is very close to native.<br/>Bandwidth test: nuttcp (http://www.nuttcp.net/) <br/>Latency test: netperf (http://netperf.org/netperf/)<br/>The host and bridge commonly used in Docker network are also very different. The stress test data of Nginx is as follows:</p>
+<p>1）native</p>
+<blockquote>
+<p># ./http_load - p 10 - s 10 urls/raw_nginx.urls <br/>274791 fetches, 10 max parallel, 1.78339e+08 bytes, in 10.0001 seconds<br/>649 mean bytes/connection<br/>27478.9 fetches/sec, 1.78338e+07 bytes/sec<br/>msecs/connect: 0.0345773 mean, 0.445 max, 0.011 min<br/>msecs/first-response: 0.310406 mean, 1.026 max, 0.088 min<br/>HTTP response codes:<br/>  code 200 -- 274791</p>
+</blockquote>
+<p>2）docker network-host</p>
+<blockquote>
+<p># ./http_load - p 10 - s 10 urls/docker_host_nginx.urls <br/>202773 fetches, 10 max parallel, 1.316e+08 bytes, in 10 seconds<br/>649 mean bytes/connection<br/>20277.3 fetches/sec, 1.31599e+07 bytes/sec<br/>msecs/connect: 0.0426044 mean, 0.897 max, 0.013 min<br/>msecs/first-response: 0.423675 mean, 1.401 max, 0.076 min<br/>HTTP response codes:<br/>  code 200 -- 202773</p>
+</blockquote>
+<p>3）docker network-bridge</p>
+<blockquote>
+<p># ./http_load - p 10 - s 10 urls/docker_bridge_nginx.urls       <br/>80282 fetches, 10 max parallel, 5.2103e+07 bytes, in 10 seconds<br/>649 mean bytes/connection<br/>8028.2 fetches/sec, 5.2103e+06 bytes/sec<br/>msecs/connect: 0.0522431 mean, 0.489 max, 0.014 min<br/>msecs/first-response: 1.17323 mean, 10.748 max, 0.122 min<br/>HTTP response codes:<br/>  code 200 -- 80282</p>
+</blockquote>
+<p>The Nginx results of several deployments are as follows: using native can reach 27k tps, using Docker network-host can reach 20k tps (a drop of 24%), and using Docker network-bridge (default) can reach 8k tps (a drop of 70%);</p>
+<p> </p>
+<p>refer to:</p>
+<p>docker network</p>
+<p>https://docs.docker.com/network/</p>
+<p> </p>
+<p>An Updated Performance Comparison of Virtual Machines and Linux Containers</p>
+<p>https://domino.research.ibm.com/library/cyberdig.nsf/papers/0929052195DD819C85257D2300681E7B/$File/rc25482.pdf</p>
+<p> </p>
+</div>
+</div>
+<!-- Post Footer -->
+<div class="post-footer">
+<div class="post-navigation">
+<a class="nav-button" href="../blog.html">← Back to Home</a>
+<a class="nav-button" href="0187.html">Next Post →</a>
+</div>
+</div>
+</article>
+</div>
+</body>
+</html>

@@ -1,0 +1,562 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Spark 5 - Shuffle implementation principle and code analysis</title>
+<link href="../css/style3.css" rel="stylesheet"/>
+</head>
+<body>
+<div class="container">
+<!-- Header Navigation -->
+<div class="header">
+<h1><a href="../blog.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+</div>
+<!-- Post Container -->
+<article class="post">
+<!-- Post Header -->
+<div class="post-header">
+<h1>Spark 5 - Shuffle implementation principle and code analysis</h1>
+<div class="post-meta">
+<div class="post-meta-item">
+<span class="meta-icon">📅</span>
+<span>December 21, 2018</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">📖</span>
+<span>21 min read</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">👁️</span>
+<span>1811 views</span>
+</div>
+</div>
+</div>
+<!-- Post Content -->
+<div class="post-content">
+<div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<h1>1 Introduction</h1>
+<p>Shuffle, in short, is to repartition the data, which will involve a lot of network IO and disk IO. Why is shuffle needed? Take the word frequency statistics reduceByKey process as an example.</p>
+<blockquote>
+<p>serverA：partition1: (hello, 1), (word, 1)<br/>serverB：partition2: (hello, 2)</p>
+</blockquote>
+<p>After shuffle:</p>
+<blockquote>
+<p>serverA：partition1: (hello, 1), (hello, 2)<br/>serverB：partition2: (word, 1)</p>
+</blockquote>
+<p>Finally you can get the result:</p>
+<blockquote>
+<p>(hello, 3), (word, 1)</p>
+</blockquote>
+<p>The shuffle process borrows pictures from the Internet</p>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201812/1509647-20181221183813454-1490252191.png"/></p>
+<p>The following is the official description. For official documentation, please see https://Spark.apache.org/docs/latest/rdd-programming-guide.html#shuffle-operations</p>
+<blockquote>
+<p>Certain operations within Spark trigger an event known as the shuffle. The shuffle is Spark’s mechanism for re-distributing data so that it’s grouped differently across partitions. This typically involves copying data across executors and machines, making the shuffle a complex and costly operation.</p>
+<p>To understand what happens during the shuffle we can consider the example of the reduceByKey operation. The reduceByKey operation generates a new RDD where all values for a single key are combined into a tuple - the key and the result of executing a reduce function against all values associated with that key. The challenge is that not all values for a single key necessarily reside on the same partition, or even the same machine, but they must be co-located to compute the result.</p>
+<p>In Spark, data is generally not distributed across partitions to be in the necessary place for a specific operation. During computations, a single task will operate on a single partition - thus, to organize all the data for a single reduceByKey reduce task to execute, Spark needs to perform an all-to-all operation. It must read from all partitions to find all the values for all keys, and then bring together values across partitions to compute the final result for each key - this is called the shuffle.</p>
+<p>Operations which can cause a shuffle include repartition operations like repartition and coalesce, ‘ByKey operations (except for counting) like groupByKey and reduceByKey, and join operations like cogroup and join.</p>
+<p>The Shuffle is an expensive operation since it involves disk I/O, data serialization, and network I/O. To organize data for the shuffle, Spark generates sets of tasks - map tasks to organize the data, and a set of reduce tasks to aggregate it. This nomenclature comes from MapReduce and does not directly relate to Spark’s map and reduce operations.</p>
+</blockquote>
+<h1> 2. Principle and code analysis</h1>
+<p>The shuffle implementation in Spark is still relatively complicated. Let’s look at the code from the shuffle implementation of reduceByKey:</p>
+<p>org.apache.spark.rdd.PairRDDFunctions</p>
+<div class="cnblogs_code">
+<pre>  <span style="color: rgba(0, 128, 0, 1)">/**</span><span style="color: rgba(0, 128, 0, 1)">
+   * Merge the values for each key using an associative and commutative reduce function. This will
+   * also perform the merging locally on each mapper before sending results to a reducer, similarly
+   * to a "combiner" in MapReduce. Output will be hash-partitioned with the existing partitioner/
+   * parallelism level.
+   </span><span style="color: rgba(0, 128, 0, 1)">*/</span><span style="color: rgba(0, 0, 0, 1)">
+  def reduceByKey(func: (V, V) </span>=&gt; V): RDD[(K, V)] =<span style="color: rgba(0, 0, 0, 1)"> self.withScope {
+    reduceByKey(defaultPartitioner(self), func)
+  }
+
+  </span><span style="color: rgba(0, 128, 0, 1)">/**</span><span style="color: rgba(0, 128, 0, 1)">
+   * Merge the values for each key using an associative and commutative reduce function. This will
+   * also perform the merging locally on each mapper before sending results to a reducer, similarly
+   * to a "combiner" in MapReduce.
+   </span><span style="color: rgba(0, 128, 0, 1)">*/</span><span style="color: rgba(0, 0, 0, 1)">
+  def reduceByKey(partitioner: Partitioner, func: (V, V) </span>=&gt; V): RDD[(K, V)] =<span style="color: rgba(0, 0, 0, 1)"> self.withScope {
+    combineByKeyWithClassTag[V]((v: V) </span>=&gt;<span style="color: rgba(0, 0, 0, 1)"> v, func, func, partitioner)
+  }
+
+  def combineByKeyWithClassTag[C](
+      createCombiner: V </span>=&gt;<span style="color: rgba(0, 0, 0, 1)"> C,
+      mergeValue: (C, V) </span>=&gt;<span style="color: rgba(0, 0, 0, 1)"> C,
+      mergeCombiners: (C, C) </span>=&gt;<span style="color: rgba(0, 0, 0, 1)"> C,
+      partitioner: Partitioner,
+      mapSideCombine: Boolean </span>= <span style="color: rgba(0, 0, 255, 1)">true</span><span style="color: rgba(0, 0, 0, 1)">,
+      serializer: Serializer </span>= <span style="color: rgba(0, 0, 255, 1)">null</span>)(implicit ct: ClassTag[C]): RDD[(K, C)] =<span style="color: rgba(0, 0, 0, 1)"> self.withScope {
+    require(mergeCombiners </span>!= <span style="color: rgba(0, 0, 255, 1)">null</span>, "mergeCombiners must be defined") <span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> required as of Spark 0.9.0</span>
+    <span style="color: rgba(0, 0, 255, 1)">if</span><span style="color: rgba(0, 0, 0, 1)"> (keyClass.isArray) {
+      </span><span style="color: rgba(0, 0, 255, 1)">if</span><span style="color: rgba(0, 0, 0, 1)"> (mapSideCombine) {
+        </span><span style="color: rgba(0, 0, 255, 1)">throw</span> <span style="color: rgba(0, 0, 255, 1)">new</span> SparkException("Cannot use map-side combining with array keys."<span style="color: rgba(0, 0, 0, 1)">)
+      }
+      </span><span style="color: rgba(0, 0, 255, 1)">if</span><span style="color: rgba(0, 0, 0, 1)"> (partitioner.isInstanceOf[HashPartitioner]) {
+        </span><span style="color: rgba(0, 0, 255, 1)">throw</span> <span style="color: rgba(0, 0, 255, 1)">new</span> SparkException("HashPartitioner cannot partition array keys."<span style="color: rgba(0, 0, 0, 1)">)
+      }
+    }
+    val aggregator </span>= <span style="color: rgba(0, 0, 255, 1)">new</span><span style="color: rgba(0, 0, 0, 1)"> Aggregator[K, V, C](
+      self.context.clean(createCombiner),
+      self.context.clean(mergeValue),
+      self.context.clean(mergeCombiners))
+    </span><span style="color: rgba(0, 0, 255, 1)">if</span> (self.partitioner ==<span style="color: rgba(0, 0, 0, 1)"> Some(partitioner)) {
+      self.mapPartitions(iter </span>=&gt;<span style="color: rgba(0, 0, 0, 1)"> {
+        val context </span>=<span style="color: rgba(0, 0, 0, 1)"> TaskContext.get()
+        </span><span style="color: rgba(0, 0, 255, 1)">new</span><span style="color: rgba(0, 0, 0, 1)"> InterruptibleIterator(context, aggregator.combineValuesByKey(iter, context))
+      }, preservesPartitioning </span>= <span style="color: rgba(0, 0, 255, 1)">true</span><span style="color: rgba(0, 0, 0, 1)">)
+    } </span><span style="color: rgba(0, 0, 255, 1)">else</span><span style="color: rgba(0, 0, 0, 1)"> {
+      </span><span style="color: rgba(0, 0, 255, 1)">new</span><span style="color: rgba(0, 0, 0, 1)"> ShuffledRDD[K, V, C](self, partitioner)
+        .setSerializer(serializer)
+        .setAggregator(aggregator)
+        .setMapSideCombine(mapSideCombine)
+    }
+  }</span></pre>
+</div>
+<p>Calling reduceByKey returns a ShuffledRDD. Let’s look at ShuffledRDD:</p>
+<p>org.apache.spark.rdd.ShuffledRDD</p>
+<div class="cnblogs_code">
+<pre><span style="color: rgba(0, 0, 255, 1)">class</span><span style="color: rgba(0, 0, 0, 1)"> ShuffledRDD[K: ClassTag, V: ClassTag, C: ClassTag](
+    @</span><span style="color: rgba(0, 0, 255, 1)">transient</span> var prev: RDD[_ &lt;<span style="color: rgba(0, 0, 0, 1)">: Product2[K, V]],
+    part: Partitioner)
+  </span><span style="color: rgba(0, 0, 255, 1)">extends</span><span style="color: rgba(0, 0, 0, 1)"> RDD[(K, C)](prev.context, Nil) {
+...
+  override def getDependencies: Seq[Dependency[_]] </span>=<span style="color: rgba(0, 0, 0, 1)"> {
+    val serializer </span>=<span style="color: rgba(0, 0, 0, 1)"> userSpecifiedSerializer.getOrElse {
+      val serializerManager </span>=<span style="color: rgba(0, 0, 0, 1)"> SparkEnv.get.serializerManager
+      </span><span style="color: rgba(0, 0, 255, 1)">if</span><span style="color: rgba(0, 0, 0, 1)"> (mapSideCombine) {
+        serializerManager.getSerializer(implicitly[ClassTag[K]], implicitly[ClassTag[C]])
+      } </span><span style="color: rgba(0, 0, 255, 1)">else</span><span style="color: rgba(0, 0, 0, 1)"> {
+        serializerManager.getSerializer(implicitly[ClassTag[K]], implicitly[ClassTag[V]])
+      }
+    }
+    List(</span><span style="color: rgba(0, 0, 255, 1)">new</span><span style="color: rgba(0, 0, 0, 1)"> ShuffleDependency(prev, part, serializer, keyOrdering, aggregator, mapSideCombine))
+  }
+  
+  override def compute(split: Partition, context: TaskContext): Iterator[(K, C)] </span>=<span style="color: rgba(0, 0, 0, 1)"> {
+    val dep </span>=<span style="color: rgba(0, 0, 0, 1)"> dependencies.head.asInstanceOf[ShuffleDependency[K, V, C]]
+    SparkEnv.get.shuffleManager.getReader(dep.shuffleHandle, split.index, split.index </span>+ 1<span style="color: rgba(0, 0, 0, 1)">, context)
+      .read()
+      .asInstanceOf[Iterator[(K, C)]]
+  }</span></pre>
+</div>
+<p>The ShuffledRDD class seems simple, but it requires in-depth analysis. The following is explained in two parts:</p>
+<h2>1 ShuffledRDD.getDependencies method</h2>
+<p>ShuffledRDD's getDependencies will return ShuffleDependency. Let's look at ShuffleDependency first.</p>
+<p>org.apache.spark.ShuffleDependency</p>
+<div class="cnblogs_code">
+<pre>  val shuffleId: Int =<span style="color: rgba(0, 0, 0, 1)"> _rdd.context.newShuffleId()
+
+  val shuffleHandle: ShuffleHandle </span>=<span style="color: rgba(0, 0, 0, 1)"> _rdd.context.env.shuffleManager.registerShuffle(
+    shuffleId, _rdd.partitions.length, </span><span style="color: rgba(0, 0, 255, 1)">this</span>)</pre>
+</div>
+<p>Each time a ShuffleDependency is created, a shuffleId will be created, and ShuffleManager.registerShuffle will be called to get a ShuffleHandle. We will look at this later;</p>
+<p>Let’s look at DAGScheduler’s handling of ShuffleDependencies</p>
+<p>org.apache.spark.scheduler.DAGScheduler</p>
+<div class="cnblogs_code">
+<pre>  <span style="color: rgba(0, 128, 0, 1)">/**</span><span style="color: rgba(0, 128, 0, 1)">
+   * Get or create the list of parent stages for a given RDD.  The new Stages will be created with
+   * the provided firstJobId.
+   </span><span style="color: rgba(0, 128, 0, 1)">*/</span>
+  <span style="color: rgba(0, 0, 255, 1)">private</span> def getOrCreateParentStages(rdd: RDD[_], firstJobId: Int): List[Stage] =<span style="color: rgba(0, 0, 0, 1)"> {
+    getShuffleDependencies(rdd).map { shuffleDep </span>=&gt;<span style="color: rgba(0, 0, 0, 1)">
+      getOrCreateShuffleMapStage(shuffleDep, firstJobId)
+    }.toList
+  }
+
+  </span><span style="color: rgba(0, 128, 0, 1)">/**</span><span style="color: rgba(0, 128, 0, 1)"> Submits stage, but first recursively submits any missing parents. </span><span style="color: rgba(0, 128, 0, 1)">*/</span>
+  <span style="color: rgba(0, 0, 255, 1)">private</span><span style="color: rgba(0, 0, 0, 1)"> def submitStage(stage: Stage) {
+...
+          submitMissingTasks(stage, jobId.get)
+...
+  </span><span style="color: rgba(0, 0, 255, 1)">private</span><span style="color: rgba(0, 0, 0, 1)"> def submitMissingTasks(stage: Stage, jobId: Int) {
+    val tasks: Seq[Task[_]] </span>= <span style="color: rgba(0, 0, 255, 1)">try</span><span style="color: rgba(0, 0, 0, 1)"> {
+      stage match {
+        </span><span style="color: rgba(0, 0, 255, 1)">case</span> stage: ShuffleMapStage =&gt;<span style="color: rgba(0, 0, 0, 1)">
+          partitionsToCompute.map { id </span>=&gt;<span style="color: rgba(0, 0, 0, 1)">
+            val locs </span>=<span style="color: rgba(0, 0, 0, 1)"> taskIdToLocations(id)
+            val part </span>=<span style="color: rgba(0, 0, 0, 1)"> stage.rdd.partitions(id)
+            </span><span style="color: rgba(0, 0, 255, 1)">new</span><span style="color: rgba(0, 0, 0, 1)"> ShuffleMapTask(stage.id, stage.latestInfo.attemptId,
+              taskBinary, part, locs, stage.latestInfo.taskMetrics, properties, Option(jobId),
+              Option(sc.applicationId), sc.applicationAttemptId)
+          }</span></pre>
+</div>
+<p>ShuffleDependency will be converted into ShuffleMapStage in DAGScheduler.createShuffleMapStage, and then ShuffleMapStage will be split into ShuffleMapTask execution;</p>
+<p>Let’s look at ShuffleMapTask below</p>
+<p>org.apache.spark.scheduler.ShuffleMapTask</p>
+<div class="cnblogs_code">
+<pre>  override def runTask(context: TaskContext): MapStatus =<span style="color: rgba(0, 0, 0, 1)"> {
+    </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> Deserialize the RDD using the broadcast variable.</span>
+    val threadMXBean =<span style="color: rgba(0, 0, 0, 1)"> ManagementFactory.getThreadMXBean
+    val deserializeStartTime </span>=<span style="color: rgba(0, 0, 0, 1)"> System.currentTimeMillis()
+    val deserializeStartCpuTime </span>= <span style="color: rgba(0, 0, 255, 1)">if</span><span style="color: rgba(0, 0, 0, 1)"> (threadMXBean.isCurrentThreadCpuTimeSupported) {
+      threadMXBean.getCurrentThreadCpuTime
+    } </span><span style="color: rgba(0, 0, 255, 1)">else</span> 0L<span style="color: rgba(0, 0, 0, 1)">
+    val ser </span>=<span style="color: rgba(0, 0, 0, 1)"> SparkEnv.get.closureSerializer.newInstance()
+    val (rdd, dep) </span>=<span style="color: rgba(0, 0, 0, 1)"> ser.deserialize[(RDD[_], ShuffleDependency[_, _, _])](
+      ByteBuffer.wrap(taskBinary.value), Thread.currentThread.getContextClassLoader)
+    _executorDeserializeTime </span>= System.currentTimeMillis() -<span style="color: rgba(0, 0, 0, 1)"> deserializeStartTime
+    _executorDeserializeCpuTime </span>= <span style="color: rgba(0, 0, 255, 1)">if</span><span style="color: rgba(0, 0, 0, 1)"> (threadMXBean.isCurrentThreadCpuTimeSupported) {
+      threadMXBean.getCurrentThreadCpuTime </span>-<span style="color: rgba(0, 0, 0, 1)"> deserializeStartCpuTime
+    } </span><span style="color: rgba(0, 0, 255, 1)">else</span> 0L<span style="color: rgba(0, 0, 0, 1)">
+
+    var writer: ShuffleWriter[Any, Any] </span>= <span style="color: rgba(0, 0, 255, 1)">null</span>
+    <span style="color: rgba(0, 0, 255, 1)">try</span><span style="color: rgba(0, 0, 0, 1)"> {
+      val manager </span>=<span style="color: rgba(0, 0, 0, 1)"> SparkEnv.get.shuffleManager
+      writer </span>=<span style="color: rgba(0, 0, 0, 1)"> manager.getWriter[Any, Any](dep.shuffleHandle, partitionId, context)
+      writer.write(rdd.iterator(partition, context).asInstanceOf[Iterator[_ </span>&lt;<span style="color: rgba(0, 0, 0, 1)">: Product2[Any, Any]]])
+      writer.stop(success </span>= <span style="color: rgba(0, 0, 255, 1)">true</span><span style="color: rgba(0, 0, 0, 1)">).get
+    } </span><span style="color: rgba(0, 0, 255, 1)">catch</span><span style="color: rgba(0, 0, 0, 1)"> {
+      </span><span style="color: rgba(0, 0, 255, 1)">case</span> e: Exception =&gt;
+        <span style="color: rgba(0, 0, 255, 1)">try</span><span style="color: rgba(0, 0, 0, 1)"> {
+          </span><span style="color: rgba(0, 0, 255, 1)">if</span> (writer != <span style="color: rgba(0, 0, 255, 1)">null</span><span style="color: rgba(0, 0, 0, 1)">) {
+            writer.stop(success </span>= <span style="color: rgba(0, 0, 255, 1)">false</span><span style="color: rgba(0, 0, 0, 1)">)
+          }
+        } </span><span style="color: rgba(0, 0, 255, 1)">catch</span><span style="color: rgba(0, 0, 0, 1)"> {
+          </span><span style="color: rgba(0, 0, 255, 1)">case</span> e: Exception =&gt;<span style="color: rgba(0, 0, 0, 1)">
+            log.debug(</span>"Could not stop writer"<span style="color: rgba(0, 0, 0, 1)">, e)
+        }
+        </span><span style="color: rgba(0, 0, 255, 1)">throw</span><span style="color: rgba(0, 0, 0, 1)"> e
+    }
+  }</span></pre>
+</div>
+<p>You can see that ShuffleManager.getWriter is called to write data when the task is executed. The data writing process will be mentioned later;</p>
+<h2>2 ShuffledRDD.compute method</h2>
+<p>The compute method of ShuffledRDD overrides the compute method of RDD, and changes the calculation process to pass ShuffleDependency into ShuffleManager.getReader.read. It should be noted that before calling compute, all dependency stages have been executed, that is, the data has been written by calling ShuffleManager.getWriter (for details, see <a href="https://www.cnblogs.com/barneywill/p/10152497.html" target="_blank" title="[Original] Spark (4) RDD principle and code analysis of big data foundation">https://www.cnblogs.com/barneywill/p/10152497.html</a>), so ShuffleManager.getReader here can read the data</p>
+<p>ShuffleManager is the core interface of Spark shuffle</p>
+<p>org.apache.spark.shuffle.ShuffleManager</p>
+<div class="cnblogs_code">
+<pre>  <span style="color: rgba(0, 128, 0, 1)">/**</span><span style="color: rgba(0, 128, 0, 1)">
+   * Register a shuffle with the manager and obtain a handle for it to pass to tasks.
+   </span><span style="color: rgba(0, 128, 0, 1)">*/</span><span style="color: rgba(0, 0, 0, 1)">
+  def registerShuffle[K, V, C](
+      shuffleId: Int,
+      numMaps: Int,
+      dependency: ShuffleDependency[K, V, C]): ShuffleHandle
+
+  </span><span style="color: rgba(0, 128, 0, 1)">/**</span><span style="color: rgba(0, 128, 0, 1)"> Get a writer for a given partition. Called on executors by map tasks. </span><span style="color: rgba(0, 128, 0, 1)">*/</span><span style="color: rgba(0, 0, 0, 1)">
+  def getWriter[K, V](handle: ShuffleHandle, mapId: Int, context: TaskContext): ShuffleWriter[K, V]
+
+  </span><span style="color: rgba(0, 128, 0, 1)">/**</span><span style="color: rgba(0, 128, 0, 1)">
+   * Get a reader for a range of reduce partitions (startPartition to endPartition-1, inclusive).
+   * Called on executors by reduce tasks.
+   </span><span style="color: rgba(0, 128, 0, 1)">*/</span><span style="color: rgba(0, 0, 0, 1)">
+  def getReader[K, C](
+      handle: ShuffleHandle,
+      startPartition: Int,
+      endPartition: Int,
+      context: TaskContext): ShuffleReader[K, C]</span></pre>
+</div>
+<p>Here is the implementation class:</p>
+<p>org.apache.spark.shuffle.sort.SortShuffleManager</p>
+<div class="cnblogs_code">
+<pre>  <span style="color: rgba(0, 128, 0, 1)">/**</span><span style="color: rgba(0, 128, 0, 1)">
+   * Register a shuffle with the manager and obtain a handle for it to pass to tasks.
+   </span><span style="color: rgba(0, 128, 0, 1)">*/</span><span style="color: rgba(0, 0, 0, 1)">
+  override def registerShuffle[K, V, C](
+      shuffleId: Int,
+      numMaps: Int,
+      dependency: ShuffleDependency[K, V, C]): ShuffleHandle </span>=<span style="color: rgba(0, 0, 0, 1)"> {
+    </span><span style="color: rgba(0, 0, 255, 1)">if</span><span style="color: rgba(0, 0, 0, 1)"> (SortShuffleWriter.shouldBypassMergeSort(SparkEnv.get.conf, dependency)) {
+      </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> If there are fewer than spark.shuffle.sort.bypassMergeThreshold partitions and we don't
+      </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> need map-side aggregation, then write numPartitions files directly and just concatenate
+      </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> them at the end. This avoids doing serialization and deserialization twice to merge
+      </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> together the spilled files, which would happen with the normal code path. The downside is
+      </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> having multiple files open at a time and thus more memory allocated to buffers.</span>
+      <span style="color: rgba(0, 0, 255, 1)">new</span><span style="color: rgba(0, 0, 0, 1)"> BypassMergeSortShuffleHandle[K, V](
+        shuffleId, numMaps, dependency.asInstanceOf[ShuffleDependency[K, V, V]])
+    } </span><span style="color: rgba(0, 0, 255, 1)">else</span> <span style="color: rgba(0, 0, 255, 1)">if</span><span style="color: rgba(0, 0, 0, 1)"> (SortShuffleManager.canUseSerializedShuffle(dependency)) {
+      </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> Otherwise, try to buffer map outputs in a serialized form, since this is more efficient:</span>
+      <span style="color: rgba(0, 0, 255, 1)">new</span><span style="color: rgba(0, 0, 0, 1)"> SerializedShuffleHandle[K, V](
+        shuffleId, numMaps, dependency.asInstanceOf[ShuffleDependency[K, V, V]])
+    } </span><span style="color: rgba(0, 0, 255, 1)">else</span><span style="color: rgba(0, 0, 0, 1)"> {
+      </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> Otherwise, buffer map outputs in a deserialized form:</span>
+      <span style="color: rgba(0, 0, 255, 1)">new</span><span style="color: rgba(0, 0, 0, 1)"> BaseShuffleHandle(shuffleId, numMaps, dependency)
+    }
+  }
+
+  </span><span style="color: rgba(0, 128, 0, 1)">/**</span><span style="color: rgba(0, 128, 0, 1)">
+   * Get a reader for a range of reduce partitions (startPartition to endPartition-1, inclusive).
+   * Called on executors by reduce tasks.
+   </span><span style="color: rgba(0, 128, 0, 1)">*/</span><span style="color: rgba(0, 0, 0, 1)">
+  override def getReader[K, C](
+      handle: ShuffleHandle,
+      startPartition: Int,
+      endPartition: Int,
+      context: TaskContext): ShuffleReader[K, C] </span>=<span style="color: rgba(0, 0, 0, 1)"> {
+    </span><span style="color: rgba(0, 0, 255, 1)">new</span><span style="color: rgba(0, 0, 0, 1)"> BlockStoreShuffleReader(
+      handle.asInstanceOf[BaseShuffleHandle[K, _, C]], startPartition, endPartition, context)
+  }
+
+  </span><span style="color: rgba(0, 128, 0, 1)">/**</span><span style="color: rgba(0, 128, 0, 1)"> Get a writer for a given partition. Called on executors by map tasks. </span><span style="color: rgba(0, 128, 0, 1)">*/</span><span style="color: rgba(0, 0, 0, 1)">
+  override def getWriter[K, V](
+      handle: ShuffleHandle,
+      mapId: Int,
+      context: TaskContext): ShuffleWriter[K, V] </span>=<span style="color: rgba(0, 0, 0, 1)"> {
+    numMapsForShuffle.putIfAbsent(
+      handle.shuffleId, handle.asInstanceOf[BaseShuffleHandle[_, _, _]].numMaps)
+    val env </span>=<span style="color: rgba(0, 0, 0, 1)"> SparkEnv.get
+    handle match {
+      </span><span style="color: rgba(0, 0, 255, 1)">case</span> unsafeShuffleHandle: SerializedShuffleHandle[K @unchecked, V @unchecked] =&gt;
+        <span style="color: rgba(0, 0, 255, 1)">new</span><span style="color: rgba(0, 0, 0, 1)"> UnsafeShuffleWriter(
+          env.blockManager,
+          shuffleBlockResolver.asInstanceOf[IndexShuffleBlockResolver],
+          context.taskMemoryManager(),
+          unsafeShuffleHandle,
+          mapId,
+          context,
+          env.conf)
+      </span><span style="color: rgba(0, 0, 255, 1)">case</span> bypassMergeSortHandle: BypassMergeSortShuffleHandle[K @unchecked, V @unchecked] =&gt;
+        <span style="color: rgba(0, 0, 255, 1)">new</span><span style="color: rgba(0, 0, 0, 1)"> BypassMergeSortShuffleWriter(
+          env.blockManager,
+          shuffleBlockResolver.asInstanceOf[IndexShuffleBlockResolver],
+          bypassMergeSortHandle,
+          mapId,
+          context,
+          env.conf)
+      </span><span style="color: rgba(0, 0, 255, 1)">case</span> other: BaseShuffleHandle[K @unchecked, V @unchecked, _] =&gt;
+        <span style="color: rgba(0, 0, 255, 1)">new</span><span style="color: rgba(0, 0, 0, 1)"> SortShuffleWriter(shuffleBlockResolver, other, mapId, context)
+    }
+  }</span></pre>
+</div>
+<p>The ShuffleManager process is more complicated and will be analyzed separately:</p>
+<h2>2.1 ShuffleManager.getWriter method</h2>
+<p>Let’s first look at how data is written after getWriter. Take BypassMergeSortShuffleWriter as an example.</p>
+<p>org.apache.spark.shuffle.sort.BypassMergeSortShuffleWriter</p>
+<div class="cnblogs_code">
+<pre><span style="color: rgba(0, 0, 0, 1)">  @Override
+  </span><span style="color: rgba(0, 0, 255, 1)">public</span> <span style="color: rgba(0, 0, 255, 1)">void</span> write(Iterator&lt;Product2&lt;K, V&gt;&gt; records) <span style="color: rgba(0, 0, 255, 1)">throws</span><span style="color: rgba(0, 0, 0, 1)"> IOException {
+    </span><span style="color: rgba(0, 0, 255, 1)">assert</span> (partitionWriters == <span style="color: rgba(0, 0, 255, 1)">null</span><span style="color: rgba(0, 0, 0, 1)">);
+    </span><span style="color: rgba(0, 0, 255, 1)">if</span> (!<span style="color: rgba(0, 0, 0, 1)">records.hasNext()) {
+      partitionLengths </span>= <span style="color: rgba(0, 0, 255, 1)">new</span> <span style="color: rgba(0, 0, 255, 1)">long</span><span style="color: rgba(0, 0, 0, 1)">[numPartitions];
+      shuffleBlockResolver.writeIndexFileAndCommit(shuffleId, mapId, partitionLengths, </span><span style="color: rgba(0, 0, 255, 1)">null</span><span style="color: rgba(0, 0, 0, 1)">);
+      mapStatus </span>=<span style="color: rgba(0, 0, 0, 1)"> MapStatus$.MODULE$.apply(blockManager.shuffleServerId(), partitionLengths);
+      </span><span style="color: rgba(0, 0, 255, 1)">return</span><span style="color: rgba(0, 0, 0, 1)">;
+    }
+    </span><span style="color: rgba(0, 0, 255, 1)">final</span> SerializerInstance serInstance =<span style="color: rgba(0, 0, 0, 1)"> serializer.newInstance();
+    </span><span style="color: rgba(0, 0, 255, 1)">final</span> <span style="color: rgba(0, 0, 255, 1)">long</span> openStartTime =<span style="color: rgba(0, 0, 0, 1)"> System.nanoTime();
+    partitionWriters </span>= <span style="color: rgba(0, 0, 255, 1)">new</span><span style="color: rgba(0, 0, 0, 1)"> DiskBlockObjectWriter[numPartitions];
+    partitionWriterSegments </span>= <span style="color: rgba(0, 0, 255, 1)">new</span><span style="color: rgba(0, 0, 0, 1)"> FileSegment[numPartitions];
+    </span><span style="color: rgba(0, 0, 255, 1)">for</span> (<span style="color: rgba(0, 0, 255, 1)">int</span> i = 0; i &lt; numPartitions; i++<span style="color: rgba(0, 0, 0, 1)">) {
+      </span><span style="color: rgba(0, 0, 255, 1)">final</span> Tuple2&lt;TempShuffleBlockId, File&gt; tempShuffleBlockIdPlusFile =<span style="color: rgba(0, 0, 0, 1)">
+        blockManager.diskBlockManager().createTempShuffleBlock();
+      </span><span style="color: rgba(0, 0, 255, 1)">final</span> File file =<span style="color: rgba(0, 0, 0, 1)"> tempShuffleBlockIdPlusFile._2();
+      </span><span style="color: rgba(0, 0, 255, 1)">final</span> BlockId blockId =<span style="color: rgba(0, 0, 0, 1)"> tempShuffleBlockIdPlusFile._1();
+      partitionWriters[i] </span>=<span style="color: rgba(0, 0, 0, 1)">
+        blockManager.getDiskWriter(blockId, file, serInstance, fileBufferSize, writeMetrics);
+    }
+    </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> Creating the file to write to and creating a disk writer both involve interacting with
+    </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> the disk, and can take a long time in aggregate when we open many files, so should be
+    </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> included in the shuffle write time.</span>
+    writeMetrics.incWriteTime(System.nanoTime() -<span style="color: rgba(0, 0, 0, 1)"> openStartTime);
+
+    </span><span style="color: rgba(0, 0, 255, 1)">while</span><span style="color: rgba(0, 0, 0, 1)"> (records.hasNext()) {
+      </span><span style="color: rgba(0, 0, 255, 1)">final</span> Product2&lt;K, V&gt; record =<span style="color: rgba(0, 0, 0, 1)"> records.next();
+      </span><span style="color: rgba(0, 0, 255, 1)">final</span> K key =<span style="color: rgba(0, 0, 0, 1)"> record._1();
+      partitionWriters[partitioner.getPartition(key)].write(key, record._2());
+    }
+
+    </span><span style="color: rgba(0, 0, 255, 1)">for</span> (<span style="color: rgba(0, 0, 255, 1)">int</span> i = 0; i &lt; numPartitions; i++<span style="color: rgba(0, 0, 0, 1)">) {
+      </span><span style="color: rgba(0, 0, 255, 1)">final</span> DiskBlockObjectWriter writer =<span style="color: rgba(0, 0, 0, 1)"> partitionWriters[i];
+      partitionWriterSegments[i] </span>=<span style="color: rgba(0, 0, 0, 1)"> writer.commitAndGet();
+      writer.close();
+    }
+
+    File output </span>=<span style="color: rgba(0, 0, 0, 1)"> shuffleBlockResolver.getDataFile(shuffleId, mapId);
+    File tmp </span>=<span style="color: rgba(0, 0, 0, 1)"> Utils.tempFileWith(output);
+    </span><span style="color: rgba(0, 0, 255, 1)">try</span><span style="color: rgba(0, 0, 0, 1)"> {
+      partitionLengths </span>=<span style="color: rgba(0, 0, 0, 1)"> writePartitionedFile(tmp);
+      shuffleBlockResolver.writeIndexFileAndCommit(shuffleId, mapId, partitionLengths, tmp);
+    } </span><span style="color: rgba(0, 0, 255, 1)">finally</span><span style="color: rgba(0, 0, 0, 1)"> {
+      </span><span style="color: rgba(0, 0, 255, 1)">if</span> (tmp.exists() &amp;&amp; !<span style="color: rgba(0, 0, 0, 1)">tmp.delete()) {
+        logger.error(</span>"Error while deleting temp file {}"<span style="color: rgba(0, 0, 0, 1)">, tmp.getAbsolutePath());
+      }
+    }
+    mapStatus </span>=<span style="color: rgba(0, 0, 0, 1)"> MapStatus$.MODULE$.apply(blockManager.shuffleServerId(), partitionLengths);
+  }</span></pre>
+</div>
+<p>Note that this is the process of writing a file by a Task. This file contains shuffleId and mapId;</p>
+<p>The writing process is to iterate all records of the current partition. Each record is first determined by the new partitioner (since it is a shuffle, the partitioning logic must be different from before, so the previous partition will be divided into multiple partitions), and then partitionWriters (one wri for each partition) decide ter) writes the files of the corresponding partitions (1 file per partition). After each partition is written, call writePartitionedFile to merge all partition files into 1 file, then call writeIndexFileAndCommit to write the index file, and finally update MapStatus to record the BlockManagerId and offset position information;</p>
+<p>MapStatus contains the status of a map process. When the Reader reads the shuffle data later, it will also obtain this information remotely, as you will see later;</p>
+<p>org.apache.spark.scheduler.MapStatus</p>
+<div class="cnblogs_code">
+<pre><span style="color: rgba(0, 0, 255, 1)">private</span><span style="color: rgba(0, 0, 0, 1)">[spark] object MapStatus {
+
+  def apply(loc: BlockManagerId, uncompressedSizes: Array[Long]): MapStatus </span>=<span style="color: rgba(0, 0, 0, 1)"> {
+    </span><span style="color: rgba(0, 0, 255, 1)">if</span> (uncompressedSizes.length &gt; 2000<span style="color: rgba(0, 0, 0, 1)">) {
+      HighlyCompressedMapStatus(loc, uncompressedSizes)
+    } </span><span style="color: rgba(0, 0, 255, 1)">else</span><span style="color: rgba(0, 0, 0, 1)"> {
+      </span><span style="color: rgba(0, 0, 255, 1)">new</span><span style="color: rgba(0, 0, 0, 1)"> CompressedMapStatus(loc, uncompressedSizes)
+    }
+  }</span></pre>
+</div>
+<h2>2.2 ShuffleManager.getReader method</h2>
+<p>Look at BlockStoreShuffleReader below</p>
+<p>org.apache.spark.shuffle.BlockStoreShuffleReader</p>
+<div class="cnblogs_code">
+<pre>  override def read(): Iterator[Product2[K, C]] =<span style="color: rgba(0, 0, 0, 1)"> {
+    val blockFetcherItr </span>= <span style="color: rgba(0, 0, 255, 1)">new</span><span style="color: rgba(0, 0, 0, 1)"> ShuffleBlockFetcherIterator(
+      context,
+      blockManager.shuffleClient,
+      blockManager,
+      mapOutputTracker.getMapSizesByExecutorId(handle.shuffleId, startPartition, endPartition),
+      </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> Note: we use getSizeAsMb when no suffix is provided for backwards compatibility</span>
+      SparkEnv.get.conf.getSizeAsMb("spark.reducer.maxSizeInFlight", "48m") * 1024 * 1024<span style="color: rgba(0, 0, 0, 1)">,
+      SparkEnv.get.conf.getInt(</span>"spark.reducer.maxReqsInFlight"<span style="color: rgba(0, 0, 0, 1)">, Int.MaxValue))
+
+    </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> Wrap the streams for compression and encryption based on configuration</span>
+    val wrappedStreams = blockFetcherItr.map { <span style="color: rgba(0, 0, 255, 1)">case</span> (blockId, inputStream) =&gt;<span style="color: rgba(0, 0, 0, 1)">
+      serializerManager.wrapStream(blockId, inputStream)
+    }
+
+    val serializerInstance </span>=<span style="color: rgba(0, 0, 0, 1)"> dep.serializer.newInstance()
+
+    </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> Create a key/value iterator for each stream</span>
+    val recordIter = wrappedStreams.flatMap { wrappedStream =&gt;
+      <span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> Note: the asKeyValueIterator below wraps a key/value iterator inside of a
+      </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> NextIterator. The NextIterator makes sure that close() is called on the
+      </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> underlying InputStream when all records have been read.</span>
+<span style="color: rgba(0, 0, 0, 1)">      serializerInstance.deserializeStream(wrappedStream).asKeyValueIterator
+    }
+
+    </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> Update the context task metrics for each record read.</span>
+    val readMetrics =<span style="color: rgba(0, 0, 0, 1)"> context.taskMetrics.createTempShuffleReadMetrics()
+    val metricIter </span>=<span style="color: rgba(0, 0, 0, 1)"> CompletionIterator[(Any, Any), Iterator[(Any, Any)]](
+      recordIter.map { record </span>=&gt;<span style="color: rgba(0, 0, 0, 1)">
+        readMetrics.incRecordsRead(</span>1<span style="color: rgba(0, 0, 0, 1)">)
+        record
+      },
+      context.taskMetrics().mergeShuffleReadMetrics())
+
+    </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> An interruptible iterator must be used here in order to support task cancellation</span>
+    val interruptibleIter = <span style="color: rgba(0, 0, 255, 1)">new</span><span style="color: rgba(0, 0, 0, 1)"> InterruptibleIterator[(Any, Any)](context, metricIter)
+
+    val aggregatedIter: Iterator[Product2[K, C]] </span>= <span style="color: rgba(0, 0, 255, 1)">if</span><span style="color: rgba(0, 0, 0, 1)"> (dep.aggregator.isDefined) {
+      </span><span style="color: rgba(0, 0, 255, 1)">if</span><span style="color: rgba(0, 0, 0, 1)"> (dep.mapSideCombine) {
+        </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> We are reading values that are already combined</span>
+        val combinedKeyValuesIterator =<span style="color: rgba(0, 0, 0, 1)"> interruptibleIter.asInstanceOf[Iterator[(K, C)]]
+        dep.aggregator.get.combineCombinersByKey(combinedKeyValuesIterator, context)
+      } </span><span style="color: rgba(0, 0, 255, 1)">else</span><span style="color: rgba(0, 0, 0, 1)"> {
+        </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> We don't know the value type, but also don't care -- the dependency *should*
+        </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> have made sure its compatible w/ this aggregator, which will convert the value
+        </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> type to the combined type C</span>
+        val keyValuesIterator =<span style="color: rgba(0, 0, 0, 1)"> interruptibleIter.asInstanceOf[Iterator[(K, Nothing)]]
+        dep.aggregator.get.combineValuesByKey(keyValuesIterator, context)
+      }
+    } </span><span style="color: rgba(0, 0, 255, 1)">else</span><span style="color: rgba(0, 0, 0, 1)"> {
+      require(</span>!dep.mapSideCombine, "Map-side combine without Aggregator specified!"<span style="color: rgba(0, 0, 0, 1)">)
+      interruptibleIter.asInstanceOf[Iterator[Product2[K, C]]]
+    }
+
+    </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> Sort the output if there is a sort ordering defined.</span>
+<span style="color: rgba(0, 0, 0, 1)">    dep.keyOrdering match {
+      </span><span style="color: rgba(0, 0, 255, 1)">case</span> Some(keyOrd: Ordering[K]) =&gt;
+        <span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> Create an ExternalSorter to sort the data. Note that if spark.shuffle.spill is disabled,
+        </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> the ExternalSorter won't spill to disk.</span>
+        val sorter =
+          <span style="color: rgba(0, 0, 255, 1)">new</span> ExternalSorter[K, C, C](context, ordering = Some(keyOrd), serializer =<span style="color: rgba(0, 0, 0, 1)"> dep.serializer)
+        sorter.insertAll(aggregatedIter)
+        context.taskMetrics().incMemoryBytesSpilled(sorter.memoryBytesSpilled)
+        context.taskMetrics().incDiskBytesSpilled(sorter.diskBytesSpilled)
+        context.taskMetrics().incPeakExecutionMemory(sorter.peakMemoryUsedBytes)
+        CompletionIterator[Product2[K, C], Iterator[Product2[K, C]]](sorter.iterator, sorter.stop())
+      </span><span style="color: rgba(0, 0, 255, 1)">case</span> None =&gt;<span style="color: rgba(0, 0, 0, 1)">
+        aggregatedIter
+    }
+  }</span></pre>
+</div>
+<p>When reading, first create a ShuffleBlockFetcherIterator. This class encapsulates the details of shuffle data reading. The Array[MapStatus] corresponding to the current shuffleId is passed in the constructor. Then this class will shield all reading details, such as whether the data is on the local disk or on a remote server;</p>
+<p>As mentioned above, the most important information is the Array[MapStatus] corresponding to shuffleId. How is this obtained? SeeMapOutputTracker</p>
+<p>org.apache.spark.MapOutputTracker</p>
+<div class="cnblogs_code">
+<pre>  <span style="color: rgba(0, 0, 255, 1)">protected</span><span style="color: rgba(0, 0, 0, 1)"> val mapStatuses: Map[Int, Array[MapStatus]]
+...
+  </span><span style="color: rgba(0, 128, 0, 1)">/**</span><span style="color: rgba(0, 128, 0, 1)">
+   * Get or fetch the array of MapStatuses for a given shuffle ID. NOTE: clients MUST synchronize
+   * on this array when reading it, because on the driver, we may be changing it in place.
+   *
+   * (It would be nice to remove this restriction in the future.)
+   </span><span style="color: rgba(0, 128, 0, 1)">*/</span>
+  <span style="color: rgba(0, 0, 255, 1)">private</span> def getStatuses(shuffleId: Int): Array[MapStatus] =<span style="color: rgba(0, 0, 0, 1)"> {
+    val statuses </span>=<span style="color: rgba(0, 0, 0, 1)"> mapStatuses.get(shuffleId).orNull
+    </span><span style="color: rgba(0, 0, 255, 1)">if</span> (statuses == <span style="color: rgba(0, 0, 255, 1)">null</span><span style="color: rgba(0, 0, 0, 1)">) {
+      logInfo(</span>"Don't have map outputs for shuffle " + shuffleId + ", fetching them"<span style="color: rgba(0, 0, 0, 1)">)
+      val startTime </span>=<span style="color: rgba(0, 0, 0, 1)"> System.currentTimeMillis
+      var fetchedStatuses: Array[MapStatus] </span>= <span style="color: rgba(0, 0, 255, 1)">null</span><span style="color: rgba(0, 0, 0, 1)">
+      fetching.</span><span style="color: rgba(0, 0, 255, 1)">synchronized</span><span style="color: rgba(0, 0, 0, 1)"> {
+        </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> Someone else is fetching it; wait for them to be done</span>
+        <span style="color: rgba(0, 0, 255, 1)">while</span><span style="color: rgba(0, 0, 0, 1)"> (fetching.contains(shuffleId)) {
+          </span><span style="color: rgba(0, 0, 255, 1)">try</span><span style="color: rgba(0, 0, 0, 1)"> {
+            fetching.wait()
+          } </span><span style="color: rgba(0, 0, 255, 1)">catch</span><span style="color: rgba(0, 0, 0, 1)"> {
+            </span><span style="color: rgba(0, 0, 255, 1)">case</span> e: InterruptedException =&gt;<span style="color: rgba(0, 0, 0, 1)">
+          }
+        }
+
+        </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> Either while we waited the fetch happened successfully, or
+        </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> someone fetched it in between the get and the fetching.synchronized.</span>
+        fetchedStatuses =<span style="color: rgba(0, 0, 0, 1)"> mapStatuses.get(shuffleId).orNull
+        </span><span style="color: rgba(0, 0, 255, 1)">if</span> (fetchedStatuses == <span style="color: rgba(0, 0, 255, 1)">null</span><span style="color: rgba(0, 0, 0, 1)">) {
+          </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> We have to do the fetch, get others to wait for us.</span>
+          fetching +=<span style="color: rgba(0, 0, 0, 1)"> shuffleId
+        }
+      }
+
+      </span><span style="color: rgba(0, 0, 255, 1)">if</span> (fetchedStatuses == <span style="color: rgba(0, 0, 255, 1)">null</span><span style="color: rgba(0, 0, 0, 1)">) {
+        </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> We won the race to fetch the statuses; do so</span>
+        logInfo("Doing the fetch; tracker endpoint = " +<span style="color: rgba(0, 0, 0, 1)"> trackerEndpoint)
+        </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> This try-finally prevents hangs due to timeouts:</span>
+        <span style="color: rgba(0, 0, 255, 1)">try</span><span style="color: rgba(0, 0, 0, 1)"> {
+          val fetchedBytes </span>=<span style="color: rgba(0, 0, 0, 1)"> askTracker[Array[Byte]](GetMapOutputStatuses(shuffleId))
+          fetchedStatuses </span>=<span style="color: rgba(0, 0, 0, 1)"> MapOutputTracker.deserializeMapStatuses(fetchedBytes)
+          logInfo(</span>"Got the output locations"<span style="color: rgba(0, 0, 0, 1)">)
+          mapStatuses.put(shuffleId, fetchedStatuses)
+        } </span><span style="color: rgba(0, 0, 255, 1)">finally</span><span style="color: rgba(0, 0, 0, 1)"> {
+          fetching.</span><span style="color: rgba(0, 0, 255, 1)">synchronized</span><span style="color: rgba(0, 0, 0, 1)"> {
+            fetching </span>-=<span style="color: rgba(0, 0, 0, 1)"> shuffleId
+            fetching.notifyAll()
+          }
+        }
+      }
+      logDebug(s</span>"Fetching map output statuses for shuffle $shuffleId took " +<span style="color: rgba(0, 0, 0, 1)">
+        s</span>"${System.currentTimeMillis - startTime} ms"<span style="color: rgba(0, 0, 0, 1)">)
+
+      </span><span style="color: rgba(0, 0, 255, 1)">if</span> (fetchedStatuses != <span style="color: rgba(0, 0, 255, 1)">null</span><span style="color: rgba(0, 0, 0, 1)">) {
+        </span><span style="color: rgba(0, 0, 255, 1)">return</span><span style="color: rgba(0, 0, 0, 1)"> fetchedStatuses
+      } </span><span style="color: rgba(0, 0, 255, 1)">else</span><span style="color: rgba(0, 0, 0, 1)"> {
+        logError(</span>"Missing all output locations for shuffle " +<span style="color: rgba(0, 0, 0, 1)"> shuffleId)
+        </span><span style="color: rgba(0, 0, 255, 1)">throw</span> <span style="color: rgba(0, 0, 255, 1)">new</span><span style="color: rgba(0, 0, 0, 1)"> MetadataFetchFailedException(
+          shuffleId, </span>-1, "Missing all output locations for shuffle " +<span style="color: rgba(0, 0, 0, 1)"> shuffleId)
+      }
+    } </span><span style="color: rgba(0, 0, 255, 1)">else</span><span style="color: rgba(0, 0, 0, 1)"> {
+      </span><span style="color: rgba(0, 0, 255, 1)">return</span><span style="color: rgba(0, 0, 0, 1)"> statuses
+    }
+  }</span></pre>
+</div>
+<p>MapOutputTracker contains mapStatus (MapStatus status of all shuffleId). The data will be initialized when called for the first time. The process is to remotely send the request message GetMapOutputStatuses(shuffleId), and then put the result into mapStatuses;</p>
+<h1>3 Summary</h1>
+<p>At this point, the entire shuffle process is completed. The process is relatively complicated. Let’s repeat it again:</p>
+<ul>
+<li>Call RDD.reduceByKey</li>
+<li>reduceByKey is transformation and returns ShuffledRDD. ShuffleDependency will be created and returned in ShuffledRDD. At this time, shuffleId is also created and registered to ShuffleManager.</li>
+<li>When Spark executes a task, DAGScheduler converts ShuffleDependency into ShuffleMapStage, and then decomposes ShuffleMapStage into ShuffleMapTask</li>
+<li>ShuffleMapTask will call ShuffleManager.getWriter to write data, and then update MapStatus. The process of writing data is to first write multiple partition files according to the new partition logic, then merge them into one and write the index file;</li>
+<li>reduceByKey In the next step, whether it is transformation or action (there must be a subsequent action that will trigger runJob and then the calculation process of 3 and 4 above), RDD.compute will be called to obtain the partition data, and ShuffledRDD's compute directly returns ShuffleManager.getReader</li>
+<li>ShuffleReader implementation class BlockStoreShuffleReader first remotely obtains all MapStatus information corresponding to the current shuffleId when reading, and then reads the shuffle data of a certain partition through ShuffleBlockFetcherIterator;</li>
+</ul>
+<p> </p>
+</div>
+</div>
+<!-- Post Footer -->
+<div class="post-footer">
+<div class="post-navigation">
+<a class="nav-button" href="../blog.html">← Back to Home</a>
+<a class="nav-button" href="0299.html">Next Post →</a>
+</div>
+</div>
+</article>
+</div>
+</body>
+</html>

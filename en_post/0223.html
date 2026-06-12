@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Marathon 1 - Introduction, installation, use</title>
+<link href="../css/style3.css" rel="stylesheet"/>
+</head>
+<body>
+<div class="container">
+<!-- Header Navigation -->
+<div class="header">
+<h1><a href="../blog.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+</div>
+<!-- Post Container -->
+<article class="post">
+<!-- Post Header -->
+<div class="post-header">
+<h1>Marathon 1 - Introduction, installation, use</h1>
+<div class="post-meta">
+<div class="post-meta-item">
+<span class="meta-icon">📅</span>
+<span>February 15, 2019</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">📖</span>
+<span>2 min read</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">👁️</span>
+<span>1527 views</span>
+</div>
+</div>
+</div>
+<!-- Post Content -->
+<div class="post-content">
+<div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<p>marathon 1.6.322</p>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201902/1509647-20190218154240076-11648461.png"/></p>
+<p>Official: https://mesosphere.github.io/marathon/</p>
+<p> </p>
+<h1>1 Introduction</h1>
+<p>Marathon is a production-grade container orchestration platform for Mesosphere’s Datacenter Operating System (DC/OS) and Apache Mesos.\</p>
+<p><em>marathon is a container orchestration platform on DC/OS and mesos;</em></p>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201902/1509647-20190218144224064-1852258185.png"/></p>
+<p> </p>
+<h2>Features</h2>
+<ul>
+<li>High Availability. Marathon runs as an active/passive cluster with leader election for 100% uptime.</li>
+<li>Multiple container runtimes. Marathon has first-class support for both Mesos containers (using cgroups) and Docker.</li>
+<li>Stateful apps. Marathon can bind persistent storage volumes to your application. You can run databases like MySQL and Postgres, and have storage accounted for by Mesos.</li>
+<li>Beautiful and powerful UI.</li>
+<li>Constraints. These allow to e.g. place only one instance of an application per rack, node, etc.</li>
+<li>Service Discovery &amp; Load Balancing. Several methods available.</li>
+<li>Health Checks. Evaluate your application’s health using HTTP or TCP checks.</li>
+<li>Event Subscription. Supply an HTTP endpoint to receive notifications - for example to integrate with an external load balancer.</li>
+<li>Metrics. Query them at /metrics in JSON format or push them to systems like graphite, statsd and Datadog.</li>
+<li>Complete REST API for easy integration and scriptability.</li>
+</ul>
+<p>Features: High availability, support for multiple container runtime environments, support for stateful applications, UI, support for deployment restrictions, service discovery &amp; load balancing, health check, event subscription, log collection, REST API;</p>
+<p> </p>
+<h2>DC/OS features</h2>
+<p>Running on DC/OS, Marathon gains the following additional features:</p>
+<ul>
+<li>Virtual IP routing. Allocate a dedicated, virtual address to your app. Your app is now reachable anywhere in the cluster, wherever it might be scheduled. Load balancing and rerouting around failures are done automatically.</li>
+<li>Authorization (DC/OS Enterprise Edition only). True multitenancy with each user or group having access to their own applications and groups.</li>
+</ul>
+<p>Virtual IP and authentication are also provided on DC/OS;</p>
+<p> <em><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201902/1509647-20190215191925891-848270288.png"/></em></p>
+<h1>2. Installation</h1>
+<h2>1 Official tar package installation</h2>
+<blockquote>
+<p>$ curl -O https://downloads.mesosphere.com/marathon/releases/1.6.322/marathon-1.6.322-2bf46b341.tgz<br/>$ tar xzf marathon-1.6.322-2bf46b341.tgz<br/>$ cd marathon-1.6.322-2bf46b341<br/>$ ls bin<br/>backup  backup.bat  marathon  marathon.bat  restore  restore.bat</p>
+</blockquote>
+<p>start up</p>
+<blockquote>
+<p>$ ./bin/mathon --master zk://$zk1:2181,$zk2:2181/mesos --zk zk://$zk1:2181,$zk2:2181/marathon --http_port 8090</p>
+</blockquote>
+<p>The default 8080 is easy to conflict with</p>
+<h2>2 Official yum installation</h2>
+<blockquote>
+<p># rpm -ivh http://repos.mesosphere.com/el/7/noarch/RPMS/mesosphere-el-repo-7-1.noarch.rpm<br/># yum install marathon</p>
+</blockquote>
+<h2>3 Offline installation</h2>
+<blockquote>
+<p># rpm -ivh http://repos.mesosphere.com/el/7/noarch/RPMS/mesosphere-el-repo-7-1.noarch.rpm<br/># yum install --downloadonly --downloaddir=/path/to/rpm/marathon marathon<br/># ls -l /path/to/rpm/marathon<br/>total 75276<br/>-rw-r--r-- 1 root root 77071702 Jan 29 07:41 marathon-1.7.189-0.1.20190125223314.el7.noarch.rpm</p>
+<p># rpm -ivh marathon-1.7.189-0.1.20190125223314.el7.noarch.rpm</p>
+</blockquote>
+<p>Installation directory</p>
+<blockquote>
+<p># ls /usr/share/marathon/bin<br/>backup  backup.bat  marathon  marathon.bat  restore  restore.bat</p>
+</blockquote>
+<p>Modify configuration</p>
+<blockquote>
+<p># vi /etc/default/marathon </p>
+<p>MARATHON_MASTER=zk://$zk1:2181,$zk2:2181/mesos<br/>MARATHON_ZK=zk://$zk1:2181,$zk2:2181/marathon<br/>MARATHON_HTTP_PORT=8090</p>
+</blockquote>
+<p>start up</p>
+<blockquote>
+<p># service marathon start</p>
+<p>or</p>
+<p># systemctl start marathon</p>
+</blockquote>
+<p>Start up</p>
+<blockquote>
+<p># systemctl enable marathon</p>
+</blockquote>
+<p>View status</p>
+<blockquote>
+<p># service marathon status</p>
+<p>or</p>
+<p># systemctl status marathon</p>
+</blockquote>
+<p>If there is an error, check the log</p>
+<blockquote>
+<p># journalctl -u marathon -r</p>
+</blockquote>
+<p> </p>
+<h1>Three uses</h1>
+<h2>http interface</h2>
+<p>Visit http://$marathon_server:8090</p>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201902/1509647-20190215183920541-1536891825.png"/></p>
+<p> </p>
+<h2>API interface</h2>
+<blockquote>
+<p>$ curl http://$marathon_server:8090/v2/apps</p>
+</blockquote>
+<p> </p>
+<p>add app</p>
+<blockquote>
+<p># curl -X POST http://$marathon_ip:8080/v2/apps -d@/path/to/app.json -H 'Content-type:application/json'</p>
+</blockquote>
+<p>View app</p>
+<blockquote>
+<p># curl http://$marathon_ip:8080/v2/apps/$app_id</p>
+</blockquote>
+<p>delete app</p>
+<blockquote>
+<p># curl -X DELETE http://$marathon_ip:8080/v2/apps/$app_id</p>
+</blockquote>
+<p>Restart app</p>
+<blockquote>
+<p># curl -XPOST http://$marathon_ip:8080/v2/apps/$app_id/restart</p>
+</blockquote>
+<p> </p>
+<p>Specific reference: http://mesosphere.github.io/marathon/API-console/index.html</p>
+<p> </p>
+<p>Reference: https://mesosphere.github.io/marathon/docs/</p>
+<p> </p>
+</div>
+</div>
+<!-- Post Footer -->
+<div class="post-footer">
+<div class="post-navigation">
+<a class="nav-button" href="../blog.html">← Back to Home</a>
+<a class="nav-button" href="0224.html">Next Post →</a>
+</div>
+</div>
+</article>
+</div>
+</body>
+</html>

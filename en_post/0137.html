@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Kudu 4 - Spark read and write Kudu</title>
+<link href="../css/style3.css" rel="stylesheet"/>
+</head>
+<body>
+<div class="container">
+<!-- Header Navigation -->
+<div class="header">
+<h1><a href="../blog.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+</div>
+<!-- Post Container -->
+<article class="post">
+<!-- Post Header -->
+<div class="post-header">
+<h1>Kudu 4 - Spark read and write Kudu</h1>
+<div class="post-meta">
+<div class="post-meta-item">
+<span class="meta-icon">📅</span>
+<span>May 15, 2019</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">📖</span>
+<span>4 min read</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">👁️</span>
+<span>5269 views</span>
+</div>
+</div>
+</div>
+<!-- Post Content -->
+<div class="post-content">
+<div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<p>spark2.4.3+kudu1.9</p>
+<p> </p>
+<h1>1 batch read</h1>
+<div class="cnblogs_code">
+<pre>val df = spark.read.format(<span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">kudu</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">)
+      .options(Map(</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">kudu.master</span><span style="color: rgba(128, 0, 0, 1)">"</span> - &gt; <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">master:7051</span><span style="color: rgba(128, 0, 0, 1)">"</span>, <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">kudu.table</span><span style="color: rgba(128, 0, 0, 1)">"</span> - &gt; <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">impala::test_db.test_table</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">))
+      .load
+df.createOrReplaceTempView(</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">tmp_table</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">)
+spark.sql(</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">select * from tmp_table limit 10</span><span style="color: rgba(128, 0, 0, 1)">"</span>).show()</pre>
+</div>
+<h1>2 Write in batches</h1>
+<div class="cnblogs_code">
+<pre><span style="color: rgba(0, 0, 255, 1)">import</span><span style="color: rgba(0, 0, 0, 1)"> org.apache.kudu.spark.kudu.{KuduContext, KuduWriteOptions}
+
+val kuduMaster </span>= <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">master:7051</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">
+val table </span>= <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">impala::test_db.test_table</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">
+
+val kuduContext </span>=<span style="color: rgba(0, 0, 0, 1)"> new KuduContext(kuduMaster, sc)
+
+kuduContext.upsertRows(df, table, new KuduWriteOptions(false, true))</span></pre>
+</div>
+<h1>3 Single read/conditional read</h1>
+<div class="cnblogs_code">
+<pre><span style="color: rgba(0, 0, 0, 1)">cd $SPARK_HOME
+bin</span>/spark-shell --packages org.apache.kudu:kudu-spark2_2.11:1.9<span style="color: rgba(0, 0, 0, 1)">.0
+
+</span><span style="color: rgba(0, 0, 255, 1)">import</span><span style="color: rgba(0, 0, 0, 1)"> org.apache.kudu.client.{KuduPredicate, RowResult}
+</span><span style="color: rgba(0, 0, 255, 1)">import</span><span style="color: rgba(0, 0, 0, 1)"> org.apache.kudu.spark.kudu.KuduContext
+
+val kuduMaster </span>= <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">master:7051</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">
+val table </span>= <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">impala::test_db.test_table</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">
+
+val kuduContext </span>=<span style="color: rgba(0, 0, 0, 1)"> new KuduContext(kuduMaster, sc)
+val table </span>=<span style="color: rgba(0, 0, 0, 1)"> kuduContext.syncClient.openTable(table)
+val predicate </span>= KuduPredicate.newComparisonPredicate(table.getSchema().getColumn(<span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">id</span><span style="color: rgba(128, 0, 0, 1)">"</span>),KuduPredicate.ComparisonOp.EQUAL, <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">testid</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">)
+val scanner </span>=<span style="color: rgba(0, 0, 0, 1)"> kuduContext.syncClient.newScannerBuilder(table).addPredicate(predicate).build()
+
+scanner.hasMoreRows
+val rows </span>=<span style="color: rgba(0, 0, 0, 1)"> scanner.nextRows
+rows.hasNext
+val row </span>=<span style="color: rgba(0, 0, 0, 1)"> rows.next
+
+println(row.getString(0))</span></pre>
+</div>
+<h1>4 single write</h1>
+<div class="cnblogs_code">
+<pre><span style="color: rgba(0, 0, 0, 1)">cd $SPARK_HOME
+bin</span>/spark-shell --packages org.apache.kudu:kudu-spark2_2.11:1.9<span style="color: rgba(0, 0, 0, 1)">.0
+
+</span><span style="color: rgba(0, 0, 255, 1)">import</span><span style="color: rgba(0, 0, 0, 1)"> org.apache.kudu.client.{KuduPredicate, RowResult}
+</span><span style="color: rgba(0, 0, 255, 1)">import</span><span style="color: rgba(0, 0, 0, 1)"> org.apache.kudu.spark.kudu.KuduContext
+</span><span style="color: rgba(0, 0, 255, 1)">import</span><span style="color: rgba(0, 0, 0, 1)"> org.apache.kudu.client.SessionConfiguration
+
+val kuduMaster </span>= <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">172.26.192.219:7051</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">
+
+val kuduContext </span>=<span style="color: rgba(0, 0, 0, 1)"> new KuduContext(kuduMaster, sc)
+val kuduClient </span>=<span style="color: rgba(0, 0, 0, 1)"> kuduContext.syncClient
+val kuduTable </span>= kuduClient.openTable(<span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">impala::dataone_xishaoye.tbl_order_union</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">)
+val kuduSession </span>=<span style="color: rgba(0, 0, 0, 1)"> kuduClient.newSession()
+
+</span>//<span style="color: rgba(0, 0, 0, 1)">AUTO_FLUSH_BACKGROUND AUTO_FLUSH_SYNC MANUAL_FLUSH
+kuduSession.setFlushMode(SessionConfiguration.FlushMode.AUTO_FLUSH_SYNC)
+kuduSession.setMutationBufferSpace(</span>1000<span style="color: rgba(0, 0, 0, 1)">)
+
+val insert </span>=<span style="color: rgba(0, 0, 0, 1)"> kuduTable.newInsert()
+val row </span>=<span style="color: rgba(0, 0, 0, 1)"> insert.getRow()
+row.addString(0, </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">hello</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">)
+kuduSession.apply(insert)
+</span>//kuduSession.flush</pre>
+</div>
+<p>Others: newInsert/newUpdate/newDelete/newUpsert</p>
+<h1>5 Error positioning</h1>
+<p>If you find that the modification has not taken effect after applying and confirm that it has been submitted, an error may be reported (no exception will be thrown) and the error message needs to be printed from OperationResponse.</p>
+<div class="cnblogs_code">
+<pre>val opResponse =<span style="color: rgba(0, 0, 0, 1)"> session.apply(op)
+</span><span style="color: rgba(0, 0, 255, 1)">if</span> (opResponse != null &amp;&amp; opResponse.hasRowError) println(opResponse.getRowError.toString)</pre>
+</div>
+<p>Note that FlushMode.AUTO_FLUSH_SYNC must be used, see the source code for details</p>
+<p>org.apache.kudu.client.KuduSession</p>
+<div class="cnblogs_code">
+<pre><span style="color: rgba(0, 0, 0, 1)">    public OperationResponse apply(Operation operation) throws KuduException {
+        </span><span style="color: rgba(0, 0, 255, 1)">while</span><span style="color: rgba(0, 0, 0, 1)">(true) {
+            </span><span style="color: rgba(0, 0, 255, 1)">try</span><span style="color: rgba(0, 0, 0, 1)"> {
+                Deferred</span>&lt;OperationResponse&gt; d =<span style="color: rgba(0, 0, 0, 1)"> this.session.apply(operation);
+                </span><span style="color: rgba(0, 0, 255, 1)">if</span>(this.getFlushMode() ==<span style="color: rgba(0, 0, 0, 1)"> FlushMode.AUTO_FLUSH_SYNC) {
+                    </span><span style="color: rgba(0, 0, 255, 1)">return</span><span style="color: rgba(0, 0, 0, 1)"> (OperationResponse)d.join();
+                }
+
+                </span><span style="color: rgba(0, 0, 255, 1)">return</span><span style="color: rgba(0, 0, 0, 1)"> null;
+            } catch (PleaseThrottleException var5) {
+                PleaseThrottleException ex </span>=<span style="color: rgba(0, 0, 0, 1)"> var5;
+
+                </span><span style="color: rgba(0, 0, 255, 1)">try</span><span style="color: rgba(0, 0, 0, 1)"> {
+                    ex.getDeferred().join();
+                } catch (Exception var4) {
+                    LOG.error(</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">Previous batch had this exception</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">, var4);
+                }
+            } catch (Exception var6) {
+                throw KuduException.transformException(var6);
+            }
+        }
+    }</span></pre>
+</div>
+<p> </p>
+<p>refer to:</p>
+<p>https://kudu.apache.org/docs/developing.html</p>
+<p> </p>
+</div>
+</div>
+<!-- Post Footer -->
+<div class="post-footer">
+<div class="post-navigation">
+<a class="nav-button" href="../blog.html">← Back to Home</a>
+<a class="nav-button" href="0138.html">Next Post →</a>
+</div>
+</div>
+</article>
+</div>
+</body>
+</html>

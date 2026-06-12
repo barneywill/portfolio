@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title> 13 - HBase Region frequently goes offline</title>
+<link href="../css/style3.css" rel="stylesheet"/>
+</head>
+<body>
+<div class="container">
+<!-- Header Navigation -->
+<div class="header">
+<h1><a href="../blog.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+</div>
+<!-- Post Container -->
+<article class="post">
+<!-- Post Header -->
+<div class="post-header">
+<h1> 13 - HBase Region frequently goes offline</h1>
+<div class="post-meta">
+<div class="post-meta-item">
+<span class="meta-icon">📅</span>
+<span>December 12, 2018</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">📖</span>
+<span>8 min read</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">👁️</span>
+<span>5413 views</span>
+</div>
+</div>
+</div>
+<!-- Post Content -->
+<div class="post-content">
+<div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<h1>Problem phenomenon: Hive reports an error when executing SQL</h1>
+<blockquote>
+<p>select count(*) from test_hive_table;</p>
+</blockquote>
+<p> Report an error</p>
+<blockquote>
+<p>Error: java.io.IOException: org.apache.hadoop.hbase.client.RetriesExhaustedException: Failed after attempts=36, exceptions:</p>
+<p>Wed May 16 10:22:17 CST 2018, null, java.net.SocketTimeoutException: callTimeout=60000, callDuration=68270: row '6495922803d09' on table 'test_hbase_table' at region=test_hbase_table,6495922803d09,1526207008130.6060407a4aa5e23c8df09614dd3fe650., hostname=server121,16020,1526398855988, seqNum=47468</p>
+</blockquote>
+<h2>Direct reason one: region status</h2>
+<p>This Hive table is an external table, and the underlying data is stored in HBase. The region status where the problem occurs is:</p>
+<blockquote>
+<p>2018-05-16 03:18:16 Online in RegionServer server121;</p>
+<p>2018-05-16 06:44:13 RegionServer server121 hung up and the region was offline; (it has been offline for 15 hours)</p>
+<p>2018-05-16 21:25:33 Online in RegionServer server92;</p>
+<p>2018-05-17 04:10:44 RegionServer server92 hung up and the region was offline; (it was offline for 10 hours)</p>
+<p>2018-05-17 14:27:33 Online in RegionServer server114;</p>
+</blockquote>
+<p> </p>
+<p>2018-05-16 10:22:17 The time when the query error was reported was when the region was offline, so the direct cause of the error was that a region in HBase was unavailable at that time.<strong>Question moved to</strong><strong>Hbase</strong>, the following is the detailed HBase log:</p>
+<p> </p>
+<h3>HMaster server132 log:</h3>
+<p>--------------------------------------</p>
+<blockquote>
+<p>2018-05-16 03:18:12,838 INFO  [ProcedureExecutor-15] master.RegionStates: Transition {6060407a4aa5e23c8df09614dd3fe650 state=OPEN, ts=1526370112734, server=server76,16020,1526343293931} to {</p>
+<p>6060407a4aa5e23c8df09614dd3fe650 state=OFFLINE, ts=1526411892838, server=server76,16020,1526343293931}</p>
+<p>2018-05-16 03:18:15,861 INFO  [server132,16000,1525800676562-GeneralBulkAssigner-9] master.RegionStates: Transition {6060407a4aa5e23c8df09614dd3fe650 state=OFFLINE, ts=1526411895787, server=server76,16020,1526343293931} to {6060407a4aa5e23c8df09614dd3fe650 state=PENDING_OPEN, ts=1526411895861, server=server121,16020,1526398855988}</p>
+<p>2018-05-16 03:18:16,311 INFO  [AM.ZK.Worker-pool2-t9606] master.RegionStates: Transition {6060407a4aa5e23c8df09614dd3fe650 state=PENDING_OPEN, ts=1526411895861, server=server121,16020,1526398855988}</p>
+<p> to {6060407a4aa5e23c8df09614dd3fe650 state=OPENING, ts=1526411896311, server=server121,16020,1526398855988}</p>
+<p>2018-05-16 03:18:16,445 INFO  [AM.ZK.Worker-pool2-t9610] master.RegionStates: Transition {6060407a4aa5e23c8df09614dd3fe650 state=OPENING, ts=1526411896311, server=server121,16020,1526398855988} to {</p>
+<p>6060407a4aa5e23c8df09614dd3fe650 state=OPEN, ts=1526411896445, server=server121,16020,1526398855988}</p>
+<p>2018-05-16 03:18:16,480 INFO  [AM.ZK.Worker-pool2-t9618] master.RegionStates: Offlined 6060407a4aa5e23c8df09614dd3fe650 from server76,16020,1526343293931</p>
+<p> </p>
+<p>2018-05-16 14:21:44,565 INFO  [B.defaultRpcServer.handler=183,queue=3,port=16000] master.MasterRpcServices: Client=hadoop//client assign test_hbase_table,6495922803d09,1526207008130.6060407a4aa5e23c8df09614dd3fe650.</p>
+<p>2018-05-16 14:21:44,565 INFO  [B.defaultRpcServer.handler=183,queue=3,port=16000] master.RegionStates: Transition {6060407a4aa5e23c8df09614dd3fe650 state=OPEN, ts=1526411896480, server=server121,16020,1526398855988} to {6060407a4aa5e23c8df09614dd3fe650 state=OFFLINE, ts=1526451704565, server=server121,16020,1526398855988}</p>
+<p>2018-05-16 14:21:44,566 INFO  [B.defaultRpcServer.handler=183,queue=3,port=16000] master.AssignmentManager: Skip assigning test_hbase_table,6495922803d09,1526207008130.6060407a4aa5e23c8df09614dd3fe650., it</p>
+<p>is on a dead but not processed yet server: server121,16020,1526398855988</p>
+<p> </p>
+<p>2018-05-16 21:25:32,030 INFO  [ProcedureExecutor-9] master.RegionStates: Transitioning {6060407a4aa5e23c8df09614dd3fe650 state=OFFLINE, ts=1526451704566, server=server121,16020,1526398855988} will be handled by ServerCrashProcedure for server121,16020,1526398855988</p>
+<p>2018-05-16 21:25:32,489 INFO  [ProcedureExecutor-9] procedure.ServerCrashProcedure: Reassigning region {6060407a4aa5e23c8df09614dd3fe650 state=OFFLINE, ts=1526451704566, server=server121,16020,1526398855988} and clearing zknode if exists</p>
+<p>2018-05-16 21:25:32,938 INFO  [server132,16000,1525800676562-GeneralBulkAssigner-9] master.RegionStates: Transition {6060407a4aa5e23c8df09614dd3fe650 state=OFFLINE, ts=1526477132893, server=server121,16020,1526398855988} to {6060407a4aa5e23c8df09614dd3fe650 state=PENDING_OPEN, ts=1526477132938, server=server92,16020,1526473170596}</p>
+<p>2018-05-16 21:25:33,078 INFO  [AM.ZK.Worker-pool2-t10955] master.RegionStates: Transition {6060407a4aa5e23c8df09614dd3fe650 state=PENDING_OPEN, ts=1526477132938, server=server92,16020,1526473170596}</p>
+<p> to {6060407a4aa5e23c8df09614dd3fe650 state=OPENING, ts=1526477133078, server=server92,1526473170596}</p>
+<p>2018-05-16 21:25:33,895 INFO  [AM.ZK.Worker-pool2-t10956] master.RegionStates: Transition {6060407a4aa5e23c8df09614dd3fe650 state=OPENING, ts=1526477133078, server=server92,16020,1526473170596} to {</p>
+<p>6060407a4aa5e23c8df09614dd3fe650 state=OPEN, ts=1526477133895, server=server92,16020,1526473170596}</p>
+<p>2018-05-16 21:25:33,940 INFO  [AM.ZK.Worker-pool2-t10956] master.RegionStates: Offlined 6060407a4aa5e23c8df09614dd3fe650 from server121,16020,1526398855988</p>
+</blockquote>
+<p> </p>
+<h3>RegionServer server121 log:</h3>
+<p>--------------------------------------</p>
+<blockquote>
+<p>2018-05-16 03:18:16,390 INFO  [RS_OPEN_REGION-server121:16020-0] regionserver.HRegion: Onlined 6060407a4aa5e23c8df09614dd3fe650; next sequenceid=47468</p>
+<p> </p>
+<p>2018-05-16 06:44:13,077 FATAL [regionserver/server121/server121:16020.logRoller] regionserver.HRegionServer: ABORTING region server server121,16020,1526398855988: Failed log close in log roller</p>
+<p> </p>
+<p>2018-05-16 06:44:13,218 INFO  [StoreCloserThread-test_hbase_table,6495922803d09,1526207008130.6060407a4aa5e23c8df09614dd3fe650.-1] regionserver.HStore: Closed cf_p</p>
+<p>2018-05-16 06:44:13,218 INFO  [RS_CLOSE_REGION-server121:16020-0] regionserver.HRegion: Closed test_hbase_table,6495922803d09,1526207008130.6060407a4aa5e23c8df09614dd3fe650.</p>
+</blockquote>
+<p> </p>
+<h3>RegionServer server92 log:</h3>
+<p>--------------------------------------</p>
+<blockquote>
+<p>2018-05-16 21:25:33,837 INFO  [RS_OPEN_REGION-server92:16020-1] regionserver.HRegion: Onlined 6060407a4aa5e23c8df09614dd3fe650; next sequenceid=48261</p>
+<p> </p>
+<p>2018-05-17 04:10:44,590 FATAL [regionserver/server92/server92:16020.logRoller] regionserver.HRegionServer: ABORTING region server server92,16020,1526473170596: Failed log close in log roller</p>
+<p> </p>
+<p>2018-05-17 04:10:44,716 INFO  [StoreCloserThread-test_hbase_table,6495922803d09,1526207008130.6060407a4aa5e23c8df09614dd3fe650.-1] regionserver.HStore: Closed cf_p</p>
+<p>2018-05-17 04:10:44,716 INFO  [RS_CLOSE_REGION-server92:16020-1] regionserver.HRegion: Closed test_hbase_table,6495922803d09,1526207008130.6060407a4aa5e23c8df09614dd3fe650.</p>
+</blockquote>
+<p> </p>
+<h2>Direct reason two: RegionServer process frequently exits</h2>
+<p>In addition, RegionServer is very unstable recently. Taking RegionServer server121 as an example, the process has frequently exited in recent days.</p>
+<h3>RegionServer exit log:</h3>
+<p>--------------------------------------</p>
+<blockquote>
+<p>2018-05-15 00:09:26,412 FATAL [regionserver/server121/server121:16020.logRoller] regionserver.HRegionServer: ABORTING region server server121,16020,1526299719028: Failed log close in log roller</p>
+<p>2018-05-15 08:07:39,293 FATAL [regionserver/server121/server121:16020.logRoller] regionserver.HRegionServer: ABORTING region server server121,16020,1526314169508: Failed log close in log roller</p>
+<p>2018-05-15 12:58:12,082 FATAL [regionserver/server121/server121:16020.logRoller] regionserver.HRegionServer: ABORTING region server server121,16020,1526342866588: Failed log close in log roller</p>
+<p>2018-05-15 21:40:19,032 FATAL [regionserver/server121/server121:16020.logRoller] regionserver.HRegionServer: ABORTING region server server121,16020,1526360301267: Failed log close in log roller</p>
+<p>2018-05-15 23:40:47,297 FATAL [regionserver/server121/server121:16020.logRoller] regionserver.HRegionServer: ABORTING region server server121,16020,1526391631046: Failed log close in log roller</p>
+<p>2018-05-16 06:44:13,077 FATAL [regionserver/server121/server121:16020.logRoller] regionserver.HRegionServer: ABORTING region server server121,16020,1526398855988: Failed log close in log roller</p>
+<p>2018-05-16 16:16:13,501 FATAL [regionserver/server121/server121:16020.logRoller] regionserver.HRegionServer: ABORTING region server server121,16020,1526449759526: Failed log close in log roller</p>
+<p>2018-05-16 21:54:02,776 FATAL [regionserver/server121/server121:16020.logRoller] regionserver.HRegionServer: ABORTING region server server121,16020,1526458576939: Failed log close in log roller</p>
+<p>2018-05-17 03:27:20,017 FATAL [regionserver/server121/server121:16020.logRoller] regionserver.HRegionServer: ABORTING region server server121,16020,1526478847956: Failed log close in log roller</p>
+<p>2018-05-17 16:03:16,978 FATAL [regionserver/server121/server121:16020.logRoller] regionserver.HRegionServer: ABORTING region server server121,16020,1526498846730: Failed log close in log roller</p>
+</blockquote>
+<p> </p>
+<h3>RegionServer startup log:</h3>
+<p>--------------------------------------</p>
+<blockquote>
+<p>Tue May 15 00:09:28 CST 2018 Starting regionserver on server121</p>
+<p>Tue May 15 08:07:45 CST 2018 Starting regionserver on server121</p>
+<p>Tue May 15 12:58:20 CST 2018 Starting regionserver on server121</p>
+<p>Tue May 15 21:40:29 CST 2018 Starting regionserver on server121</p>
+<p>Tue May 15 23:40:54 CST 2018 Starting regionserver on server121</p>
+<p>Wed May 16 06:44:20 CST 2018 Starting regionserver on server121</p>
+<p>Wed May 16 13:49:18 CST 2018 Starting regionserver on server121</p>
+<p>Wed May 16 16:16:15 CST 2018 Starting regionserver on server121</p>
+<p>Wed May 16 21:54:06 CST 2018 Starting regionserver on server121</p>
+<p>Thu May 17 03:27:25 CST 2018 Starting regionserver on server121</p>
+<p>Thu May 17 16:03:21 CST 2018 Starting regionserver on server121</p>
+</blockquote>
+<p> </p>
+<h1>Question 1: Why does HBase’s RegionServer exit frequently?</h1>
+<blockquote>
+<p>2018-05-16 06:44:13,077 FATAL [regionserver/server121/server121:16020.logRoller] regionserver.HRegionServer: ABORTING region server server121,16020,1526398855988: Failed log close in log roller</p>
+<p>org.apache.hadoop.hbase.regionserver.wal.FailedLogCloseException: hdfs://hdfs_name/hbase/WALs/server121,16020,1526398855988/server121%2C16020%2C1526398855988.default.1526421652184, unflushedEntries=133</p>
+<p>        at org.apache.hadoop.hbase.regionserver.wal.FSHLog.replaceWriter(FSHLog.java:907)</p>
+<p>        at org.apache.hadoop.hbase.regionserver.wal.FSHLog.rollWriter(FSHLog.java:709)</p>
+<p>        at org.apache.hadoop.hbase.regionserver.LogRoller.run(LogRoller.java:148)</p>
+<p>        at java.lang.Thread.run(Thread.java:745)</p>
+<p>Caused by: org.apache.hadoop.hbase.regionserver.wal.FailedSyncBeforeLogCloseException: org.apache.hadoop.hbase.regionserver.wal.DamagedWALException: Append sequenceId=10739149, requesting roll of WAL</p>
+<p>        at org.apache.hadoop.hbase.regionserver.wal.FSHLog$SafePointZigZagLatch.checkIfSyncFailed(FSHLog.java:1650)</p>
+<p>        at org.apache.hadoop.hbase.regionserver.wal.FSHLog$SafePointZigZagLatch.waitSafePoint(FSHLog.java:1669)</p>
+<p>        at org.apache.hadoop.hbase.regionserver.wal.FSHLog.replaceWriter(FSHLog.java:858)</p>
+<p>        ... 3 more</p>
+<p>Caused by: org.apache.hadoop.hbase.regionserver.wal.DamagedWALException: Append sequenceId=10739149, requesting roll of WAL</p>
+<p>        at org.apache.hadoop.hbase.regionserver.wal.FSHLog$RingBufferEventHandler.append(FSHLog.java:1970)</p>
+<p>        at org.apache.hadoop.hbase.regionserver.wal.FSHLog$RingBufferEventHandler.onEvent(FSHLog.java:1814)</p>
+<p>        at org.apache.hadoop.hbase.regionserver.wal.FSHLog$RingBufferEventHandler.onEvent(FSHLog.java:1724)</p>
+<p>        at com.lmax.disruptor.BatchEventProcessor.run(BatchEventProcessor.java:128)</p>
+<p>        at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1142)</p>
+<p>        at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:617)</p>
+<p>        ... 1 more</p>
+<p>Caused by: java.io.IOException: Failed to replace a bad datanode on the existing pipeline due to no more good datanodes being available to try. (Nodes: current=[server82:50010], original=[server82:50010]).</p>
+<p> The current failed datanode replacement policy is ALWAYS, and a client may configure this via 'dfs.client.block.write.replace-datanode-on-failure.policy' in its configuration.</p>
+<p>        at org.apache.hadoop.hdfs.DFSOutputStream$DataStreamer.findNewDatanode(DFSOutputStream.java:1040)</p>
+<p>        at org.apache.hadoop.hdfs.DFSOutputStream$DataStreamer.addDatanode2ExistingPipeline(DFSOutputStream.java:1106)</p>
+<p>        at org.apache.hadoop.hdfs.DFSOutputStream$DataStreamer.setupPipelineForAppendOrRecovery(DFSOutputStream.java:1253)</p>
+<p>        at org.apache.hadoop.hdfs.DFSOutputStream$DataStreamer.processDatanodeError(DFSOutputStream.java:1004)</p>
+<p>        at org.apache.hadoop.hdfs.DFSOutputStream$DataStreamer.run(DFSOutputStream.java:548)</p>
+</blockquote>
+<p> The error reported here is due to the failure to obtain a new DataNode. Please see HDFS code analysis for details. <a href="https://www.cnblogs.com/barneywill/p/10114504.html" target="_blank" title="Big Data Basics HDFS (1) How to allocate Datanodes for newly created files in HDFS">https://www.cnblogs.com/barneywill/p/10114504.html</a></p>
+<p>Approximate process: Due to too many racks, the maxNodesPerRack calculation result is 1 (see question 2 for the calculation process), that is, each rack can only be allocated at most one DataNode, and then only one rack is available in the entire HDFS cluster. Finally, the numOfAvailableNodes calculation result is 0, and then NotEnoughReplicasException will be thrown.</p>
+<p> </p>
+<h1>Question 2: Why is there only one copy of the problematic HDFS file?</h1>
+<blockquote>
+<p>hdfs://hdfs_name/hbase/WALs/server121,16020,1526398855988/server121%2C16020%2C1526398855988.default.1526421652184</p>
+<p>Failed to replace a bad datanode on the existing pipeline due to no more good datanodes being available to try. (Nodes: current=[server82:50010], original=[server82:50010]).</p>
+</blockquote>
+<p> For details on HDFS code analysis, see <a href="https://www.cnblogs.com/barneywill/p/10114504.html" target="_blank" title="Big Data Basics HDFS (1) How to allocate Datanodes for newly created files in HDFS">https://www.cnblogs.com/barneywill/p/10114504.html</a>       </p>
+<p>Note:</p>
+<blockquote>
+<p>int maxNodesPerRack = (totalNumOfReplicas-1)/numOfRacks + 2;</p>
+</blockquote>
+<p>Result: maxNodesPerRack = (2-1)/5+2 = 2;</p>
+<blockquote>
+<p>    if (maxNodesPerRack == totalNumOfReplicas) {</p>
+<p>      maxNodesPerRack--;</p>
+<p>    }</p>
+</blockquote>
+<p>Result: maxNodesPerRack = 1;</p>
+<p>Due to the excessive number of racks, only one DataNode can be allocated to a rack. Combined with the current HDFS rack structure, only one rack is available, so there is only 1 copy.</p>
+<p> </p>
+<h1>Question 3: Why does it take a long time for a Region to go from OFFLINE to ONLINE?</h1>
+<p>Let’s look at the process of the problematic Region going offline from 2018-05-16 06:44:13 to going online at 2018-05-16 21:25:33</p>
+<p> </p>
+<h2>Hmaster log:</h2>
+<blockquote>
+<p>2018-05-16 06:44:13,437 INFO  [main-EventThread] zookeeper.RegionServerTracker: RegionServer ephemeral node deleted, processing expiration [server121,16020,1526398855988]</p>
+<p>2018-05-16 06:44:13,633 INFO  [ProcedureExecutor-2] procedure.ServerCrashProcedure: Start processing crashed server121,16020,1526398855988</p>
+<p>2018-05-16 06:44:13,895 INFO  [ProcedureExecutor-8] master.SplitLogManager: dead splitlog workers [server121,16020,1526398855988]</p>
+<p>2018-05-16 06:44:13,896 INFO  [ProcedureExecutor-8] master.SplitLogManager: Started splitting 3 logs in [hdfs://hdfs_name/hbase/WALs/server121,16020,1526398855988-splitting] for [server121,16020,1526398855988]</p>
+<p>2018-05-16 06:44:13,911 INFO  [main-EventThread] coordination.SplitLogManagerCoordination: task /hbase/splitWAL/WALs%2Fserver121%2C16020%2C1526398855988-splitting%2Fserver121%252C16020%252C1526398855988.default.1526418989998 acquired by server94,16020,1526360475758</p>
+<p>2018-05-16 06:44:13,919 INFO  [main-EventThread] coordination.SplitLogManagerCoordination: task /hbase/splitWAL/WALs%2Fserver121%2C16020%2C1526398855988-splitting%2Fserver121%252C16020%252C1526398855988.default.1526424253042 acquired by server124,16020,1526398058280</p>
+<p>2018-05-16 06:44:13,919 INFO  [main-EventThread] coordination.SplitLogManagerCoordination: task /hbase/splitWAL/WALs%2Fserver121%2C16020%2C1526398855988-splitting%2Fserver121%252C16020%252C1526398855988.default.1526421652184 acquired by server119,16020,1526383578672</p>
+</blockquote>
+<p> </p>
+<p>After the RegionServer hangs, the master starts server crash processing. First, it tries to split the log. There are three logs here, and two of them are processed quickly:</p>
+<blockquote>
+<p>2018-05-16 06:44:13,964 INFO  [main-EventThread] coordination.SplitLogManagerCoordination: Done splitting /hbase/splitWAL/WALs%2Fserver121%2C16020%2C1526398855988-splitting%2Fserver121%</p>
+<p>252C16020%252C1526398855988.default.1526424253042</p>
+<p>2018-05-16 06:46:01,875 INFO  [main-EventThread] coordination.SplitLogManagerCoordination: Done splitting /hbase/splitWAL/WALs%2Fserver121%2C16020%2C1526398855988-splitting%2Fserver121%</p>
+<p>252C16020%252C1526398855988.default.1526421652184</p>
+</blockquote>
+<p> </p>
+<p>But there is one that has been being processed and repeatedly reported errors:</p>
+<blockquote>
+<p>2018-05-16 07:56:32,848 WARN  [main-EventThread] coordination.SplitLogManagerCoordination: Error splitting /hbase/splitWAL/WALs%2Fserver121%2C16020%2C1526398855988-splitting%2Fserver121%252C16020%252C1526398855988.default.1526418989998</p>
+<p>2018-05-16 09:08:56,761 WARN  [main-EventThread] coordination.SplitLogManagerCoordination: Error splitting /hbase/splitWAL/WALs%2Fserver121%2C16020%2C1526398855988-splitting%2Fserver121%252C16020%252C1526398855988.default.1526418989998</p>
+<p>2018-05-16 10:21:29,120 WARN  [main-EventThread] coordination.SplitLogManagerCoordination: Error splitting /hbase/splitWAL/WALs%2Fserver121%2C16020%2C1526398855988-splitting%2Fserver121%252C16020%252C1526398855988.default.1526418989998</p>
+<p>2018-05-16 11:47:19,093 WARN  [main-EventThread] coordination.SplitLogManagerCoordination: Error splitting /hbase/splitWAL/WALs%2Fserver121%2C16020%2C1526398855988-splitting%2Fserver121%252C16020%252C1526398855988.default.1526418989998</p>
+<p>2018-05-16 12:59:40,008 WARN  [main-EventThread] coordination.SplitLogManagerCoordination: Error splitting /hbase/splitWAL/WALs%2Fserver121%2C16020%2C1526398855988-splitting%2Fserver121%252C16020%252C1526398855988.default.1526418989998</p>
+<p>2018-05-16 14:12:18,594 WARN  [main-EventThread] coordination.SplitLogManagerCoordination: Error splitting /hbase/splitWAL/WALs%2Fserver121%2C16020%2C1526398855988-splitting%2Fserver121%252C16020%252C1526398855988.default.1526418989998</p>
+<p>2018-05-16 15:24:46,758 WARN  [main-EventThread] coordination.SplitLogManagerCoordination: Error splitting /hbase/splitWAL/WALs%2Fserver121%2C16020%2C1526398855988-splitting%2Fserver121%252C16020%252C1526398855988.default.1526418989998</p>
+<p>2018-05-16 16:37:17,790 WARN  [main-EventThread] coordination.SplitLogManagerCoordination: Error splitting /hbase/splitWAL/WALs%2Fserver121%2C16020%2C1526398855988-splitting%2Fserver121%252C16020%252C1526398855988.default.1526418989998</p>
+<p>2018-05-16 18:06:36,864 WARN  [main-EventThread] coordination.SplitLogManagerCoordination: Error splitting /hbase/splitWAL/WALs%2Fserver121%2C16020%2C1526398855988-splitting%2Fserver121%252C16020%252C1526398855988.default.1526418989998</p>
+<p>2018-05-16 19:18:50,573 WARN  [main-EventThread] coordination.SplitLogManagerCoordination: Error splitting /hbase/splitWAL/WALs%2Fserver121%2C16020%2C1526398855988-splitting%2Fserver121%252C16020%252C1526398855988.default.1526418989998</p>
+<p>2018-05-16 20:37:30,438 WARN  [main-EventThread] coordination.SplitLogManagerCoordination: Error splitting /hbase/splitWAL/WALs%2Fserver121%2C16020%2C1526398855988-splitting%2Fserver121%252C16020%252C1526398855988.default.1526418989998</p>
+<p>2018-05-16 21:17:56,062 WARN  [main-EventThread] coordination.SplitLogManagerCoordination: Error splitting /hbase/splitWAL/WALs%2Fserver121%2C16020%2C1526398855988-splitting%2Fserver121%252C16020%252C1526398855988.default.1526418989998</p>
+</blockquote>
+<p> </p>
+<p>It is found that the split process of this log file has been in the error retry process from 6:44 to 21:00. For specific error reports, please refer to the first split process log:</p>
+<blockquote>
+<p>2018-05-16 06:44:13,911 INFO  [SplitLogWorker-server94:16020] coordination.ZkSplitLogWorkerCoordination: worker server94,16020,1526360475758 acquired task /hbase/splitWAL/WALs%2Fserver121%2C16020%2C1526398855988-splitting%2Fserver121%252C16020%252C1526398855988.default.1526418989998</p>
+<p>2018-05-16 06:44:13,932 INFO  [RS_LOG_REPLAY_OPS-server94:16020-0] wal.WALSplitter: Splitting wal: hdfs://hdfs_name/hbase/WALs/server121,16020,1526398855988-splitting/server121%2C16020%2C1526398855988.default.1526418989998, length=83</p>
+<p>2018-05-16 06:44:13,932 INFO  [RS_LOG_REPLAY_OPS-server94:16020-0] wal.WALSplitter: DistributedLogReplay = false</p>
+<p>2018-05-16 06:44:13,932 INFO  [RS_LOG_REPLAY_OPS-server94:16020-0] util.FSHDFSUtils: Recover lease on dfs file hdfs://hdfs_name/hbase/WALs/server121,16020,1526398855988-splitting/server121%2C16020%2C1526398855988.default.1526418989998</p>
+<p> </p>
+<p>2018-05-16 06:44:13,934 INFO  [RS_LOG_REPLAY_OPS-server94:16020-0] util.FSHDFSUtils: Failed to recover lease, attempt=0 on file=hdfs://hdfs_name/hbase/WALs/server121,16020,1526398855988-splitting/server121%2C16020%2C1526398855988.default.1526418989998 after 1ms</p>
+<p>2018-05-16 06:44:17,935 INFO  [RS_LOG_REPLAY_OPS-server94:16020-0] util.FSHDFSUtils: Failed to recover lease, attempt=1 on file=hdfs://hdfs_name/hbase/WALs/server121,16020,1526398855988-splitting/server121%2C16020%2C1526398855988.default.1526418989998 after 4002ms</p>
+<p>2018-05-16 06:45:22,051 INFO  [RS_LOG_REPLAY_OPS-server94:16020-0] util.FSHDFSUtils: Failed to recover lease, attempt=2 on file=hdfs://hdfs_name/hbase/WALs/server121,16020,1526398855988-splitting/server121%2C16020%2C1526398855988.default.1526418989998 after 68118ms</p>
+<p>2018-05-16 06:47:30,834 INFO  [RS_LOG_REPLAY_OPS-server94:16020-0] util.FSHDFSUtils: Failed to recover lease, attempt=3 on file=hdfs://hdfs_name/hbase/WALs/server121,16020,1526398855988-splitting/server121%2C16020%2C1526398855988.default.1526418989998 after 196901ms</p>
+<p>2018-05-16 06:50:43,622 INFO  [RS_LOG_REPLAY_OPS-server94:16020-0] util.FSHDFSUtils: Failed to recover lease, attempt=4 on file=hdfs://hdfs_name/hbase/WALs/server121,16020,1526398855988-splitting/server121%2C16020%2C1526398855988.default.1526418989998 after 389689ms</p>
+<p>2018-05-16 06:55:00,314 INFO  [RS_LOG_REPLAY_OPS-server94:16020-0] util.FSHDFSUtils: Failed to recover lease, attempt=5 on file=hdfs://hdfs_name/hbase/WALs/server121,16020,1526398855988-splitting/server121%2C16020%2C1526398855988.default.1526418989998 after 646381ms</p>
+<p>2018-05-16 07:00:20,600 INFO  [RS_LOG_REPLAY_OPS-server94:16020-0] util.FSHDFSUtils: Failed to recover lease, attempt=6 on file=hdfs://hdfs_name/hbase/WALs/server121,16020,1526398855988-splitting/server121%2C16020%2C1526398855988.default.1526418989998 after 966667ms</p>
+<p>2018-05-16 07:01:09,660 WARN  [RS_LOG_REPLAY_OPS-server94:16020-0] hdfs.DFSClient: Failed to connect to /server28:50010 for block, add to deadNodes and continue. java.io.IOException: Got error for OP_READ_BLOCK, self=/server94:26354, remote=/server28:50010, for file /hbase/WALs/server121,16020,1526398855988-splitting/server121%2C16020%2C1526398855988.default.1526418989998, for pool BP-436366437-server131-1493982655699 block 1361314257_288238951</p>
+<p>2018-05-16 07:01:59,868 WARN  [RS_LOG_REPLAY_OPS-server94:16020-0] hdfs.DFSClient: Failed to connect to /server28:50010 for block, add to deadNodes and continue. java.io.IOException: Got error for OP_READ_BLOCK, self=/server94:28464, remote=/server28:50010, for file /hbase/WALs/server121,16020,1526398855988-splitting/server121%2C16020%2C1526398855988.default.1526418989998, for pool BP-436366437-server131-1493982655699 block 1361314257_288238951</p>
+<p>2018-05-16 07:02:56,853 WARN  [RS_LOG_REPLAY_OPS-server94:16020-0] hdfs.DFSClient: Failed to connect to /server28:50010 for block, add to deadNodes and continue. java.io.IOException: Got error for OP_READ_BLOCK, self=/server94:30766, remote=/server28:50010, for file /hbase/WALs/server121,16020,1526398855988-splitting/server121%2C16020%2C1526398855988.default.1526418989998, for pool BP-436366437-server131-1493982655699 block 1361314257_288238951</p>
+<p>2018-05-16 07:03:56,370 WARN  [RS_LOG_REPLAY_OPS-server94:16020-0] hdfs.DFSClient: Failed to connect to /server28:50010 for block, add to deadNodes and continue. java.io.IOException: Got error for OP_READ_BLOCK, self=/server94:33214, remote=/server28:50010, for file /hbase/WALs/server121,16020,1526398855988-splitting/server121%2C16020%2C1526398855988.default.1526418989998, for pool BP-436366437-server131-1493982655699 block 1361314257_288238951</p>
+</blockquote>
+<p> </p>
+<p>It was found that reading the HDFS file timed out, and the specific error was reported:</p>
+<blockquote>
+<p>2018-05-16 07:01:09,660 WARN  [RS_LOG_REPLAY_OPS-server94:16020-0] hdfs.DFSClient: Failed to connect to /server28:50010 for block, add to deadNodes and continue. java.io.IOException: Got error for OP_READ_BLOCK, self=/server94:26354, remote=/server28:50010, for file /hbase/WALs/server121,16020,1526398855988-splitting/server121%2C16020%2C1526398855988.default.1526418989998, for pool BP-436366437-server131-1493982655699 block 1361314257_288238951</p>
+<p>java.io.IOException: Got error for OP_READ_BLOCK, self=/server94:26354, remote=/server28:50010, for file /hbase/WALs/server121,16020,1526398855988-splitting/server121%2C16020%2C</p>
+<p>1526398855988.default.1526418989998, for pool BP-436366437-server131-1493982655699 block 1361314257_288238951</p>
+<p>        at org.apache.hadoop.hdfs.RemoteBlockReader2.checkSuccess(RemoteBlockReader2.java:445)</p>
+<p>        at org.apache.hadoop.hdfs.RemoteBlockReader2.newBlockReader(RemoteBlockReader2.java:410)</p>
+<p>        at org.apache.hadoop.hdfs.BlockReaderFactory.getRemoteBlockReader(BlockReaderFactory.java:819)</p>
+<p>        at org.apache.hadoop.hdfs.BlockReaderFactory.getRemoteBlockReaderFromTcp(BlockReaderFactory.java:697)</p>
+<p>        at org.apache.hadoop.hdfs.BlockReaderFactory.build(BlockReaderFactory.java:354)</p>
+<p>        at org.apache.hadoop.hdfs.DFSInputStream.blockSeekTo(DFSInputStream.java:576)</p>
+<p>        at org.apache.hadoop.hdfs.DFSInputStream.readWithStrategy(DFSInputStream.java:800)</p>
+<p>        at org.apache.hadoop.hdfs.DFSInputStream.read(DFSInputStream.java:848)</p>
+<p>        at java.io.DataInputStream.read(DataInputStream.java:100)</p>
+<p>        at org.apache.hadoop.hbase.wal.WALFactory.createReader(WALFactory.java:299)</p>
+<p>        at org.apache.hadoop.hbase.wal.WALFactory.createReader(WALFactory.java:267)</p>
+<p>        at org.apache.hadoop.hbase.wal.WALSplitter.getReader(WALSplitter.java:853)</p>
+<p>        at org.apache.hadoop.hbase.wal.WALSplitter.getReader(WALSplitter.java:777)</p>
+<p>        at org.apache.hadoop.hbase.wal.WALSplitter.splitLogFile(WALSplitter.java:298)</p>
+<p>        at org.apache.hadoop.hbase.wal.WALSplitter.splitLogFile(WALSplitter.java:236)</p>
+<p>        at org.apache.hadoop.hbase.regionserver.SplitLogWorker$1.exec(SplitLogWorker.java:104)</p>
+<p>        at org.apache.hadoop.hbase.regionserver.handler.WALSplitterHandler.process(WALSplitterHandler.java:72)</p>
+<p>        at org.apache.hadoop.hbase.executor.EventHandler.run(EventHandler.java:129)</p>
+<p>        at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1142)</p>
+<p>        at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:617)</p>
+<p>        at java.lang.Thread.run(Thread.java:745)</p>
+<p>2018-05-16 07:01:09,661 INFO  [RS_LOG_REPLAY_OPS-server94:16020-0] hdfs.DFSClient: Could not obtain BP-436366437-server131-1493982655699:blk_1361314257_288238951 from any node: java.io.IOException: No live</p>
+<p>nodes contain block BP-436366437-server131-1493982655699:blk_1361314257_288238951 after checking nodes = [server127:50010, server28:50010], ignoredNodes = null No live nodes contain current block Block</p>
+<p>locations: server127:50010 server28:50010 Dead nodes:  server127:50010 server28:50010. Will get new block locations from namenode and retry...</p>
+<p>2018-05-16 07:01:09,661 WARN  [RS_LOG_REPLAY_OPS-server94:16020-0] hdfs.DFSClient: DFS chooseDataNode: got # 1 IOException, will wait for 1196.0361088580376 msec.</p>
+<p>2018-05-16 07:01:14,861 INFO  [RS_LOG_REPLAY_OPS-server94:16020-0] ipc.Client: Retrying connect to server: server127/server127:50020. Already tried 0 time(s); retry policy is RetryUpToMaximumCountWithFixedSleep(maxRetries=10, sleepTime=1000 MILLISECONDS)</p>
+</blockquote>
+<p> </p>
+<p>It was not until 2018-05-16 21:25:31 that the split was finally completed.</p>
+<blockquote>
+<p>2018-05-16 21:25:31,858 INFO  [main-EventThread] coordination.SplitLogManagerCoordination: task /hbase/splitWAL/WALs%2Fserver121%2C16020%2C1526398855988-splitting%2Fserver121%252C16020%252C1526398855988.default.1526418989998 entered state: DONE server76,16020,1526424280100</p>
+<p>2018-05-16 21:25:31,868 INFO  [main-EventThread] wal.WALSplitter: Archived processed log hdfs://hdfs_name/hbase/WALs/server121,16020,1526398855988-splitting/server121%2C16020%2C1526398855988.default.1526418989998 to hdfs://hdfs_name/hbase/oldWALs/server121%2C16020%2C1526398855988.default.1526418989998</p>
+<p>2018-05-16 21:25:31,869 INFO  [main-EventThread] coordination.SplitLogManagerCoordination: Done splitting /hbase/splitWAL/WALs%2Fserver121%2C16020%2C1526398855988-splitting%2Fserver121%252C16020%252C1526398855988.default.1526418989998</p>
+<p>2018-05-16 21:25:31,870 INFO  [ProcedureExecutor-11] master.SplitLogManager: finished splitting (more than or equal to) 83 bytes in 1 log files in [hdfs://hdfs_name/hbase/WALs/server121,16020,1526398855988-splitting] in 455631ms</p>
+</blockquote>
+<p> </p>
+<p>Then many regions were assigned, including the problematic region. This region was online on RegionServer server92. For details, see the previous log. For details of the assign process code, see:</p>
+<p>org.apache.hadoop.hbase.master.AssignmentManager.assign</p>
+<p> </p>
+<h1>Problem summary</h1>
+<p>In the final analysis, all problems are caused by the HDFS rack configuration. Some servers are configured with rack information, and some servers are not configured with rack information, resulting in a particularly large number of racks, and the servers in the racks are unevenly distributed. According to the HDFS allocation strategy, it can be calculated that in this case, a rack can only be allocated a maximum of one D Atanode, at the same time, the remaining space of datanodes on a large number of racks is 0, so many files only have one copy, which creates a single point. Once a DataNode node status is abnormal, it may cause a large number of files to be unavailable, which will lead to a series of other problems, such as the HBase above The region has been offline for a long time.</p>
+<p>The problem was found in Hive, the direct cause was HBase, and the root cause was HDFS, which was essentially due to improper rack configuration;</p>
+<p>Rack-related configurations in HDFS:</p>
+<blockquote>
+<p>  &lt;property&gt;</p>
+<p>    &lt;name&gt;net.topology.script.file.name&lt;/name&gt;</p>
+<p>    &lt;value&gt;/export/App/hadoop-2.6.1/etc/hadoop/rack.py&lt;/value&gt;</p>
+<p>  &lt;/property&gt;</p>
+</blockquote>
+<p> </p>
+</div>
+</div>
+<!-- Post Footer -->
+<div class="post-footer">
+<div class="post-navigation">
+<a class="nav-button" href="../blog.html">← Back to Home</a>
+<a class="nav-button" href="0328.html">Next Post →</a>
+</div>
+</div>
+</article>
+</div>
+</body>
+</html>

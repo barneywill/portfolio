@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>The content is modified after Spring's RestTemplate requests JSON data</title>
+<link href="../css/style3.css" rel="stylesheet"/>
+</head>
+<body>
+<div class="container">
+<!-- Header Navigation -->
+<div class="header">
+<h1><a href="../blog.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+</div>
+<!-- Post Container -->
+<article class="post">
+<!-- Post Header -->
+<div class="post-header">
+<h1>The content is modified after Spring's RestTemplate requests JSON data</h1>
+<div class="post-meta">
+<div class="post-meta-item">
+<span class="meta-icon">📅</span>
+<span>July 05, 2019</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">📖</span>
+<span>7 min read</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">👁️</span>
+<span>952 views</span>
+</div>
+</div>
+</div>
+<!-- Post Content -->
+<div class="post-content">
+<div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<p>Look at the code first</p>
+<p>org.springframework.web.client.RestTemplate</p>
+<div class="cnblogs_code">
+<pre>    <span style="color: rgba(0, 0, 255, 1)">public</span><span style="color: rgba(0, 0, 0, 1)"> RestTemplate() {
+        </span><span style="color: rgba(0, 0, 255, 1)">this</span>.messageConverters = <span style="color: rgba(0, 0, 255, 1)">new</span><span style="color: rgba(0, 0, 0, 1)"> ArrayList();
+        </span><span style="color: rgba(0, 0, 255, 1)">this</span>.errorHandler = <span style="color: rgba(0, 0, 255, 1)">new</span><span style="color: rgba(0, 0, 0, 1)"> DefaultResponseErrorHandler();
+        </span><span style="color: rgba(0, 0, 255, 1)">this</span>.headersExtractor = <span style="color: rgba(0, 0, 255, 1)">new</span><span style="color: rgba(0, 0, 0, 1)"> RestTemplate.HeadersExtractor();
+        </span><span style="color: rgba(0, 0, 255, 1)">this</span>.messageConverters.add(<span style="color: rgba(0, 0, 255, 1)">new</span><span style="color: rgba(0, 0, 0, 1)"> ByteArrayHttpMessageConverter());
+        </span><span style="color: rgba(0, 0, 255, 1)">this</span>.messageConverters.add(<span style="color: rgba(0, 0, 255, 1)">new</span><span style="color: rgba(0, 0, 0, 1)"> StringHttpMessageConverter());
+        </span><span style="color: rgba(0, 0, 255, 1)">this</span>.messageConverters.add(<span style="color: rgba(0, 0, 255, 1)">new</span> ResourceHttpMessageConverter(<span style="color: rgba(0, 0, 255, 1)">false</span><span style="color: rgba(0, 0, 0, 1)">));
+
+        </span><span style="color: rgba(0, 0, 255, 1)">try</span><span style="color: rgba(0, 0, 0, 1)"> {
+            </span><span style="color: rgba(0, 0, 255, 1)">this</span>.messageConverters.add(<span style="color: rgba(0, 0, 255, 1)">new</span><span style="color: rgba(0, 0, 0, 1)"> SourceHttpMessageConverter());
+        } </span><span style="color: rgba(0, 0, 255, 1)">catch</span><span style="color: rgba(0, 0, 0, 1)"> (Error var2) {
+            ;
+        }
+
+        </span><span style="color: rgba(0, 0, 255, 1)">this</span>.messageConverters.add(<span style="color: rgba(0, 0, 255, 1)">new</span><span style="color: rgba(0, 0, 0, 1)"> AllEncompassingFormHttpMessageConverter());
+        </span><span style="color: rgba(0, 0, 255, 1)">if</span><span style="color: rgba(0, 0, 0, 1)">(romePresent) {
+            </span><span style="color: rgba(0, 0, 255, 1)">this</span>.messageConverters.add(<span style="color: rgba(0, 0, 255, 1)">new</span><span style="color: rgba(0, 0, 0, 1)"> AtomFeedHttpMessageConverter());
+            </span><span style="color: rgba(0, 0, 255, 1)">this</span>.messageConverters.add(<span style="color: rgba(0, 0, 255, 1)">new</span><span style="color: rgba(0, 0, 0, 1)"> RssChannelHttpMessageConverter());
+        }
+
+        </span><span style="color: rgba(0, 0, 255, 1)">if</span><span style="color: rgba(0, 0, 0, 1)">(jackson2XmlPresent) {
+            </span><span style="color: rgba(0, 0, 255, 1)">this</span>.messageConverters.add(<span style="color: rgba(0, 0, 255, 1)">new</span><span style="color: rgba(0, 0, 0, 1)"> MappingJackson2XmlHttpMessageConverter());
+        } </span><span style="color: rgba(0, 0, 255, 1)">else</span> <span style="color: rgba(0, 0, 255, 1)">if</span><span style="color: rgba(0, 0, 0, 1)">(jaxb2Present) {
+            </span><span style="color: rgba(0, 0, 255, 1)">this</span>.messageConverters.add(<span style="color: rgba(0, 0, 255, 1)">new</span><span style="color: rgba(0, 0, 0, 1)"> Jaxb2RootElementHttpMessageConverter());
+        }
+
+        </span><span style="color: rgba(0, 0, 255, 1)">if</span><span style="color: rgba(0, 0, 0, 1)">(jackson2Present) {
+            </span><span style="color: rgba(0, 0, 255, 1)">this</span>.messageConverters.add(<span style="color: rgba(0, 0, 255, 1)">new</span><span style="color: rgba(0, 0, 0, 1)"> MappingJackson2HttpMessageConverter());
+        } </span><span style="color: rgba(0, 0, 255, 1)">else</span> <span style="color: rgba(0, 0, 255, 1)">if</span><span style="color: rgba(0, 0, 0, 1)">(gsonPresent) {
+            </span><span style="color: rgba(0, 0, 255, 1)">this</span>.messageConverters.add(<span style="color: rgba(0, 0, 255, 1)">new</span><span style="color: rgba(0, 0, 0, 1)"> GsonHttpMessageConverter());
+        } </span><span style="color: rgba(0, 0, 255, 1)">else</span> <span style="color: rgba(0, 0, 255, 1)">if</span><span style="color: rgba(0, 0, 0, 1)">(jsonbPresent) {
+            </span><span style="color: rgba(0, 0, 255, 1)">this</span>.messageConverters.add(<span style="color: rgba(0, 0, 255, 1)">new</span><span style="color: rgba(0, 0, 0, 1)"> JsonbHttpMessageConverter());
+        }
+
+        </span><span style="color: rgba(0, 0, 255, 1)">if</span><span style="color: rgba(0, 0, 0, 1)">(jackson2SmilePresent) {
+            </span><span style="color: rgba(0, 0, 255, 1)">this</span>.messageConverters.add(<span style="color: rgba(0, 0, 255, 1)">new</span><span style="color: rgba(0, 0, 0, 1)"> MappingJackson2SmileHttpMessageConverter());
+        }
+
+        </span><span style="color: rgba(0, 0, 255, 1)">if</span><span style="color: rgba(0, 0, 0, 1)">(jackson2CborPresent) {
+            </span><span style="color: rgba(0, 0, 255, 1)">this</span>.messageConverters.add(<span style="color: rgba(0, 0, 255, 1)">new</span><span style="color: rgba(0, 0, 0, 1)"> MappingJackson2CborHttpMessageConverter());
+        }
+
+        </span><span style="color: rgba(0, 0, 255, 1)">this</span>.uriTemplateHandler =<span style="color: rgba(0, 0, 0, 1)"> initUriTemplateHandler();
+    }</span></pre>
+</div>
+<p>In the constructor, many MessageConverters will be added based on various boolean flags, and these boolean flags come from</p>
+<div class="cnblogs_code">
+<pre>    <span style="color: rgba(0, 0, 255, 1)">static</span><span style="color: rgba(0, 0, 0, 1)"> {
+        ClassLoader classLoader </span>= RestTemplate.<span style="color: rgba(0, 0, 255, 1)">class</span><span style="color: rgba(0, 0, 0, 1)">.getClassLoader();
+        romePresent </span>= ClassUtils.isPresent("com.rometools.rome.feed.WireFeed"<span style="color: rgba(0, 0, 0, 1)">, classLoader);
+        jaxb2Present </span>= ClassUtils.isPresent("javax.xml.bind.Binder"<span style="color: rgba(0, 0, 0, 1)">, classLoader);
+        jackson2Present </span>= ClassUtils.isPresent("com.fasterxml.jackson.databind.ObjectMapper", classLoader) &amp;&amp; ClassUtils.isPresent("com.fasterxml.jackson.core.JsonGenerator"<span style="color: rgba(0, 0, 0, 1)">, classLoader);
+        jackson2XmlPresent </span>= ClassUtils.isPresent("com.fasterxml.jackson.dataformat.xml.XmlMapper"<span style="color: rgba(0, 0, 0, 1)">, classLoader);
+        jackson2SmilePresent </span>= ClassUtils.isPresent("com.fasterxml.jackson.dataformat.smile.SmileFactory"<span style="color: rgba(0, 0, 0, 1)">, classLoader);
+        jackson2CborPresent </span>= ClassUtils.isPresent("com.fasterxml.jackson.dataformat.cbor.CBORFactory"<span style="color: rgba(0, 0, 0, 1)">, classLoader);
+        gsonPresent </span>= ClassUtils.isPresent("com.google.gson.Gson"<span style="color: rgba(0, 0, 0, 1)">, classLoader);
+        jsonbPresent </span>= ClassUtils.isPresent("javax.json.bind.Jsonb"<span style="color: rgba(0, 0, 0, 1)">, classLoader);
+    }</span></pre>
+</div>
+<p>When making a request</p>
+<div class="cnblogs_code">
+<pre>    <span style="color: rgba(0, 0, 255, 1)">public</span> &lt;T&gt; ResponseEntity&lt;T&gt; postForEntity(String url, @Nullable Object request, Class&lt;T&gt; responseType, Object... uriVariables) <span style="color: rgba(0, 0, 255, 1)">throws</span><span style="color: rgba(0, 0, 0, 1)"> RestClientException {
+        RequestCallback requestCallback </span>= <span style="color: rgba(0, 0, 255, 1)">this</span><span style="color: rgba(0, 0, 0, 1)">.httpEntityCallback(request, responseType);
+        ResponseExtractor</span>&lt;ResponseEntity&lt;T&gt;&gt; responseExtractor = <span style="color: rgba(0, 0, 255, 1)">this</span><span style="color: rgba(0, 0, 0, 1)">.responseEntityExtractor(responseType);
+        </span><span style="color: rgba(0, 0, 255, 1)">return</span> (ResponseEntity)nonNull(<span style="color: rgba(0, 0, 255, 1)">this</span><span style="color: rgba(0, 0, 0, 1)">.execute(url, HttpMethod.POST, requestCallback, responseExtractor, uriVariables));
+    }</span></pre>
+</div>
+<p>A ResponseExtractor will be created</p>
+<div class="cnblogs_code">
+<pre>    <span style="color: rgba(0, 0, 255, 1)">private</span> <span style="color: rgba(0, 0, 255, 1)">class</span> ResponseEntityResponseExtractor&lt;T&gt; <span style="color: rgba(0, 0, 255, 1)">implements</span> ResponseExtractor&lt;ResponseEntity&lt;T&gt;&gt;<span style="color: rgba(0, 0, 0, 1)"> {
+        @Nullable
+        </span><span style="color: rgba(0, 0, 255, 1)">private</span> <span style="color: rgba(0, 0, 255, 1)">final</span> HttpMessageConverterExtractor&lt;T&gt;<span style="color: rgba(0, 0, 0, 1)"> delegate;
+
+        </span><span style="color: rgba(0, 0, 255, 1)">public</span><span style="color: rgba(0, 0, 0, 1)"> ResponseEntityResponseExtractor(@Nullable Type responseType) {
+            </span><span style="color: rgba(0, 0, 255, 1)">if</span>(responseType != <span style="color: rgba(0, 0, 255, 1)">null</span> &amp;&amp; Void.<span style="color: rgba(0, 0, 255, 1)">class</span> !=<span style="color: rgba(0, 0, 0, 1)"> responseType) {
+                </span><span style="color: rgba(0, 0, 255, 1)">this</span>.delegate = <span style="color: rgba(0, 0, 255, 1)">new</span> HttpMessageConverterExtractor(responseType, RestTemplate.<span style="color: rgba(0, 0, 255, 1)">this</span>.getMessageConverters(), RestTemplate.<span style="color: rgba(0, 0, 255, 1)">this</span><span style="color: rgba(0, 0, 0, 1)">.logger);
+            } </span><span style="color: rgba(0, 0, 255, 1)">else</span><span style="color: rgba(0, 0, 0, 1)"> {
+                </span><span style="color: rgba(0, 0, 255, 1)">this</span>.delegate = <span style="color: rgba(0, 0, 255, 1)">null</span><span style="color: rgba(0, 0, 0, 1)">;
+            }
+
+        }</span></pre>
+</div>
+<p>It can be seen that a proxy is created based on responseType, and then the proxy contains all added MessageConverters</p>
+<p> </p>
+<p>And it will be called in execute</p>
+<div class="cnblogs_code">
+<pre>    <span style="color: rgba(0, 0, 255, 1)">protected</span> &lt;T&gt; T doExecute(URI url, @Nullable HttpMethod method, @Nullable RequestCallback requestCallback, @Nullable ResponseExtractor&lt;T&gt; responseExtractor) <span style="color: rgba(0, 0, 255, 1)">throws</span><span style="color: rgba(0, 0, 0, 1)"> RestClientException {
+        Assert.notNull(url, </span>"URI is required"<span style="color: rgba(0, 0, 0, 1)">);
+        Assert.notNull(method, </span>"HttpMethod is required"<span style="color: rgba(0, 0, 0, 1)">);
+        ClientHttpResponse response </span>= <span style="color: rgba(0, 0, 255, 1)">null</span><span style="color: rgba(0, 0, 0, 1)">;
+
+        Object var14;
+        </span><span style="color: rgba(0, 0, 255, 1)">try</span><span style="color: rgba(0, 0, 0, 1)"> {
+            ClientHttpRequest request </span>= <span style="color: rgba(0, 0, 255, 1)">this</span><span style="color: rgba(0, 0, 0, 1)">.createRequest(url, method);
+            </span><span style="color: rgba(0, 0, 255, 1)">if</span>(requestCallback != <span style="color: rgba(0, 0, 255, 1)">null</span><span style="color: rgba(0, 0, 0, 1)">) {
+                requestCallback.doWithRequest(request);
+            }
+
+            response </span>=<span style="color: rgba(0, 0, 0, 1)"> request.execute();
+            </span><span style="color: rgba(0, 0, 255, 1)">this</span><span style="color: rgba(0, 0, 0, 1)">.handleResponse(url, method, response);
+            var14 </span>= responseExtractor != <span style="color: rgba(0, 0, 255, 1)">null</span>?responseExtractor.extractData(response):<span style="color: rgba(0, 0, 255, 1)">null</span>;</pre>
+</div>
+<p>That is responseExecutor.extractData, let’s take a look at this function</p>
+<div class="cnblogs_code">
+<pre>    <span style="color: rgba(0, 0, 255, 1)">public</span> T extractData(ClientHttpResponse response) <span style="color: rgba(0, 0, 255, 1)">throws</span><span style="color: rgba(0, 0, 0, 1)"> IOException {
+        MessageBodyClientHttpResponseWrapper responseWrapper </span>= <span style="color: rgba(0, 0, 255, 1)">new</span><span style="color: rgba(0, 0, 0, 1)"> MessageBodyClientHttpResponseWrapper(response);
+        </span><span style="color: rgba(0, 0, 255, 1)">if</span>(responseWrapper.hasMessageBody() &amp;&amp; !<span style="color: rgba(0, 0, 0, 1)">responseWrapper.hasEmptyMessageBody()) {
+            MediaType contentType </span>= <span style="color: rgba(0, 0, 255, 1)">this</span><span style="color: rgba(0, 0, 0, 1)">.getContentType(responseWrapper);
+
+            </span><span style="color: rgba(0, 0, 255, 1)">try</span><span style="color: rgba(0, 0, 0, 1)"> {
+                Iterator var4 </span>= <span style="color: rgba(0, 0, 255, 1)">this</span><span style="color: rgba(0, 0, 0, 1)">.messageConverters.iterator();
+
+                </span><span style="color: rgba(0, 0, 255, 1)">while</span><span style="color: rgba(0, 0, 0, 1)">(var4.hasNext()) {
+                    HttpMessageConverter</span>&lt;?&gt; messageConverter =<span style="color: rgba(0, 0, 0, 1)"> (HttpMessageConverter)var4.next();
+                    </span><span style="color: rgba(0, 0, 255, 1)">if</span>(messageConverter <span style="color: rgba(0, 0, 255, 1)">instanceof</span><span style="color: rgba(0, 0, 0, 1)"> GenericHttpMessageConverter) {
+                        GenericHttpMessageConverter</span>&lt;?&gt; genericMessageConverter =<span style="color: rgba(0, 0, 0, 1)"> (GenericHttpMessageConverter)messageConverter;
+                        </span><span style="color: rgba(0, 0, 255, 1)">if</span>(genericMessageConverter.canRead(<span style="color: rgba(0, 0, 255, 1)">this</span>.responseType, (Class)<span style="color: rgba(0, 0, 255, 1)">null</span><span style="color: rgba(0, 0, 0, 1)">, contentType)) {
+                            </span><span style="color: rgba(0, 0, 255, 1)">if</span>(<span style="color: rgba(0, 0, 255, 1)">this</span><span style="color: rgba(0, 0, 0, 1)">.logger.isDebugEnabled()) {
+                                ResolvableType resolvableType </span>= ResolvableType.forType(<span style="color: rgba(0, 0, 255, 1)">this</span><span style="color: rgba(0, 0, 0, 1)">.responseType);
+                                </span><span style="color: rgba(0, 0, 255, 1)">this</span>.logger.debug("Reading to [" + resolvableType + "]"<span style="color: rgba(0, 0, 0, 1)">);
+                            }
+
+                            </span><span style="color: rgba(0, 0, 255, 1)">return</span> genericMessageConverter.read(<span style="color: rgba(0, 0, 255, 1)">this</span>.responseType, (Class)<span style="color: rgba(0, 0, 255, 1)">null</span><span style="color: rgba(0, 0, 0, 1)">, responseWrapper);
+                        }
+                    }
+
+                    </span><span style="color: rgba(0, 0, 255, 1)">if</span>(<span style="color: rgba(0, 0, 255, 1)">this</span>.responseClass != <span style="color: rgba(0, 0, 255, 1)">null</span> &amp;&amp; messageConverter.canRead(<span style="color: rgba(0, 0, 255, 1)">this</span><span style="color: rgba(0, 0, 0, 1)">.responseClass, contentType)) {
+                        </span><span style="color: rgba(0, 0, 255, 1)">if</span>(<span style="color: rgba(0, 0, 255, 1)">this</span><span style="color: rgba(0, 0, 0, 1)">.logger.isDebugEnabled()) {
+                            String className </span>= <span style="color: rgba(0, 0, 255, 1)">this</span><span style="color: rgba(0, 0, 0, 1)">.responseClass.getName();
+                            </span><span style="color: rgba(0, 0, 255, 1)">this</span>.logger.debug("Reading to [" + className + "] as \"" + contentType + "\""<span style="color: rgba(0, 0, 0, 1)">);
+                        }
+
+                        </span><span style="color: rgba(0, 0, 255, 1)">return</span> messageConverter.read(<span style="color: rgba(0, 0, 255, 1)">this</span><span style="color: rgba(0, 0, 0, 1)">.responseClass, responseWrapper);
+                    }
+                }
+            } </span><span style="color: rgba(0, 0, 255, 1)">catch</span> (HttpMessageNotReadableException |<span style="color: rgba(0, 0, 0, 1)"> IOException var8) {
+                </span><span style="color: rgba(0, 0, 255, 1)">throw</span> <span style="color: rgba(0, 0, 255, 1)">new</span> RestClientException("Error while extracting response for type [" + <span style="color: rgba(0, 0, 255, 1)">this</span>.responseType + "] and content type [" + contentType + "]"<span style="color: rgba(0, 0, 0, 1)">, var8);
+            }
+
+            </span><span style="color: rgba(0, 0, 255, 1)">throw</span> <span style="color: rgba(0, 0, 255, 1)">new</span> RestClientException("Could not extract response: no suitable HttpMessageConverter found for response type [" + <span style="color: rgba(0, 0, 255, 1)">this</span>.responseType + "] and content type [" + contentType + "]"<span style="color: rgba(0, 0, 0, 1)">);
+        } </span><span style="color: rgba(0, 0, 255, 1)">else</span><span style="color: rgba(0, 0, 0, 1)"> {
+            </span><span style="color: rgba(0, 0, 255, 1)">return</span> <span style="color: rgba(0, 0, 255, 1)">null</span><span style="color: rgba(0, 0, 0, 1)">;
+        }
+    }</span></pre>
+</div>
+<p> </p>
+<p>So when you find that the data has been modified after making a request using RestTemplate, you need to check the corresponding content type and check which MessageConverters (including various boolean flags) are in RestTemplate.</p>
+<p>If you are sure that the data does not need to be modified, you can call the RestTemplate.setMessageConverters method and pass in the default StringHttpMessageConverter;</p>
+<p> </p>
+</div>
+</div>
+<!-- Post Footer -->
+<div class="post-footer">
+<div class="post-navigation">
+<a class="nav-button" href="../blog.html">← Back to Home</a>
+<a class="nav-button" href="0102.html">Next Post →</a>
+</div>
+</div>
+</article>
+</div>
+</body>
+</html>

@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Managing USB Drives and Portable Disks from the CentOS Command Line</title>
+<link href="../css/style3.css" rel="stylesheet"/>
+</head>
+<body>
+<div class="container">
+<!-- Header Navigation -->
+<div class="header">
+<h1><a href="../blog.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+</div>
+<!-- Post Container -->
+<article class="post">
+<!-- Post Header -->
+<div class="post-header">
+<h1>Managing USB Drives and Portable Disks from the CentOS Command Line</h1>
+<div class="post-meta">
+<div class="post-meta-item">
+<span class="meta-icon">📅</span>
+<span>December 05, 2020</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">📖</span>
+<span>1 min read</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">👁️</span>
+<span>765 views</span>
+</div>
+</div>
+</div>
+<!-- Post Content -->
+<div class="post-content">
+<div class="blogpost-body cnblogs-markdown" id="cnblogs_post_body">
+<p>After inserting the USB flash disk or mobile hard disk into the USB, use</p>
+<blockquote>
+<h1 id="fdisk--l">fdisk - l</h1>
+</blockquote>
+<p>You can find the partition, such as /dev/sdc1, and then mount it</p>
+<blockquote>
+<h1 id="mount-devsdc1-usb">mount /dev/sdc1 /usb</h1>
+</blockquote>
+<p>If an error is reported, it may be a different file system problem, as follows:</p>
+<p>1 ntfs file system</p>
+<blockquote>
+<h1 id="yum-install-ntfs-3g">yum install ntfs-3g</h1>
+<h1 id="mount--t-ntfs-3g-devsdc1-usb">mount - t ntfs-3g /dev/sdc1 /usb</h1>
+</blockquote>
+<p>2 exfat file system</p>
+<blockquote>
+<h1 id="yum-install--y-httplinuxrodownloadnuxdextopel7x86_64nux-dextop-release-0-5el7nuxnoarchrpm">yum install - y <a href="http://li.nux.ro/download/nux/dextop/el7/x86_64/nux-dextop-release-0-5.el7.nux.noarch.rpm" rel="noopener nofollow" target="_blank">http://li.nux.ro/download/nux/dextop/el7/x86_64/nux-dextop-release-0-5.el7.nux.noarch.rpm</a></h1>
+<h1 id="yum-install-exfat-utils-fuse-exfat">yum install exfat-utils fuse-exfat</h1>
+<h1 id="mount--t-exfat-devsdc1-usb">mount - t exfat /dev/sdc1 /usb</h1>
+</blockquote>
+<p>If you find that the Chinese file name is garbled after opening the USB flash drive or mobile hard disk, you need to set the character set, such as</p>
+<blockquote>
+<h1 id="mount--o-iocharsetutf8-devsdc1-usb">mount - o iocharset=utf8 /dev/sdc1 /usb</h1>
+</blockquote>
+<p>After using the USB flash drive or mobile hard disk, you need to eject it first and then remove it. The ejection operation is as follows:</p>
+<h1 id="yum-install-udisks2">yum install udisks2</h1>
+<h1 id="udisksctl-unmount--b-devsdc1">udisksctl unmount - b /dev/sdc1</h1>
+<h1 id="udisksctl-power-off--b-devsdc1">udisksctl power-off - b /dev/sdc1</h1>
+<p>If the write operation prompts readonly file system, you need to mount it again.</p>
+<h1 id="mount--o-remount-rw-path">mount - o remount rw /path</h1>
+</div>
+</div>
+<!-- Post Footer -->
+<div class="post-footer">
+<div class="post-navigation">
+<a class="nav-button" href="../blog.html">← Back to Home</a>
+<a class="nav-button" href="0048.html">Next Post →</a>
+</div>
+</div>
+</article>
+</div>
+</body>
+</html>

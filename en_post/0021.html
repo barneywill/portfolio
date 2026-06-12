@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Garbled Text When Hive Reads gzip Files</title>
+<link href="../css/style3.css" rel="stylesheet"/>
+</head>
+<body>
+<div class="container">
+<!-- Header Navigation -->
+<div class="header">
+<h1><a href="../blog.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+</div>
+<!-- Post Container -->
+<article class="post">
+<!-- Post Header -->
+<div class="post-header">
+<h1>Garbled Text When Hive Reads gzip Files</h1>
+<div class="post-meta">
+<div class="post-meta-item">
+<span class="meta-icon">📅</span>
+<span>May 19, 2022</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">📖</span>
+<span>1 min read</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">👁️</span>
+<span>599 views</span>
+</div>
+</div>
+</div>
+<!-- Post Content -->
+<div class="post-content">
+<div class="blogpost-body cnblogs-markdown" id="cnblogs_post_body">
+<h1 id="section-0021-1">background</h1>
+<p>Hive reads plain text data, whether in original format, gzip, or bzip, and can automatically recognize it without modifying the table creation statement or setting.<br/>
+However, after using gobblin to enable gzip compression and saving the file and reading it with Hive, garbled characters occur.</p>
+<h1 id="section-0021-2">position</h1>
+<h2 id="section-0021-3">First suspect that the file is damaged</h2>
+<p>The file written by gobblin after turning on compression is: *.txt.gzip. Download the file locally and use the gzip command to decompress and exclude it normally.</p>
+<h2 id="section-0021-4">Secondly, I suspect that there is incompatibility between gzip versions.</h2>
+<p>That is, the versions of gobblin writing gzip and Hive reading gzip are not compatible. Check the code of gobblin writing files and find that the</p>
+<blockquote>
+<p>java.util.zip.GZIPOutputStream</p>
+</blockquote>
+<p>Both jdk jar packages are used for reading and Hive, so they are excluded.</p>
+<h2 id="section-0021-5">Finally, I suspect that Hive has a problem with gzip format recognition.</h2>
+<p>Looking at the code of Hive reading files, we found that the gzip format is recognized based on the hard-coded gz suffix. After changing the gzip suffix to gz suffix, Hive reads normally and finds the reason.</p>
+</div>
+</div>
+<!-- Post Footer -->
+<div class="post-footer">
+<div class="post-navigation">
+<a class="nav-button" href="../blog.html">← Back to Home</a>
+<a class="nav-button" href="0022.html">Next Post →</a>
+</div>
+</div>
+</article>
+</div>
+</body>
+</html>

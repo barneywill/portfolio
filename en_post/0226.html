@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Redis 1 - Introduction, installation, use</title>
+<link href="../css/style3.css" rel="stylesheet"/>
+</head>
+<body>
+<div class="container">
+<!-- Header Navigation -->
+<div class="header">
+<h1><a href="../blog.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+</div>
+<!-- Post Container -->
+<article class="post">
+<!-- Post Header -->
+<div class="post-header">
+<h1>Redis 1 - Introduction, installation, use</h1>
+<div class="post-meta">
+<div class="post-meta-item">
+<span class="meta-icon">📅</span>
+<span>February 15, 2019</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">📖</span>
+<span>1 min read</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">👁️</span>
+<span>257 views</span>
+</div>
+</div>
+</div>
+<!-- Post Content -->
+<div class="post-content">
+<div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<p>redis 5.0.3</p>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201902/1509647-20190215113635124-2079456131.png"/></p>
+<p>Official: https://Redis.io/</p>
+<p> </p>
+<h1>1 Introduction</h1>
+<p>Redis is an open source (BSD licensed), in-memory data structure store, used as a database, cache and message broker. It supports data structures such as strings, hashes, lists, sets, sorted sets with range queries, bitmaps, hyperloglogs, geospatial indexes with radius queries and streams. Redis has built-in replication, Lua scripting, LRU eviction, transactions and different levels of on-disk persistence, and provides high availability via Redis Sentinel and automatic partitioning with Redis Cluster.</p>
+<p><em>Redis is an open source in-memory data structure warehouse that can be used as a database, cache or message queue. It supports rich data types: strings, hashes, lists, sets, sorted sets, bitmaps, hyperloglogs, geospatial indexes. It supports multiple copies, Lua scripts, LRU, transactions, persistence, and also supports high availability and partitioning (Sentinel);</em></p>
+<p> </p>
+<h1>2. Installation</h1>
+<blockquote>
+<p>$ wget http://download.redis.io/releases/redis-5.0.3.tar.gz<br/>$ tar xzf redis-5.0.3.tar.gz<br/>$ cd redis-5.0.3<br/>$ make</p>
+</blockquote>
+<p> </p>
+<h1>Three uses</h1>
+<h2>Start server</h2>
+<blockquote>
+<p>$ src/redis-server</p>
+</blockquote>
+<h2>Connect to local server</h2>
+<blockquote>
+<p>$ src/redis-cli<br/>redis&gt; set foo bar<br/>OK<br/>redis&gt; get foo<br/>"bar"</p>
+</blockquote>
+<h2>Connect to remote server</h2>
+<blockquote>
+<p>$ src/redis-cli<br/>Could not connect to Redis at 127.0.0.1:6379: Connection refused<br/>not connected&gt; connect 192.168.0.1 6379<br/>192.168.0.1:6379&gt; ping<br/>PONG<br/>192.168.0.1:6379&gt; set hello world<br/>OK<br/>192.168.0.1:6379&gt; get hello<br/>"world"</p>
+</blockquote>
+<p> </p>
+<p>Common command reference: https://Redis.io/commands</p>
+<p> </p>
+</div>
+</div>
+<!-- Post Footer -->
+<div class="post-footer">
+<div class="post-navigation">
+<a class="nav-button" href="../blog.html">← Back to Home</a>
+<a class="nav-button" href="0227.html">Next Post →</a>
+</div>
+</div>
+</article>
+</div>
+</body>
+</html>

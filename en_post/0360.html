@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>ZooKeeper 2 - Source code analysis</title>
+<link href="../css/style3.css" rel="stylesheet"/>
+</head>
+<body>
+<div class="container">
+<!-- Header Navigation -->
+<div class="header">
+<h1><a href="../blog.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+</div>
+<!-- Post Container -->
+<article class="post">
+<!-- Post Header -->
+<div class="post-header">
+<h1>ZooKeeper 2 - Source code analysis</h1>
+<div class="post-meta">
+<div class="post-meta-item">
+<span class="meta-icon">📅</span>
+<span>October 31, 2018</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">📖</span>
+<span>1 min read</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">👁️</span>
+<span>574 views</span>
+</div>
+</div>
+</div>
+<!-- Post Content -->
+<div class="post-content">
+<div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<p id="section-0360-1">core enumeration</p>
+<div class="cnblogs_code">
+<pre><span style="color: rgba(0, 0, 255, 1)">public</span> <span style="color: rgba(0, 0, 255, 1)">enum</span><span style="color: rgba(0, 0, 0, 1)"> ServerState {
+    LOOKING, FOLLOWING, LEADING, OBSERVING;
+}</span></pre>
+</div>
+<pre>ZooKeeper server status: LOOKING has just been started, the follower is FOLLOWING, the leader is LEADING, and the observer is OBSERVING;</pre>
+<div class="cnblogs_code">
+<pre><span style="color: rgba(0, 0, 255, 1)">public</span> <span style="color: rgba(0, 0, 255, 1)">enum</span><span style="color: rgba(0, 0, 0, 1)"> LearnerType {
+    PARTICIPANT, OBSERVER;
+}</span></pre>
+</div>
+<p>To put it simply, the core class started by ZooKeeper is QuorumPeerMain. After startup, the configuration will be loaded and QuorumPeer will be started at the same time. QuorumPeer will load data from the local data directory and then start the election. The core class of the election is FastLeaderElection. After the election is completed, the status will be set. Depending on the status, different classes will be started, such as Leader, Fo The lllower, Observer, and leader will set a new epoch and wait for the follower to register with itself. After the registration is completed, the follower will synchronize the latest data with the leader, and the leader will ping all followers regularly. Once less than half of the followers survive, the leader will shut down and trigger a re-election of the cluster.</p>
+<p>The specific code and calls are as follows:</p>
+<p><strong>org.apache.zookeeper.server.quorum.QuorumPeerMain</strong></p>
+<p><strong>         initializeAndRun</strong></p>
+<p><strong>                  runFromConfig</strong></p>
+<p><strong>                          org.apache.zookeeper.server.quorum.QuorumPeer extends ZooKeeperThread</strong></p>
+<p><strong>                                   initialize</strong></p>
+<p><strong>                                   start</strong></p>
+<p><strong>                                            loadDataBase</strong></p>
+<p><strong>                                            org.apache.zookeeper.server.ServerCnxnFactory</strong></p>
+<p><strong>                                                     start</strong></p>
+<p><strong>                                            startLeaderElection</strong></p>
+<p><strong>                                                     org.apache.zookeeper.server.quorum.QuorumPeer.ResponderThread</strong></p>
+<p><strong>                                                             start</strong></p>
+<p><strong>                                                     createElectionAlgorithm</strong></p>
+<p><strong>                                            run</strong></p>
+<p><strong>                                                     org.apache.zookeeper.server.quorum.FastLeaderElection implements Election</strong></p>
+<p><strong>                                                             lookForLeader</strong></p>
+<p><strong>                                                                      sendNotifications</strong></p>
+<p><strong>                                                                      totalOrderPredicate</strong></p>
+<p><strong>                                                                      termPredicate</strong></p>
+<p><strong>                                                                               org.apache.zookeeper.server.quorum.flexible.QuorumMaj</strong></p>
+<p><strong>                                                                                        containsQuorum</strong></p>
+<p><strong>                                                                      QuorumPeer.setPeerState</strong></p>
+<p><strong>                                                             1 org.apache.zookeeper.server.quorum.Leader extends Learner</strong></p>
+<p><strong>                                                                      lead</strong></p>
+<p><strong>                                                                               org.apache.zookeeper.server.quorum.Leader.LearnerCnxAcceptor extends ZooKeeperThread</strong></p>
+<p><strong>                                                                                        run</strong></p>
+<p><strong>                                                                                                 org.apache.zookeeper.server.quorum.LearnerHandler extends ZooKeeperThread</strong></p>
+<p><strong>                                                                                                         start</strong></p>
+<p><strong>                                                                                                                  receive Leader.FOLLOWERINFO</strong></p>
+<p><strong>                                                                               epoch++</strong></p>
+<p><strong>                                                                               setZxid</strong></p>
+<p><strong>                                                                               setCurrentEpoch</strong></p>
+<p><strong>                                                                               waitForNewLeaderAck</strong></p>
+<p><strong>                                                                               startZkServer</strong></p>
+<p><strong>                                                                               loop</strong></p>
+<p><strong>                                                                                        org.apache.zookeeper.server.quorum.LearnerHandler</strong></p>
+<p><strong>                                                                                                ping</strong></p>
+<p><strong>                                                                                                         org.apache.zookeeper.server.quorum.LearnerHandler.SyncLimitCheck</strong></p>
+<p><strong>                                                                                                                  check</strong></p>
+<p><strong>                                                                                                         shutdown</strong></p>
+<p><strong>                                                                                                                  Leader.removeLearnerHandler</strong></p>
+<p><strong>                                                                                        containsQuorum</strong></p>
+<p><strong>                                                                                        shutdown</strong></p>
+<p><strong>                                                             2 org.apache.zookeeper.server.quorum.Follower extends Learner</strong></p>
+<p><strong>                                                                      followLeader</strong></p>
+<p><strong>                                                                               findLeader</strong></p>
+<p><strong>                                                                               connectToLeader</strong></p>
+<p><strong>                                                                               registerWithLeader</strong></p>
+<p><strong>                                                                                        send Leader.FOLLOWERINFO</strong></p>
+<p><strong>                                                                               syncWithLeader</strong></p>
+<p><strong>                                                             3 org.apache.zookeeper.server.quorum.Observer extends Learner</strong></p>
+<p><strong>                                                                      observeLeader</strong></p>
+<p>Please see the election code analysis  <a href="https://www.cnblogs.com/barneywill/p/9883937.html" id="post_title_link_9883937">ZooKeeper (3) election algorithm based on big data</a></p>
+</div>
+</div>
+<!-- Post Footer -->
+<div class="post-footer">
+<div class="post-navigation">
+<a class="nav-button" href="../blog.html">← Back to Home</a>
+<a class="nav-button" href="0361.html">Next Post →</a>
+</div>
+</div>
+</article>
+</div>
+</body>
+</html>

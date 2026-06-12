@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Zabbix 1 - Introduction, installation, use</title>
+<link href="../css/style3.css" rel="stylesheet"/>
+</head>
+<body>
+<div class="container">
+<!-- Header Navigation -->
+<div class="header">
+<h1><a href="../blog.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+</div>
+<!-- Post Container -->
+<article class="post">
+<!-- Post Header -->
+<div class="post-header">
+<h1>Zabbix 1 - Introduction, installation, use</h1>
+<div class="post-meta">
+<div class="post-meta-item">
+<span class="meta-icon">📅</span>
+<span>February 15, 2019</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">📖</span>
+<span>3 min read</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">👁️</span>
+<span>1228 views</span>
+</div>
+</div>
+</div>
+<!-- Post Content -->
+<div class="post-content">
+<div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<p>zabbix 4</p>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201902/1509647-20190214230525915-1271469802.png"/></p>
+<p>Official: https://www.zabbix.com/</p>
+<p> </p>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201902/1509647-20190214230838017-659179227.png"/> </p>
+<h1>1 Introduction</h1>
+<p>Monitor anything<br/>Solutions for any kind of IT infrastructure, services, applications, resources</p>
+<p><em>Monitor everything</em></p>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201902/1509647-20190214230720305-1779816813.png"/></p>
+<p> </p>
+<p>Enterprise-ready<br/>Mature, enterprise-level platform to monitor large-scale IT environments</p>
+<p><em>Mature enterprise-level monitoring platform</em></p>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201902/1509647-20190214231308198-587914086.png"/></p>
+<p> </p>
+<p>Zabbix is an enterprise-class open source distributed monitoring solution.</p>
+<p><em>Zabbix is ​​an open source distributed enterprise-level monitoring solution;</em></p>
+<p>Zabbix is software that monitors numerous parameters of a network and the health and integrity of servers. Zabbix uses a flexible notification mechanism that allows users to configure e-mail based alerts for virtually any event. This allows a fast reaction to server problems. Zabbix offers excellent reporting and data visualisation features based on the stored data. This makes Zabbix ideal for capacity planning.</p>
+<p>Zabbix supports both polling and trapping. All Zabbix reports and statistics, as well as configuration parameters, are accessed through a web-based frontend. A web-based frontend ensures that the status of your network and the health of your servers can be assessed from any location. Properly configured, Zabbix can play an important role in monitoring IT infrastructure. This is equally true for small organisations with a few servers and for large companies with a multitude of servers.</p>
+<p> </p>
+<h2>Role</h2>
+<h3>1 Server （zabbix-server）</h3>
+<p>Zabbix server is the central component to which agents report availability and integrity information and statistics. The server is the central repository in which all configuration, statistical and operational data are stored.</p>
+<h3>2 Agent （zabbix-agent）</h3>
+<p>Zabbix agents are deployed on monitoring targets to actively monitor local resources and applications and report the gathered data to Zabbix server.</p>
+<h3>3 Database storage （mysql）</h3>
+<p>All configuration information as well as the data gathered by Zabbix is stored in a database.</p>
+<h3>4 Web interface （httpd）</h3>
+<p>For an easy access to Zabbix from anywhere and from any platform, the web-based interface is provided. The interface is part of Zabbix server, and usually (but not necessarily) runs on the same physical machine as the one running the server.</p>
+<h3>5 Proxy (optional)</h3>
+<p>Zabbix proxy can collect performance and availability data on behalf of Zabbix server. A proxy is an optional part of Zabbix deployment; however, it may be very beneficial to distribute the load of a single Zabbix server.</p>
+<p> </p>
+<h1>2. Installation</h1>
+<h2>1 yum installation</h2>
+<blockquote>
+<p># rpm - Uvh https://repo.zabbix.com/zabbix/4.0/rhel/7/x86_64/zabbix-release-4.0-1.el7.noarch.rpm</p>
+<p>agent installation<br/># yum install zabbix-agent</p>
+<p>server installation<br/># yum install zabbix-server-mysql zabbix-web-mysql zabbix-agent</p>
+</blockquote>
+<h2>2 Initialize db</h2>
+<blockquote>
+<p>mysql&gt; create database zabbix character set utf8 collate utf8_bin;<br/>mysql&gt; grant all privileges on zabbix.* to zabbix@'%' identified by 'password';</p>
+<p># zcat /usr/share/doc/zabbix-server-mysql*/create.sql.gz | mysql - h$ip - uzabbix - p zabbix</p>
+</blockquote>
+<h2>3 Start the server</h2>
+<p>Modify database configuration/time zone/port</p>
+<blockquote>
+<p># vi /etc/zabbix/zabbix_server.conf<br/>DBHost=$ip<br/>DBPassword=password</p>
+<p># vi /etc/httpd/conf.d/zabbix.conf<br/>php_value date.timezone Asia/Shanghai</p>
+<p># vi <span class="s1">/etc/httpd/conf/httpd.conf</span></p>
+<p class="p1"><span class="s1">listen 80</span></p>
+<p># systemctl restart zabbix-server httpd<br/># systemctl enable zabbix-server httpd</p>
+</blockquote>
+<h2>4 Start the agent</h2>
+<blockquote>
+<p># vi /etc/zabbix/zabbix_agentd.conf<br/>Server=$server_ip<br/>ServerActive=$server_ip</p>
+<p># systemctl restart zabbix-agent<br/># systemctl enable zabbix-agent</p>
+</blockquote>
+<p> </p>
+<p>Reference: https://www.zabbix.com/download?zabbix=4.0&amp;os_distribution=CentOS&amp;os_version=7&amp;db=MySQL</p>
+<h1>Three uses</h1>
+<p>Visit http://$server_ip/zabbix to enter the setup wizard </p>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201902/1509647-20190214232518184-1030366495.png"/></p>
+<p>Set up db</p>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201902/1509647-20190214232558558-905105041.png"/></p>
+<p>After the setup is complete</p>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201902/1509647-20190214233804032-1174338339.png"/></p>
+<p>Default user password: Admin/zabbix</p>
+<p>ps: If you find that the zabbix server is not running after logging in, and the 10051 port is not bound, it is most likely that the connection to the db is blocked;</p>
+<p> </p>
+<p>Reference: https://www.zabbix.com/documentation/4.0/manual/installation/install#installing_frontend</p>
+<p> </p>
+<p>After adding host and setting template, you can see the effect.</p>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201902/1509647-20190215003606645-1204646373.png"/></p>
+<p>In addition it is important to take a step back and have a look at the overall data flow within Zabbix. In order to create an item that gathers data you must first create a host. Moving to the other end of the Zabbix spectrum you must first have an item to create a trigger. You must have a trigger to create an action. Thus if you want to receive an alert that your CPU load it too high on <em>Server X</em> you must first create a host entry for <em>Server X</em> followed by an item for monitoring its CPU, then a trigger which activates if the CPU is too high, followed by an action which sends you an email. While that may seem like a lot of steps, with the use of templating it really isn't. However, due to this design it is possible to create a very flexible setup.</p>
+<p> </p>
+<p>Usage help: https://www.zabbix.com/documentation/4.0/manual/quickstart</p>
+<p> </p>
+<p>About Java gateway</p>
+<p>It is required to install Java gateway only if you want to monitor JMX applications. Java gateway is lightweight and does not require a database.</p>
+<p> </p>
+<p>Modify zabbix database account password</p>
+<blockquote>
+<p>#vi /etc/zabbix/zabbix_server.conf<br/>BPassword=111<br/>#vi /etc/zabbix/web/zabbix.conf.php<br/>DB['PASSWORD'] = '111';</p>
+</blockquote>
+<p> </p>
+<p>Notice:</p>
+<p>Before completing the page wizard, you must directly access httpd (httpd is bound to port 80). Do not add Nginx and other proxies in front of httpd, otherwise an error will be reported during the page wizard process and you will be unable to continue.</p>
+<p>If you want to use Nginx, after completing the page wizard, change the httpd port to a non-80 port (such as 81), and then add a proxy in Nginx to forward the request to httpd</p>
+<div class="cnblogs_code">
+<pre><span style="color: rgba(0, 0, 0, 1)">server {
+    listen       </span>80<span style="color: rgba(0, 0, 0, 1)">;
+    server_name  zabbix.your.host;
+
+    </span><span style="color: rgba(0, 128, 0, 1)">#</span><span style="color: rgba(0, 128, 0, 1)">charset koi8-r;</span>
+    access_log  /var/log/nginx/<span style="color: rgba(0, 0, 0, 1)">zabbix.access.log  main;
+    error_log </span>/var/log/nginx/<span style="color: rgba(0, 0, 0, 1)">error.log error;
+    rewrite_log on;
+
+    rewrite </span>^/$ /<span style="color: rgba(0, 0, 0, 1)">zabbix last;
+    location </span>^~ /<span style="color: rgba(0, 0, 0, 1)">zabbix {
+        proxy_set_header Host $host;
+    proxy_pass http:</span>//your.httpd.ip:81<span style="color: rgba(0, 0, 0, 1)">;
+    }
+}</span></pre>
+</div>
+<p>After the installation is completed, a configuration file will be generated</p>
+<p>Configuration file "/etc/zabbix/web/zabbix.conf.php" created.</p>
+<p>If you have Zabbix and need to migrate the server, pay attention to migrating this file to avoid entering the installation process.</p>
+<p> </p>
+</div>
+</div>
+<!-- Post Footer -->
+<div class="post-footer">
+<div class="post-navigation">
+<a class="nav-button" href="../blog.html">← Back to Home</a>
+<a class="nav-button" href="0229.html">Next Post →</a>
+</div>
+</div>
+</article>
+</div>
+</body>
+</html>

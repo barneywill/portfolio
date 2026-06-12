@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Ambari 3 - Deploy Airflow via Ambari</title>
+<link href="../css/style3.css" rel="stylesheet"/>
+</head>
+<body>
+<div class="container">
+<!-- Header Navigation -->
+<div class="header">
+<h1><a href="../blog.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+</div>
+<!-- Post Container -->
+<article class="post">
+<!-- Post Header -->
+<div class="post-header">
+<h1>Ambari 3 - Deploy Airflow via Ambari</h1>
+<div class="post-meta">
+<div class="post-meta-item">
+<span class="meta-icon">📅</span>
+<span>January 17, 2019</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">📖</span>
+<span>1 min read</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">👁️</span>
+<span>2065 views</span>
+</div>
+</div>
+</div>
+<!-- Post Content -->
+<div class="post-content">
+<div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<p>ambari2.7.3 (hdp3.1) install airflow1.10</p>
+<p>Ambari's HDP does not natively support airflow installation. Here is how to make Ambari support airflow installation through mpack:</p>
+<h2>1 download</h2>
+<blockquote>
+<p># wget https://github.com/miho120/ambari-airflow-mpack/raw/master/airflow-service-mpack.tar.gz</p>
+</blockquote>
+<h2>2 installation</h2>
+<blockquote>
+<p># ambari-server install-mpack --mpack airflow-service-mpack.tar.gz --verbose</p>
+</blockquote>
+<h2>3 Restart</h2>
+<blockquote>
+<p># ambari-server restart</p>
+</blockquote>
+<h2>4 Ambari does not appear on the Ambari page, check mpack.JSON</h2>
+<p>/var/lib/ambari-server/resources/mpacks/airflow-ambari-mpack-1.5.4/mpack.json</p>
+<blockquote>
+<p>      "service_versions_map": [</p>
+<p>        {</p>
+<p>          "service_name" : "AIRFLOW",</p>
+<p>          "service_version" : "1.10.0",</p>
+<p>          "applicable_stacks" : [</p>
+<p>            {</p>
+<p>              "stack_name" : "HDP",</p>
+<p>              "stack_version" : "2.4"</p>
+<p>            },</p>
+<p>            {</p>
+<p>              "stack_name" : "HDP",</p>
+<p>              "stack_version" : "2.5"</p>
+<p>            },</p>
+<p>            {</p>
+<p>              "stack_name" : "HDP",</p>
+<p>              "stack_version" : "2.6"</p>
+<p>            },</p>
+<p>            {</p>
+<p>              "stack_name" : "HDP",</p>
+<p>              "stack_version" : "3.0"</p>
+<p>            }</p>
+<p>          ]</p>
+<p>        }</p>
+<p>      ]</p>
+</blockquote>
+<p>Need to add HDP3.1, modify and repackage</p>
+<h2>4 Uninstall</h2>
+<blockquote>
+<p>ambari-server uninstall-mpack --mpack-name=airflow-ambari-mpack</p>
+</blockquote>
+<h2>5 Installation (same as above)</h2>
+<h2>6 Restart (same as above)</h2>
+<p>Open the Ambari page</p>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201901/1509647-20190117215336192-734251756.png"/></p>
+<p> </p>
+<p>It may fail when starting the worker. Check the startup command.</p>
+<blockquote>
+<pre class="stdout">2019-01-18 19:09:48,159 - Execute['service airflow-worker start'] {}</pre>
+</blockquote>
+<p>View log</p>
+<blockquote>
+<p>journalctl -xe</p>
+</blockquote>
+<p>An error was found</p>
+<blockquote>
+<p>Jan 18 19:04:05 cdp-test-server-01.bj python[15246]: detected unhandled Python exception in '/var/lib/ambari-agent/cache/common-services/AIRFLOW/1.10.0/package/scripts/airflow_worker_control.py'<br/>Jan 18 19:04:05 cdp-test-server-01.bj abrt-server[15254]: Executable '/var/lib/ambari-agent/cache/common-services/AIRFLOW/1.10.0/package/scripts/airflow_worker_control.py' doesn't belong to any package and ProcessUnpackaged is set t<br/>Jan 18 19:04:05 cdp-test-server-01.bj abrt-server[15254]: 'post-create' on '/var/spool/abrt/Python-2019-01-18-19:04:05-15246' exited with 1<br/>Jan 18 19:04:05 cdp-test-server-01.bj abrt-server[15254]: Deleting problem directory '/var/spool/abrt/Python-2019-01-18-19:04:05-15246'</p>
+</blockquote>
+<p>Can be solved by modifying the configuration</p>
+<blockquote>
+<p># grep ProcessUnpackaged /etc/abrt/abrt-action-save-package-data.conf<br/>no</p>
+</blockquote>
+<p>Change to yes</p>
+<p> </p>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201901/1509647-20190126173117989-739135988.png"/></p>
+<p> </p>
+<p> </p>
+<p>For details on the specific use of Ambari, see:<a href="https://www.cnblogs.com/barneywill/p/10268501.html" target="_blank">https://www.cnblogs.com/barneywill/p/10268501.html</a></p>
+<p> </p>
+<p>refer to:</p>
+<p>https://github.com/miho120/ambari-airflow-mpack</p>
+<p> </p>
+</div>
+</div>
+<!-- Post Footer -->
+<div class="post-footer">
+<div class="post-navigation">
+<a class="nav-button" href="../blog.html">← Back to Home</a>
+<a class="nav-button" href="0263.html">Next Post →</a>
+</div>
+</div>
+</article>
+</div>
+</body>
+</html>

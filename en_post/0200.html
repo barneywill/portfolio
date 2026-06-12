@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>LZO format support</title>
+<link href="../css/style3.css" rel="stylesheet"/>
+</head>
+<body>
+<div class="container">
+<!-- Header Navigation -->
+<div class="header">
+<h1><a href="../blog.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+</div>
+<!-- Post Container -->
+<article class="post">
+<!-- Post Header -->
+<div class="post-header">
+<h1>LZO format support</h1>
+<div class="post-meta">
+<div class="post-meta-item">
+<span class="meta-icon">📅</span>
+<span>February 26, 2019</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">📖</span>
+<span>1 min read</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">👁️</span>
+<span>2159 views</span>
+</div>
+</div>
+</div>
+<!-- Post Content -->
+<div class="post-content">
+<div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<p>Create table statement</p>
+<blockquote>
+<p>CREATE EXTERNAL TABLE `my_lzo_table`(`something` string)<br/>ROW FORMAT DELIMITED <br/>  FIELDS TERMINATED BY '\t' <br/>STORED AS INPUTFORMAT <br/>  'com.hadoop.mapred.DeprecatedLzoTextInputFormat' <br/>OUTPUTFORMAT <br/>  'org.apache.hadoop.hive.ql.io.HiveIgnoreKeyTextOutputFormat'</p>
+</blockquote>
+<h1><br/>1 lzo</h1>
+<blockquote>
+<p># yum install lzo lzop</p>
+</blockquote>
+<p>Manual installation: http://www.oberhumer.com/opensource/LZO/download/LZO-2.10.tar.gz</p>
+<h1>2 hadoop-lzo</h1>
+<blockquote>
+<p># wget https://storage.googleapis.com/google-code-archive-downloads/v2/code.google.com/hadoop-gpl-packing/hadoop-gpl-packaging-0.6.1-1.x86_64.rpm<br/># rpm - ivh hadoop-gpl-packaging-0.6.1-1.x86_64.rpm</p>
+<p># ls /opt/hadoopgpl/lib<br/>cdh4.0.1  guava-12.0.jar  hadoop-lzo-0.4.17.jar  hadoop-lzo.jar  pig-0.10.0  pig-0.6.0  pig-0.7.0  pig-0.8.0  protobuf-java-2.4.1.jar  slf4j-api-1.5.8.jar  slf4j-log4j12-1.5.10.jar  yamlbeans-0.9.3.jar<br/># ls /opt/hadoopgpl/native/Linux-amd64-64/<br/>libgplcompression.a  libgplcompression.la  libgplcompression.so  libgplcompression.so.0  libgplcompression.so.0.0.0  LzoCompressor.lo  LzoCompressor.o  LzoDecompressor.lo  LzoDecompressor.o</p>
+</blockquote>
+<p>Manual installation: https://github.com/twitter/hadoop-LZO/</p>
+<h1>3 error</h1>
+<p>1) Error: IOException: No LZO codec found, cannot run.</p>
+<p>core-site.xml</p>
+<blockquote>
+<p>    &lt;property&gt;</p>
+<p>        &lt;name&gt;io.compression.codecs&lt;/name&gt;</p>
+<p>        &lt;value&gt;org.apache.hadoop.io.compress.DefaultCodec,org.apache.hadoop.io.compress.GzipCodec,org.apache.hadoop.io.compress.BZip2Codec,com.hadoop.compression.lzo.LzoCodec,com.hadoop.compression.lzo.LzopCodec,org.apache.hadoop.io.compress.SnappyCodec&lt;/value&gt;</p>
+<p>    &lt;/property&gt;</p>
+<p>    &lt;property&gt;</p>
+<p>        &lt;name&gt;io.compression.codec.lzo.class&lt;/name&gt;</p>
+<p>        &lt;value&gt;com.hadoop.compression.lzo.LzoCodec&lt;/value&gt;</p>
+<p>    &lt;/property&gt;</p>
+</blockquote>
+<p>2) Error: Error: Java.io.IOException: cannot find class com.hadoop.mapred.DeprecatedLzoTextInputFormat</p>
+<p>hive</p>
+<blockquote>
+<p># export HADOOP_CLASSPATH=/opt/hadoopgpl/lib/hadoop-lzo.jar</p>
+</blockquote>
+<p>spark</p>
+<blockquote>
+<p># export SPARK_CLASSPATH=/opt/hadoopgpl/lib/hadoop-lzo.jar</p>
+<p>or</p>
+<p># cp /opt/hadoopgpl/lib/hadoop-lzo.jar $SPARK_HOME/jars/</p>
+</blockquote>
+<p> </p>
+<p>3) Error: IOException:Java.lang.RuntimeException: native-LZO library not available</p>
+<p>hive</p>
+<blockquote>
+<p># export JAVA_LIBRARY_PATH=/opt/hadoopgpl/native/Linux-amd64-64/</p>
+</blockquote>
+<p>spark</p>
+<blockquote>
+<p># export LD_LIBRARY_PATH=/opt/hadoopgpl/native/Linux-amd64-64/</p>
+</blockquote>
+<p>4) mr reported an error: Error: Java.io.IOException: cannot find class com.hadoop.mapred.DeprecatedLzoTextInputFormat<br/>        at org.apache.hadoop.hive.ql.io.CombineHiveInputFormat.getRecordReader(CombineHiveInputFormat.java:689)<br/>        at org.apache.hadoop.mapred.MapTask$TrackedRecordReader.&lt;init&gt;(MapTask.java:169)<br/>        at org.apache.hadoop.mapred.MapTask.runOldMapper(MapTask.java:429)<br/>        at org.apache.hadoop.mapred.MapTask.run(MapTask.java:343)</p>
+<blockquote>
+<p>$ cp /opt/hadoopgpl/lib/hadoop-lzo.jar $HADOOP_HOME/share/hadoop/common/lib/</p>
+</blockquote>
+<p>5) mr error: Caused by: Java.lang.RuntimeException: native-LZO library not available</p>
+<p>mapred-site.xml</p>
+<blockquote>
+<p>    &lt;property&gt;</p>
+<p>        &lt;name&gt;mapreduce.map.java.opts&lt;/name&gt;</p>
+<p>        &lt;value&gt;-Djava.library.path=/opt/hadoopgpl/native/Linux-amd64-64&lt;/value&gt;</p>
+<p>    &lt;/property&gt;</p>
+</blockquote>
+<p>The disadvantage of this modification method is that it will be overwritten when modified in Hive.</p>
+<blockquote>
+<p>hive&gt; set mapreduce.map.java.opts=-Xmx3072m - Djava.library.path=/opt/hadoopgpl/native/Linux-amd64-64;</p>
+</blockquote>
+<p>Another modification is</p>
+<blockquote>
+<p>$ cp /opt/hadoopgpl/lib/native/Linux-amd64-64/* $HADOOP_HOME/lib/native/</p>
+</blockquote>
+<p>Depending on the version you installed, it may also be /usr/lib/hadoop/lib/native</p>
+<p> </p>
+</div>
+</div>
+<!-- Post Footer -->
+<div class="post-footer">
+<div class="post-navigation">
+<a class="nav-button" href="../blog.html">← Back to Home</a>
+<a class="nav-button" href="0201.html">Next Post →</a>
+</div>
+</div>
+</article>
+</div>
+</body>
+</html>

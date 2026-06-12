@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Large-Scale File Changes in Git</title>
+<link href="../css/style3.css" rel="stylesheet"/>
+</head>
+<body>
+<div class="container">
+<!-- Header Navigation -->
+<div class="header">
+<h1><a href="../blog.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+</div>
+<!-- Post Container -->
+<article class="post">
+<!-- Post Header -->
+<div class="post-header">
+<h1>Large-Scale File Changes in Git</h1>
+<div class="post-meta">
+<div class="post-meta-item">
+<span class="meta-icon">📅</span>
+<span>July 20, 2020</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">📖</span>
+<span>1 min read</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">👁️</span>
+<span>282 views</span>
+</div>
+</div>
+</div>
+<!-- Post Content -->
+<div class="post-content">
+<div class="blogpost-body cnblogs-markdown" id="cnblogs_post_body">
+<p>After recently moving the git project directory to another directory, I found that there were large-scale modifications in the git project.</p>
+<p>View via git status</p>
+<pre><code>	modified:   .gitignore
+	modified:   .README.md
+...
+</code></pre>
+<p>View via git diff</p>
+<pre><code>diff --git a/.gitignore b/.gitignore
+old mode 100644
+new mode 100755
+diff --git a/README.md b/README.md
+old mode 100644
+new mode 100755
+...
+</code></pre>
+<p>It was found that there were no changes in the file content of these files, only changes in the file mode. The file mode was from 644 to 755.</p>
+<p>There are two solutions at this time:</p>
+<ul>
+<li>Modify file mode through chmod</li>
+<li>git config --add core.filemode false</li>
+</ul>
+</div>
+</div>
+<!-- Post Footer -->
+<div class="post-footer">
+<div class="post-navigation">
+<a class="nav-button" href="../blog.html">← Back to Home</a>
+<a class="nav-button" href="0060.html">Next Post →</a>
+</div>
+</div>
+</article>
+</div>
+</body>
+</html>

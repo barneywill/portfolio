@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>least squares method</title>
+<link href="../css/style3.css" rel="stylesheet"/>
+</head>
+<body>
+<div class="container">
+<!-- Header Navigation -->
+<div class="header">
+<h1><a href="../blog.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+</div>
+<!-- Post Container -->
+<article class="post">
+<!-- Post Header -->
+<div class="post-header">
+<h1>least squares method</h1>
+<div class="post-meta">
+<div class="post-meta-item">
+<span class="meta-icon">📅</span>
+<span>January 03, 2019</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">📖</span>
+<span>1 min read</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">👁️</span>
+<span>1217 views</span>
+</div>
+</div>
+</div>
+<!-- Post Content -->
+<div class="post-content">
+<div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<h1>Ordinary Least Square least squares method</h1>
+<p>When mentioning the least squares method, we must first mention fitting. Fitting is one of the basic tools of numerical analysis. The simplest fitting is the function of one. variable) fitting, one-variable function fitting (i.e. two-dimensional plane) is divided into straight-line fitting (one-variable linear function, such as Y=aX+b) and curve fitting (one-variable high-order function, such as Y=aX^2+bX+c). The simplest one-variable function fitting is straight-line fitting. Straight-line fitting is to find a straight line that passes through all points as much as possible. Note that this is as much as possible, because as long as there are more than 2 points, it may happen that the straight line cannot accurately pass through all points. In this case, there are many principles for determining the straight line, and the least squares method is one of them. When the straight line cannot pass through the points, an error will occur (the distance between the point and the straight line). The principle of the least squares method is to minimize the sum of the squares of the errors at all points;</p>
+<p>The least squares method (also known as the least squares method) is a mathematical optimization technique. It finds the best functional match of the data by minimizing the sum of squared errors. The least squares method can be used to easily obtain unknown data, and minimize the sum of square errors between the obtained data and the actual data.</p>
+<p>The straight line fitting (linear regression) process is as follows:</p>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201901/1509647-20190103223432010-1831955943.png"/></p>
+<p>Let’s look at the standard definition:</p>
+<p>For a given set of data points , in a given function class , find , so that the sum of squares of the errors is minimized, . In a geometric sense, it is to seek the curve y=p(x) whose sum of squared distances from a given point set is the smallest. The function p(x) is called the fitting function or least squares solution, and the method of finding the fitting function p(x) is called the least squares method of curve fitting.</p>
+<p> </p>
+<p>Assume that the equation of the straight line is</p>
+<p><span class="mrow"><span class="mi"><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201901/1509647-20190103233041711-1537559584.png"/></span></span></p>
+<p>Then the error is</p>
+<p><span class="mrow"><span class="msubsup"><span class="mi"><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201901/1509647-20190103233052413-985234998.png"/></span></span></span></p>
+<p>where di represents the error at (xi, yi) point</p>
+<p> </p>
+<p>The sum of squares of all errors is</p>
+<p><span class="mrow" id="MathJax-Span-69"><span class="mi" id="MathJax-Span-70"><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201901/1509647-20190103233113791-495005842.png"/></span></span></p>
+<p>This is a quadratic function. The quadratic function curve is as shown in the figure:</p>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201901/1509647-20190103232113324-1472256261.png"/></p>
+<p>The minimum value of D in the quadratic function is located at the point where the derivative is equal to 0, so calculating the two partial derivatives of D with respect to a and b is 0 to obtain two equations about a and b,</p>
+<p>The final calculation formula for a and b is:</p>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201901/1509647-20190103233316839-1751171459.png"/></p>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201901/1509647-20190103233325938-1906284092.png"/></p>
+<p>For details on the formula derivation process, please see https://www.cnblogs.com/paiandlu/p/7843236.html</p>
+<p> </p>
+</div>
+</div>
+<!-- Post Footer -->
+<div class="post-footer">
+<div class="post-navigation">
+<a class="nav-button" href="../blog.html">← Back to Home</a>
+<a class="nav-button" href="0284.html">Next Post →</a>
+</div>
+</div>
+</article>
+</div>
+</body>
+</html>

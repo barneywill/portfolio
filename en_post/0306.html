@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>beeline connection Spark thrift sometimes gets stuck</title>
+<link href="../css/style3.css" rel="stylesheet"/>
+</head>
+<body>
+<div class="container">
+<!-- Header Navigation -->
+<div class="header">
+<h1><a href="../blog.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+</div>
+<!-- Post Container -->
+<article class="post">
+<!-- Post Header -->
+<div class="post-header">
+<h1>beeline connection Spark thrift sometimes gets stuck</h1>
+<div class="post-meta">
+<div class="post-meta-item">
+<span class="meta-icon">📅</span>
+<span>December 19, 2018</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">📖</span>
+<span>1 min read</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">👁️</span>
+<span>968 views</span>
+</div>
+</div>
+</div>
+<!-- Post Content -->
+<div class="post-content">
+<div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<p>spark 2.1.1</p>
+<p> </p>
+<p>After beeline connects to Spark thrift, the execution of use database sometimes gets stuck, and use database corresponds to setCurrentDatabase on the server side.</p>
+<p>After investigation, it was found that Spark thrift was performing an insert operation at that time.</p>
+<p> </p>
+<p>org.apache.spark.sql.hive.execution.InsertIntoHiveTable</p>
+<div class="cnblogs_code">
+<pre>  <span style="color: rgba(0, 0, 255, 1)">protected</span> override def doExecute(): RDD[InternalRow] =<span style="color: rgba(0, 0, 0, 1)"> {
+    sqlContext.sparkContext.parallelize(sideEffectResult.asInstanceOf[Seq[InternalRow]], </span>1<span style="color: rgba(0, 0, 0, 1)">)
+  }
+...
+  @</span><span style="color: rgba(0, 0, 255, 1)">transient</span> <span style="color: rgba(0, 0, 255, 1)">private</span> val externalCatalog =<span style="color: rgba(0, 0, 0, 1)"> sqlContext.sharedState.externalCatalog
+
+  </span><span style="color: rgba(0, 0, 255, 1)">protected</span>[sql] lazy val sideEffectResult: Seq[InternalRow] =<span style="color: rgba(0, 0, 0, 1)"> {
+  ...
+        externalCatalog.loadDynamicPartitions(
+          externalCatalog.getPartitionOption(
+          externalCatalog.loadPartition(
+      externalCatalog.loadTable(</span></pre>
+</div>
+<p>It can be seen that loadDynamicPartitions, getPartitionOption, loadPartition, loadTable and other methods may be called during the insert operation.</p>
+<p> </p>
+<p>org.apache.spark.sql.hive.client.HiveClientImpl</p>
+<div class="cnblogs_code">
+<pre><span style="color: rgba(0, 0, 0, 1)">  def loadTable(
+      loadPath: String, </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> TODO URI</span>
+<span style="color: rgba(0, 0, 0, 1)">      tableName: String,
+      replace: Boolean,
+      holdDDLTime: Boolean): Unit </span>=<span style="color: rgba(0, 0, 0, 1)"> withHiveState {
+...
+  def loadPartition(
+      loadPath: String,
+      dbName: String,
+      tableName: String,
+      partSpec: java.util.LinkedHashMap[String, String],
+      replace: Boolean,
+      holdDDLTime: Boolean,
+      inheritTableSpecs: Boolean): Unit </span>=<span style="color: rgba(0, 0, 0, 1)"> withHiveState {
+...
+  override def setCurrentDatabase(databaseName: String): Unit </span>= withHiveState {</pre>
+</div>
+<p>The corresponding methods in HiveClientImpl will execute withHiveState, and withHiveState is synchronized, so part of the code in the insert operation (such as loadPartition) and the use database operation will be executed synchronously. When the insert execution is very slow, all other operations will be stuck;</p>
+<p> </p>
+<p>For details on the implementation principle in Spark thrift, see <a href="https://www.cnblogs.com/barneywill/p/10137672.html" target="_blank" title="[Original] Spark (3) Spark Thrift implementation principle and code implementation of big data foundation">https://www.cnblogs.com/barneywill/p/10137672.html</a></p>
+<p> </p>
+</div>
+</div>
+<!-- Post Footer -->
+<div class="post-footer">
+<div class="post-navigation">
+<a class="nav-button" href="../blog.html">← Back to Home</a>
+<a class="nav-button" href="0307.html">Next Post →</a>
+</div>
+</div>
+</article>
+</div>
+</body>
+</html>

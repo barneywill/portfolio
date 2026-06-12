@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Installing the Oracle Client on Windows</title>
+<link href="../css/style3.css" rel="stylesheet"/>
+</head>
+<body>
+<div class="container">
+<!-- Header Navigation -->
+<div class="header">
+<h1><a href="../blog.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+</div>
+<!-- Post Container -->
+<article class="post">
+<!-- Post Header -->
+<div class="post-header">
+<h1>Installing the Oracle Client on Windows</h1>
+<div class="post-meta">
+<div class="post-meta-item">
+<span class="meta-icon">📅</span>
+<span>December 31, 2019</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">📖</span>
+<span>1 min read</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">👁️</span>
+<span>442 views</span>
+</div>
+</div>
+</div>
+<!-- Post Content -->
+<div class="post-content">
+<div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<h1>1 Download and install plSQL</h1>
+<p>Official download address: https://www.allroundautomations.com/plSQLdev.html</p>
+<p>Registration code:</p>
+<blockquote>
+<p>product code： 4vkjwhfeh3ufnqnmpr9brvcuyujrx3n3le <br/>serial Number：226959 <br/>password: xs374ca</p>
+</blockquote>
+<h1>2 Download oracle client</h1>
+<p>Official download address: https://www.oracle.com/database/technologies/instant-client/winx64-64-downloads.html</p>
+<p>Basic Package（zip）</p>
+<p>SQL*Plus Package（zip）</p>
+<p>After decompression, merge the directories to get</p>
+<p>instantclient_19_5</p>
+<h1>3 Move the oracle client directory to plSQL</h1>
+<p>Move instantclient_19_5 to the plSQL installation directory (such as D:\Program Files\PLSQL Developer 13)</p>
+<p>Create a new directory and file network/admin/tnsnames.ora under instantclient_19_5</p>
+<div class="cnblogs_code">
+<pre>alias =<span style="color: rgba(0, 0, 0, 1)">
+ (DESCRIPTION </span>=<span style="color: rgba(0, 0, 0, 1)">
+ (ADDRESS </span>= (PROTOCOL = TCP)(HOST = 192.168.1.1)(PORT = 1521<span style="color: rgba(0, 0, 0, 1)">))
+  (CONNECT_DATA </span>=<span style="color: rgba(0, 0, 0, 1)">
+   (SERVER </span>=<span style="color: rgba(0, 0, 0, 1)"> DEDICATED)
+   (SERVICE_NAME </span>=<span style="color: rgba(0, 0, 0, 1)"> orcl)
+  )
+ )</span></pre>
+</div>
+<p>Note that the file suffix must be displayed under Windows. A possible pitfall is that the file appears to be tnsnames.ora, but is actually tnsnames.ora.txt, which will cause the configuration to fail.</p>
+<h1>4 Set environment variables</h1>
+<blockquote>
+<p>ORACLE_HOME=D:\Program Files\PLSQL Developer 13\instantclient_19_5<br/>TNS_ADMIN=D:\Program Files\PLSQL Developer 13\instantclient_19_5\network\admin<br/>NLS_LANG=SIMPLIFIED CHINESE_CHINA.AL32UTF8</p>
+</blockquote>
+<h1>5 Set up plSQL</h1>
+<p>MenuConfig-Perferences</p>
+<p>Oracle-Connection</p>
+<p>set up</p>
+<blockquote>
+<p>Oracle Home=D:\Program Files\PLSQL Developer 13\instantclient_19_5</p>
+<p>OCI Library=D:\Program Files\PLSQL Developer 13\instantclient_19_5\oci.dll</p>
+</blockquote>
+<h1>6 Start plSQL</h1>
+<p><picture>
+<source srcset="../img/1509647-20191231162424484-641429228.webp" type="image/webp"/>
+<img alt="" src="../img/1509647-20191231162424484-641429228.png"/>
+</picture></p>
+</div>
+</div>
+<!-- Post Footer -->
+<div class="post-footer">
+<div class="post-navigation">
+<a class="nav-button" href="../blog.html">← Back to Home</a>
+<a class="nav-button" href="0078.html">Next Post →</a>
+</div>
+</div>
+</article>
+</div>
+</body>
+</html>

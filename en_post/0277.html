@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Hadoop 1 - HA implementation principle</title>
+<link href="../css/style3.css" rel="stylesheet"/>
+</head>
+<body>
+<div class="container">
+<!-- Header Navigation -->
+<div class="header">
+<h1><a href="../blog.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+</div>
+<!-- Post Container -->
+<article class="post">
+<!-- Post Header -->
+<div class="post-header">
+<h1>Hadoop 1 - HA implementation principle</h1>
+<div class="post-meta">
+<div class="post-meta-item">
+<span class="meta-icon">📅</span>
+<span>January 11, 2019</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">📖</span>
+<span>15 min read</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">👁️</span>
+<span>1775 views</span>
+</div>
+</div>
+</div>
+<!-- Post Content -->
+<div class="post-content">
+<div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<p>Some work can only be performed on one server, such as the master. At this time, HA (High Availability) first requires the deployment of multiple servers, and secondly requires multiple servers to automatically elect an active server. The other servers are in the standby state, and only the active server is allowed to perform specific operations. When the active server cannot serve due to various reasons (such as hanging or disconnecting), other standby servers will automatically elect an active server to provide services to achieve seamless switching of services.</p>
+<p>Hadoop master ha is implemented through ZooKeeper, which is divided into HDFS ha (ha of NameNode) and YARN ha (ha of ResourceManager). The two have both similarities and differences;</p>
+<h1>1 phenomenon</h1>
+<h2>1.1 hdfs ha</h2>
+<p>zookeeper path：</p>
+<blockquote>
+<p>/hadoop-ha/${dfs.nameservices}/ActiveBreadCrumb<br/>/hadoop-ha/${dfs.nameservices}/ActiveStandbyElectorLock</p>
+</blockquote>
+<p>Configuration:</p>
+<blockquote>
+<p>&lt;property&gt;</p>
+<p>  &lt;name&gt;ha.zookeeper.parent-znode&lt;/name&gt;</p>
+<p>  &lt;value&gt;/hadoop-ha&lt;/value&gt;</p>
+<p>  &lt;description&gt;</p>
+<p>    The ZooKeeper znode under which the ZK failover controller stores</p>
+<p>    its information. Note that the nameservice ID is automatically</p>
+<p>    appended to this znode, so it is not normally necessary to</p>
+<p>    configure this, even in a federated environment.</p>
+<p>  &lt;/description&gt;</p>
+<p>&lt;/property&gt;</p>
+<p>&lt;property&gt;</p>
+<p>  &lt;name&gt;dfs.nameservices&lt;/name&gt;</p>
+<p>  &lt;value&gt;&lt;/value&gt;</p>
+<p>  &lt;description&gt;</p>
+<p>    Comma-separated list of nameservices.</p>
+<p>  &lt;/description&gt;</p>
+<p>&lt;/property&gt;</p>
+</blockquote>
+<h2>1.2 yarn ha</h2>
+<p>zookeeper path：</p>
+<blockquote>
+<p>/yarn-leader-election/${yarn.resourcemanager.cluster-id}/ActiveBreadCrumb<br/>/yarn-leader-election/${yarn.resourcemanager.cluster-id}/ActiveStandbyElectorLock</p>
+</blockquote>
+<p>Configuration:</p>
+<blockquote>
+<p>  &lt;property&gt;</p>
+<p>    &lt;description&gt;The base znode path to use for storing leader information,</p>
+<p>      when using ZooKeeper based leader election.&lt;/description&gt;</p>
+<p>    &lt;name&gt;yarn.resourcemanager.ha.automatic-failover.zk-base-path&lt;/name&gt;</p>
+<p>    &lt;value&gt;/yarn-leader-election&lt;/value&gt;</p>
+<p>  &lt;/property&gt;</p>
+<p>  &lt;property&gt;</p>
+<p>    &lt;description&gt;Name of the cluster. In a HA setting,</p>
+<p>      this is used to ensure the RM participates in leader</p>
+<p>      election for this cluster and ensures it does not affect</p>
+<p>      other clusters&lt;/description&gt;</p>
+<p>    &lt;name&gt;yarn.resourcemanager.cluster-id&lt;/name&gt;</p>
+<p>    &lt;!--value&gt;yarn-cluster&lt;/value--&gt;</p>
+<p>  &lt;/property&gt;</p>
+</blockquote>
+<p>Why are there two nodes ActiveBreadCrumb and ActiveStandbyElectorLock on ZooKeeper? ActiveStandbyElectorLock is used for actual locking, and ActiveBreadCrumb is used for fence;</p>
+<h1>2 code implementation</h1>
+<p>Both HDFS and YARN ha ultimately use ActiveStandbyElector, let’s look at them one by one.</p>
+<h2>2.1 hdfs ha</h2>
+<p>zkfc start command</p>
+<blockquote>
+<p>$HADOOP_HOME/bin/hdfs</p>
+<p>elif [ "$COMMAND" = "zkfc" ] ; then<br/>  CLASS='org.apache.hadoop.hdfs.tools.DFSZKFailoverController'<br/>  HADOOP_OPTS="$HADOOP_OPTS $HADOOP_ZKFC_OPTS"</p>
+</blockquote>
+<p>code</p>
+<p>org.apache.hadoop.hdfs.tools.DFSZKFailoverController</p>
+<div class="cnblogs_code">
+<pre>  <span style="color: rgba(0, 0, 255, 1)">public</span> <span style="color: rgba(0, 0, 255, 1)">static</span> <span style="color: rgba(0, 0, 255, 1)">void</span><span style="color: rgba(0, 0, 0, 1)"> main(String args[])
+      </span><span style="color: rgba(0, 0, 255, 1)">throws</span><span style="color: rgba(0, 0, 0, 1)"> Exception {
+    </span><span style="color: rgba(0, 0, 255, 1)">if</span><span style="color: rgba(0, 0, 0, 1)"> (DFSUtil.parseHelpArgument(args, 
+        ZKFailoverController.USAGE, System.out, </span><span style="color: rgba(0, 0, 255, 1)">true</span><span style="color: rgba(0, 0, 0, 1)">)) {
+      System.exit(</span>0<span style="color: rgba(0, 0, 0, 1)">);
+    }
+    
+    GenericOptionsParser parser </span>= <span style="color: rgba(0, 0, 255, 1)">new</span><span style="color: rgba(0, 0, 0, 1)"> GenericOptionsParser(
+        </span><span style="color: rgba(0, 0, 255, 1)">new</span><span style="color: rgba(0, 0, 0, 1)"> HdfsConfiguration(), args);
+    DFSZKFailoverController zkfc </span>=<span style="color: rgba(0, 0, 0, 1)"> DFSZKFailoverController.create(
+        parser.getConfiguration());
+    </span><span style="color: rgba(0, 0, 255, 1)">int</span> retCode = 0<span style="color: rgba(0, 0, 0, 1)">;
+    </span><span style="color: rgba(0, 0, 255, 1)">try</span><span style="color: rgba(0, 0, 0, 1)"> {
+      retCode </span>=<span style="color: rgba(0, 0, 0, 1)"> zkfc.run(parser.getRemainingArgs());
+    } </span><span style="color: rgba(0, 0, 255, 1)">catch</span><span style="color: rgba(0, 0, 0, 1)"> (Throwable t) {
+      LOG.fatal(</span>"Got a fatal error, exiting now"<span style="color: rgba(0, 0, 0, 1)">, t);
+    }
+    System.exit(retCode);
+  }</span></pre>
+</div>
+<p>DFSZKFailoverController.main will call run. The run here is the method of the parent class ZKFailoverController, which will call doRun. Let’s look at the parent class below:</p>
+<p>org.apache.hadoop.ha.ZKFailoverController</p>
+<div class="cnblogs_code">
+<pre>  <span style="color: rgba(0, 0, 255, 1)">private</span> <span style="color: rgba(0, 0, 255, 1)">static</span> <span style="color: rgba(0, 0, 255, 1)">final</span> String ZK_PARENT_ZNODE_KEY = "ha.zookeeper.parent-znode"<span style="color: rgba(0, 0, 0, 1)">;
+  
+  </span><span style="color: rgba(0, 0, 255, 1)">static</span> <span style="color: rgba(0, 0, 255, 1)">final</span> String ZK_PARENT_ZNODE_DEFAULT = "/hadoop-ha"<span style="color: rgba(0, 0, 0, 1)">;
+  
+  </span><span style="color: rgba(0, 0, 255, 1)">private</span> <span style="color: rgba(0, 0, 255, 1)">int</span><span style="color: rgba(0, 0, 0, 1)"> doRun(String[] args)
+      </span><span style="color: rgba(0, 0, 255, 1)">throws</span><span style="color: rgba(0, 0, 0, 1)"> HadoopIllegalArgumentException, IOException, InterruptedException {
+    </span><span style="color: rgba(0, 0, 255, 1)">try</span><span style="color: rgba(0, 0, 0, 1)"> {
+      initZK();
+    } </span><span style="color: rgba(0, 0, 255, 1)">catch</span><span style="color: rgba(0, 0, 0, 1)"> (KeeperException ke) {
+      LOG.fatal(</span>"Unable to start failover controller. Unable to connect "
+          + "to ZooKeeper quorum at " + zkQuorum + ". Please check the "
+          + "configured value for " + ZK_QUORUM_KEY + " and ensure that "
+          + "ZooKeeper is running."<span style="color: rgba(0, 0, 0, 1)">);
+      </span><span style="color: rgba(0, 0, 255, 1)">return</span><span style="color: rgba(0, 0, 0, 1)"> ERR_CODE_NO_ZK;
+    }
+    </span><span style="color: rgba(0, 0, 255, 1)">if</span> (args.length &gt; 0<span style="color: rgba(0, 0, 0, 1)">) {
+      </span><span style="color: rgba(0, 0, 255, 1)">if</span> ("-formatZK".equals(args[0<span style="color: rgba(0, 0, 0, 1)">])) {
+        </span><span style="color: rgba(0, 0, 255, 1)">boolean</span> force = <span style="color: rgba(0, 0, 255, 1)">false</span><span style="color: rgba(0, 0, 0, 1)">;
+        </span><span style="color: rgba(0, 0, 255, 1)">boolean</span> interactive = <span style="color: rgba(0, 0, 255, 1)">true</span><span style="color: rgba(0, 0, 0, 1)">;
+        </span><span style="color: rgba(0, 0, 255, 1)">for</span> (<span style="color: rgba(0, 0, 255, 1)">int</span> i = 1; i &lt; args.length; i++<span style="color: rgba(0, 0, 0, 1)">) {
+          </span><span style="color: rgba(0, 0, 255, 1)">if</span> ("-force"<span style="color: rgba(0, 0, 0, 1)">.equals(args[i])) {
+            force </span>= <span style="color: rgba(0, 0, 255, 1)">true</span><span style="color: rgba(0, 0, 0, 1)">;
+          } </span><span style="color: rgba(0, 0, 255, 1)">else</span> <span style="color: rgba(0, 0, 255, 1)">if</span> ("-nonInteractive"<span style="color: rgba(0, 0, 0, 1)">.equals(args[i])) {
+            interactive </span>= <span style="color: rgba(0, 0, 255, 1)">false</span><span style="color: rgba(0, 0, 0, 1)">;
+          } </span><span style="color: rgba(0, 0, 255, 1)">else</span><span style="color: rgba(0, 0, 0, 1)"> {
+            badArg(args[i]);
+          }
+        }
+        </span><span style="color: rgba(0, 0, 255, 1)">return</span><span style="color: rgba(0, 0, 0, 1)"> formatZK(force, interactive);
+      } </span><span style="color: rgba(0, 0, 255, 1)">else</span><span style="color: rgba(0, 0, 0, 1)"> {
+        badArg(args[</span>0<span style="color: rgba(0, 0, 0, 1)">]);
+      }
+    }
+
+    </span><span style="color: rgba(0, 0, 255, 1)">if</span> (!<span style="color: rgba(0, 0, 0, 1)">elector.parentZNodeExists()) {
+      LOG.fatal(</span>"Unable to start failover controller. "
+          + "Parent znode does not exist.\n"
+          + "Run with - formatZK flag to initialize ZooKeeper."<span style="color: rgba(0, 0, 0, 1)">);
+      </span><span style="color: rgba(0, 0, 255, 1)">return</span><span style="color: rgba(0, 0, 0, 1)"> ERR_CODE_NO_PARENT_ZNODE;
+    }
+
+    </span><span style="color: rgba(0, 0, 255, 1)">try</span><span style="color: rgba(0, 0, 0, 1)"> {
+      localTarget.checkFencingConfigured();
+    } </span><span style="color: rgba(0, 0, 255, 1)">catch</span><span style="color: rgba(0, 0, 0, 1)"> (BadFencingConfigurationException e) {
+      LOG.fatal(</span>"Fencing is not configured for " + localTarget + ".\n" +
+          "You must configure a fencing method before using automatic " +
+          "failover."<span style="color: rgba(0, 0, 0, 1)">, e);
+      </span><span style="color: rgba(0, 0, 255, 1)">return</span><span style="color: rgba(0, 0, 0, 1)"> ERR_CODE_NO_FENCER;
+    }
+
+    initRPC();
+    initHM();
+    startRPC();
+    </span><span style="color: rgba(0, 0, 255, 1)">try</span><span style="color: rgba(0, 0, 0, 1)"> {
+      mainLoop();
+    } </span><span style="color: rgba(0, 0, 255, 1)">finally</span><span style="color: rgba(0, 0, 0, 1)"> {
+      rpcServer.stopAndJoin();
+      
+      elector.quitElection(</span><span style="color: rgba(0, 0, 255, 1)">true</span><span style="color: rgba(0, 0, 0, 1)">);
+      healthMonitor.shutdown();
+      healthMonitor.join();
+    }
+    </span><span style="color: rgba(0, 0, 255, 1)">return</span> 0<span style="color: rgba(0, 0, 0, 1)">;
+  }
+  
+  </span><span style="color: rgba(0, 0, 255, 1)">private</span> <span style="color: rgba(0, 0, 255, 1)">void</span> initZK() <span style="color: rgba(0, 0, 255, 1)">throws</span><span style="color: rgba(0, 0, 0, 1)"> HadoopIllegalArgumentException, IOException,
+      KeeperException {
+...
+    elector </span>= <span style="color: rgba(0, 0, 255, 1)">new</span><span style="color: rgba(0, 0, 0, 1)"> ActiveStandbyElector(zkQuorum,
+        zkTimeout, getParentZnode(), zkAcls, zkAuths,
+        </span><span style="color: rgba(0, 0, 255, 1)">new</span><span style="color: rgba(0, 0, 0, 1)"> ElectorCallbacks(), maxRetryNum);
+  }
+  
+  </span><span style="color: rgba(0, 0, 255, 1)">private</span><span style="color: rgba(0, 0, 0, 1)"> String getParentZnode() {
+    String znode </span>=<span style="color: rgba(0, 0, 0, 1)"> conf.get(ZK_PARENT_ZNODE_KEY,
+        ZK_PARENT_ZNODE_DEFAULT);
+    </span><span style="color: rgba(0, 0, 255, 1)">if</span> (!znode.endsWith("/"<span style="color: rgba(0, 0, 0, 1)">)) {
+      znode </span>+= "/"<span style="color: rgba(0, 0, 0, 1)">;
+    }
+    </span><span style="color: rgba(0, 0, 255, 1)">return</span> znode +<span style="color: rgba(0, 0, 0, 1)"> getScopeInsideParentNode();
+  }
+
+  </span><span style="color: rgba(0, 0, 255, 1)">class</span> ElectorCallbacks <span style="color: rgba(0, 0, 255, 1)">implements</span><span style="color: rgba(0, 0, 0, 1)"> ActiveStandbyElectorCallback {
+    @Override
+    </span><span style="color: rgba(0, 0, 255, 1)">public</span> <span style="color: rgba(0, 0, 255, 1)">void</span> becomeActive() <span style="color: rgba(0, 0, 255, 1)">throws</span><span style="color: rgba(0, 0, 0, 1)"> ServiceFailedException {
+      ZKFailoverController.</span><span style="color: rgba(0, 0, 255, 1)">this</span><span style="color: rgba(0, 0, 0, 1)">.becomeActive();
+    }
+
+    @Override
+    </span><span style="color: rgba(0, 0, 255, 1)">public</span> <span style="color: rgba(0, 0, 255, 1)">void</span><span style="color: rgba(0, 0, 0, 1)"> becomeStandby() {
+      ZKFailoverController.</span><span style="color: rgba(0, 0, 255, 1)">this</span><span style="color: rgba(0, 0, 0, 1)">.becomeStandby();
+    }
+
+    @Override
+    </span><span style="color: rgba(0, 0, 255, 1)">public</span> <span style="color: rgba(0, 0, 255, 1)">void</span><span style="color: rgba(0, 0, 0, 1)"> enterNeutralMode() {
+    }
+
+    @Override
+    </span><span style="color: rgba(0, 0, 255, 1)">public</span> <span style="color: rgba(0, 0, 255, 1)">void</span><span style="color: rgba(0, 0, 0, 1)"> notifyFatalError(String errorMessage) {
+      fatalError(errorMessage);
+    }
+
+    @Override
+    </span><span style="color: rgba(0, 0, 255, 1)">public</span> <span style="color: rgba(0, 0, 255, 1)">void</span> fenceOldActive(<span style="color: rgba(0, 0, 255, 1)">byte</span><span style="color: rgba(0, 0, 0, 1)">[] data) {
+      ZKFailoverController.</span><span style="color: rgba(0, 0, 255, 1)">this</span><span style="color: rgba(0, 0, 0, 1)">.fenceOldActive(data);
+    }
+    
+    @Override
+    </span><span style="color: rgba(0, 0, 255, 1)">public</span><span style="color: rgba(0, 0, 0, 1)"> String toString() {
+      </span><span style="color: rgba(0, 0, 255, 1)">synchronized</span> (ZKFailoverController.<span style="color: rgba(0, 0, 255, 1)">this</span><span style="color: rgba(0, 0, 0, 1)">) {
+        </span><span style="color: rgba(0, 0, 255, 1)">return</span> "Elector callbacks for " +<span style="color: rgba(0, 0, 0, 1)"> localTarget;
+      }
+    }
+  }</span></pre>
+</div>
+<p>Several methods are called in doRun, the two most important ones are initZK and initHM:</p>
+<p>In initZK, the zk path is created through getParentZnode, and ActiveStandbyElector is created at the same time. The most important thing here is to pass the object of the internal class ElectorCallbacks to ActiveStandbyElector. Subsequent zk states are passed through the call chain of ActiveStandbyElector-&gt;ElectorCallbacks-&gt;ZKFailoverController, and finally the state changes are realized, such as becomeActive, becomeStandby, etc.;</p>
+<p>InitZK only determines the zk path and various callback functions. There is no actual creation operation. The specific operations are in initHM. Let’s look at initHM below:</p>
+<p>org.apache.hadoop.ha.ZKFailoverController</p>
+<div class="cnblogs_code">
+<pre>  <span style="color: rgba(0, 0, 255, 1)">private</span> <span style="color: rgba(0, 0, 255, 1)">void</span><span style="color: rgba(0, 0, 0, 1)"> initHM() {
+    healthMonitor </span>= <span style="color: rgba(0, 0, 255, 1)">new</span><span style="color: rgba(0, 0, 0, 1)"> HealthMonitor(conf, localTarget);
+    healthMonitor.addCallback(</span><span style="color: rgba(0, 0, 255, 1)">new</span><span style="color: rgba(0, 0, 0, 1)"> HealthCallbacks());
+    healthMonitor.addServiceStateCallback(</span><span style="color: rgba(0, 0, 255, 1)">new</span><span style="color: rgba(0, 0, 0, 1)"> ServiceStateCallBacks());
+    healthMonitor.start();
+  }</span></pre>
+</div>
+<p>HealthMonitor will be created in initHM, HealthCallbacks will be passed in, and then HealthMonitor will be started. Let’s look at HealthMonitor below:</p>
+<p>org.apache.hadoop.ha.HealthMonitor</p>
+<div class="cnblogs_code">
+<pre>  <span style="color: rgba(0, 0, 255, 1)">void</span><span style="color: rgba(0, 0, 0, 1)"> start() {
+    daemon.start();
+  }
+  
+  </span><span style="color: rgba(0, 0, 255, 1)">private</span> <span style="color: rgba(0, 0, 255, 1)">void</span> doHealthChecks() <span style="color: rgba(0, 0, 255, 1)">throws</span><span style="color: rgba(0, 0, 0, 1)"> InterruptedException {
+    </span><span style="color: rgba(0, 0, 255, 1)">while</span><span style="color: rgba(0, 0, 0, 1)"> (shouldRun) {
+      HAServiceStatus status </span>= <span style="color: rgba(0, 0, 255, 1)">null</span><span style="color: rgba(0, 0, 0, 1)">;
+      </span><span style="color: rgba(0, 0, 255, 1)">boolean</span> healthy = <span style="color: rgba(0, 0, 255, 1)">false</span><span style="color: rgba(0, 0, 0, 1)">;
+      </span><span style="color: rgba(0, 0, 255, 1)">try</span><span style="color: rgba(0, 0, 0, 1)"> {
+        status </span>=<span style="color: rgba(0, 0, 0, 1)"> proxy.getServiceStatus();
+        proxy.monitorHealth();
+        healthy </span>= <span style="color: rgba(0, 0, 255, 1)">true</span><span style="color: rgba(0, 0, 0, 1)">;
+      } </span><span style="color: rgba(0, 0, 255, 1)">catch</span><span style="color: rgba(0, 0, 0, 1)"> (HealthCheckFailedException e) {
+        LOG.warn(</span>"Service health check failed for " +<span style="color: rgba(0, 0, 0, 1)"> targetToMonitor
+            </span>+ ": " +<span style="color: rgba(0, 0, 0, 1)"> e.getMessage());
+        enterState(State.SERVICE_UNHEALTHY);
+      } </span><span style="color: rgba(0, 0, 255, 1)">catch</span><span style="color: rgba(0, 0, 0, 1)"> (Throwable t) {
+        LOG.warn(</span>"Transport-level exception trying to monitor health of " +<span style="color: rgba(0, 0, 0, 1)">
+            targetToMonitor </span>+ ": " +<span style="color: rgba(0, 0, 0, 1)"> t.getLocalizedMessage());
+        RPC.stopProxy(proxy);
+        proxy </span>= <span style="color: rgba(0, 0, 255, 1)">null</span><span style="color: rgba(0, 0, 0, 1)">;
+        enterState(State.SERVICE_NOT_RESPONDING);
+        Thread.sleep(sleepAfterDisconnectMillis);
+        </span><span style="color: rgba(0, 0, 255, 1)">return</span><span style="color: rgba(0, 0, 0, 1)">;
+      }
+      
+      </span><span style="color: rgba(0, 0, 255, 1)">if</span> (status != <span style="color: rgba(0, 0, 255, 1)">null</span><span style="color: rgba(0, 0, 0, 1)">) {
+        setLastServiceStatus(status);
+      }
+      </span><span style="color: rgba(0, 0, 255, 1)">if</span><span style="color: rgba(0, 0, 0, 1)"> (healthy) {
+        enterState(State.SERVICE_HEALTHY);
+      }
+
+      Thread.sleep(checkIntervalMillis);
+    }
+  }
+  
+  </span><span style="color: rgba(0, 0, 255, 1)">private</span> <span style="color: rgba(0, 0, 255, 1)">synchronized</span> <span style="color: rgba(0, 0, 255, 1)">void</span><span style="color: rgba(0, 0, 0, 1)"> enterState(State newState) {
+    </span><span style="color: rgba(0, 0, 255, 1)">if</span> (newState !=<span style="color: rgba(0, 0, 0, 1)"> state) {
+      LOG.info(</span>"Entering state " +<span style="color: rgba(0, 0, 0, 1)"> newState);
+      state </span>=<span style="color: rgba(0, 0, 0, 1)"> newState;
+      </span><span style="color: rgba(0, 0, 255, 1)">synchronized</span><span style="color: rgba(0, 0, 0, 1)"> (callbacks) {
+        </span><span style="color: rgba(0, 0, 255, 1)">for</span><span style="color: rgba(0, 0, 0, 1)"> (Callback cb : callbacks) {
+          cb.enteredState(newState);
+        }
+      }
+    }
+  }</span></pre>
+</div>
+<p>HealthMonitor.start will start the internal MonitorDaemon thread, and the MonitorDaemon thread will call HealthMonitor.doHealthChecks cyclically. doHealthChecks will call enterState according to various state changes, and enterState will iteratively call back all callbacks. This is an Observer mode, focusing on callbacks, that is, HealthCallbacks;</p>
+<p>Let’s look at the MonitorDaemon thread first:</p>
+<p>org.apache.hadoop.ha.HealthMonitor.MonitorDaemon</p>
+<div class="cnblogs_code">
+<pre>    <span style="color: rgba(0, 0, 255, 1)">public</span> <span style="color: rgba(0, 0, 255, 1)">void</span><span style="color: rgba(0, 0, 0, 1)"> run() {
+      </span><span style="color: rgba(0, 0, 255, 1)">while</span><span style="color: rgba(0, 0, 0, 1)"> (shouldRun) {
+        </span><span style="color: rgba(0, 0, 255, 1)">try</span><span style="color: rgba(0, 0, 0, 1)"> { 
+          loopUntilConnected();
+          doHealthChecks();
+        } </span><span style="color: rgba(0, 0, 255, 1)">catch</span><span style="color: rgba(0, 0, 0, 1)"> (InterruptedException ie) {
+          Preconditions.checkState(</span>!<span style="color: rgba(0, 0, 0, 1)">shouldRun,
+              </span>"Interrupted but still supposed to run"<span style="color: rgba(0, 0, 0, 1)">);
+        }
+      }
+    }</span></pre>
+</div>
+<p>Look at HealthCallbacks again:</p>
+<p>org.apache.hadoop.ha.ZKFailoverController.HealthCallbacks</p>
+<div class="cnblogs_code">
+<pre>  <span style="color: rgba(0, 0, 255, 1)">class</span> HealthCallbacks <span style="color: rgba(0, 0, 255, 1)">implements</span><span style="color: rgba(0, 0, 0, 1)"> HealthMonitor.Callback {
+    @Override
+    </span><span style="color: rgba(0, 0, 255, 1)">public</span> <span style="color: rgba(0, 0, 255, 1)">void</span><span style="color: rgba(0, 0, 0, 1)"> enteredState(HealthMonitor.State newState) {
+      setLastHealthState(newState);
+      recheckElectability();
+    }
+  }</span></pre>
+</div>
+<p>ZKFailoverController.recheckElectability will be called here</p>
+<p>org.apache.hadoop.ha.ZKFailoverController</p>
+<div class="cnblogs_code">
+<pre>  <span style="color: rgba(0, 0, 255, 1)">private</span> <span style="color: rgba(0, 0, 255, 1)">void</span><span style="color: rgba(0, 0, 0, 1)"> recheckElectability() {
+    </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> Maintain lock ordering of elector - &gt; ZKFC</span>
+    <span style="color: rgba(0, 0, 255, 1)">synchronized</span><span style="color: rgba(0, 0, 0, 1)"> (elector) {
+      </span><span style="color: rgba(0, 0, 255, 1)">synchronized</span> (<span style="color: rgba(0, 0, 255, 1)">this</span><span style="color: rgba(0, 0, 0, 1)">) {
+        </span><span style="color: rgba(0, 0, 255, 1)">boolean</span> healthy = lastHealthState ==<span style="color: rgba(0, 0, 0, 1)"> State.SERVICE_HEALTHY;
+    
+        </span><span style="color: rgba(0, 0, 255, 1)">long</span> remainingDelay = delayJoiningUntilNanotime - <span style="color: rgba(0, 0, 0, 1)"> System.nanoTime(); 
+        </span><span style="color: rgba(0, 0, 255, 1)">if</span> (remainingDelay &gt; 0<span style="color: rgba(0, 0, 0, 1)">) {
+          </span><span style="color: rgba(0, 0, 255, 1)">if</span><span style="color: rgba(0, 0, 0, 1)"> (healthy) {
+            LOG.info(</span>"Would have joined master election, but this node is " +
+                "prohibited from doing so for " +<span style="color: rgba(0, 0, 0, 1)">
+                TimeUnit.NANOSECONDS.toMillis(remainingDelay) </span>+ " more ms"<span style="color: rgba(0, 0, 0, 1)">);
+          }
+          scheduleRecheck(remainingDelay);
+          </span><span style="color: rgba(0, 0, 255, 1)">return</span><span style="color: rgba(0, 0, 0, 1)">;
+        }
+    
+        </span><span style="color: rgba(0, 0, 255, 1)">switch</span><span style="color: rgba(0, 0, 0, 1)"> (lastHealthState) {
+        </span><span style="color: rgba(0, 0, 255, 1)">case</span><span style="color: rgba(0, 0, 0, 1)"> SERVICE_HEALTHY:
+          elector.joinElection(targetToData(localTarget));
+          </span><span style="color: rgba(0, 0, 255, 1)">if</span><span style="color: rgba(0, 0, 0, 1)"> (quitElectionOnBadState) {
+            quitElectionOnBadState </span>= <span style="color: rgba(0, 0, 255, 1)">false</span><span style="color: rgba(0, 0, 0, 1)">;
+          }
+          </span><span style="color: rgba(0, 0, 255, 1)">break</span><span style="color: rgba(0, 0, 0, 1)">;
+          
+        </span><span style="color: rgba(0, 0, 255, 1)">case</span><span style="color: rgba(0, 0, 0, 1)"> INITIALIZING:
+          LOG.info(</span>"Ensuring that " + localTarget + " does not " +
+              "participate in active master election"<span style="color: rgba(0, 0, 0, 1)">);
+          elector.quitElection(</span><span style="color: rgba(0, 0, 255, 1)">false</span><span style="color: rgba(0, 0, 0, 1)">);
+          serviceState </span>=<span style="color: rgba(0, 0, 0, 1)"> HAServiceState.INITIALIZING;
+          </span><span style="color: rgba(0, 0, 255, 1)">break</span><span style="color: rgba(0, 0, 0, 1)">;
+    
+        </span><span style="color: rgba(0, 0, 255, 1)">case</span><span style="color: rgba(0, 0, 0, 1)"> SERVICE_UNHEALTHY:
+        </span><span style="color: rgba(0, 0, 255, 1)">case</span><span style="color: rgba(0, 0, 0, 1)"> SERVICE_NOT_RESPONDING:
+          LOG.info(</span>"Quitting master election for " + localTarget +
+              " and marking that fencing is necessary"<span style="color: rgba(0, 0, 0, 1)">);
+          elector.quitElection(</span><span style="color: rgba(0, 0, 255, 1)">true</span><span style="color: rgba(0, 0, 0, 1)">);
+          serviceState </span>=<span style="color: rgba(0, 0, 0, 1)"> HAServiceState.INITIALIZING;
+          </span><span style="color: rgba(0, 0, 255, 1)">break</span><span style="color: rgba(0, 0, 0, 1)">;
+          
+        </span><span style="color: rgba(0, 0, 255, 1)">case</span><span style="color: rgba(0, 0, 0, 1)"> HEALTH_MONITOR_FAILED:
+          fatalError(</span>"Health monitor failed!"<span style="color: rgba(0, 0, 0, 1)">);
+          </span><span style="color: rgba(0, 0, 255, 1)">break</span><span style="color: rgba(0, 0, 0, 1)">;
+          
+        </span><span style="color: rgba(0, 0, 255, 1)">default</span><span style="color: rgba(0, 0, 0, 1)">:
+          </span><span style="color: rgba(0, 0, 255, 1)">throw</span> <span style="color: rgba(0, 0, 255, 1)">new</span> IllegalArgumentException("Unhandled state:" +<span style="color: rgba(0, 0, 0, 1)"> lastHealthState);
+        }
+      }
+    }
+  }</span></pre>
+</div>
+<p>In the case of health, ActiveStandbyElector.joinElection will be called. Let’s look at ActiveStandbyElector:</p>
+<p>org.apache.hadoop.ha.ActiveStandbyElector</p>
+<div class="cnblogs_code">
+<pre><span style="color: rgba(0, 0, 255, 1)">public</span> <span style="color: rgba(0, 0, 255, 1)">class</span> ActiveStandbyElector <span style="color: rgba(0, 0, 255, 1)">implements</span><span style="color: rgba(0, 0, 0, 1)"> StatCallback, StringCallback {
+
+  </span><span style="color: rgba(0, 0, 255, 1)">public</span><span style="color: rgba(0, 0, 0, 1)"> ActiveStandbyElector(String zookeeperHostPorts,
+      </span><span style="color: rgba(0, 0, 255, 1)">int</span> zookeeperSessionTimeout, String parentZnodeName, List&lt;ACL&gt;<span style="color: rgba(0, 0, 0, 1)"> acl,
+      List</span>&lt;ZKAuthInfo&gt;<span style="color: rgba(0, 0, 0, 1)"> authInfo,
+      ActiveStandbyElectorCallback app, </span><span style="color: rgba(0, 0, 255, 1)">int</span> maxRetryNum) <span style="color: rgba(0, 0, 255, 1)">throws</span><span style="color: rgba(0, 0, 0, 1)"> IOException,
+      HadoopIllegalArgumentException, KeeperException {
+...
+    znodeWorkingDir </span>=<span style="color: rgba(0, 0, 0, 1)"> parentZnodeName;
+    zkLockFilePath </span>= znodeWorkingDir + "/" +<span style="color: rgba(0, 0, 0, 1)"> LOCK_FILENAME;
+    zkBreadCrumbPath </span>= znodeWorkingDir + "/" +<span style="color: rgba(0, 0, 0, 1)"> BREADCRUMB_FILENAME;
+...
+
+  </span><span style="color: rgba(0, 0, 255, 1)">public</span> <span style="color: rgba(0, 0, 255, 1)">synchronized</span> <span style="color: rgba(0, 0, 255, 1)">void</span> joinElection(<span style="color: rgba(0, 0, 255, 1)">byte</span><span style="color: rgba(0, 0, 0, 1)">[] data)
+      </span><span style="color: rgba(0, 0, 255, 1)">throws</span><span style="color: rgba(0, 0, 0, 1)"> HadoopIllegalArgumentException {
+    
+    </span><span style="color: rgba(0, 0, 255, 1)">if</span> (data == <span style="color: rgba(0, 0, 255, 1)">null</span><span style="color: rgba(0, 0, 0, 1)">) {
+      </span><span style="color: rgba(0, 0, 255, 1)">throw</span> <span style="color: rgba(0, 0, 255, 1)">new</span> HadoopIllegalArgumentException("data cannot be null"<span style="color: rgba(0, 0, 0, 1)">);
+    }
+    
+    </span><span style="color: rgba(0, 0, 255, 1)">if</span><span style="color: rgba(0, 0, 0, 1)"> (wantToBeInElection) {
+      LOG.info(</span>"Already in election. Not re-connecting."<span style="color: rgba(0, 0, 0, 1)">);
+      </span><span style="color: rgba(0, 0, 255, 1)">return</span><span style="color: rgba(0, 0, 0, 1)">;
+    }
+
+    appData </span>= <span style="color: rgba(0, 0, 255, 1)">new</span> <span style="color: rgba(0, 0, 255, 1)">byte</span><span style="color: rgba(0, 0, 0, 1)">[data.length];
+    System.arraycopy(data, </span>0, appData, 0<span style="color: rgba(0, 0, 0, 1)">, data.length);
+
+    LOG.debug(</span>"Attempting active election for " + <span style="color: rgba(0, 0, 255, 1)">this</span><span style="color: rgba(0, 0, 0, 1)">);
+    joinElectionInternal();
+  }
+  
+  </span><span style="color: rgba(0, 0, 255, 1)">private</span> <span style="color: rgba(0, 0, 255, 1)">void</span><span style="color: rgba(0, 0, 0, 1)"> joinElectionInternal() {
+    Preconditions.checkState(appData </span>!= <span style="color: rgba(0, 0, 255, 1)">null</span><span style="color: rgba(0, 0, 0, 1)">,
+        </span>"trying to join election without any app data"<span style="color: rgba(0, 0, 0, 1)">);
+    </span><span style="color: rgba(0, 0, 255, 1)">if</span> (zkClient == <span style="color: rgba(0, 0, 255, 1)">null</span><span style="color: rgba(0, 0, 0, 1)">) {
+      </span><span style="color: rgba(0, 0, 255, 1)">if</span> (!<span style="color: rgba(0, 0, 0, 1)">reEstablishSession()) {
+        fatalError(</span>"Failed to reEstablish connection with ZooKeeper"<span style="color: rgba(0, 0, 0, 1)">);
+        </span><span style="color: rgba(0, 0, 255, 1)">return</span><span style="color: rgba(0, 0, 0, 1)">;
+      }
+    }
+
+    createRetryCount </span>= 0<span style="color: rgba(0, 0, 0, 1)">;
+    wantToBeInElection </span>= <span style="color: rgba(0, 0, 255, 1)">true</span><span style="color: rgba(0, 0, 0, 1)">;
+    createLockNodeAsync();
+  }
+  
+  </span><span style="color: rgba(0, 0, 255, 1)">private</span> <span style="color: rgba(0, 0, 255, 1)">void</span><span style="color: rgba(0, 0, 0, 1)"> createLockNodeAsync() {
+    zkClient.create(zkLockFilePath, appData, zkAcl, CreateMode.EPHEMERAL,
+        </span><span style="color: rgba(0, 0, 255, 1)">this</span><span style="color: rgba(0, 0, 0, 1)">, zkClient);
+  }</span></pre>
+</div>
+<p>ActiveStandbyElector implements two ZooKeeper callback interfaces StatCallback and StringCallback. The calling process is joinElection-&gt;joinElectionInternal-&gt;createLockNodeAsync, which will eventually be called ZooKeeper.create asynchronous method, and pass itself in as a callback, so that subsequent changes in ZooKeeper will call back ActiveStandbyElector.processResult, and processResult will call back ElectorCallbacks, and the entire process will be completed.</p>
+<p>The StringCallback interface of ZooKeeper is as follows:</p>
+<p>org.apache.zookeeper.AsyncCallback.StringCallback</p>
+<div class="cnblogs_code">
+<pre>    <span style="color: rgba(0, 0, 255, 1)">interface</span> StringCallback <span style="color: rgba(0, 0, 255, 1)">extends</span><span style="color: rgba(0, 0, 0, 1)"> AsyncCallback {
+        </span><span style="color: rgba(0, 0, 255, 1)">public</span> <span style="color: rgba(0, 0, 255, 1)">void</span> processResult(<span style="color: rgba(0, 0, 255, 1)">int</span><span style="color: rgba(0, 0, 0, 1)"> rc, String path, Object ctx, String name);
+    }</span></pre>
+</div>
+<h2>2.2 yarn ha</h2>
+<p>org.apache.hadoop.yarn.conf.YarnConfiguration</p>
+<div class="cnblogs_code">
+<pre>  <span style="color: rgba(0, 0, 255, 1)">public</span> <span style="color: rgba(0, 0, 255, 1)">static</span> <span style="color: rgba(0, 0, 255, 1)">final</span> String AUTO_FAILOVER_ZK_BASE_PATH =<span style="color: rgba(0, 0, 0, 1)">
+      AUTO_FAILOVER_PREFIX </span>+ "zk-base-path"<span style="color: rgba(0, 0, 0, 1)">;
+  </span><span style="color: rgba(0, 0, 255, 1)">public</span> <span style="color: rgba(0, 0, 255, 1)">static</span> <span style="color: rgba(0, 0, 255, 1)">final</span> String DEFAULT_AUTO_FAILOVER_ZK_BASE_PATH =
+      "/yarn-leader-election";</pre>
+</div>
+<p>Here you can see the configuration</p>
+<p>org.apache.hadoop.yarn.server.resourcemanager.EmbeddedElectorService</p>
+<div class="cnblogs_code">
+<pre>  <span style="color: rgba(0, 0, 255, 1)">protected</span> <span style="color: rgba(0, 0, 255, 1)">void</span><span style="color: rgba(0, 0, 0, 1)"> serviceInit(Configuration conf)
+      </span><span style="color: rgba(0, 0, 255, 1)">throws</span><span style="color: rgba(0, 0, 0, 1)"> Exception {
+...
+    String zkBasePath </span>=<span style="color: rgba(0, 0, 0, 1)"> conf.get(YarnConfiguration.AUTO_FAILOVER_ZK_BASE_PATH,
+        YarnConfiguration.DEFAULT_AUTO_FAILOVER_ZK_BASE_PATH);
+    String electionZNode </span>= zkBasePath + "/" +<span style="color: rgba(0, 0, 0, 1)"> clusterId;
+...
+    elector </span>= <span style="color: rgba(0, 0, 255, 1)">new</span> ActiveStandbyElector(zkQuorum, (<span style="color: rgba(0, 0, 255, 1)">int</span><span style="color: rgba(0, 0, 0, 1)">) zkSessionTimeout,
+        electionZNode, zkAcls, zkAuths, </span><span style="color: rgba(0, 0, 255, 1)">this</span><span style="color: rgba(0, 0, 0, 1)">, maxRetryNum);
+...
+
+  @Override
+  </span><span style="color: rgba(0, 0, 255, 1)">protected</span> <span style="color: rgba(0, 0, 255, 1)">void</span> serviceStart() <span style="color: rgba(0, 0, 255, 1)">throws</span><span style="color: rgba(0, 0, 0, 1)"> Exception {
+    elector.joinElection(localActiveNodeInfo);
+    </span><span style="color: rgba(0, 0, 255, 1)">super</span><span style="color: rgba(0, 0, 0, 1)">.serviceStart();
+  }</span></pre>
+</div>
+<p>The process is similar to the ZKFailoverController above. EmbeddedElectorService.serviceInit will create the zk path and create ActiveStandbyElector, and then call ActiveStandbyElector.joinElection in serviceStart.</p>
+<p> </p>
+</div>
+</div>
+<!-- Post Footer -->
+<div class="post-footer">
+<div class="post-navigation">
+<a class="nav-button" href="../blog.html">← Back to Home</a>
+<a class="nav-button" href="0278.html">Next Post →</a>
+</div>
+</div>
+</article>
+</div>
+</body>
+</html>

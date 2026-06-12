@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Ruby on Programming Basics</title>
+<link href="../css/style3.css" rel="stylesheet"/>
+</head>
+<body>
+<div class="container">
+<!-- Header Navigation -->
+<div class="header">
+<h1><a href="../blog.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+</div>
+<!-- Post Container -->
+<article class="post">
+<!-- Post Header -->
+<div class="post-header">
+<h1>Ruby on Programming Basics</h1>
+<div class="post-meta">
+<div class="post-meta-item">
+<span class="meta-icon">📅</span>
+<span>March 20, 2019</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">📖</span>
+<span>3 min read</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">👁️</span>
+<span>553 views</span>
+</div>
+</div>
+</div>
+<!-- Post Content -->
+<div class="post-content">
+<div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<p>ruby2.6.2</p>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201903/1509647-20190319152650741-2065222535.png"/></p>
+<p>Official: https://www.Ruby-lang.org/en/</p>
+<p> </p>
+<h1>1 Introduction</h1>
+<p>A dynamic, open source programming language with a focus on simplicity and productivity. It has an elegant syntax that is natural to read and easy to write.</p>
+<p> </p>
+<p>Ruby is a language of careful balance. Its creator, Yukihiro “Matz” Matsumoto, blended parts of his favorite languages (Perl, Smalltalk, Eiffel, Ada, and Lisp) to form a new language that balanced functional programming with imperative programming.</p>
+<p>Since its public release in 1995, Ruby has drawn devoted coders worldwide. In 2006, Ruby achieved mass acceptance. With active user groups formed in the world’s major cities and Ruby-related conferences filled to capacity.</p>
+<p>Ruby was first released in 1995; in 2006, Ruby began to be widely accepted;</p>
+<p> </p>
+<p>Ruby is ranked among the top 10 on most of the indices that measure the growth and popularity of programming languages worldwide (such as the TIOBE index). Much of the growth is attributed to the popularity of software written in Ruby, particularly the Ruby on Rails web framework.</p>
+<p>Ruby has always been in the top 10 programming languages. Much of the growth comes from software written in Ruby, such as Ruby on Rails;</p>
+<p> </p>
+<p>Initially, Matz looked at other languages to find an ideal syntax. Recalling his search, he said, “I wanted a scripting language that was more powerful than Perl, and more object-oriented than Python.”</p>
+<p>Ruby is seen as a flexible language, since it allows its users to freely alter its parts. Essential parts of Ruby can be removed or redefined, at will. Existing parts can be added upon. Ruby tries not to restrict the coder.</p>
+<p>Ruby, as a language, has a few different implementations. This page has been discussing the reference implementation, in the community often referred to as MRI (“Matz’s Ruby Interpreter”) or CRuby (since it is written in C), but there are also others. They are often useful in certain situations, provide extra integration to other languages or environments, or have special features that MRI doesn’t.</p>
+<p>As a language, Ruby ​​has many different implementations, such as cruby and jruby;</p>
+<p>JRuby is Ruby atop the JVM (Java Virtual Machine), utilizing the JVM’s optimizing JIT compilers, garbage collectors, concurrent threads, tool ecosystem, and vast collection of libraries.</p>
+<p>jruby is Ruby ​​on JVM;</p>
+<h1>2. Installation</h1>
+<h2>1 Use the web version</h2>
+<p>https://ruby.github.io/TryRuby/</p>
+<h2>2 Using Docker</h2>
+<blockquote>
+<p>$ docker run - it --rm --name my-running-script - v "$PWD":/usr/src/myapp - w /usr/src/myapp ruby:2.6.2 ruby your-daemon-or-script.rb</p>
+</blockquote>
+<p>Reference: https://hub.Docker.com/_/Ruby/</p>
+<h2>3 Using rbenv</h2>
+<div class="cnblogs_code">
+<pre># 1 install rbenv<br/>$ git clone https://github.com/rbenv/rbenv.git ~/<span style="color: rgba(0, 0, 0, 1)">.rbenv
+$ cd </span>~/.rbenv &amp;&amp; src/configure &amp;&amp; make - <span style="color: rgba(0, 0, 0, 1)">C src
+$ echo </span><span style="color: rgba(128, 0, 0, 1)">'</span><span style="color: rgba(128, 0, 0, 1)">export PATH="$HOME/.rbenv/bin:$PATH"</span><span style="color: rgba(128, 0, 0, 1)">'</span> &gt;&gt; ~/<span style="color: rgba(0, 0, 0, 1)">.bash_profile
+$ source </span>~/<span style="color: rgba(0, 0, 0, 1)">.bash_profile
+$ </span>~/.rbenv/bin/<span style="color: rgba(0, 0, 0, 1)">rbenv init
+<br/># 2 install ruby-build plugin
+$ mkdir </span>-p <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">$(rbenv root)</span><span style="color: rgba(128, 0, 0, 1)">"</span>/<span style="color: rgba(0, 0, 0, 1)">plugins
+$ git clone https:</span>//github.com/rbenv/ruby-build.git <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">$(rbenv root)</span><span style="color: rgba(128, 0, 0, 1)">"</span>/plugins/ruby-<span style="color: rgba(0, 0, 0, 1)">build
+<br/># 3 install ruby
+$ rbenv install </span>-<span style="color: rgba(0, 0, 0, 1)">l
+$ rbenv install </span>2.6.2<br/><br/># 4 use ruby<br/>$ rbenv shell 2.6.2<br/>$ ruby - v<br/>ruby 2.6.2p47 (2019-03-13 revision 67232) [x86_64-linux]<br/>$ ruby test.rb</pre>
+</div>
+<p>An error may be reported during installation:</p>
+<blockquote>
+<p>$ rbenv install 2.6.2</p>
+<p>Downloading ruby-2.6.2.tar.bz2...<br/>-&gt; https://cache.ruby-lang.org/pub/ruby/2.6/ruby-2.6.2.tar.bz2<br/>Installing ruby-2.6.2...</p>
+<p>BUILD FAILED (CentOS 7.4.1708 using ruby-build 20190314-4-g8e70553)</p>
+<p>Inspect or clean up the working tree at /tmp/ruby-build.20190319152414.23377<br/>Results logged to /tmp/ruby-build.20190319152414.23377.log</p>
+<p>Last 10 log lines:<br/>installing html-docs:               /root/.rbenv/versions/2.6.2/share/doc/ruby<br/>installing capi-docs:               /root/.rbenv/versions/2.6.2/share/doc/ruby<br/>The Ruby readline extension was not compiled.<br/>ERROR: Ruby install aborted due to missing extensions<br/>Try running `yum install - y readline-devel` to fetch missing dependencies.</p>
+</blockquote>
+<p>Just follow the prompts to install it</p>
+<blockquote>
+<p>yum install - y readline-devel</p>
+</blockquote>
+<p> </p>
+<p>refer to<br/>https://github.com/rbenv/rbenv<br/>https://github.com/rbenv/ruby-build</p>
+<h1>Three uses</h1>
+<div class="cnblogs_code">
+<pre>$ cat /tmp/<span style="color: rgba(0, 0, 0, 1)">test.rb 
+puts 'hello world'
+</span>$ ruby /tmp/<span style="color: rgba(0, 0, 0, 1)">test.rb
+hello world</span></pre>
+</div>
+<p>Ruby has many applications, such as Logstash, Ruby ​​on rails, etc.;</p>
+<p> </p>
+<p>Ruby API reference: https://Ruby-doc.org/core-2.6.2/</p>
+<p> </p>
+</div>
+</div>
+<!-- Post Footer -->
+<div class="post-footer">
+<div class="post-navigation">
+<a class="nav-button" href="../blog.html">← Back to Home</a>
+<a class="nav-button" href="0169.html">Next Post →</a>
+</div>
+</div>
+</article>
+</div>
+</body>
+</html>

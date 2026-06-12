@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>File encoding</title>
+<link href="../css/style3.css" rel="stylesheet"/>
+</head>
+<body>
+<div class="container">
+<!-- Header Navigation -->
+<div class="header">
+<h1><a href="../blog.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+</div>
+<!-- Post Container -->
+<article class="post">
+<!-- Post Header -->
+<div class="post-header">
+<h1>File encoding</h1>
+<div class="post-meta">
+<div class="post-meta-item">
+<span class="meta-icon">📅</span>
+<span>March 13, 2019</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">📖</span>
+<span>1 min read</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">👁️</span>
+<span>179 views</span>
+</div>
+</div>
+</div>
+<!-- Post Content -->
+<div class="post-content">
+<div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<h1>Check</h1>
+<h2>1 vi</h2>
+<blockquote>
+<p>$ vi $file<br/>:set fileencoding</p>
+</blockquote>
+<h2>2 file</h2>
+<blockquote>
+<p>$ file $file</p>
+</blockquote>
+<h1>Revise</h1>
+<h1>1 vi</h1>
+<blockquote>
+<p>$ vi $file<br/>:set fileencoding=utf-8</p>
+</blockquote>
+<h1> 2 iconv</h1>
+<blockquote>
+<p># iconv - l</p>
+<p># iconv - f gbk - t utf8 /path/to/file</p>
+</blockquote>
+<p> </p>
+</div>
+</div>
+<!-- Post Footer -->
+<div class="post-footer">
+<div class="post-navigation">
+<a class="nav-button" href="../blog.html">← Back to Home</a>
+<a class="nav-button" href="0184.html">Next Post →</a>
+</div>
+</div>
+</article>
+</div>
+</body>
+</html>

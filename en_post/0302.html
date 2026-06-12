@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>After Spark on YARN submits the task to the cluster, the Spark-submit process keeps waiting.</title>
+<link href="../css/style3.css" rel="stylesheet"/>
+</head>
+<body>
+<div class="container">
+<!-- Header Navigation -->
+<div class="header">
+<h1><a href="../blog.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+</div>
+<!-- Post Container -->
+<article class="post">
+<!-- Post Header -->
+<div class="post-header">
+<h1>After Spark on YARN submits the task to the cluster, the Spark-submit process keeps waiting.</h1>
+<div class="post-meta">
+<div class="post-meta-item">
+<span class="meta-icon">📅</span>
+<span>December 21, 2018</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">📖</span>
+<span>1 min read</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">👁️</span>
+<span>2967 views</span>
+</div>
+</div>
+</div>
+<!-- Post Content -->
+<div class="post-content">
+<div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<p>After Spark on YARN submits the task through --deploy-mode cluster, the application has been executed on YARN, but the Spark-submit submission process is still there. The submission process will not exit until the application execution is completed. Sometimes this is very inconvenient, and if you are not careful, it will occupy a lot of resources, such as submitting Spark streaming applications;</p>
+<p>Recently I discovered that there is a configuration in Spark that can modify this behavior. Just add a conf when submitting a task.</p>
+<blockquote>
+<p>--conf spark.yarn.submit.waitAppCompletion=false</p>
+</blockquote>
+<p>org.apache.spark.deploy.yarn.config</p>
+<div class="cnblogs_code">
+<pre>  <span style="color: rgba(0, 0, 255, 1)">private</span>[spark] val WAIT_FOR_APP_COMPLETION = ConfigBuilder("spark.yarn.submit.waitAppCompletion"<span style="color: rgba(0, 0, 0, 1)">)
+    .doc(</span>"In cluster mode, whether to wait for the application to finish before exiting the " +
+      "launcher process."<span style="color: rgba(0, 0, 0, 1)">)
+    .booleanConf
+    .createWithDefault(</span><span style="color: rgba(0, 0, 255, 1)">true</span>)</pre>
+</div>
+<p> </p>
+</div>
+</div>
+<!-- Post Footer -->
+<div class="post-footer">
+<div class="post-navigation">
+<a class="nav-button" href="../blog.html">← Back to Home</a>
+<a class="nav-button" href="0303.html">Next Post →</a>
+</div>
+</div>
+</article>
+</div>
+</body>
+</html>

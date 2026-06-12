@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Repairing location in Hive Metadata</title>
+<link href="../css/style3.css" rel="stylesheet"/>
+</head>
+<body>
+<div class="container">
+<!-- Header Navigation -->
+<div class="header">
+<h1><a href="../blog.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+</div>
+<!-- Post Container -->
+<article class="post">
+<!-- Post Header -->
+<div class="post-header">
+<h1>Repairing location in Hive Metadata</h1>
+<div class="post-meta">
+<div class="post-meta-item">
+<span class="meta-icon">📅</span>
+<span>May 19, 2022</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">📖</span>
+<span>1 min read</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">👁️</span>
+<span>400 views</span>
+</div>
+</div>
+</div>
+<!-- Post Content -->
+<div class="post-content">
+<div class="blogpost-body cnblogs-markdown" id="cnblogs_post_body">
+<p>If the location of the table or partition in Hive is wrong or missing and needs to be repaired in batches, you can refer to the following steps:</p>
+<h2 id="section-0022-1">Repair table location</h2>
+<blockquote>
+<p>hdfs dfs - ls /data/hive/warehouse/$db | awk '{print $8}' |sed '1d' | awk - F '/' '{print "alter table "$5"."$7" set location ""$0"";"}'</p>
+</blockquote>
+<p>The output SQL is executed in Hive</p>
+<h2 id="section-0022-2">Repair the location of the partition</h2>
+<blockquote>
+<p>update DBS d, TBLS t, SDS ts, PARTITIONS p, SDS ps set ps.location = concat(ts.location, '/', p.part_name)<br/>
+-&gt; where d.db_id = t.db_id and t.sd_id = ts.sd_id and p.tbl_id = t.tbl_id and p.sd_id = ps.sd_id<br/>
+-&gt; and d.name = '$db';&gt;</p>
+</blockquote>
+<p>Execute the above command in the Hive metadata database</p>
+<h2 id="section-0022-3">Confirm fix</h2>
+<blockquote>
+<p>select * from $db.$table limit 10</p>
+</blockquote>
+</div>
+</div>
+<!-- Post Footer -->
+<div class="post-footer">
+<div class="post-navigation">
+<a class="nav-button" href="../blog.html">← Back to Home</a>
+<a class="nav-button" href="0023.html">Next Post →</a>
+</div>
+</div>
+</article>
+</div>
+</body>
+</html>

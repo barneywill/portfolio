@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>fail2ban</title>
+<link href="../css/style3.css" rel="stylesheet"/>
+</head>
+<body>
+<div class="container">
+<!-- Header Navigation -->
+<div class="header">
+<h1><a href="../blog.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+</div>
+<!-- Post Container -->
+<article class="post">
+<!-- Post Header -->
+<div class="post-header">
+<h1>fail2ban</h1>
+<div class="post-meta">
+<div class="post-meta-item">
+<span class="meta-icon">📅</span>
+<span>September 12, 2021</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">📖</span>
+<span>1 min read</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">👁️</span>
+<span>516 views</span>
+</div>
+</div>
+</div>
+<!-- Post Content -->
+<div class="post-content">
+<div class="blogpost-body cnblogs-markdown" id="cnblogs_post_body">
+<p>When ssh logs in to the Linux server, there will often be prompts</p>
+<blockquote>
+<p>There were * failed login attempts since the last successful login.</p>
+</blockquote>
+<p>It means there are a large number of illegal login attempts and there are several ways to deal with them.</p>
+<h3 id="section-0031-1">1 Change the sshd port</h3>
+<p>However, it is often scanned</p>
+<h3 id="section-0031-2">2 Disable direct ssh login with root account</h3>
+<p>Modify /etc/ssh/sshd_config</p>
+<pre><code>PermitRootLogin no
+</code></pre>
+<p>Restart sshd after modification</p>
+<pre><code>systemctl restart sshd
+</code></pre>
+<h3 id="section-0031-3">3 Using fail2ban</h3>
+<h4 id="section-0031-4">Install</h4>
+<pre><code>yum install fail2ban
+</code></pre>
+<h4 id="section-0031-5">Modify configuration</h4>
+<p>/etc/fail2ban/jail.conf, find [sshd], add enable</p>
+<pre><code>[sshd]
+
+# To use more aggressive sshd modes set filter parameter "mode" in jail.local:
+# normal (default), ddos, extra or aggressive (combines all).
+# See "tests/files/logs/sshd" or "filter.d/sshd.conf" for usage example and details.
+#mode   = normal
+filter = sshd
+port    = ssh
+logpath = %(sshd_log)s
+backend = %(sshd_backend)s
+enabled = true
+</code></pre>
+<h4 id="section-0031-6">start up</h4>
+<pre><code>systemctl start fail2ban
+</code></pre>
+<h4 id="section-0031-7">Configure startup</h4>
+<pre><code>systemctl enable fail2ban
+</code></pre>
+<h4 id="section-0031-8">check status</h4>
+<pre><code>fail2ban-client status sshd
+</code></pre>
+<h4 id="section-0031-9">Unrestrictions on an IP</h4>
+<pre><code>fail2ban-client set sshd unbanip $ip
+</code></pre>
+</div>
+</div>
+<!-- Post Footer -->
+<div class="post-footer">
+<div class="post-navigation">
+<a class="nav-button" href="../blog.html">← Back to Home</a>
+<a class="nav-button" href="0032.html">Next Post →</a>
+</div>
+</div>
+</article>
+</div>
+</body>
+</html>

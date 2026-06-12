@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Running in the background</title>
+<link href="../css/style3.css" rel="stylesheet"/>
+</head>
+<body>
+<div class="container">
+<!-- Header Navigation -->
+<div class="header">
+<h1><a href="../blog.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+</div>
+<!-- Post Container -->
+<article class="post">
+<!-- Post Header -->
+<div class="post-header">
+<h1>Running in the background</h1>
+<div class="post-meta">
+<div class="post-meta-item">
+<span class="meta-icon">📅</span>
+<span>January 14, 2019</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">📖</span>
+<span>1 min read</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">👁️</span>
+<span>345 views</span>
+</div>
+</div>
+</div>
+<!-- Post Content -->
+<div class="post-content">
+<div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<p>Linux servers are usually logged in remotely. When executing commands or scripts, if the connection is disconnected (when the execution time is long or the network is unstable), then the process will be gone. At this time, you can only reconnect and re-execute. In this case, you can use background execution:</p>
+<h1>1 nohup</h1>
+<p>Order</p>
+<blockquote>
+<p>nohup $command $args &amp;</p>
+</blockquote>
+<p>At this time, a nohup.out file will be generated. The content is the console output of the command execution. You can also redirect it to another file yourself:</p>
+<blockquote>
+<p>nohup $command $args 1&gt;test.log 2&gt;&amp;1 &amp;</p>
+</blockquote>
+<h1>2 screen</h1>
+<p>Install</p>
+<blockquote>
+<p>yum install screen</p>
+</blockquote>
+<p>For detailed session parameters, see</p>
+<blockquote>
+<p>screen - h</p>
+</blockquote>
+<p> </p>
+<p>Here are some commonly used parameters:</p>
+<p> </p>
+<p>List all current sessions</p>
+<blockquote>
+<p>screen - list</p>
+</blockquote>
+<p>Create new session</p>
+<blockquote>
+<p>screen - S $session_name</p>
+</blockquote>
+<p>After entering the session, execute any command, and then you can directly close the connection, or temporarily exit the current session (you can re-enter after temporary exit). The temporary exit command is:</p>
+<blockquote>
+<p>Ctrl+A d</p>
+</blockquote>
+<p>kill current session (permanent exit) command:</p>
+<blockquote>
+<p>Ctrl+A k</p>
+</blockquote>
+<p>Re-enter the session</p>
+<blockquote>
+<p>screen - r $session_name</p>
+</blockquote>
+<p>Note that the re-entered session must be in the detached state. If it is in the attached state, it must be detached first:</p>
+<blockquote>
+<p>screen - d $session_name</p>
+</blockquote>
+<p> </p>
+<p>If an error occurs when executing screen</p>
+<blockquote>
+<p>Cannot open your terminal ‘/dev/pts/0’ – please check.</p>
+</blockquote>
+<p>Just execute it first</p>
+<blockquote>
+<p>script /dev/null</p>
+</blockquote>
+<h1>3 Tmux</h1>
+<p>Three concepts: session/window/pane, a session has multiple Windows, and a window has multiple panes.</p>
+<h2>help</h2>
+<p>After entering tmux</p>
+<blockquote>
+<p>Ctrl+d ? (show help for all commands)<br/>Exc or q (leave help)</p>
+</blockquote>
+<h2>3.1 session related</h2>
+<blockquote>
+<p>tmux ls (show all sessions)</p>
+<p>tmux new - s myname (create a new session, named myname)</p>
+<p>Ctrl+d or exit (exit the current session)</p>
+<p>Ctrl+b d or tmux detach (detach the current session and leave temporarily)</p>
+<p>tmux a (return to the last session)</p>
+<p>tmux a - t myname (returns the session named myname)</p>
+<p>tmux attach - t myname </p>
+<p>tmux kill-session - t myname (close the session named myname)</p>
+<p>tmux rename - t myname1 myname2 (rename the session named myname1 to myname2)</p>
+<p>Ctrl+b s (display all sessions, you can use 0-9 to switch)</p>
+<p>tmux switch - t myname (switch to the session named myname)</p>
+<p>Ctrl+b $ (rename current session)</p>
+</blockquote>
+<h2>3.2 window related</h2>
+<blockquote>
+<p>Ctrl+b c (create new window)</p>
+<p>Ctrl+b n (switch to next window)</p>
+<p>Ctrl+b p (switch to the previous window)</p>
+<p>Ctrl+b 0-9 (switch to the specified window)</p>
+<p>Ctrl+b, (rename current window)</p>
+<p>Ctrl+b w (show all Windows)</p>
+<p>Ctrl+b &amp; (Close the current window)</p>
+</blockquote>
+<h2>3.3 pane related</h2>
+<blockquote>
+<p>Ctrl+b % (split pane vertically)</p>
+<p> tmux split-window</p>
+<p>Ctrl+b " (split pane horizontally)</p>
+<p>tmux split-window - h</p>
+<p><br/>Ctrl+b q (display the number of each panel, directly enter the numeric keys to select the panel when the number is displayed)</p>
+<p>Ctrl+b Left|Right|Up|Down (switch cursor between panes)</p>
+<p>tmux select-pane - L|R|U|D </p>
+<p>Ctrl+b ; (return to previous pane)</p>
+<p>Ctrl+b o (switch to next pane)</p>
+<p><br/>Ctrl+b x (close current pane)</p>
+<p>Ctrl+b space (re-adjust the layout of all panes)</p>
+<p>Ctrl+b z (Adjust the current pane to full screen, and then adjust it back to the original size)</p>
+<p>Ctrl+b t (current pane display time)</p>
+<p>Ctrl+b Ctrl+o (rotate all panes counterclockwise)</p>
+<p>tmux resize-pane - L|R|U|D (resize the current pane)</p>
+<p> </p>
+<p>Ctrl+b PageUp|PageDown (page up and down)</p>
+<p>q (exit page turning)</p>
+<p> </p>
+<p>Ctrl+b [ (Enter copy mode)</p>
+<p>q (exit copy mode)</p>
+</blockquote>
+<h2> 3.4 Configuration file</h2>
+<p>Modify configuration</p>
+<blockquote>
+<p># vi ~/.tmux.conf</p>
+<p>setw - g mode-keys vi</p>
+<p>set - g default-command /bin/zsh</p>
+<p>set - g default-terminal "screen-256color"</p>
+<p>set - g pane-active-border-fg black                                                                                                     </p>
+<p>set - g pane-active-border-bg red</p>
+</blockquote>
+<p>Effective configuration</p>
+<blockquote>
+<p># tmux (enter tmux)</p>
+<p>Ctrl+b : source-file ~/.tmux.conf</p>
+<p>or</p>
+<p># tmux source ~/.tmux.conf </p>
+</blockquote>
+<p> </p>
+</div>
+</div>
+<!-- Post Footer -->
+<div class="post-footer">
+<div class="post-navigation">
+<a class="nav-button" href="../blog.html">← Back to Home</a>
+<a class="nav-button" href="0274.html">Next Post →</a>
+</div>
+</div>
+</article>
+</div>
+</body>
+</html>

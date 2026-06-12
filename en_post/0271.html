@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>MySQL 1 - Common commands</title>
+<link href="../css/style3.css" rel="stylesheet"/>
+</head>
+<body>
+<div class="container">
+<!-- Header Navigation -->
+<div class="header">
+<h1><a href="../blog.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+</div>
+<!-- Post Container -->
+<article class="post">
+<!-- Post Header -->
+<div class="post-header">
+<h1>MySQL 1 - Common commands</h1>
+<div class="post-meta">
+<div class="post-meta-item">
+<span class="meta-icon">📅</span>
+<span>January 15, 2019</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">📖</span>
+<span>1 min read</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">👁️</span>
+<span>338 views</span>
+</div>
+</div>
+</div>
+<!-- Post Content -->
+<div class="post-content">
+<div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<h1>1 Create user</h1>
+<blockquote>
+<p>CREATE USER 'username'@'host' IDENTIFIED BY 'password';</p>
+</blockquote>
+<p>for example</p>
+<blockquote>
+<p>create user 'test_user'@'%' identified by 'test';</p>
+</blockquote>
+<p>ps: If only local login is allowed, host=localhost, if login from any remote host is allowed, host=%</p>
+<p>Change password</p>
+<blockquote>
+<p>SET PASSWORD FOR 'username'@'host' = PASSWORD('newpassword');</p>
+</blockquote>
+<h1>2 Authorization</h1>
+<blockquote>
+<p>GRANT privileges ON dbname.tablename TO 'username'@'host'</p>
+</blockquote>
+<p>for example</p>
+<blockquote>
+<p>GRANT ALL ON test_db.* TO 'test_user'@'%';</p>
+</blockquote>
+<p>revoke permission</p>
+<blockquote>
+<p>REVOKE privilege ON dbname.tablename FROM 'username'@'host';</p>
+</blockquote>
+<h1>3 View the authorization of a user</h1>
+<blockquote>
+<p>show grants for test_user;</p>
+</blockquote>
+<h1>4 Data export</h1>
+<blockquote>
+<p>$ mysqldump - u dbuser - p dbname [tablename1] [tablename2] &gt; dump.sql</p>
+</blockquote>
+<p>ps: tablename is optional</p>
+<p>If you want to export all databases, pass --all-databases to dataname.</p>
+<p>More parameters:</p>
+<p>--no-create-info Do not export table creation statements</p>
+<p>--skip-add-locks Skip lock table statements</p>
+<p>--where="..." Export only data that meets the conditions</p>
+<h1>5 Data import</h1>
+<blockquote>
+<p>mysql&gt;source /path/dump.sql</p>
+</blockquote>
+<p>or</p>
+<blockquote>
+<p>$ mysql - uusername - p dbname &lt; dump.sql</p>
+</blockquote>
+<h1>6 Positioning issues</h1>
+<blockquote>
+<p>mysql&gt;show processlist;</p>
+<p>mysql&gt;show variables;</p>
+<p> </p>
+<p>mysql&gt;show index from $db.$table;</p>
+<p> </p>
+<p>mysql&gt;select @@profiling;</p>
+<p>mysql&gt;set profiling=1;</p>
+<p>mysql&gt;select * from $table;</p>
+<p>mysql&gt;show profiles;</p>
+<p>mysql&gt;show profile all for query $query_id;</p>
+<p>mysql&gt;set profiling=0;</p>
+</blockquote>
+<h1>7 Modify character set</h1>
+<blockquote>
+<p>mysql&gt; alter database $database_name character set utf8;<br/>mysql&gt; alter table $table_name default character set utf8;<br/>mysql&gt; alter table $table_name change $column_name $column_name varchar(50) character utf8;</p>
+</blockquote>
+<p> </p>
+</div>
+</div>
+<!-- Post Footer -->
+<div class="post-footer">
+<div class="post-navigation">
+<a class="nav-button" href="../blog.html">← Back to Home</a>
+<a class="nav-button" href="0272.html">Next Post →</a>
+</div>
+</div>
+</article>
+</div>
+</body>
+</html>

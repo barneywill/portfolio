@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Free stock quotes interface</title>
+<link href="../css/style3.css" rel="stylesheet"/>
+</head>
+<body>
+<div class="container">
+<!-- Header Navigation -->
+<div class="header">
+<h1><a href="../blog.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+</div>
+<!-- Post Container -->
+<article class="post">
+<!-- Post Header -->
+<div class="post-header">
+<h1>Free stock quotes interface</h1>
+<div class="post-meta">
+<div class="post-meta-item">
+<span class="meta-icon">📅</span>
+<span>December 18, 2018</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">📖</span>
+<span>1 min read</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">👁️</span>
+<span>6219 views</span>
+</div>
+</div>
+</div>
+<!-- Post Content -->
+<div class="post-content">
+<div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<p>Free stock quotation interface:</p>
+<h1>A shares</h1>
+<h2>1 sina Sina js interface</h2>
+<blockquote>
+<p>http://hq.sinajs.cn/list=sh600001</p>
+</blockquote>
+<p>return</p>
+<blockquote>
+<pre>var hq_str_sh600011="Huaneng International,7.390,7.420,7.230,7.500,7.110,7.210,7.230,24257738,174459225.000,6200,7.210,9900,7.200,16000 ,7.190,24400,7.180,18506,7.170,23900,7.230,53100,7.240,50400,7.250,17000,7.260,2000,7.270,2018-12-17,15:00:00,00";</pre>
+</blockquote>
+<p> </p>
+<blockquote>
+<p>http://hq.sinajs.cn/list=sh600011,sh600012</p>
+</blockquote>
+<p>return</p>
+<blockquote>
+<pre>var hq_str_sh600011="Huaneng International,7.390,7.420,7.230,7.500,7.110,7.210,7.230,24257738,174459225.000,6200,7.210,9900,7.200,16000 ,7.190,24400,7.180,18506,7.170,23900,7.230,53100,7.240,50400,7.250,17000,7.260,2000,7.270,2018-12-17,15:00:00,00"; var hq_str_sh600012="Wantong Expressway,5.590,5.590,5.620,5.650,5.550,5.610,5.620,2157530,12066336.000,16500,5.610,45971,5.600,11600 ,5.590,44300,5.580,19600,5.570,1200,5.620,19500,5.630,21300,5.640,57700,5.650,38100,5.660,2018-12-17,15:00:00,00";</pre>
+</blockquote>
+<p>The return format is as follows:</p>
+<blockquote>
+<pre>Stock name, today's opening price, yesterday's closing price, current price, today's highest price, today's lowest price, buy one price, buy one price, trading volume, trading amount, buy one quantity, buy one price, buy two quantity, buy two price, buy Three quantities, buy three prices, buy four quantities, buy four prices, buy five quantities, buy five prices, sell one quantity, sell one price, sell two quantities, sell two prices, sell three quantities, sell three prices, sell four quantities, sell four prices, sell five quantities, sell five prices, date, time</pre>
+</blockquote>
+<p>Advantages: Real-time data, you can obtain the real-time data of multiple stocks on the same day at one time, and the data indicators are very comprehensive;</p>
+<p>Disadvantages: cannot specify date;</p>
+<p> </p>
+<p>There are also image URLs as follows:</p>
+<blockquote>
+<p>View the daily K-line chart:<br/>http://image.sinajs.cn/newchart/daily/n/sh600011.gif<br/>Time-sharing inquiry:<br/>http://image.sinajs.cn/newchart/min/n/sh600011.gif<br/>Daily K-line query:<br/>http://image.sinajs.cn/newchart/daily/n/sh600011.gif<br/>Weekly K-line query:<br/>http://image.sinajs.cn/newchart/weekly/n/sh600011.gif<br/>Monthly K-line query:<br/>http://image.sinajs.cn/newchart/monthly/n/sh600011.gif</p>
+<p> </p>
+</blockquote>
+<p>ps: US stock interface:</p>
+<p>http://hq.sinajs.cn/list=gb_sina</p>
+<p>http://image.sinajs.cn/newchart/usstock/daily/SINA.gif</p>
+<h2>2 netease Netease csv download interface</h2>
+<blockquote>
+<p>http://quotes.money.163.com/service/chddata.html?code=0600011&amp;start=19940809&amp;end=20181214&amp;fields=TCLOSE;HIGH;LOW;TOPEN;LCLOSE;CHG;PCHG;TURNOVER;VOTURNOVER;VATURNOVER;TCAP;MCAP</p>
+</blockquote>
+<p>return</p>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201812/1509647-20181218010257158-582944474.png"/></p>
+<p>Advantages: You can specify the start and end dates and which data indicators are suitable for downloading historical data;</p>
+<p>Disadvantages: not real-time;</p>
+<p>The code is as follows:</p>
+<div class="cnblogs_code">
+<pre>    val url = <span style="color: rgba(0, 0, 255, 1)">new</span><span style="color: rgba(0, 0, 0, 1)"> URL(urlStr)
+    val conn </span>=<span style="color: rgba(0, 0, 0, 1)"> url.openConnection
+    val is </span>=<span style="color: rgba(0, 0, 0, 1)"> conn.getInputStream
+    val bos </span>= <span style="color: rgba(0, 0, 255, 1)">new</span><span style="color: rgba(0, 0, 0, 1)"> ByteArrayOutputStream()
+    val b </span>= <span style="color: rgba(0, 0, 255, 1)">new</span> Array[Byte](1024<span style="color: rgba(0, 0, 0, 1)">)
+    var len </span>= 0
+    <span style="color: rgba(0, 0, 255, 1)">do</span><span style="color: rgba(0, 0, 0, 1)"> {
+      len </span>=<span style="color: rgba(0, 0, 0, 1)"> is.read(b)
+      </span><span style="color: rgba(0, 0, 255, 1)">if</span> (len &gt; 0) bos.write(b, 0<span style="color: rgba(0, 0, 0, 1)">, len)
+    } </span><span style="color: rgba(0, 0, 255, 1)">while</span> (len != - 1<span style="color: rgba(0, 0, 0, 1)">)
+    println(</span><span style="color: rgba(0, 0, 255, 1)">new</span> String(bos.toByteArray, "GBK"))</pre>
+</div>
+<h2>3 sohu historical data interface</h2>
+<blockquote>
+<p><a href="https://q.stock.sohu.com/hisHq?code=cn_159915&amp;start=20130201&amp;end=20200904&amp;stat=1&amp;order=D&amp;period=d&amp;callback=historySearchHandler&amp;rt=jsonp" rel="noopener nofollow">https://q.stock.sohu.com/hisHq?code=cn_159915&amp;start=20130201&amp;end=20200904&amp;stat=1&amp;order=D&amp;period=d&amp;callback=historySearchHandler&amp;rt=jsonp</a></p>
+</blockquote>
+<p>The return result is js data</p>
+<h2>4 Others</h2>
+<p>The following interfaces are no longer available:</p>
+<p>webservice：<a href="http://www.webxml.com.cn/WebServices/ChinaStockWebService.asmx" rel="noopener nofollow" target="_blank">http://www.webxml.com.cn/WebServices/ChinaStockWebService.asmx</a> </p>
+<p>yahoo：<a href="http://quote.yahoo.com/d/quotes.csv?s=000969.SZ&amp;f=slc1wop" rel="noopener nofollow" target="_blank">http://quote.yahoo.com/d/quotes.csv?s=000969.SZ&amp;f=slc1wop</a> </p>
+<h2>5 codes</h2>
+<p>Index code:</p>
+<blockquote>
+<p>https://www.myquant.cn/gm2/docs/api/index_list/</p>
+</blockquote>
+<p>Stock code:</p>
+<blockquote>
+<p>http://quote.eastmoney.com/stocklist.html</p>
+</blockquote>
+<p>ETF code on the market:</p>
+<blockquote>
+<pre>http://fund_open.eastmoney.com/data/rankhandler.aspx?op=ph&amp;dt=fb&amp;ft=ct&amp;rs=&amp;gs=0&amp;sc=zzf&amp;st=desc&amp;pi=1&amp;pn=10000&amp;v=0.03511869769117637</pre>
+</blockquote>
+<h1>Forex</h1>
+<p>FXCM API</p>
+<p><a href="https://www.fuhuiyazhou.com/gb/algorithmic-trading/api-trading/" rel="noopener nofollow">https://www.fuhuiyazhou.com/gb/algorithmic-trading/api-trading/</a></p>
+<p><a href="https://github.com/fxcm/JavaAPI" rel="noopener nofollow">https://github.com/fxcm/JavaAPI</a></p>
+<h1>digital currency</h1>
+<p>Huobi API</p>
+<p><a href="https://huobiapi.github.io/docs/spot/v1/en/" rel="noopener nofollow">https://huobiapi.github.io/docs/spot/v1/en/</a></p>
+<p> </p>
+</div>
+</div>
+<!-- Post Footer -->
+<div class="post-footer">
+<div class="post-navigation">
+<a class="nav-button" href="../blog.html">← Back to Home</a>
+<a class="nav-button" href="0315.html">Next Post →</a>
+</div>
+</div>
+</article>
+</div>
+</body>
+</html>

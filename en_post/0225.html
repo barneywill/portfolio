@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>CM5 (Cloudera Manager) + CDH5 offline installation</title>
+<link href="../css/style3.css" rel="stylesheet"/>
+</head>
+<body>
+<div class="container">
+<!-- Header Navigation -->
+<div class="header">
+<h1><a href="../blog.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+</div>
+<!-- Post Container -->
+<article class="post">
+<!-- Post Header -->
+<div class="post-header">
+<h1>CM5 (Cloudera Manager) + CDH5 offline installation</h1>
+<div class="post-meta">
+<div class="post-meta-item">
+<span class="meta-icon">📅</span>
+<span>February 15, 2019</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">📖</span>
+<span>2 min read</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">👁️</span>
+<span>1770 views</span>
+</div>
+</div>
+</div>
+<!-- Post Content -->
+<div class="post-content">
+<div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<p>CM/CDH 5.16.1</p>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201902/1509647-20190215142552587-999537288.png"/></p>
+<p>CM official: https://www.cloudera.com/products/product-components/cloudera-manager.html</p>
+<p>CDH official: https://www.cloudera.com/products/open-source/apache-hadoop/key-CDH-components.html</p>
+<p>CDH5.16.1 software list: https://www.cloudera.com/documentation/enterprise/release-notes/topics/cdh_vd_cdh_package_tarball_516.html</p>
+<p> </p>
+<h1>1 Introduction</h1>
+<h2>1 CDH</h2>
+<p>CDH is Cloudera’s 100% open source platform distribution, including Apache Hadoop and built specifically to meet enterprise demands. CDH delivers everything you need for enterprise use right out of the box. By integrating Hadoop with more than a dozen other critical open source projects, Cloudera has created a functionally advanced system that helps you perform end-to-end Big Data workflows.</p>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201902/1509647-20190215152025597-1933109293.png"/></p>
+<h2>2 Cloudera Manager</h2>
+<p>Cloudera Manager is the industry’s trusted tool for managing Hadoop in production.</p>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201902/1509647-20190215170314943-1985091625.png"/></p>
+<p> </p>
+<h1>2. Installation </h1>
+<h2>1 Prepare jdk</h2>
+<h3>1) Uninstall possible openjdk</h3>
+<blockquote>
+<p># rpm - qa|grep openjdk<br/>java-1.8.0-openjdk-1.8.0.191.b12-1.el7_6.x86_64<br/>java-1.8.0-openjdk-devel-1.8.0.191.b12-1.el7_6.x86_64<br/>java-1.8.0-openjdk-headless-1.8.0.191.b12-1.el7_6.x86_64<br/># rpm - e --nodeps java-1.8.0-openjdk-1.8.0.191.b12-1.el7_6.x86_64 java-1.8.0-openjdk-devel-1.8.0.191.b12-1.el7_6.x86_64 java-1.8.0-openjdk-headless-1.8.0.191.b12-1.el7_6.x86_64</p>
+</blockquote>
+<h3>2) Install oracle jdk</h3>
+<blockquote>
+<p># wget https://archive.cloudera.com/cm6/6.1.0/redhat7/yum/RPMS/x86_64/oracle-j2sdk1.8-1.8.0+update141-1.x86_64.rpm<br/># rpm - ivh oracle-j2sdk1.8-1.8.0+update141-1.x86_64.rpm<br/># ln - s /usr/java/jdk1.8.0_141-cloudera/bin/java /usr/bin/java</p>
+</blockquote>
+<h2>2 Create user</h2>
+<blockquote>
+<p># useradd --system --no-create-home --shell=/bin/false --comment "Cloudera SCM User" cloudera-scm</p>
+</blockquote>
+<h2>3 downloads</h2>
+<blockquote>
+<p># wget http://archive.cloudera.com/cm5/cm/5/cloudera-manager-centos7-cm5.16.1_x86_64.tar.gz<br/># mkdir /opt/cloudera-manager<br/># tar xvzf cloudera-manager-centos7-cm5.16.1_x86_64.tar.gz - C /opt/cloudera-manager</p>
+<p># mkdir - p /opt/cloudera/parcels<br/># chown cloudera-scm:cloudera-scm /opt/cloudera/parcels</p>
+</blockquote>
+<h2>4 Prepare server</h2>
+<h3>1) Make sure the file exists: /usr/share/Java/MySQL-connector-Java.jar</h3>
+<blockquote>
+<p># cp mysql-connector-java.jar /usr/share/java/mysql-connector-java.jar</p>
+</blockquote>
+<p>or</p>
+<blockquote>
+<p># yum install mysql-connector-java</p>
+</blockquote>
+<h3>2) Initialize MySQL</h3>
+<blockquote>
+<p>mysql&gt; create database scm;<br/>mysql&gt; grant all privileges on scm.* to scm@'%' identified by 'scm';</p>
+<p># /opt/cloudera-manager/cm-5.16.1/share/cmf/schema/scm_prepare_database.sh - h 192.168.0.1 mysql scm scm scm</p>
+</blockquote>
+<h3>3) Others</h3>
+<blockquote>
+<p># mkdir /var/lib/cloudera-scm-server<br/># chown cloudera-scm:cloudera-scm /var/lib/cloudera-scm-server</p>
+</blockquote>
+<h3>4) Download CDH</h3>
+<blockquote>
+<p># wget http://archive.cloudera.com/cdh5/parcels/latest/CDH-5.16.1-1.cdh5.16.1.p0.3-el7.parcel<br/># wget http://archive.cloudera.com/cdh5/parcels/latest/CDH-5.16.1-1.cdh5.16.1.p0.3-el7.parcel.sha1<br/># wget http://archive.cloudera.com/cdh5/parcels/latest/manifest.json<br/># mv CDH-5.16.1-1.cdh5.16.1.p0.3-el7.parcel.sha1 CDH-5.16.1-1.cdh5.16.1.p0.3-el7.parcel.sha</p>
+<p># mkdir - p /opt/cloudera/parcel-repo<br/># chown cloudera-scm:cloudera-scm /opt/cloudera/parcel-repo<br/># mv CDH-5.16.1-1.cdh5.16.1.p0.3-el7.parcel CDH-5.16.1-1.cdh5.16.1.p0.3-el7.parcel.sha manifest.json /opt/cloudera/parcel-repo</p>
+</blockquote>
+<h2>5 Start the server</h2>
+<blockquote>
+<p># /opt/cloudera-manager/cm-5.16.1/etc/init.d/cloudera-scm-server start</p>
+</blockquote>
+<p>The log is located at /opt/cloudera-manager/CM-5.16.1/log/cloudera-scm-server/</p>
+<h2>6 Start agents one by one</h2>
+<blockquote>
+<p># vi /opt/cloudera-manager/cm-5.16.1/etc/cloudera-scm-agent/config.ini<br/>server_host=$server_ip</p>
+<p># /opt/cloudera-manager/cm-5.16.1/etc/init.d/cloudera-scm-agent start</p>
+</blockquote>
+<p>The log is located at /opt/cloudera-manager/CM-5.16.1/log/cloudera-scm-agent/</p>
+<h2>7 Start up</h2>
+<p>/opt/cloudera-manager/cm-5.16.1/etc/init.d/cloudera-scm-server<br/>/opt/cloudera-manager/cm-5.16.1/etc/init.d/cloudera-scm-agent</p>
+<p>Revise</p>
+<blockquote>
+<p>CMF_DEFAULTS=${CMF_DEFAULTS:-/etc/default}<br/>-&gt;<br/>CMF_DEFAULTS=${CMF_DEFAULTS:-/opt/cloudera-manager/cm-5.16.1/etc/default}</p>
+</blockquote>
+<p>Otherwise an error will be reported</p>
+<p>File not found: /usr/sbin/cmf-agent</p>
+<p>After modification, synchronize to all nodes, and then configure and start</p>
+<blockquote>
+<p># ln - s /opt/cloudera-manager/cm-5.16.1/etc/init.d/cloudera-scm-agent /etc/init.d/cloudera-scm-agent<br/># chkconfig --add cloudera-scm-agent<br/># chkconfig cloudera-scm-agent on<br/># chkconfig --list cloudera-scm-agent</p>
+<p># ln - s /opt/cloudera-manager/cm-5.16.1/etc/init.d/cloudera-scm-server /etc/init.d/cloudera-scm-server<br/># chkconfig --add cloudera-scm-server<br/># chkconfig cloudera-scm-server on<br/># chkconfig --list cloudera-scm-server</p>
+</blockquote>
+<h2>8 visits </h2>
+<p>http://$server_ip:7180 The username and password are admin/admin. Enter the wizard page and complete the step-by-step configuration;</p>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201902/1509647-20190215170629973-2092164492.png"/></p>
+<p> </p>
+<p> </p>
+<p>When using some functions, you need to install new libraries, as follows:</p>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201902/1509647-20190215153013069-774726984.png"/></p>
+<p>For example, Activity Monitor requires</p>
+<blockquote>
+<p>mysql&gt; create database amon;<br/>mysql&gt; grant all privileges on amon.* to amon@'%' identified by 'amon';</p>
+</blockquote>
+<p> </p>
+<h1>Possible problems</h1>
+<p>1) If you cannot see the downloaded version of CDH, check whether CDH-5.16.1-1.cdh5.16.1.p0.3-el7.parcel.sha1 is modified to CDH-5.16.1-1.cdh5.16.1.p0.3-el7.parcel.sha</p>
+<p>2) Installing selected Parcel<br/>Error: The host is in poor health.</p>
+<p>Check the agent log:</p>
+<blockquote>
+<p># tail - f /opt/cloudera-manager/cm-5.16.1/log/cloudera-scm-agent/cloudera-scm-agent.log<br/>[15/Feb/2019 14:44:28 +0000] 7241 MainThread agent        ERROR    Error, CM server guid updated, expected b6f92bed-e8fc-45e0-b627-fead8cd288e6, received 1db60b99-1f0c-4226-bd2f-a9baa568cf96</p>
+</blockquote>
+<p>Solution</p>
+<blockquote>
+<p># /bin/rm /opt/cloudera-manager/cm-5.16.1/lib/cloudera-scm-agent/cm_guid<br/># /opt/cloudera-manager/cm-5.16.1/etc/init.d/cloudera-scm-agent restart</p>
+</blockquote>
+<p>Installing parcel is normal</p>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201902/1509647-20190215145638995-1846379768.png"/></p>
+<p>3) If any problems occur during the installation process, stop the server and agent, then repeat the 'initialize MySQL' process, and then restart the server and agent;</p>
+<p>4) Install components such as HDFS, and deploy client configurations that require perl.</p>
+<blockquote>
+<p># yum install perl perl-devel</p>
+</blockquote>
+<p> </p>
+<p>Reference: https://www.cloudera.com/documentation/enterprise/5-16-x/topics/installation.html</p>
+</div>
+</div>
+<!-- Post Footer -->
+<div class="post-footer">
+<div class="post-navigation">
+<a class="nav-button" href="../blog.html">← Back to Home</a>
+<a class="nav-button" href="0226.html">Next Post →</a>
+</div>
+</div>
+</article>
+</div>
+</body>
+</html>

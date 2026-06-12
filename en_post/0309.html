@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>How to programmatically kill SQL submitted to Spark thrift</title>
+<link href="../css/style3.css" rel="stylesheet"/>
+</head>
+<body>
+<div class="container">
+<!-- Header Navigation -->
+<div class="header">
+<h1><a href="../blog.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+</div>
+<!-- Post Container -->
+<article class="post">
+<!-- Post Header -->
+<div class="post-header">
+<h1>How to programmatically kill SQL submitted to Spark thrift</h1>
+<div class="post-meta">
+<div class="post-meta-item">
+<span class="meta-icon">📅</span>
+<span>December 18, 2018</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">📖</span>
+<span>1 min read</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">👁️</span>
+<span>1400 views</span>
+</div>
+</div>
+</div>
+<!-- Post Content -->
+<div class="post-content">
+<div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<p>spark 2.1.1</p>
+<p> </p>
+<p>The SQL being executed by Hive can be easily aborted because the application id currently on YARN can be obtained from the console output, and then the task can be killed.</p>
+<blockquote>
+<p>WARNING: Hive-on-MR is deprecated in Hive 2 and may not be available in the future versions. Consider using a different execution engine (i.e. spark, tez) or using Hive 1.X releases.<br/>Query ID = hadoop_20181218163113_65da7e1f-b4b8-4cb8-86cc-236c37aea682<br/>Total jobs = 1<br/>Launching Job 1 out of 1<br/>Number of reduce tasks determined at compile time: 1<br/>In order to change the average load for a reducer (in bytes):<br/>  set hive.exec.reducers.bytes.per.reducer=&lt;number&gt;<br/>In order to limit the maximum number of reducers:<br/>  set hive.exec.reducers.max=&lt;number&gt;<br/>In order to set a constant number of reducers:<br/>  set mapreduce.job.reduces=&lt;number&gt;<br/>Starting Job = job_1544593827645_9409, Tracking URL = http://rm1:8088/proxy/application_1544593827645_9409/<br/>Kill Command = /export/App/hadoop-2.6.1/bin/hadoop job  - kill job_1544593827645_9409</p>
+</blockquote>
+<p>But after the same SQL is submitted to Spark thrift, it is not that easy to kill. You need to go to the Spark thrift page to manually find the SQL and then kill the corresponding job:</p>
+<p> 1 find SQL</p>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201812/1509647-20181218163641699-1601805725.png"/></p>
+<p> 2 kill the corresponding job</p>
+<p> <img alt="" src="https://img2018.cnblogs.com/blog/1509647/201812/1509647-20181218171917348-528883600.png"/> </p>
+<p> Note that the Spark thrift page can also view all current sessions.</p>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201812/1509647-20181218164315307-1844370484.png"/></p>
+<p> And you can view the status of all job executions in a session,</p>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201812/1509647-20181218164801491-605846242.png"/></p>
+<p>If you can write down the current session id every time you connect to Spark thrift, you can find the job being executed by the current session through the session id. Check the code and find that you only need to add one line.</p>
+<p> </p>
+<p>org.apache.spark.sql.hive.thriftserver.SparkExecuteStatementOperation</p>
+<div class="cnblogs_code">
+<pre>  <span style="color: rgba(0, 0, 255, 1)">private</span> def execute(): Unit =<span style="color: rgba(0, 0, 0, 1)"> {
+    statementId </span>=<span style="color: rgba(0, 0, 0, 1)"> UUID.randomUUID().toString
+    logInfo(s</span>"Running query '$statement' with $statementId"<span style="color: rgba(0, 0, 0, 1)">)
+
+    </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)">modify here</span>
+    <span style="color: rgba(0, 0, 255, 1)">this</span>.operationLog.writeOperationLog("session id : " + <span style="color: rgba(0, 0, 255, 1)">this</span><span style="color: rgba(0, 0, 0, 1)">.getParentSession.getSessionState.getSessionId)
+
+    setState(OperationState.RUNNING)</span></pre>
+</div>
+<p> </p>
+<p>After modification, repackage and use beeline to connect Spark thrift to execute SQL. The effect is as follows:</p>
+<blockquote>
+<p>0: jdbc:hive2://spark_thrift:11111&gt; select * from test_table;<br/>session id : 0bc63382-a54a-41f8-8c2e-0323f4ebbde6<br/>+---------+--+<br/>| Result  |<br/>+---------+--+<br/>+---------+--+<br/>No rows selected (0.277 seconds)</p>
+</blockquote>
+<p>After finding the job id through the session id, you can kill the job through the url.</p>
+<blockquote>
+<p>curl http://rm1/proxy/application_1544593827645_0134/jobs/job/kill/?id=3</p>
+</blockquote>
+<p> </p>
+</div>
+</div>
+<!-- Post Footer -->
+<div class="post-footer">
+<div class="post-navigation">
+<a class="nav-button" href="../blog.html">← Back to Home</a>
+<a class="nav-button" href="0310.html">Next Post →</a>
+</div>
+</div>
+</article>
+</div>
+</body>
+</html>

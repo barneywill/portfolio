@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Benchmark 4 - TPC-DS test results (Hive/Hive on Spark/Spark SQL/Impala/Presto)</title>
+<link href="../css/style3.css" rel="stylesheet"/>
+</head>
+<body>
+<div class="container">
+<!-- Header Navigation -->
+<div class="header">
+<h1><a href="../blog.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+</div>
+<!-- Post Container -->
+<article class="post">
+<!-- Post Header -->
+<div class="post-header">
+<h1>Benchmark 4 - TPC-DS test results (Hive/Hive on Spark/Spark SQL/Impala/Presto)</h1>
+<div class="post-meta">
+<div class="post-meta-item">
+<span class="meta-icon">📅</span>
+<span>March 11, 2019</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">📖</span>
+<span>1 min read</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">👁️</span>
+<span>4638 views</span>
+</div>
+</div>
+</div>
+<!-- Post Content -->
+<div class="post-content">
+<div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<h1>1 test cluster</h1>
+<p>Memory: 256G<br/>CPU：32Core （Intel(R) Xeon(R) CPU E5-2640 v3 @ 2.60GHz）<br/>Disk (system disk): 300G<br/>Disk (data disk): 1.5T*1</p>
+<h1>2 test data</h1>
+<ul>
+<li>tpcds parquet 10g</li>
+<li>tpcds orc 10g</li>
+</ul>
+<h1>3 test subjects</h1>
+<ul>
+<li>hive-2.3.4 【set mapreduce.map.memory.mb=4096; set mapreduce.map.java.opts=-Xmx3072m;】【yarn 200g*3】</li>
+<li>hive-2.3.4 on spark-2.4.0 【--master yarn --driver-memory 4g --num-executors 10 --executor-memory 4g】</li>
+<li>spark-2.4.0 【--master yarn --driver-memory 4g --num-executors 10 --executor-memory 4g】</li>
+<li>impala-2.12 【MEM_LIMIT=20gb * 3】</li>
+</ul>
+<p>Default configuration, not optimized;</p>
+<h1>4 test results</h1>
+<h2>4.1 parquet</h2>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201903/1509647-20190320184622785-1823171254.png"/></p>
+<p>ps: 0 means execution failed</p>
+<p> </p>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201903/1509647-20190320184826201-172962802.png"/></p>
+<p> </p>
+<h2>4.2 orc</h2>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201903/1509647-20190320173032843-377338916.png"/></p>
+<p>ps: 0 means execution failed</p>
+<p> </p>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201903/1509647-20190320173642828-218509256.png"/></p>
+<p> </p>
+<p>visible:</p>
+<p>The performance of Hive ORC is improved by 22% compared to Parquet;<br/>The performance of Spark Parquet is improved by 36% compared to ORC;</p>
+<p> </p>
+</div>
+</div>
+<!-- Post Footer -->
+<div class="post-footer">
+<div class="post-navigation">
+<a class="nav-button" href="../blog.html">← Back to Home</a>
+<a class="nav-button" href="0186.html">Next Post →</a>
+</div>
+</div>
+</article>
+</div>
+</body>
+</html>

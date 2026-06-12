@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Spark occasionally reports NullPointerException when checking data in ORC format</title>
+<link href="../css/style3.css" rel="stylesheet"/>
+</head>
+<body>
+<div class="container">
+<!-- Header Navigation -->
+<div class="header">
+<h1><a href="../blog.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+</div>
+<!-- Post Container -->
+<article class="post">
+<!-- Post Header -->
+<div class="post-header">
+<h1>Spark occasionally reports NullPointerException when checking data in ORC format</h1>
+<div class="post-meta">
+<div class="post-meta-item">
+<span class="meta-icon">📅</span>
+<span>December 19, 2018</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">📖</span>
+<span>2 min read</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">👁️</span>
+<span>3774 views</span>
+</div>
+</div>
+</div>
+<!-- Post Content -->
+<div class="post-content">
+<div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<p>Spark sometimes reports this error when checking data in ORC format.</p>
+<blockquote>
+<p>Caused by: java.lang.NullPointerException<br/>    at org.apache.hadoop.hive.ql.io.orc.OrcInputFormat$BISplitStrategy.getSplits(OrcInputFormat.java:560)<br/>    at org.apache.hadoop.hive.ql.io.orc.OrcInputFormat.generateSplitsInfo(OrcInputFormat.java:1010)<br/>    ... 47 more</p>
+</blockquote>
+<p>Follow up code</p>
+<p>org.apache.hadoop.hive.ql.io.orc.OrcInputFormat</p>
+<div class="cnblogs_code">
+<pre>  <span style="color: rgba(0, 0, 255, 1)">static</span> <span style="color: rgba(0, 0, 255, 1)">enum</span><span style="color: rgba(0, 0, 0, 1)"> SplitStrategyKind {
+    HYBRID,
+    BI,
+    ETL
+  }
+...
+
+    Context(Configuration conf) {
+      </span><span style="color: rgba(0, 0, 255, 1)">this</span>.conf =<span style="color: rgba(0, 0, 0, 1)"> conf;
+      minSize </span>=<span style="color: rgba(0, 0, 0, 1)"> conf.getLong(MIN_SPLIT_SIZE, DEFAULT_MIN_SPLIT_SIZE);
+      maxSize </span>=<span style="color: rgba(0, 0, 0, 1)"> conf.getLong(MAX_SPLIT_SIZE, DEFAULT_MAX_SPLIT_SIZE);
+      String ss </span>=<span style="color: rgba(0, 0, 0, 1)"> conf.get(ConfVars.HIVE_ORC_SPLIT_STRATEGY.varname);
+      </span><span style="color: rgba(0, 0, 255, 1)">if</span> (ss == <span style="color: rgba(0, 0, 255, 1)">null</span> ||<span style="color: rgba(0, 0, 0, 1)"> ss.equals(SplitStrategyKind.HYBRID.name())) {
+        splitStrategyKind </span>=<span style="color: rgba(0, 0, 0, 1)"> SplitStrategyKind.HYBRID;
+      } </span><span style="color: rgba(0, 0, 255, 1)">else</span><span style="color: rgba(0, 0, 0, 1)"> {
+        LOG.info(</span>"Enforcing " + ss + " ORC split strategy"<span style="color: rgba(0, 0, 0, 1)">);
+        splitStrategyKind </span>=<span style="color: rgba(0, 0, 0, 1)"> SplitStrategyKind.valueOf(ss);
+      }
+
+...
+        </span><span style="color: rgba(0, 0, 255, 1)">switch</span><span style="color: rgba(0, 0, 0, 1)">(context.splitStrategyKind) {
+          </span><span style="color: rgba(0, 0, 255, 1)">case</span><span style="color: rgba(0, 0, 0, 1)"> BI:
+            </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> BI strategy requested through config</span>
+            splitStrategy = <span style="color: rgba(0, 0, 255, 1)">new</span><span style="color: rgba(0, 0, 0, 1)"> BISplitStrategy(context, fs, dir, children, isOriginal,
+                deltas, covered);
+            </span><span style="color: rgba(0, 0, 255, 1)">break</span><span style="color: rgba(0, 0, 0, 1)">;
+          </span><span style="color: rgba(0, 0, 255, 1)">case</span><span style="color: rgba(0, 0, 0, 1)"> ETL:
+            </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> ETL strategy requested through config</span>
+            splitStrategy = <span style="color: rgba(0, 0, 255, 1)">new</span><span style="color: rgba(0, 0, 0, 1)"> ETLSplitStrategy(context, fs, dir, children, isOriginal,
+                deltas, covered);
+            </span><span style="color: rgba(0, 0, 255, 1)">break</span><span style="color: rgba(0, 0, 0, 1)">;
+          </span><span style="color: rgba(0, 0, 255, 1)">default</span><span style="color: rgba(0, 0, 0, 1)">:
+            </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> HYBRID strategy</span>
+            <span style="color: rgba(0, 0, 255, 1)">if</span> (avgFileSize &gt;<span style="color: rgba(0, 0, 0, 1)"> context.maxSize) {
+              splitStrategy </span>= <span style="color: rgba(0, 0, 255, 1)">new</span><span style="color: rgba(0, 0, 0, 1)"> ETLSplitStrategy(context, fs, dir, children, isOriginal, deltas,
+                  covered);
+            } </span><span style="color: rgba(0, 0, 255, 1)">else</span><span style="color: rgba(0, 0, 0, 1)"> {
+              splitStrategy </span>= <span style="color: rgba(0, 0, 255, 1)">new</span><span style="color: rgba(0, 0, 0, 1)"> BISplitStrategy(context, fs, dir, children, isOriginal, deltas,
+                  covered);
+            }
+            </span><span style="color: rgba(0, 0, 255, 1)">break</span><span style="color: rgba(0, 0, 0, 1)">;
+        }</span></pre>
+</div>
+<p> </p>
+<p>org.apache.hadoop.hive.conf.HiveConf.ConfVars</p>
+<div class="cnblogs_code">
+<pre>    HIVE_ORC_SPLIT_STRATEGY("hive.exec.orc.split.strategy", "HYBRID", <span style="color: rgba(0, 0, 255, 1)">new</span> StringSet("HYBRID", "BI", "ETL"<span style="color: rgba(0, 0, 0, 1)">),
+        </span>"This is not a user level config. BI strategy is used when the requirement is to spend less time in split generation" +
+        " as opposed to query execution (split generation does not read or cache file footers)." +
+        " ETL strategy is used when spending little more time in split generation is acceptable" +
+        " (split generation reads and caches file footers). HYBRID chooses between the above strategies" +
+        " based on heuristics."),</pre>
+</div>
+<p> </p>
+<p>The HYBRID mode reads the footers for all files if there are fewer files than expected mapper count, switching over to generating 1 split per file if the average file sizes are smaller than the default HDFS blocksize. ETL strategy always reads the ORC footers before generating splits, while the BI strategy generates per-file splits fast without reading any data from HDFS.</p>
+<p> </p>
+<p>It can be seen that Hive.exec.ORC.split.strategy defaults to HYBRID. If HYBRID is not satisfied</p>
+<blockquote>
+<p>if (avgFileSize &gt; context.maxSize) {</p>
+</blockquote>
+<p>but</p>
+<blockquote>
+<p>splitStrategy = new BISplitStrategy(context, fs, dir, children, isOriginal, deltas,<br/>                  covered);</p>
+</blockquote>
+<p>The error is reported by BISplitStrategy. I haven’t looked into the specific reason why this class is reporting the error, but you can modify the settings to avoid this problem.</p>
+<blockquote>
+<p>set hive.exec.orc.split.strategy=ETL</p>
+</blockquote>
+<p>The problem has been temporarily solved and will be continued;</p>
+<p> </p>
+</div>
+</div>
+<!-- Post Footer -->
+<div class="post-footer">
+<div class="post-navigation">
+<a class="nav-button" href="../blog.html">← Back to Home</a>
+<a class="nav-button" href="0308.html">Next Post →</a>
+</div>
+</div>
+</article>
+</div>
+</body>
+</html>

@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Timezone Offset When Impala Reads parquet Timestamp Fields</title>
+<link href="../css/style3.css" rel="stylesheet"/>
+</head>
+<body>
+<div class="container">
+<!-- Header Navigation -->
+<div class="header">
+<h1><a href="../blog.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+</div>
+<!-- Post Container -->
+<article class="post">
+<!-- Post Header -->
+<div class="post-header">
+<h1>Timezone Offset When Impala Reads parquet Timestamp Fields</h1>
+<div class="post-meta">
+<div class="post-meta-item">
+<span class="meta-icon">📅</span>
+<span>June 08, 2020</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">📖</span>
+<span>1 min read</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">👁️</span>
+<span>1301 views</span>
+</div>
+</div>
+</div>
+<!-- Post Content -->
+<div class="post-content">
+<div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<p>The time field in the parquet file is read normally in Hive and spark-SQL, but will be offset by 8 hours (less) when read in Impala. The test results are as follows:</p>
+<h1>1. Do not modify the Impala configuration</h1>
+<p>1 Write parquet from spark or Hive</p>
+<ul>
+<li>spark and Hive read normally</li>
+<li>Impala reads an offset of 8 hours (less) and requires manual offset from_unixtime(unix_timestamp(time) + 28800)</li>
+</ul>
+<h1>2. Modify Impala configuration</h1>
+<blockquote>
+<p>use_local_tz_for_unix_timestamp_conversions=true</p>
+<p>convert_legacy_hive_parquet_utc_timestamps=true</p>
+</blockquote>
+<p>1 Write parquet from spark or Hive</p>
+<ul>
+<li>spark and Hive read normally</li>
+<li>Impala reads normally</li>
+</ul>
+<p>2 Writing to parquet by Impala</p>
+<ul>
+<li>spark and Hive read offset 8 hours (more)</li>
+<li>Impala reads normally</li>
+</ul>
+<p> </p>
+<p>Reference: https://docs.cloudera.com/documentation/enterprise/latest/topics/Impala_timezone.html</p>
+</div>
+</div>
+<!-- Post Footer -->
+<div class="post-footer">
+<div class="post-navigation">
+<a class="nav-button" href="../blog.html">← Back to Home</a>
+<a class="nav-button" href="0069.html">Next Post →</a>
+</div>
+</div>
+</article>
+</div>
+</body>
+</html>

@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Elasticsearch 3 - Upgrade</title>
+<link href="../css/style3.css" rel="stylesheet"/>
+</head>
+<body>
+<div class="container">
+<!-- Header Navigation -->
+<div class="header">
+<h1><a href="../blog.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+</div>
+<!-- Post Container -->
+<article class="post">
+<!-- Post Header -->
+<div class="post-header">
+<h1>Elasticsearch 3 - Upgrade</h1>
+<div class="post-meta">
+<div class="post-meta-item">
+<span class="meta-icon">📅</span>
+<span>February 14, 2019</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">📖</span>
+<span>1 min read</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">👁️</span>
+<span>475 views</span>
+</div>
+</div>
+</div>
+<!-- Post Content -->
+<div class="post-content">
+<div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<p>Elasticsearch version upgrade plan</p>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201902/1509647-20190213195406320-522072258.png"/></p>
+<p> </p>
+<p>The commonly used rolling upgrade process (Rolling Upgrade) is as follows:</p>
+<blockquote>
+<p>$ curl - XPUT '$es_server:9200/_cluster/settings?pretty' - H 'Content-Type: application/json' - d '{"transient":{"cluster.routing.allocation.enable":"none"}}'<br/>$ curl - XPOST '$es_server/_flush/synced?pretty'<br/>$ systemctl stop elasticsearch.service</p>
+<p># upgrade elasticsearch</p>
+<p>$ systemctl start elasticsearch.service<br/>$ curl - XGET '$es_server:9200/_cat/nodes?pretty'<br/>$ curl - XPUT '$es_server:9200/_cluster/settings?pretty' - H 'Content-Type: application/json' - d '{"transient":{"cluster.routing.allocation.enable":"all"}}'<br/>$ curl - XGET '$es_server:9200/_cat/health?pretty'</p>
+</blockquote>
+<p>The above is the upgrade process of a single node, just operate node by node.</p>
+<p><br/>refer to:<br/>https://www.elastic.co/guide/en/elasticsearch/reference/current/setup-upgrade.html<br/>https://www.elastic.co/guide/en/elasticsearch/reference/current/rolling-upgrades.html</p>
+<p> </p>
+</div>
+</div>
+<!-- Post Footer -->
+<div class="post-footer">
+<div class="post-navigation">
+<a class="nav-button" href="../blog.html">← Back to Home</a>
+<a class="nav-button" href="0232.html">Next Post →</a>
+</div>
+</div>
+</article>
+</div>
+</body>
+</html>

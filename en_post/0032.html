@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>IntelliJ IDEA Fails to Start on macOS 12</title>
+<link href="../css/style3.css" rel="stylesheet"/>
+</head>
+<body>
+<div class="container">
+<!-- Header Navigation -->
+<div class="header">
+<h1><a href="../blog.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+</div>
+<!-- Post Container -->
+<article class="post">
+<!-- Post Header -->
+<div class="post-header">
+<h1>IntelliJ IDEA Fails to Start on macOS 12</h1>
+<div class="post-meta">
+<div class="post-meta-item">
+<span class="meta-icon">📅</span>
+<span>September 08, 2021</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">📖</span>
+<span>1 min read</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">👁️</span>
+<span>1892 views</span>
+</div>
+</div>
+</div>
+<!-- Post Content -->
+<div class="post-content">
+<div class="blogpost-body cnblogs-markdown" id="cnblogs_post_body">
+<p>For the m1 version of mac, using macOS 11 Big Sur can start idea normally, but macOS 12 Monterey fails to start, prompting</p>
+<p>Idea quit unexpectedly, click "Reopen" to open the application again<br/>
+idea quit unexpectedly, Click Reopen to open the application again.</p>
+<p><img alt="Error screenshot" src="../img/74-1145788"/></p>
+<p>Revise</p>
+<blockquote>
+<p>~/Library/Application\ Support/JetBrains/IdeaIC2021.2/idea.vmoptions</p>
+</blockquote>
+<p>Add two lines</p>
+<blockquote>
+<p>-XX:+TieredCompilation<br/>
+-XX:TieredStopAtLevel=1</p>
+</blockquote>
+<p>problem solving</p>
+<p>Reference:<a href="https://youtrack.jetbrains.com/issue/JBR-3715" rel="noopener nofollow" target="_blank">https://youtrack.jetbrains.com/issue/JBR-3715</a></p>
+</div>
+</div>
+<!-- Post Footer -->
+<div class="post-footer">
+<div class="post-navigation">
+<a class="nav-button" href="../blog.html">← Back to Home</a>
+<a class="nav-button" href="0033.html">Next Post →</a>
+</div>
+</div>
+</article>
+</div>
+</body>
+</html>

@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Python imports a module and reports an error: ImportError: No module named pandas numpy</title>
+<link href="../css/style3.css" rel="stylesheet"/>
+</head>
+<body>
+<div class="container">
+<!-- Header Navigation -->
+<div class="header">
+<h1><a href="../blog.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+</div>
+<!-- Post Container -->
+<article class="post">
+<!-- Post Header -->
+<div class="post-header">
+<h1>Python imports a module and reports an error: ImportError: No module named pandas numpy</h1>
+<div class="post-meta">
+<div class="post-meta-item">
+<span class="meta-icon">📅</span>
+<span>December 18, 2018</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">📖</span>
+<span>1 min read</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">👁️</span>
+<span>31822 views</span>
+</div>
+</div>
+</div>
+<!-- Post Content -->
+<div class="post-content">
+<div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<p>Python applications usually require some libraries, such as numpy, pandas, etc. The installation is also very simple, directly through pip</p>
+<blockquote>
+<p># pip install numpy<br/>Requirement already satisfied: numpy in /export/App/anaconda2/lib/python2.7/site-packages</p>
+<p># pip install pandasRequirement already satisfied: pandas in /export/App/anaconda2/lib/python2.7/site-packagesRequirement already satisfied: python-dateutil in /export/App/anaconda2/lib/python2.7/site-packages (from pandas)Requirement already satisfied: pytz&gt;=2011k in /export/App/anaconda2/lib/python2.7/site-packages (from pandas)Requirement already satisfied: numpy&gt;=1.7.0 in /export/App/anaconda2/lib/python2.7/site-packages (from pandas)Requirement already satisfied: six&gt;=1.5 in /export/App/anaconda2/lib/python2.7/site-packages (from python-dateutil-&gt;pandas)</p>
+</blockquote>
+<p>The above is the prompt information that has been installed, but at this time, an error will still be reported when importing it in Python.</p>
+<blockquote>
+<p>$ python<br/>Python 2.6.6 (r266:84292, Aug 18 2016, 15:13:37) <br/>[GCC 4.4.7 20120313 (Red Hat 4.4.7-17)] on linux2<br/>Type "help", "copyright", "credits" or "license" for more information.<br/>&gt;&gt;&gt; import pandas as pd<br/>Traceback (most recent call last):<br/>  File "&lt;stdin&gt;", line 1, in &lt;module&gt;<br/>ImportError: No module named pandas<br/>&gt;&gt;&gt;</p>
+</blockquote>
+<p>The usual reason at this time is because there are two versions of Python on your machine (usually the one that comes with the system, and the one that comes with anaconda). Python in one version has the dependencies installed, and then you introduce the dependencies in the other version.</p>
+<blockquote>
+<p>$ python - c 'import sys; print(sys.version_info)'<br/>(2, 6, 6, 'final', 0)</p>
+<p>$ python --version<br/>Python 2.6.6</p>
+<p>$ which python</p>
+</blockquote>
+<p>It can be seen from the above that the current Python is using 2.6.6, but the dependencies are installed under 2.7 (comes with anaconda), just modify the path.</p>
+<blockquote>
+<p>export PATH=/export/App/anaconda2/bin:$PATH</p>
+</blockquote>
+<p>Then just import it</p>
+<blockquote>
+<p>$ python<br/>Python 2.7.13 |Anaconda 4.3.1 (64-bit)| (default, Dec 20 2016, 23:09:15) <br/>[GCC 4.4.7 20120313 (Red Hat 4.4.7-1)] on linux2<br/>Type "help", "copyright", "credits" or "license" for more information.<br/>Anaconda is brought to you by Continuum Analytics.<br/>Please check out: http://continuum.io/thanks and https://anaconda.org<br/>&gt;&gt;&gt; import pandas as pd<br/>&gt;&gt;&gt;</p>
+</blockquote>
+<p>In fact, after anaconda is installed, it will modify the current user's ~/.bashrc, modify the path, and point to the built-in Python. Other users may encounter the above problems;</p>
+<p>In addition, you can use the command to check which versions of the Python path the current path has.</p>
+<blockquote>
+<p>$ whereis python</p>
+</blockquote>
+<p> </p>
+</div>
+</div>
+<!-- Post Footer -->
+<div class="post-footer">
+<div class="post-navigation">
+<a class="nav-button" href="../blog.html">← Back to Home</a>
+<a class="nav-button" href="0314.html">Next Post →</a>
+</div>
+</div>
+</article>
+</div>
+</body>
+</html>

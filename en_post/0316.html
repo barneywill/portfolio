@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Context namespace element 'component-scan' and its parser class [org.springframework.context.annotation.ComponentScanBeanDefinitionParser] are only available on JDK 1.5 and higher</title>
+<link href="../css/style3.css" rel="stylesheet"/>
+</head>
+<body>
+<div class="container">
+<!-- Header Navigation -->
+<div class="header">
+<h1><a href="../blog.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+</div>
+<!-- Post Container -->
+<article class="post">
+<!-- Post Header -->
+<div class="post-header">
+<h1>Context namespace element 'component-scan' and its parser class [org.springframework.context.annotation.ComponentScanBeanDefinitionParser] are only available on JDK 1.5 and higher</h1>
+<div class="post-meta">
+<div class="post-meta-item">
+<span class="meta-icon">📅</span>
+<span>December 17, 2018</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">📖</span>
+<span>2 min read</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">👁️</span>
+<span>2152 views</span>
+</div>
+</div>
+</div>
+<!-- Post Content -->
+<div class="post-content">
+<div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<p>Today I tried to run an ancient project. After configuring it, it compiled and passed. As a result, an error occurred when running:</p>
+<blockquote>
+<p>org.springframework.beans.factory.BeanDefinitionStoreException: Unexpected exception parsing XML document from class path resource [applicationContext.xml]; nested exception is java.lang.IllegalStateException: <strong>Context namespace element 'component-scan' and its parser class [org.springframework.context.annotation.ComponentScanBeanDefinitionParser] are only available on JDK 1.5 and higher</strong></p>
+<p> at org.springframework.beans.factory.xml.XmlBeanDefinitionReader.doLoadBeanDefinitions(XmlBeanDefinitionReader.java:420)<br/>	at org.springframework.beans.factory.xml.XmlBeanDefinitionReader.loadBeanDefinitions(XmlBeanDefinitionReader.java:342)<br/>	at org.springframework.beans.factory.xml.XmlBeanDefinitionReader.loadBeanDefinitions(XmlBeanDefinitionReader.java:310)<br/>	at org.springframework.beans.factory.support.AbstractBeanDefinitionReader.loadBeanDefinitions(AbstractBeanDefinitionReader.java:143)<br/>	at org.springframework.beans.factory.support.AbstractBeanDefinitionReader.loadBeanDefinitions(AbstractBeanDefinitionReader.java:178)<br/>	at org.springframework.beans.factory.support.AbstractBeanDefinitionReader.loadBeanDefinitions(AbstractBeanDefinitionReader.java:149)<br/>	at org.springframework.beans.factory.support.AbstractBeanDefinitionReader.loadBeanDefinitions(AbstractBeanDefinitionReader.java:212)<br/>	at org.springframework.test.AbstractSingleSpringContextTests.createApplicationContext(AbstractSingleSpringContextTests.java:212)<br/>	at org.springframework.test.AbstractSingleSpringContextTests.loadContextLocations(AbstractSingleSpringContextTests.java:189)<br/>	at org.springframework.test.AbstractSingleSpringContextTests.loadContext(AbstractSingleSpringContextTests.java:169)<br/>	at org.springframework.test.AbstractSpringContextTests.getContext(AbstractSpringContextTests.java:140)<br/>	at org.springframework.test.AbstractSingleSpringContextTests.setUp(AbstractSingleSpringContextTests.java:98)<br/>	at junit.framework.TestCase.runBare(TestCase.java:125)<br/>	at org.springframework.test.ConditionalTestCase.runBare(ConditionalTestCase.java:76)<br/>	at junit.framework.TestResult$1.protect(TestResult.java:106)<br/>	at junit.framework.TestResult.runProtected(TestResult.java:124)<br/>	at junit.framework.TestResult.run(TestResult.java:109)<br/>	at junit.framework.TestCase.run(TestCase.java:118)<br/>	at junit.textui.TestRunner.doRun(TestRunner.java:116)<br/>	at com.intellij.junit3.JUnit3IdeaTestRunner.doRun(JUnit3IdeaTestRunner.java:113)<br/>	at junit.textui.TestRunner.doRun(TestRunner.java:109)<br/>	at com.intellij.junit3.JUnit3IdeaTestRunner.startRunnerWithArgs(JUnit3IdeaTestRunner.java:45)<br/>	at com.intellij.rt.execution.junit.IdeaTestRunner$Repeater.startRunnerWithArgs(IdeaTestRunner.java:51)<br/>	at com.intellij.rt.execution.junit.JUnitStarter.prepareStreamsAndStart(JUnitStarter.java:242)<br/>	at com.intellij.rt.execution.junit.JUnitStarter.main(JUnitStarter.java:70)<br/>Caused by: java.lang.IllegalStateException: Context namespace element 'component-scan' and its parser class [org.springframework.context.annotation.ComponentScanBeanDefinitionParser] are only available on JDK 1.5 and higher<br/>	at org.springframework.context.config.ContextNamespaceHandler$1.parse(ContextNamespaceHandler.java:65)<br/>	at org.springframework.beans.factory.xml.NamespaceHandlerSupport.parse(NamespaceHandlerSupport.java:69)<br/>	at org.springframework.beans.factory.xml.BeanDefinitionParserDelegate.parseCustomElement(BeanDefinitionParserDelegate.java:1297)<br/>	at org.springframework.beans.factory.xml.BeanDefinitionParserDelegate.parseCustomElement(BeanDefinitionParserDelegate.java:1287)<br/>	at org.springframework.beans.factory.xml.DefaultBeanDefinitionDocumentReader.parseBeanDefinitions(DefaultBeanDefinitionDocumentReader.java:135)<br/>	at org.springframework.beans.factory.xml.DefaultBeanDefinitionDocumentReader.registerBeanDefinitions(DefaultBeanDefinitionDocumentReader.java:92)<br/>	at org.springframework.beans.factory.xml.XmlBeanDefinitionReader.registerBeanDefinitions(XmlBeanDefinitionReader.java:507)<br/>	at org.springframework.beans.factory.xml.XmlBeanDefinitionReader.doLoadBeanDefinitions(XmlBeanDefinitionReader.java:398)<br/>	... 24 more</p>
+</blockquote>
+<p>I'm using jdk1.8. Why do I keep getting this error? I can't figure it out. I can't see the version number of the spring jar. Well, just decompile it and take a look.</p>
+<p> </p>
+<p><strong>org.springframework.context.config.ContextNamespaceHandler</strong></p>
+<div class="cnblogs_code">
+<pre>    <span style="color: rgba(0, 0, 255, 1)">private</span> <span style="color: rgba(0, 0, 255, 1)">void</span> registerJava5DependentParser(<span style="color: rgba(0, 0, 255, 1)">final</span> String elementName, <span style="color: rgba(0, 0, 255, 1)">final</span><span style="color: rgba(0, 0, 0, 1)"> String parserClassName) {
+        BeanDefinitionParser parser </span>= <span style="color: rgba(0, 0, 255, 1)">null</span><span style="color: rgba(0, 0, 0, 1)">;
+        </span><span style="color: rgba(0, 0, 255, 1)">if</span><span style="color: rgba(0, 0, 0, 1)">(JdkVersion.isAtLeastJava15()) {
+            </span><span style="color: rgba(0, 0, 255, 1)">try</span><span style="color: rgba(0, 0, 0, 1)"> {
+                Class parserClass </span>= ClassUtils.forName(parserClassName, ContextNamespaceHandler.<span style="color: rgba(0, 0, 255, 1)">class</span><span style="color: rgba(0, 0, 0, 1)">.getClassLoader());
+                parser </span>=<span style="color: rgba(0, 0, 0, 1)"> (BeanDefinitionParser)parserClass.newInstance();
+            } </span><span style="color: rgba(0, 0, 255, 1)">catch</span><span style="color: rgba(0, 0, 0, 1)"> (Throwable var5) {
+                </span><span style="color: rgba(0, 0, 255, 1)">throw</span> <span style="color: rgba(0, 0, 255, 1)">new</span> IllegalStateException("Unable to create Java 1.5 dependent parser: " +<span style="color: rgba(0, 0, 0, 1)"> parserClassName, var5);
+            }
+        } </span><span style="color: rgba(0, 0, 255, 1)">else</span><span style="color: rgba(0, 0, 0, 1)"> {
+            parser </span>= <span style="color: rgba(0, 0, 255, 1)">new</span><span style="color: rgba(0, 0, 0, 1)"> BeanDefinitionParser() {
+                </span><span style="color: rgba(0, 0, 255, 1)">public</span><span style="color: rgba(0, 0, 0, 1)"> BeanDefinition parse(Element element, ParserContext parserContext) {
+                    </span><span style="color: rgba(0, 0, 255, 1)">throw</span> <span style="color: rgba(0, 0, 255, 1)">new</span> IllegalStateException("Context namespace element '" + elementName + "' and its parser class [" + parserClassName + "] are only available on JDK 1.5 and higher"<span style="color: rgba(0, 0, 0, 1)">);
+                }
+            };
+        }
+
+        </span><span style="color: rgba(0, 0, 255, 1)">this</span><span style="color: rgba(0, 0, 0, 1)">.registerBeanDefinitionParser(elementName, parser);
+    }</span></pre>
+</div>
+<p> </p>
+<p><strong>org.springframework.core.JdkVersion</strong></p>
+<div class="cnblogs_code">
+<pre>    <span style="color: rgba(0, 0, 255, 1)">public</span> <span style="color: rgba(0, 0, 255, 1)">static</span> <span style="color: rgba(0, 0, 255, 1)">boolean</span><span style="color: rgba(0, 0, 0, 1)"> isAtLeastJava15() {
+        </span><span style="color: rgba(0, 0, 255, 1)">return</span> getMajorJavaVersion() &gt;= 2<span style="color: rgba(0, 0, 0, 1)">;
+    }
+
+    </span><span style="color: rgba(0, 0, 255, 1)">public</span> <span style="color: rgba(0, 0, 255, 1)">static</span> <span style="color: rgba(0, 0, 255, 1)">boolean</span><span style="color: rgba(0, 0, 0, 1)"> isAtLeastJava16() {
+        </span><span style="color: rgba(0, 0, 255, 1)">return</span> getMajorJavaVersion() &gt;= 3<span style="color: rgba(0, 0, 0, 1)">;
+    }
+
+    </span><span style="color: rgba(0, 0, 255, 1)">static</span><span style="color: rgba(0, 0, 0, 1)"> {
+        </span><span style="color: rgba(0, 0, 255, 1)">if</span>(javaVersion.indexOf("1.7.") != - 1<span style="color: rgba(0, 0, 0, 1)">) {
+            majorJavaVersion </span>= 4<span style="color: rgba(0, 0, 0, 1)">;
+        } </span><span style="color: rgba(0, 0, 255, 1)">else</span> <span style="color: rgba(0, 0, 255, 1)">if</span>(javaVersion.indexOf("1.6.") != - 1<span style="color: rgba(0, 0, 0, 1)">) {
+            majorJavaVersion </span>= 3<span style="color: rgba(0, 0, 0, 1)">;
+        } </span><span style="color: rgba(0, 0, 255, 1)">else</span> <span style="color: rgba(0, 0, 255, 1)">if</span>(javaVersion.indexOf("1.5.") != - 1<span style="color: rgba(0, 0, 0, 1)">) {
+            majorJavaVersion </span>= 2<span style="color: rgba(0, 0, 0, 1)">;
+        } </span><span style="color: rgba(0, 0, 255, 1)">else</span><span style="color: rgba(0, 0, 0, 1)"> {
+            majorJavaVersion </span>= 1<span style="color: rgba(0, 0, 0, 1)">;
+        }
+
+    }</span></pre>
+</div>
+<p> </p>
+<p>Well, the hard coding only supports 1.5, 1.6 and 1.7. If you don’t accept it, you can only lower the jdk to 1.7 and then run it.</p>
+<p> </p>
+</div>
+</div>
+<!-- Post Footer -->
+<div class="post-footer">
+<div class="post-navigation">
+<a class="nav-button" href="../blog.html">← Back to Home</a>
+<a class="nav-button" href="0317.html">Next Post →</a>
+</div>
+</div>
+</article>
+</div>
+</body>
+</html>

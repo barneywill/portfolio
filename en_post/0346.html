@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>ORC 1 - Introduction</title>
+<link href="../css/style3.css" rel="stylesheet"/>
+</head>
+<body>
+<div class="container">
+<!-- Header Navigation -->
+<div class="header">
+<h1><a href="../blog.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+</div>
+<!-- Post Container -->
+<article class="post">
+<!-- Post Header -->
+<div class="post-header">
+<h1>ORC 1 - Introduction</h1>
+<div class="post-meta">
+<div class="post-meta-item">
+<span class="meta-icon">📅</span>
+<span>November 07, 2018</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">📖</span>
+<span>4 min read</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">👁️</span>
+<span>2415 views</span>
+</div>
+</div>
+</div>
+<!-- Post Content -->
+<div class="post-content">
+<div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201811/1509647-20181107164754667-168486965.png"/></p>
+<p><a class="external-link" href="https://orc.apache.org/" rel="noopener nofollow">https://orc.apache.org</a></p>
+<p> </p>
+<p>Optimized Row Columnar (ORC) file</p>
+<p>Mixed row and column storage</p>
+<blockquote>
+<p>Hierarchy:</p>
+<p><strong>file - &gt; stripes -&gt; row groups(10000 rows)</strong></p>
+</blockquote>
+<p> </p>
+<h2 id="Parquet、Avro、ORC、Kudu-Background">Background</h2>
+<p>Back in January 2013, we created ORC files as part of the initiative to <strong>massively speed up Apache Hive</strong> and <strong>improve the storage efficiency of data stored in Apache Hadoop</strong>. The focus was on enabling high speed processing and reducing file sizes.</p>
+<blockquote>
+<p>ORC was born to speed up Hive queries and save hadoop disk space;</p>
+</blockquote>
+<p>ORC is a <strong>self-describing type-aware columnar file format</strong> designed for Hadoop workloads. It is optimized for large streaming reads, but with integrated support for finding required rows quickly. Storing data in a columnar format lets the reader read, decompress, and process only the values that are required for the current query. Because ORC files are type-aware, the writer chooses the most appropriate encoding for the type and builds an internal index as the file is written.</p>
+<blockquote>
+<p>ORC is a self-describing columnar storage file type that is specially optimized for large-scale streaming reading and also supports quickly locating the required rows; columnar storage allows readers to read, decompress, and process only the values ​​they need;</p>
+</blockquote>
+<p><strong>Predicate pushdown</strong> uses those indexes to determine which <strong>stripes</strong> in a <strong>file</strong> need to be read for a particular query and the row indexes can narrow the search to a particular set of 10,000 rows. ORC supports the complete set of types in Hive, including the complex types: structs, lists, maps, and unions.<br/>( In ORC, <strong>the minimum and maximum values of each column are recorded per file, per stripe (~1M rows), and every 10,000 rows.</strong> Using this information, the reader should skip any segment that could not possibly match the query predicate. <br/>Predicate pushdown is amazing when it works, but for a lot of data sets, it doesn't work at all. If the data has a large number of distinct values and is well-shuffled, the minimum and maximum stats will cover almost the entire range of values, rendering predicate pushdown ineffective. )</p>
+<blockquote>
+<p>Predicate Pushdown Predicate pushdown is a concept from RDBMS, which means that filtering conditions should be executed in advance as much as possible without affecting the results, which can significantly reduce the amount of data in the process;</p>
+<p>ORC's Predicate Pushdown uses index to determine which stripes in a file need to be read, and can narrow the query range to a set of 10,000 rows. The implementation principle is that in ORC, each file/stripe/every 10,000 rows has an index that records statistical information such as the maximum and minimum values ​​of each column in the data range, so it can be easily determined based on the query conditions whether the corresponding file/stripe/10,000 rows need to be read;</p>
+<p>ORC supports all data types in Hive;</p>
+</blockquote>
+<p>ORC files are divided in to stripes that are roughly 64MB by default. The stripes in a file are independent of each other and form the natural unit of distributed work. <strong>Within each stripe, the columns are separated from each other so the reader can read just the columns that are required.</strong></p>
+<blockquote>
+<p>The ORC file will be divided into multiple stripes, each stripes is about 64M, about 1 million lines; different stripes in a file are independent of each other; in a stripe, different columns are also stored separately;</p>
+</blockquote>
+<p><strong> </strong></p>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201811/1509647-20181107164821436-361989275.png"/></p>
+<p> </p>
+<p>ORC uses type specific readers and writers that provide <strong>light weight compression techniques</strong> such as dictionary encoding, bit packing, delta encoding, and run length encoding – resulting in dramatically smaller files. Additionally, ORC can apply generic compression using zlib, or Snappy on top of the lightweight compression for even smaller files. However, storage savings are only part of the gain. ORC supports <strong>projection</strong>, which selects subsets of the columns for reading, so that queries reading only one column read only the required bytes. Furthermore, ORC files include <strong>light weight indexes</strong> that include the minimum and maximum values for each column in each set of 10,000 rows and the entire file. Using pushdown filters from Hive, the file reader can skip entire sets of rows that aren’t important for this query.</p>
+<blockquote>
+<p>ORC uses type-related readers and writers to provide lightweight compression technology. As a result, the file size is greatly reduced; in addition, ORC can also use commonly used compression formats such as zlib, snappy, etc. based on built-in lightweight compression;</p>
+</blockquote>
+<p>ORC stores the top level index at the end of the file. The overall structure of the file is given in the figure above. <strong>The file’s tail consists of 3 parts; the file metadata, file footer and postscript.</strong><br/>The metadata for ORC is stored using <strong>Protocol Buffers</strong>, which provides the ability to add new fields without breaking readers.</p>
+<blockquote>
+<p>ORC stores the top-level index at the end of the file; the end of the file contains 3 parts: metadata, footer, and postscript; metadata is stored using the Protocol Buffer format (new columns can be added without affecting the reading of old data);</p>
+</blockquote>
+<h2 id="Parquet、Avro、ORC、Kudu-Stripes">Stripes</h2>
+<p>The body of ORC files consists of a series of stripes. Stripes are large (typically ~200MB) and independent of each other and are often processed by different tasks. The defining characteristic for columnar storage formats is that the data for each column is stored separately and that reading data out of the file should be proportional to the number of columns read.</p>
+<blockquote>
+<p>Each ORC file contains multiple stripes, which are independent of each other and can be processed in parallel by different tasks;</p>
+</blockquote>
+<p>In ORC files, <strong>each column is stored in several streams that are stored next to each other in the file</strong>.</p>
+<p>The stripe footer contains the encoding of each column and the directory of the streams including their location.</p>
+<p>Stripes have three sections: a set of indexes for the rows within the stripe, the data itself, and a stripe footer. Both the indexes and the data sections are divided by columns so that only the data for the required columns needs to be read.</p>
+<blockquote>
+<p>Stripes has three parts: index collection, data, and footer; in index and data, columns and columns are stored separately;</p>
+</blockquote>
+<p>The row group indexes consist of a ROW_INDEX stream for each primitive column that has an entry for each row group. Row groups are controlled by the writer and default to 10,000 rows. Each RowIndexEntry gives the position of each stream for the column and the statistics for that row group.</p>
+<blockquote>
+<p>The default row group is 10000 rows;</p>
+</blockquote>
+<p>Bloom Filters are added to ORC indexes from Hive 1.2.0 onwards. Predicate pushdown can make use of bloom filters to better prune the row groups that do not satisfy the filter condition. A BLOOM_FILTER stream records a bloom filter entry for <strong>each row group</strong> (default to 10,000 rows) in a column. Only the row groups that satisfy min/max row index evaluation will be evaluated against the bloom filter index.</p>
+<blockquote>
+<p>Starting from hive1.2, Bloom Filter was introduced to better support Predicate Pushdown;</p>
+</blockquote>
+</div>
+</div>
+<!-- Post Footer -->
+<div class="post-footer">
+<div class="post-navigation">
+<a class="nav-button" href="../blog.html">← Back to Home</a>
+<a class="nav-button" href="0347.html">Next Post →</a>
+</div>
+</div>
+</article>
+</div>
+</body>
+</html>

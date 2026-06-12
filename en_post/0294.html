@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Hive executes multiple inserts at the same time and only one of the overwrite tables can be executed.</title>
+<link href="../css/style3.css" rel="stylesheet"/>
+</head>
+<body>
+<div class="container">
+<!-- Header Navigation -->
+<div class="header">
+<h1><a href="../blog.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+</div>
+<!-- Post Container -->
+<article class="post">
+<!-- Post Header -->
+<div class="post-header">
+<h1>Hive executes multiple inserts at the same time and only one of the overwrite tables can be executed.</h1>
+<div class="post-meta">
+<div class="post-meta-item">
+<span class="meta-icon">📅</span>
+<span>December 27, 2018</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">📖</span>
+<span>5 min read</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">👁️</span>
+<span>10207 views</span>
+</div>
+</div>
+</div>
+<!-- Post Content -->
+<div class="post-content">
+<div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<p>hive 2.1</p>
+<h1>1 question</h1>
+<p>Recently, there was a scenario where data was written to multiple partitions of a table. In order to shorten the execution time, a concurrent method was used. Multiple SQLs were executed at the same time, writing different partitions respectively, and enabling dynamic partitioning at the same time:</p>
+<blockquote>
+<p>set hive.exec.dynamic.partition=true</p>
+<p>insert overwrite table test_table partition(dt) select * from test_table_another where dt = 1;</p>
+</blockquote>
+<p>It turns out that only one SQL is running, and other SQL will be stuck;<br/>Check the Hive thrift server thread stack and find that the requests are stuck on DbTxnManager. The key configuration of Hive is as follows:</p>
+<blockquote>
+<p>hive.support.concurrency=true<br/>hive.txn.manager=org.apache.hadoop.hive.ql.lockmgr.DbTxnManager</p>
+</blockquote>
+<p>Configure the corresponding default values ​​and comments:</p>
+<p>org.apache.hadoop.hive.conf.HiveConf</p>
+<div class="cnblogs_code">
+<pre>    HIVE_SUPPORT_CONCURRENCY("hive.support.concurrency", <span style="color: rgba(0, 0, 255, 1)">false</span><span style="color: rgba(0, 0, 0, 1)">,
+        </span>"Whether Hive supports concurrency control or not. \n" +
+        "A ZooKeeper instance must be up and running when using zookeeper Hive lock manager "<span style="color: rgba(0, 0, 0, 1)">),
+
+    HIVE_TXN_MANAGER(</span>"hive.txn.manager"<span style="color: rgba(0, 0, 0, 1)">,
+        </span>"org.apache.hadoop.hive.ql.lockmgr.DummyTxnManager"<span style="color: rgba(0, 0, 0, 1)">,
+        </span>"Set to org.apache.hadoop.hive.ql.lockmgr.DbTxnManager as part of turning on Hive\n" +
+        "transactions, which also requires appropriate settings for hive.compactor.initiator.on,\n" +
+        "hive.compactor.worker.threads, hive.support.concurrency (true), hive.enforce.bucketing\n" +
+        "(true), and hive.exec.dynamic.partition.mode (nonstrict).\n" +
+        "The default DummyTxnManager replicates pre-Hive-0.13 behavior and provides\n" +
+        "no transactions."),</pre>
+</div>
+<h1>2. Code analysis</h1>
+<p>For the detailed process of Hive executing SQL, please see:<a href="https://www.cnblogs.com/barneywill/p/10185168.html" target="_blank">https://www.cnblogs.com/barneywill/p/10185168.html</a></p>
+<p> </p>
+<p>Executing SQL in Hive will eventually call Driver.run, and run will call runInternal. Let’s look directly at the runInternal code:</p>
+<p>org.apache.hadoop.hive.ql.Driver</p>
+<div class="cnblogs_code">
+<pre>  <span style="color: rgba(0, 0, 255, 1)">private</span> CommandProcessorResponse runInternal(String command, <span style="color: rgba(0, 0, 255, 1)">boolean</span><span style="color: rgba(0, 0, 0, 1)"> alreadyCompiled)
+      </span><span style="color: rgba(0, 0, 255, 1)">throws</span><span style="color: rgba(0, 0, 0, 1)"> CommandNeedRetryException {
+...
+      </span><span style="color: rgba(0, 0, 255, 1)">if</span><span style="color: rgba(0, 0, 0, 1)"> (requiresLock()) {
+        </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> a checkpoint to see if the thread is interrupted or not before an expensive operation</span>
+        <span style="color: rgba(0, 0, 255, 1)">if</span><span style="color: rgba(0, 0, 0, 1)"> (isInterrupted()) {
+          ret </span>= handleInterruption("at acquiring the lock."<span style="color: rgba(0, 0, 0, 1)">);
+        } </span><span style="color: rgba(0, 0, 255, 1)">else</span><span style="color: rgba(0, 0, 0, 1)"> {
+          ret </span>=<span style="color: rgba(0, 0, 0, 1)"> acquireLocksAndOpenTxn(startTxnImplicitly);
+        }
+...
+
+  </span><span style="color: rgba(0, 0, 255, 1)">private</span> <span style="color: rgba(0, 0, 255, 1)">boolean</span><span style="color: rgba(0, 0, 0, 1)"> requiresLock() {
+    </span><span style="color: rgba(0, 0, 255, 1)">if</span> (!<span style="color: rgba(0, 0, 0, 1)">checkConcurrency()) {
+      </span><span style="color: rgba(0, 0, 255, 1)">return</span> <span style="color: rgba(0, 0, 255, 1)">false</span><span style="color: rgba(0, 0, 0, 1)">;
+    }
+    </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> Lock operations themselves don't require the lock.</span>
+    <span style="color: rgba(0, 0, 255, 1)">if</span><span style="color: rgba(0, 0, 0, 1)"> (isExplicitLockOperation()){
+      </span><span style="color: rgba(0, 0, 255, 1)">return</span> <span style="color: rgba(0, 0, 255, 1)">false</span><span style="color: rgba(0, 0, 0, 1)">;
+    }
+    </span><span style="color: rgba(0, 0, 255, 1)">if</span> (!<span style="color: rgba(0, 0, 0, 1)">HiveConf.getBoolVar(conf, ConfVars.HIVE_LOCK_MAPRED_ONLY)) {
+      </span><span style="color: rgba(0, 0, 255, 1)">return</span> <span style="color: rgba(0, 0, 255, 1)">true</span><span style="color: rgba(0, 0, 0, 1)">;
+    }
+    Queue</span>&lt;Task&lt;? <span style="color: rgba(0, 0, 255, 1)">extends</span> Serializable&gt;&gt; taskQueue = <span style="color: rgba(0, 0, 255, 1)">new</span> LinkedList&lt;Task&lt;? <span style="color: rgba(0, 0, 255, 1)">extends</span> Serializable&gt;&gt;<span style="color: rgba(0, 0, 0, 1)">();
+    taskQueue.addAll(plan.getRootTasks());
+    </span><span style="color: rgba(0, 0, 255, 1)">while</span> (taskQueue.peek() != <span style="color: rgba(0, 0, 255, 1)">null</span><span style="color: rgba(0, 0, 0, 1)">) {
+      Task</span>&lt;? <span style="color: rgba(0, 0, 255, 1)">extends</span> Serializable&gt; tsk =<span style="color: rgba(0, 0, 0, 1)"> taskQueue.remove();
+      </span><span style="color: rgba(0, 0, 255, 1)">if</span><span style="color: rgba(0, 0, 0, 1)"> (tsk.requireLock()) {
+        </span><span style="color: rgba(0, 0, 255, 1)">return</span> <span style="color: rgba(0, 0, 255, 1)">true</span><span style="color: rgba(0, 0, 0, 1)">;
+      }
+...
+
+  </span><span style="color: rgba(0, 0, 255, 1)">private</span> <span style="color: rgba(0, 0, 255, 1)">boolean</span><span style="color: rgba(0, 0, 0, 1)"> checkConcurrency() {
+    </span><span style="color: rgba(0, 0, 255, 1)">boolean</span> supportConcurrency =<span style="color: rgba(0, 0, 0, 1)"> conf.getBoolVar(HiveConf.ConfVars.HIVE_SUPPORT_CONCURRENCY);
+    </span><span style="color: rgba(0, 0, 255, 1)">if</span> (!<span style="color: rgba(0, 0, 0, 1)">supportConcurrency) {
+      LOG.info(</span>"Concurrency mode is disabled, not creating a lock manager"<span style="color: rgba(0, 0, 0, 1)">);
+      </span><span style="color: rgba(0, 0, 255, 1)">return</span> <span style="color: rgba(0, 0, 255, 1)">false</span><span style="color: rgba(0, 0, 0, 1)">;
+    }
+    </span><span style="color: rgba(0, 0, 255, 1)">return</span> <span style="color: rgba(0, 0, 255, 1)">true</span><span style="color: rgba(0, 0, 0, 1)">;
+  }
+
+  </span><span style="color: rgba(0, 0, 255, 1)">private</span> <span style="color: rgba(0, 0, 255, 1)">int</span> acquireLocksAndOpenTxn(<span style="color: rgba(0, 0, 255, 1)">boolean</span><span style="color: rgba(0, 0, 0, 1)"> startTxnImplicitly) {
+...
+      txnMgr.acquireLocks(plan, ctx, userFromUGI);
+...</span></pre>
+</div>
+<p>runInternal will call requiresLock to determine whether a lock is required. requiresLock has two judgments:</p>
+<ul>
+<li>Call checkConcurrency, checkConcurrency will check Hive.support.concurrency=true to require lock;</li>
+<li>Call Task.requireLock, only some tasks require lock;</li>
+</ul>
+<p>If it is determined that a lock is needed, acquireLocksAndOpenTxn will be called, and acquireLocksAndOpenTxn will call HiveTxnManager.acquireLocks to obtain the lock;</p>
+<p> </p>
+<p>1) First look at those tasks that require lock:</p>
+<p>org.apache.hadoop.hive.ql.parse.DDLSemanticAnalyzer</p>
+<div class="cnblogs_code">
+<pre>  <span style="color: rgba(0, 0, 255, 1)">private</span> <span style="color: rgba(0, 0, 255, 1)">void</span><span style="color: rgba(0, 0, 0, 1)"> analyzeAlterTablePartMergeFiles(ASTNode ast,
+      String tableName, HashMap</span>&lt;String, String&gt;<span style="color: rgba(0, 0, 0, 1)"> partSpec)
+      </span><span style="color: rgba(0, 0, 255, 1)">throws</span><span style="color: rgba(0, 0, 0, 1)"> SemanticException {
+...
+      DDLWork ddlWork </span>= <span style="color: rgba(0, 0, 255, 1)">new</span><span style="color: rgba(0, 0, 0, 1)"> DDLWork(getInputs(), getOutputs(), mergeDesc);
+      ddlWork.setNeedLock(</span><span style="color: rgba(0, 0, 255, 1)">true</span><span style="color: rgba(0, 0, 0, 1)">);
+...</span></pre>
+</div>
+<p>It can be seen that DDL operations are required;</p>
+<p>2) Let’s look at how to obtain the lock:</p>
+<p>org.apache.hadoop.hive.ql.lockmgr.DbTxnManager</p>
+<div class="cnblogs_code">
+<pre>  <span style="color: rgba(0, 0, 255, 1)">public</span> <span style="color: rgba(0, 0, 255, 1)">void</span> acquireLocks(QueryPlan plan, Context ctx, String username) <span style="color: rgba(0, 0, 255, 1)">throws</span><span style="color: rgba(0, 0, 0, 1)"> LockException {
+    </span><span style="color: rgba(0, 0, 255, 1)">try</span><span style="color: rgba(0, 0, 0, 1)"> {
+      acquireLocksWithHeartbeatDelay(plan, ctx, username, </span>0<span style="color: rgba(0, 0, 0, 1)">);
+...
+
+  </span><span style="color: rgba(0, 0, 255, 1)">void</span> acquireLocksWithHeartbeatDelay(QueryPlan plan, Context ctx, String username, <span style="color: rgba(0, 0, 255, 1)">long</span> delay) <span style="color: rgba(0, 0, 255, 1)">throws</span><span style="color: rgba(0, 0, 0, 1)"> LockException {
+    LockState ls </span>= acquireLocks(plan, ctx, username, <span style="color: rgba(0, 0, 255, 1)">true</span><span style="color: rgba(0, 0, 0, 1)">);
+...
+
+  LockState acquireLocks(QueryPlan plan, Context ctx, String username, </span><span style="color: rgba(0, 0, 255, 1)">boolean</span> isBlocking) <span style="color: rgba(0, 0, 255, 1)">throws</span><span style="color: rgba(0, 0, 0, 1)"> LockException {
+...
+      </span><span style="color: rgba(0, 0, 255, 1)">switch</span><span style="color: rgba(0, 0, 0, 1)"> (output.getType()) {
+        </span><span style="color: rgba(0, 0, 255, 1)">case</span><span style="color: rgba(0, 0, 0, 1)"> DATABASE:
+          compBuilder.setDbName(output.getDatabase().getName());
+          </span><span style="color: rgba(0, 0, 255, 1)">break</span><span style="color: rgba(0, 0, 0, 1)">;
+
+        </span><span style="color: rgba(0, 0, 255, 1)">case</span><span style="color: rgba(0, 0, 0, 1)"> TABLE:
+        </span><span style="color: rgba(0, 0, 255, 1)">case</span> DUMMYPARTITION:   <span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> in case of dynamic partitioning lock the table</span>
+          t =<span style="color: rgba(0, 0, 0, 1)"> output.getTable();
+          compBuilder.setDbName(t.getDbName());
+          compBuilder.setTableName(t.getTableName());
+          </span><span style="color: rgba(0, 0, 255, 1)">break</span><span style="color: rgba(0, 0, 0, 1)">;
+
+        </span><span style="color: rgba(0, 0, 255, 1)">case</span><span style="color: rgba(0, 0, 0, 1)"> PARTITION:
+          compBuilder.setPartitionName(output.getPartition().getName());
+          t </span>=<span style="color: rgba(0, 0, 0, 1)"> output.getPartition().getTable();
+          compBuilder.setDbName(t.getDbName());
+          compBuilder.setTableName(t.getTableName());
+          </span><span style="color: rgba(0, 0, 255, 1)">break</span><span style="color: rgba(0, 0, 0, 1)">;
+
+        </span><span style="color: rgba(0, 0, 255, 1)">default</span><span style="color: rgba(0, 0, 0, 1)">:
+          </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> This is a file or something we don't hold locks for.</span>
+          <span style="color: rgba(0, 0, 255, 1)">continue</span><span style="color: rgba(0, 0, 0, 1)">;
+      }
+...
+    LockState lockState </span>=<span style="color: rgba(0, 0, 0, 1)"> lockMgr.lock(rqstBuilder.build(), queryId, isBlocking, locks);
+    ctx.setHiveLocks(locks);
+    </span><span style="color: rgba(0, 0, 255, 1)">return</span><span style="color: rgba(0, 0, 0, 1)"> lockState;
+  }</span></pre>
+</div>
+<p>It can be seen that when dynamic partitioning is enabled, the lock granularity is DbName+TableName, which will result in multiple SQL only one SQL can get the lock, and other SQL can only wait;</p>
+<h1>Three Summary</h1>
+<p>There are several ways to solve the problem:</p>
+<ol>
+<li id="__mceDel">Turn off dynamic partitioning: set Hive.exec.dynamic.partition=false</li>
+<li id="__mceDel">Turn off concurrency: set Hive.support.concurrency=false</li>
+<li id="__mceDel">Close the transaction: set Hive.txn.manager=org.apache.hadoop.Hive.ql.lockmgr.DummyTxnManager</li>
+</ol>
+<p>Choose one of the three, and the first one is recommended because in the scenario just now, dynamic partitioning is not needed;</p>
+<p> </p>
+</div>
+</div>
+<!-- Post Footer -->
+<div class="post-footer">
+<div class="post-navigation">
+<a class="nav-button" href="../blog.html">← Back to Home</a>
+<a class="nav-button" href="0295.html">Next Post →</a>
+</div>
+</div>
+</article>
+</div>
+</body>
+</html>

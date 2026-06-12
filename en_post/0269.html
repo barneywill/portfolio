@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>SSH key login</title>
+<link href="../css/style3.css" rel="stylesheet"/>
+</head>
+<body>
+<div class="container">
+<!-- Header Navigation -->
+<div class="header">
+<h1><a href="../blog.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+</div>
+<!-- Post Container -->
+<article class="post">
+<!-- Post Header -->
+<div class="post-header">
+<h1>SSH key login</h1>
+<div class="post-meta">
+<div class="post-meta-item">
+<span class="meta-icon">📅</span>
+<span>January 15, 2019</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">📖</span>
+<span>2 min read</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">👁️</span>
+<span>1260 views</span>
+</div>
+</div>
+</div>
+<!-- Post Content -->
+<div class="post-content">
+<div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201902/1509647-20190222234844388-1771608622.png"/></p>
+<p>Official: https://www.ssh.com/ssh/</p>
+<p>The SSH protocol uses encryption to secure the connection between a client and a server. All user authentication, commands, output, and file transfers are encrypted to protect against attacks in the network. </p>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201902/1509647-20190222234808097-255955738.png"/></p>
+<p> </p>
+<p>Key types include rsa and dsa, see https://security.stackexchange.com/questions/5096/rsa-vs-dsa-for-ssh-authentication-keys for details</p>
+<p>The security of the RSA algorithm is based on the fact that factorization of large integers is known to be "difficult", whereas DSA security is based on the discrete logarithm problem.</p>
+<p>rsa is based on large number decomposition, and dsa is based on discrete logarithms;</p>
+<p>RSA keys can go up to 4096 bits, where DSA has to be exactly 1024 bits (although OpenSSL allows for more.)</p>
+<p>The rsa key supports up to 4096 bits in length, and the dsa key only supports 1024 bits in length;</p>
+<h1>1 Generate secret key, rsa or dsa</h1>
+<h2>1.1 Command generation (Linux or mac)</h2>
+<blockquote>
+<p>$ ssh-keygen -t rsa -b 4096<br/>Generating public/private rsa key pair.<br/>Enter file in which to save the key (/home/testuser/.ssh/id_rsa): <br/>Enter passphrase (empty for no passphrase): <br/>Enter same passphrase again: <br/>Your identification has been saved in /home/testuser/.ssh/id_rsa.<br/>Your public key has been saved in /home/testuser/.ssh/id_rsa.pub.<br/>The key fingerprint is:<br/>SHA256:mRMuErgh17o9EPe1gzdd/tFuj6L0rVsk7qTw1rrGFCc testuser@testserver<br/>The key's randomart image is:<br/>+---[RSA 4096]----+<br/>|                 |<br/>|   o             |<br/>|. = +   o   .    |<br/>| o * o + *Eo.  . |<br/>|  + . + S .+o o .|<br/>|   + . o +.. + o |<br/>|  . o   .o..o o o|<br/>|     .   ++=oo o.|<br/>|         o*+=+o .|<br/>+----[SHA256]-----+</p>
+</blockquote>
+<p>A password will be entered during the creation process;</p>
+<p>After the creation is completed, two secret key files will be created by default in the .ssh directory of the home directory, the public key (pub suffix) and the private key.</p>
+<blockquote>
+<p>$ ls .ssh<br/>id_rsa  id_rsa.pub</p>
+</blockquote>
+<p> When logging in, the private key is saved by itself and the public key is placed on the server.</p>
+<h2>1.2 securecrt or xshell interface generation (Windows)</h2>
+<p>The place where securecrt creates the secret key is </p>
+<p>Tools--Create Public Keys</p>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201901/1509647-20190115141126761-143816549.png"/></p>
+<h1>2 Upload the public key</h1>
+<p>Upload the public key to the user's home directory of the server you want to log in to, and add the public key to authorized_keys.</p>
+<blockquote>
+<p>cat .ssh/id_rsa.pub &gt;&gt; .ssh/authorized_keys<br/>chmod 600 .ssh/authorized_keys</p>
+</blockquote>
+<h1>3 Log in with local private key</h1>
+<h2>3.1 Log in with ssh command (Linux or mac)</h2>
+<blockquote>
+<p>$ ssh -i /path/id_rsa user@remote_ip</p>
+</blockquote>
+<p>In addition, you can also modify the configuration file and configure the key, so that -i can be dispensed with.</p>
+<blockquote>
+<p>#vi /etc/ssh/ssh_config</p>
+<p><span class="hljs-constant">IdentityFile ~<span class="hljs-regexp">/.ssh/id_rsa</span></span></p>
+</blockquote>
+<h2>3.2 securecrt or xshell login (Windows)</h2>
+<p> Select private key<img alt="" src="https://img2018.cnblogs.com/blog/1509647/201901/1509647-20190115140939540-1938816752.png"/></p>
+<p> </p>
+<h1>4 hadoop cluster configuration password-free login</h1>
+<h2>4.1 Root user ssh password-free login</h2>
+<h3>1 Prepare key</h3>
+<blockquote>
+<p># ssh-keygen -t rsa -b 4096<br/># ls .ssh<br/>authorized_keys  id_rsa  id_rsa.pub  known_hosts<br/># cat .ssh/id_rsa.pub &gt;&gt; .ssh/authorized_keys<br/># chmod 600 .ssh/authorized_keys</p>
+</blockquote>
+<h3>2 copies</h3>
+<p>1) There is no password, but you can log in to the server. After logging in to the server one by one, nc receives the file.</p>
+<blockquote>
+<p># nc -l $receive_port |tar -zxvf -</p>
+</blockquote>
+<p>native execution</p>
+<blockquote>
+<p># tar -zcvf - .ssh |nc $receive_ip $receive_port</p>
+</blockquote>
+<p>2) Have the login account and password of the server and copy them one by one.</p>
+<blockquote>
+<p># scp .ssh/id_rsa.pub root@$server_ip:/root/.ssh<br/># scp .ssh/authorized_keys root@$server_ip:/root/.ssh</p>
+</blockquote>
+<h3>3 SSH login verification one by one</h3>
+<blockquote>
+<p># ssh $server_ip</p>
+</blockquote>
+<h3>4 Copy known_hosts one by one</h3>
+<blockquote>
+<p># scp .ssh/known_hosts $server_ip:/root/.ssh/</p>
+</blockquote>
+<p> </p>
+<h2>4.2 Other users can log in without password, taking hadoop as an example</h2>
+<blockquote>
+<p># ansible all-servers -m shell -a 'useradd hadoop'<br/># su - hadoop<br/>$ ssh-keygen -t rsa -b 4096<br/>$ cat .ssh/id_rsa.pub &gt;&gt; .ssh/authorized_keys<br/>$ chmod 600 .ssh/authorized_keys<br/>$ exit<br/># ansible other-servers -m copy -a 'src=/home/hadoop/.ssh dest=/home/hadoop/'<br/># ansible other-servers -m shell -a 'chown -R hadoop.hadoop /home/hadoop/.ssh &amp;&amp; cd /home/hadoop/.ssh &amp;&amp; chmod 600 id_rsa authorized_keys'<br/># su - hadoop<br/>$ ssh $server<br/>$ scp .ssh/known_host $server:/home/hadoop/.ssh</p>
+</blockquote>
+<p> </p>
+<h1>5 Troubleshooting</h1>
+<p>If you are still prompted to enter a password after configuring the certificate, you need to check the log on the server /var/logs/auth.log</p>
+<p>If there are logs in it: User *** from *** not allowed because none of user's groups are listed in AllowGroups</p>
+<p>View sshd configuration /etc/ssh/sshd_config</p>
+<p>AllowGroups root ssh</p>
+<p>Several methods: 1. Comment; 2. Add the user to the relevant group; 3. Add the user's group here;</p>
+<p> </p>
+</div>
+</div>
+<!-- Post Footer -->
+<div class="post-footer">
+<div class="post-navigation">
+<a class="nav-button" href="../blog.html">← Back to Home</a>
+<a class="nav-button" href="0270.html">Next Post →</a>
+</div>
+</div>
+</article>
+</div>
+</body>
+</html>

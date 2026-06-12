@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Logstash 1 - Introduction, installation, use</title>
+<link href="../css/style3.css" rel="stylesheet"/>
+</head>
+<body>
+<div class="container">
+<!-- Header Navigation -->
+<div class="header">
+<h1><a href="../blog.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+</div>
+<!-- Post Container -->
+<article class="post">
+<!-- Post Header -->
+<div class="post-header">
+<h1>Logstash 1 - Introduction, installation, use</h1>
+<div class="post-meta">
+<div class="post-meta-item">
+<span class="meta-icon">📅</span>
+<span>March 19, 2019</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">📖</span>
+<span>2 min read</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">👁️</span>
+<span>420 views</span>
+</div>
+</div>
+</div>
+<!-- Post Content -->
+<div class="post-content">
+<div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<p>Logstash 6.6.2</p>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201901/1509647-20190123214945296-795860038.png"/></p>
+<p>Official: https://www.elastic.co/products/Logstash</p>
+<p> </p>
+<h1>1 Introduction</h1>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201901/1509647-20190123221110307-1206888640.png"/></p>
+<p>Centralize, Transform &amp; Stash Your Data</p>
+<p>Logstash is an open source, server-side data processing pipeline that ingests data from a multitude of sources simultaneously, transforms it, and then sends it to your favorite “stash.” (Ours is Elasticsearch, naturally.)</p>
+<p>Centralize, transform, and store your data: Logstash is an open source server-side data processing pipeline that can receive data from many data sources, convert the format, and send it to your data warehouse at the same time;</p>
+<p> </p>
+<h2>structure</h2>
+<p>A Logstash pipeline has two required elements, <code class="literal">input</code> and <code class="literal">output</code>, and one optional element, <code class="literal">filter</code>. </p>
+<h3>1 INPUTS</h3>
+<p>Ingest Data of All Shapes, Sizes, and Sources</p>
+<p>Data is often scattered or siloed across many systems in many formats. Logstash supports a variety of inputs that pull in events from a multitude of common sources, all at the same time. Easily ingest from your logs, metrics, web applications, data stores, and various AWS services, all in continuous, streaming fashion.</p>
+<p>Receive data of any form, size and source: Data is usually scattered in various systems in various formats. Logstash supports many types of input and can pull data from various data sources, including logs, monitoring, web applications, data storage, etc.;</p>
+<h3>2 FILTERS</h3>
+<p>Parse &amp; Transform Your Data On the Fly</p>
+<p>As data travels from source to store, Logstash filters parse each event, identify named fields to build structure, and transform them to converge on a common format for easier, accelerated analysis and business value.</p>
+<p>Parse your data and convert the format: After the data is collected, the Logstash filter will parse each piece of data, identify the data format, and convert the data into a more general format to facilitate subsequent simpler and faster analysis;</p>
+<p>The most commonly used filters include grok (regular) and Ruby ​​(code), as well as mutate/date/JSON/kv, which can easily parse any of your data;</p>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201903/1509647-20190320114135300-878262261.png"/></p>
+<p> </p>
+<h3>3 OUTPUTS</h3>
+<p>Choose Your Stash, Transport Your Data</p>
+<p>While Elasticsearch is our go-to output that opens up a world of search and analytics possibilities, it’s not the only one available.</p>
+<p>Choose your data warehouse, move your data: Elasticsearch offers unlimited search and analysis possibilities, but Elasticsearch is not the only output;</p>
+<h1>2. Installation</h1>
+<h2>1 Ambari installation</h2>
+<p>For details, see:<a href="https://www.cnblogs.com/barneywill/p/10281678.html" target="_blank">https://www.cnblogs.com/barneywill/p/10281678.html</a></p>
+<h2>2 Docker installation</h2>
+<p>For details, see:<a href="https://www.cnblogs.com/barneywill/p/10367297.html" target="_blank">https://www.cnblogs.com/barneywill/p/10367297.html</a></p>
+<h2>3 Manual tar installation</h2>
+<blockquote>
+<p>$ wget https://artifacts.elastic.co/downloads/logstash/logstash-6.6.2.tar.gz<br/>$ tar xvf logstash-6.6.2.tar.gz<br/>$ cd logstash-6.6.2</p>
+</blockquote>
+<p>Logstash plugin directory</p>
+<blockquote>
+<p>$LOGSTASH_HOME/vendor/bundle/jruby/2.3.0/gems/</p>
+</blockquote>
+<p>You can see all current plug-ins and corresponding versions, and manually view and install plug-ins:</p>
+<blockquote>
+<p>$LOGSTASH_HOME/bin/logstash-plugin list<br/>$LOGSTASH_HOME/bin/logstash-plugin install logstash-input-jdbc</p>
+</blockquote>
+<p>Plug-in source code: https://github.com/Logstash-plugins</p>
+<h2>4 Manual yum installation</h2>
+<blockquote>
+<p># rpm --import https://artifacts.elastic.co/GPG-KEY-elasticsearch<br/># yum install logstash</p>
+</blockquote>
+<p>Registration service:</p>
+<blockquote>
+<p>$ sudo /usr/share/logstash/bin/<span class="hljs-keyword">system-install /etc/logstash/startup.options systemd</span></p>
+</blockquote>
+<h1>Three uses </h1>
+<h2>1 debug filter</h2>
+<h3>Debugging grok</h3>
+<p>http://grokdebug.herokuapp.com/</p>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201903/1509647-20190319160125632-964440906.png"/></p>
+<p>Built-in grok pattern</p>
+<p>https://github.com/elastic/logstash/blob/v1.4.2/patterns/grok-patterns</p>
+<h3>debugging Ruby</h3>
+<p>https://ruby.github.io/TryRuby/</p>
+<p> <img alt="" src="https://img2018.cnblogs.com/blog/1509647/201903/1509647-20190319160315210-2011061989.png"/></p>
+<h2>2 Test the parsing of Nginx log: file-&gt;grok-&gt;stdout</h2>
+<p>Nginx log default format:</p>
+<div class="cnblogs_code">
+<pre>    <span style="color: rgba(0, 128, 0, 1)">#</span><span style="color: rgba(0, 128, 0, 1)">log_format  main  '$remote_addr - $remote_user [$time_local] "$request" '</span>
+    <span style="color: rgba(0, 128, 0, 1)">#</span><span style="color: rgba(0, 128, 0, 1)">                  '$status $body_bytes_sent "$http_referer" '</span>
+    <span style="color: rgba(0, 128, 0, 1)">#</span><span style="color: rgba(0, 128, 0, 1)">                  '"$http_user_agent" "$http_x_forwarded_for"';</span></pre>
+</div>
+<p>Nginx log example:</p>
+<blockquote>
+<p>1.119.132.168 - - [18/Mar/2019:09:13:50 +0000] "POST /cmf/services/6/healthStatusBar?timestamp=1552900429484&amp;currentMode=true HTTP/1.1" 200 929 "http://some.server/cmf/services/6/instances" "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/72.0.3626.119 Safari/537.36" "-"</p>
+</blockquote>
+<h3>Configuration file</h3>
+<p>test.conf</p>
+<div class="cnblogs_code">
+<pre><span style="color: rgba(0, 0, 0, 1)">input {
+    file {
+        path </span>=&gt; [ <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">/tmp/test.log</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)"> ]
+        start_position </span>=&gt; <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">beginning</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">
+        ignore_older </span>=&gt;<span style="color: rgba(0, 0, 0, 1)"> 0
+    }
+}
+filter {
+    grok {
+        match </span>=&gt; { <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">message</span><span style="color: rgba(128, 0, 0, 1)">"</span> =&gt; <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">%{IPORHOST:client_ip} (%{USER:ident}|-) (%{USER:auth}|-) \[%{HTTPDATE:timestamp}\] \"(?:%{WORD:verb} (%{URIPATHPARAM:request}|-)(?: HTTP/%{NUMBER:http_version})?|-)\" (%{NUMBER:response}|-) (?:%{NUMBER:bytes}|-) %{QS:referrer} %{QS:agent} %{QS:x_forward_for}</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)"> }
+    }
+}
+output {
+    stdout {}
+}</span></pre>
+</div>
+<h3>start up</h3>
+<blockquote>
+<p>$LOGSTASH_HOME/bin/logstash -f /path/to/test.conf --path.data=/path/to/data --verbose --debug</p>
+</blockquote>
+<p>Note: If multiple Logstash is started on a machine, distinguish it through --path.data; use --verbose --debug to display the output in the console;</p>
+<h3>test</h3>
+<blockquote>
+<p>$ head -5 /var/log/nginx/access.log &gt;&gt; /tmp/test.log</p>
+</blockquote>
+<p> </p>
+<p>For more input details, see</p>
+<p>https://www.elastic.co/guide/en/logstash/current/input-plugins.html</p>
+<p>For more filters, see</p>
+<p>https://www.elastic.co/guide/en/logstash/current/filter-plugins.html</p>
+<p>The most commonly used filter: grok</p>
+<p>https://www.elastic.co/guide/en/logstash/current/plugins-filters-ruby.html</p>
+<p>The most commonly used filter: Ruby</p>
+<p>https://www.elastic.co/guide/en/logstash/current/plugins-filters-ruby.html</p>
+<p>Commonly used filters: mutate</p>
+<p>https://www.elastic.co/guide/en/logstash/current/plugins-filters-mutate.html</p>
+<p>Commonly used filters: date</p>
+<p>https://www.elastic.co/guide/en/logstash/current/plugins-filters-date.html</p>
+<p>Commonly used filters: JSON</p>
+<p>https://www.elastic.co/guide/en/logstash/current/plugins-filters-json.html</p>
+<p>Commonly used filters: kv</p>
+<p>https://www.elastic.co/guide/en/logstash/current/plugins-filters-kv.html</p>
+<p>For more output details, see</p>
+<p>https://www.elastic.co/guide/en/logstash/current/output-plugins.html</p>
+<p> </p>
+</div>
+</div>
+<!-- Post Footer -->
+<div class="post-footer">
+<div class="post-navigation">
+<a class="nav-button" href="../blog.html">← Back to Home</a>
+<a class="nav-button" href="0173.html">Next Post →</a>
+</div>
+</div>
+</article>
+</div>
+</body>
+</html>

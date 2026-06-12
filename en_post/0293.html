@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>After hive2.0, there is no progress information when executing SQL through beeline.</title>
+<link href="../css/style3.css" rel="stylesheet"/>
+</head>
+<body>
+<div class="container">
+<!-- Header Navigation -->
+<div class="header">
+<h1><a href="../blog.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+</div>
+<!-- Post Container -->
+<article class="post">
+<!-- Post Header -->
+<div class="post-header">
+<h1>After hive2.0, there is no progress information when executing SQL through beeline.</h1>
+<div class="post-meta">
+<div class="post-meta-item">
+<span class="meta-icon">📅</span>
+<span>December 27, 2018</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">📖</span>
+<span>6 min read</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">👁️</span>
+<span>6005 views</span>
+</div>
+</div>
+</div>
+<!-- Post Content -->
+<div class="post-content">
+<div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<h1>1 question</h1>
+<p>In hive1.2, there is progress information when using Hive or beeline to execute SQL. However, after upgrading to hive2.0, only Hive has progress information when executing SQL. Beeline is completely silent when executing SQL. During the process of waiting for the result, you have no idea where the execution is.</p>
+<h2>1 Hive executes SQL process (with progress information)</h2>
+<blockquote>
+<p>hive&gt; select count(1) from test_table;<br/>WARNING: Hive-on-MR is deprecated in Hive 2 and may not be available in the future versions. Consider using a different execution engine (i.e. spark, tez) or using Hive 1.X releases.<br/>Query ID = hadoop_20181227162003_bd82e3e2-2736-42b4-b1da-4270ead87e4d<br/>Total jobs = 1<br/>Launching Job 1 out of 1<br/>Number of reduce tasks determined at compile time: 1<br/>In order to change the average load for a reducer (in bytes):<br/>  set hive.exec.reducers.bytes.per.reducer=&lt;number&gt;<br/>In order to limit the maximum number of reducers:<br/>  set hive.exec.reducers.max=&lt;number&gt;<br/>In order to set a constant number of reducers:<br/>  set mapreduce.job.reduces=&lt;number&gt;<br/>Starting Job = job_1544593827645_22873, Tracking URL = http://rm1:8088/proxy/application_1544593827645_22873/<br/>Kill Command = /export/App/hadoop-2.6.1/bin/hadoop job  - kill job_1544593827645_22873<br/>2018-12-27 16:20:27,650 Stage-1 map = 100%,  reduce = 100%, Cumulative CPU 116.9 sec<br/>MapReduce Total cumulative CPU time: 1 minutes 56 seconds 900 msec<br/>Ended Job = job_1544593827645_22873<br/>MapReduce Jobs Launched: <br/>Stage-Stage-1: Map: 29  Reduce: 1   Cumulative CPU: 116.9 sec   HDFS Read: 518497 HDFS Write: 197 SUCCESS<br/>Total MapReduce CPU Time Spent: 1 minutes 56 seconds 900 msec<br/>OK<br/>104<br/>Time taken: 24.437 seconds, Fetched: 1 row(s)</p>
+</blockquote>
+<h2>2 beeline executes SQL process (no progress information)</h2>
+<blockquote>
+<p>0: jdbc:hive2://thrift1:10000&gt; select count(1) from test_table;<br/>WARNING: Hive-on-MR is deprecated in Hive 2 and may not be available in the future versions. Consider using a different execution engine (i.e. spark, tez) or using Hive 1.X releases.<br/>+------+--+<br/>|  c0  |<br/>+------+--+<br/>| 104  |<br/>+------+--+<br/>1 row selected (23.965 seconds)</p>
+</blockquote>
+<h1>2. Code analysis</h1>
+<p>For the detailed process of Hive executing SQL, please see:<a href="https://www.cnblogs.com/barneywill/p/10185168.html" target="_blank">https://www.cnblogs.com/barneywill/p/10185168.html</a></p>
+<p>Executing SQL in Hive will eventually call Driver.run, and run will call execute. Let’s look at the execute code directly:</p>
+<p>org.apache.hadoop.hive.ql.Driver</p>
+<div class="cnblogs_code">
+<pre>  <span style="color: rgba(0, 0, 255, 1)">public</span> <span style="color: rgba(0, 0, 255, 1)">int</span> execute(<span style="color: rgba(0, 0, 255, 1)">boolean</span> deferClose) <span style="color: rgba(0, 0, 255, 1)">throws</span><span style="color: rgba(0, 0, 0, 1)"> CommandNeedRetryException {
+...
+      </span><span style="color: rgba(0, 0, 255, 1)">if</span> (jobs &gt; 0<span style="color: rgba(0, 0, 0, 1)">) {
+        logMrWarning(mrJobs);
+        console.printInfo(</span>"Query ID = " +<span style="color: rgba(0, 0, 0, 1)"> queryId);
+        console.printInfo(</span>"Total jobs = " +<span style="color: rgba(0, 0, 0, 1)"> jobs);
+      }
+...
+  </span><span style="color: rgba(0, 0, 255, 1)">private</span> <span style="color: rgba(0, 0, 255, 1)">void</span> logMrWarning(<span style="color: rgba(0, 0, 255, 1)">int</span><span style="color: rgba(0, 0, 0, 1)"> mrJobs) {
+    </span><span style="color: rgba(0, 0, 255, 1)">if</span> (mrJobs &lt;= 0 || !("mr"<span style="color: rgba(0, 0, 0, 1)">.equals(HiveConf.getVar(conf, ConfVars.HIVE_EXECUTION_ENGINE)))) {
+      </span><span style="color: rgba(0, 0, 255, 1)">return</span><span style="color: rgba(0, 0, 0, 1)">;
+    }
+    String warning </span>=<span style="color: rgba(0, 0, 0, 1)"> HiveConf.generateMrDeprecationWarning();
+    LOG.warn(warning);
+    warning </span>= "WARNING: " +<span style="color: rgba(0, 0, 0, 1)"> warning;
+    console.printInfo(warning);
+    </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> Propagate warning to beeline via operation log.</span>
+    OperationLog ol =<span style="color: rgba(0, 0, 0, 1)"> OperationLog.getCurrentOperationLog();
+    </span><span style="color: rgba(0, 0, 255, 1)">if</span> (ol != <span style="color: rgba(0, 0, 255, 1)">null</span><span style="color: rgba(0, 0, 0, 1)">) {
+      ol.writeOperationLog(LoggingLevel.EXECUTION, warning </span>+ "\n"<span style="color: rgba(0, 0, 0, 1)">);
+    }
+  }</span></pre>
+</div>
+<p>It can be seen that the progress information seen in the Hive command is output through console.printInfo;<br/>Noticed a detail. Although there is no progress information in beeline, there is a warning message:</p>
+<blockquote>
+<p>WARNING: Hive-on-MR is deprecated in Hive 2 and may not be available in the future versions. Consider using a different execution engine (i.e. spark, tez) or using Hive 1.X releases.</p>
+</blockquote>
+<p>This warning information is output through the following code:</p>
+<div class="cnblogs_code">
+<pre>    OperationLog ol =<span style="color: rgba(0, 0, 0, 1)"> OperationLog.getCurrentOperationLog();
+    </span><span style="color: rgba(0, 0, 255, 1)">if</span> (ol != <span style="color: rgba(0, 0, 255, 1)">null</span><span style="color: rgba(0, 0, 0, 1)">) {
+      ol.writeOperationLog(LoggingLevel.EXECUTION, warning </span>+ "\n"<span style="color: rgba(0, 0, 0, 1)">);
+    }</span></pre>
+</div>
+<p>Therefore, if you let beeline execute SQL and there is progress information, it must be output in the same way;</p>
+<h1>Three Hive progress information locations</h1>
+<p>The familiar progress information is here:</p>
+<p>org.apache.hadoop.hive.ql.Driver</p>
+<div class="cnblogs_code">
+<pre>  <span style="color: rgba(0, 0, 255, 1)">public</span> <span style="color: rgba(0, 0, 255, 1)">int</span> execute(<span style="color: rgba(0, 0, 255, 1)">boolean</span> deferClose) <span style="color: rgba(0, 0, 255, 1)">throws</span><span style="color: rgba(0, 0, 0, 1)"> CommandNeedRetryException {
+...
+        console.printInfo(</span>"Query ID = " +<span style="color: rgba(0, 0, 0, 1)"> queryId);
+        console.printInfo(</span>"Total jobs = " +<span style="color: rgba(0, 0, 0, 1)"> jobs);
+
+  </span><span style="color: rgba(0, 0, 255, 1)">private</span> TaskRunner launchTask(Task&lt;? <span style="color: rgba(0, 0, 255, 1)">extends</span> Serializable&gt; tsk, String queryId, <span style="color: rgba(0, 0, 255, 1)">boolean</span><span style="color: rgba(0, 0, 0, 1)"> noName,
+      String jobname, </span><span style="color: rgba(0, 0, 255, 1)">int</span> jobs, DriverContext cxt) <span style="color: rgba(0, 0, 255, 1)">throws</span><span style="color: rgba(0, 0, 0, 1)"> HiveException {
+...
+      console.printInfo(</span>"Launching Job " + cxt.getCurJobNo() + " out of " + jobs);</pre>
+</div>
+<p>org.apache.hadoop.hive.ql.exec.mr.MapRedTask</p>
+<div class="cnblogs_code">
+<pre>  <span style="color: rgba(0, 0, 255, 1)">private</span> <span style="color: rgba(0, 0, 255, 1)">void</span> setNumberOfReducers() <span style="color: rgba(0, 0, 255, 1)">throws</span><span style="color: rgba(0, 0, 0, 1)"> IOException {
+    ReduceWork rWork </span>=<span style="color: rgba(0, 0, 0, 1)"> work.getReduceWork();
+    </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> this is a temporary hack to fix things that are not fixed in the compiler</span>
+    Integer numReducersFromWork = rWork == <span style="color: rgba(0, 0, 255, 1)">null</span> ? 0<span style="color: rgba(0, 0, 0, 1)"> : rWork.getNumReduceTasks();
+
+    </span><span style="color: rgba(0, 0, 255, 1)">if</span> (rWork == <span style="color: rgba(0, 0, 255, 1)">null</span><span style="color: rgba(0, 0, 0, 1)">) {
+      console
+          .printInfo(</span>"Number of reduce tasks is set to 0 since there's no reduce operator"<span style="color: rgba(0, 0, 0, 1)">);
+    } </span><span style="color: rgba(0, 0, 255, 1)">else</span><span style="color: rgba(0, 0, 0, 1)"> {
+      </span><span style="color: rgba(0, 0, 255, 1)">if</span> (numReducersFromWork &gt;= 0<span style="color: rgba(0, 0, 0, 1)">) {
+        console.printInfo(</span>"Number of reduce tasks determined at compile time: "
+            +<span style="color: rgba(0, 0, 0, 1)"> rWork.getNumReduceTasks());
+      } </span><span style="color: rgba(0, 0, 255, 1)">else</span> <span style="color: rgba(0, 0, 255, 1)">if</span> (job.getNumReduceTasks() &gt; 0<span style="color: rgba(0, 0, 0, 1)">) {
+        </span><span style="color: rgba(0, 0, 255, 1)">int</span> reducers =<span style="color: rgba(0, 0, 0, 1)"> job.getNumReduceTasks();
+        rWork.setNumReduceTasks(reducers);
+        console
+            .printInfo(</span>"Number of reduce tasks not specified. Defaulting to jobconf value of: "
+            +<span style="color: rgba(0, 0, 0, 1)"> reducers);
+      } </span><span style="color: rgba(0, 0, 255, 1)">else</span><span style="color: rgba(0, 0, 0, 1)"> {
+        </span><span style="color: rgba(0, 0, 255, 1)">if</span> (inputSummary == <span style="color: rgba(0, 0, 255, 1)">null</span><span style="color: rgba(0, 0, 0, 1)">) {
+          inputSummary </span>=  Utilities.getInputSummary(driverContext.getCtx(), work.getMapWork(), <span style="color: rgba(0, 0, 255, 1)">null</span><span style="color: rgba(0, 0, 0, 1)">);
+        }
+        </span><span style="color: rgba(0, 0, 255, 1)">int</span> reducers =<span style="color: rgba(0, 0, 0, 1)"> Utilities.estimateNumberOfReducers(conf, inputSummary, work.getMapWork(),
+                                                          work.isFinalMapRed());
+        rWork.setNumReduceTasks(reducers);
+        console
+            .printInfo(</span>"Number of reduce tasks not specified. Estimated from input data size: "
+            +<span style="color: rgba(0, 0, 0, 1)"> reducers);
+
+      }
+      console
+          .printInfo(</span>"In order to change the average load for a reducer (in bytes):"<span style="color: rgba(0, 0, 0, 1)">);
+      console.printInfo(</span>"  set " +<span style="color: rgba(0, 0, 0, 1)"> HiveConf.ConfVars.BYTESPERREDUCER.varname
+          </span>+ "=&lt;number&gt;"<span style="color: rgba(0, 0, 0, 1)">);
+      console.printInfo(</span>"In order to limit the maximum number of reducers:"<span style="color: rgba(0, 0, 0, 1)">);
+      console.printInfo(</span>"  set " +<span style="color: rgba(0, 0, 0, 1)"> HiveConf.ConfVars.MAXREDUCERS.varname
+          </span>+ "=&lt;number&gt;"<span style="color: rgba(0, 0, 0, 1)">);
+      console.printInfo(</span>"In order to set a constant number of reducers:"<span style="color: rgba(0, 0, 0, 1)">);
+      console.printInfo(</span>"  set " +<span style="color: rgba(0, 0, 0, 1)"> HiveConf.ConfVars.HADOOPNUMREDUCERS
+          </span>+ "=&lt;number&gt;"<span style="color: rgba(0, 0, 0, 1)">);
+    }
+  }</span></pre>
+</div>
+<p>Most of them are in the following category:</p>
+<p>org.apache.hadoop.hive.ql.exec.mr.HadoopJobExecHelper</p>
+<div class="cnblogs_code">
+<pre>  <span style="color: rgba(0, 0, 255, 1)">public</span> <span style="color: rgba(0, 0, 255, 1)">void</span><span style="color: rgba(0, 0, 0, 1)"> jobInfo(RunningJob rj) {
+    </span><span style="color: rgba(0, 0, 255, 1)">if</span><span style="color: rgba(0, 0, 0, 1)"> (ShimLoader.getHadoopShims().isLocalMode(job)) {
+      console.printInfo(</span>"Job running in-process (local Hadoop)"<span style="color: rgba(0, 0, 0, 1)">);
+    } </span><span style="color: rgba(0, 0, 255, 1)">else</span><span style="color: rgba(0, 0, 0, 1)"> {
+      </span><span style="color: rgba(0, 0, 255, 1)">if</span> (SessionState.get() != <span style="color: rgba(0, 0, 255, 1)">null</span><span style="color: rgba(0, 0, 0, 1)">) {
+        SessionState.get().getHiveHistory().setTaskProperty(queryState.getQueryId(),
+            getId(), Keys.TASK_HADOOP_ID, rj.getID().toString());
+      }
+      console.printInfo(getJobStartMsg(rj.getID()) </span>+ ", Tracking URL = "
+          +<span style="color: rgba(0, 0, 0, 1)"> rj.getTrackingURL());
+      console.printInfo(</span>"Kill Command = " +<span style="color: rgba(0, 0, 0, 1)"> HiveConf.getVar(job, HiveConf.ConfVars.HADOOPBIN)
+          </span>+ " job  - kill " +<span style="color: rgba(0, 0, 0, 1)"> rj.getID());
+    }
+  }
+
+  </span><span style="color: rgba(0, 0, 255, 1)">private</span> MapRedStats progress(ExecDriverTaskHandle th) <span style="color: rgba(0, 0, 255, 1)">throws</span><span style="color: rgba(0, 0, 0, 1)"> IOException, LockException {
+...
+      StringBuilder report </span>= <span style="color: rgba(0, 0, 255, 1)">new</span><span style="color: rgba(0, 0, 0, 1)"> StringBuilder();
+      report.append(dateFormat.format(Calendar.getInstance().getTime()));
+
+      report.append(</span>' '<span style="color: rgba(0, 0, 0, 1)">).append(getId());
+      report.append(</span>" map = ").append(mapProgress).append("%, "<span style="color: rgba(0, 0, 0, 1)">);
+      report.append(</span>" reduce = ").append(reduceProgress).append('%'<span style="color: rgba(0, 0, 0, 1)">);
+...
+      String output </span>=<span style="color: rgba(0, 0, 0, 1)"> report.toString();
+...
+      console.printInfo(output);
+...
+  
+  </span><span style="color: rgba(0, 0, 255, 1)">public</span> <span style="color: rgba(0, 0, 255, 1)">static</span><span style="color: rgba(0, 0, 0, 1)"> String getJobEndMsg(JobID jobId) {
+    </span><span style="color: rgba(0, 0, 255, 1)">return</span> "Ended Job = " +<span style="color: rgba(0, 0, 0, 1)"> jobId;
+  }</span></pre>
+</div>
+<p>It looks like the workload for the changes is not small, haha</p>
+<p> </p>
+</div>
+</div>
+<!-- Post Footer -->
+<div class="post-footer">
+<div class="post-navigation">
+<a class="nav-button" href="../blog.html">← Back to Home</a>
+<a class="nav-button" href="0294.html">Next Post →</a>
+</div>
+</div>
+</article>
+</div>
+</body>
+</html>

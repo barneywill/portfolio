@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Creating and Using SSH Keys</title>
+<link href="../css/style3.css" rel="stylesheet"/>
+</head>
+<body>
+<div class="container">
+<!-- Header Navigation -->
+<div class="header">
+<h1><a href="../blog.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+</div>
+<!-- Post Container -->
+<article class="post">
+<!-- Post Header -->
+<div class="post-header">
+<h1>Creating and Using SSH Keys</h1>
+<div class="post-meta">
+<div class="post-meta-item">
+<span class="meta-icon">📅</span>
+<span>October 03, 2019</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">📖</span>
+<span>1 min read</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">👁️</span>
+<span>999 views</span>
+</div>
+</div>
+</div>
+<!-- Post Content -->
+<div class="post-content">
+<div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<h1 id="section-0088-1">1 Create a secret key</h1>
+<h2 id="section-0088-2">1 Macbook</h2>
+<p><strong>$ ssh-keygen - t rsa</strong><br/>Generating public/private rsa key pair.<br/>Enter file in which to save the key ($HOME/.ssh/id_rsa): <br/>Enter passphrase (empty for no passphrase): <br/>Enter same passphrase again: <br/>Your identification has been saved in $HOME/.ssh/id_rsa.<br/>Your public key has been saved in $HOME/.ssh/id_rsa.pub.<br/>The key fingerprint is:<br/>SHA256:HqDbdb3SyrM2pPj+rrZt0F34GUjVIlDpEKuTOT473KU you@HOST<br/>The key's randomart image is:<br/>+---[RSA 2048]----+<br/>| o+.o.. |<br/>| ..+ . .|<br/>| . .+ + . |<br/>| . . + .+ o |<br/>| . S....o o |<br/>| o +.=o.o.o |<br/>| . .o+=.oo |<br/>| . ==Eo |<br/>| +*OB+ |<br/>+----[SHA256]-----+</p>
+<p>$ ls - l .ssh<br/>total 24<br/>-rw------- 1 you staff 1876 Sep 11 23:07 id_rsa<br/><strong>-rw-r--r-- 1 you staff 404 Sep 11 23:07 id_rsa.pub</strong><br/>-rw-r--r-- 1 you staff 1046 Aug 3 10:06 known_hosts</p>
+<h2 id="section-0088-3">2 Windows</h2>
+<h3 id="section-0088-4">2.1 XShell</h3>
+<p><picture>
+<source srcset="../img/1509647-20191003220343687-1293180837.webp" type="image/webp"/>
+<img alt="" src="../img/1509647-20191003220343687-1293180837.png"/>
+</picture></p>
+<p> </p>
+<p> </p>
+<p> </p>
+<p><picture>
+<source srcset="../img/1509647-20191003220406614-955808315.webp" type="image/webp"/>
+<img alt="" src="../img/1509647-20191003220406614-955808315.png"/>
+</picture></p>
+<p> </p>
+<p> </p>
+<p> </p>
+<p><picture>
+<source srcset="../img/1509647-20191003220424927-1315078048.webp" type="image/webp"/>
+<img alt="" src="../img/1509647-20191003220424927-1315078048.png"/>
+</picture></p>
+<p> </p>
+<p> </p>
+<p> </p>
+<p><picture>
+<source srcset="../img/1509647-20191003220441175-498568229.webp" type="image/webp"/>
+<img alt="" src="../img/1509647-20191003220441175-498568229.png"/>
+</picture></p>
+<p> </p>
+<h3 id="section-0088-5">2.2 SecureCRT</h3>
+<p><picture>
+<source srcset="../img/1509647-20191003220513401-1968385514.webp" type="image/webp"/>
+<img alt="" src="../img/1509647-20191003220513401-1968385514.png"/>
+</picture></p>
+<p> </p>
+<p> </p>
+<p> </p>
+<p><picture>
+<source srcset="../img/1509647-20191003220529253-1749106090.webp" type="image/webp"/>
+<img alt="" src="../img/1509647-20191003220529253-1749106090.png"/>
+</picture></p>
+<p> </p>
+<p> </p>
+<p><picture>
+<source srcset="../img/1509647-20191003220541556-422703498.webp" type="image/webp"/>
+<img alt="" src="../img/1509647-20191003220541556-422703498.png"/>
+</picture></p>
+<p> </p>
+<p> </p>
+<p><picture>
+<source srcset="../img/1509647-20191003220553944-105499208.webp" type="image/webp"/>
+<img alt="" src="../img/1509647-20191003220553944-105499208.png"/>
+</picture></p>
+<p> </p>
+<p> </p>
+<p> </p>
+<p><picture>
+<source srcset="../img/1509647-20191003220606553-651898882.webp" type="image/webp"/>
+<img alt="" src="../img/1509647-20191003220606553-651898882.png"/>
+</picture></p>
+<p> </p>
+<h1 id="section-0088-6">2. Log in using secret key</h1>
+<h2 id="section-0088-7">1 Macbook</h2>
+<p>Default file name and path of the secret key</p>
+<p>$ vi /etc/ssh/ssh_config<br/># IdentityFile ~/.ssh/id_rsa<br/># IdentityFile ~/.ssh/id_dsa</p>
+<p>If the secret key is in the above path, you can log in directly.</p>
+<p>$ ssh you@1.1.1.1</p>
+<p>If the secret key is not in the above path, there are two methods:</p>
+<p>1) Specify the secret key path through -i</p>
+<p>$ ssh - i /path/to/id_rsa you<a class="external-link" href="mailto:www@39.100.3.162" rel="noopener nofollow">@1</a>.1.1.1</p>
+<p>2) Modify /etc/ssh/ssh_config</p>
+<h2 id="section-0088-8">2 Windows</h2>
+<h3 id="section-0088-9">2.1 XShell</h3>
+<p><picture>
+<source srcset="../img/1509647-20191003220712687-1353592688.webp" type="image/webp"/>
+<img alt="" src="../img/1509647-20191003220712687-1353592688.png"/>
+</picture></p>
+<p> </p>
+<h3 id="section-0088-10">2.2 SecureCRT</h3>
+<p><picture>
+<source srcset="../img/1509647-20191003220735936-816782486.webp" type="image/webp"/>
+<img alt="" src="../img/1509647-20191003220735936-816782486.png"/>
+</picture></p>
+<p> </p>
+</div>
+</div>
+<!-- Post Footer -->
+<div class="post-footer">
+<div class="post-navigation">
+<a class="nav-button" href="../blog.html">← Back to Home</a>
+<a class="nav-button" href="0089.html">Next Post →</a>
+</div>
+</div>
+</article>
+</div>
+</body>
+</html>

@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Common commands</title>
+<link href="../css/style3.css" rel="stylesheet"/>
+</head>
+<body>
+<div class="container">
+<!-- Header Navigation -->
+<div class="header">
+<h1><a href="../blog.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+</div>
+<!-- Post Container -->
+<article class="post">
+<!-- Post Header -->
+<div class="post-header">
+<h1>Common commands</h1>
+<div class="post-meta">
+<div class="post-meta-item">
+<span class="meta-icon">📅</span>
+<span>January 30, 2019</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">📖</span>
+<span>2 min read</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">👁️</span>
+<span>362 views</span>
+</div>
+</div>
+</div>
+<!-- Post Content -->
+<div class="post-content">
+<div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<h1>1 Disk, CPU, memory related</h1>
+<p>View all device information</p>
+<blockquote>
+<p># lspci</p>
+</blockquote>
+<p>View overall disk space usage</p>
+<blockquote>
+<p># df -h</p>
+</blockquote>
+<p>View disk partitions and file systems</p>
+<blockquote>
+<p># df -T</p>
+</blockquote>
+<p>Check the overall disk inode usage</p>
+<blockquote>
+<p># df -i</p>
+</blockquote>
+<p>View file details</p>
+<blockquote>
+<p># ls -l $path</p>
+</blockquote>
+<p>View file inode information</p>
+<blockquote>
+<p># ls -i $path<br/># stat $path</p>
+</blockquote>
+<p>View the disk usage of the specified directory, summarize by directory, the depth is 1</p>
+<blockquote>
+<p># du -h --max-depth=1 $path</p>
+<p># du -sh $path/*</p>
+</blockquote>
+<p>Search for the specified file by name in the specified directory</p>
+<blockquote>
+<p># find $path -name $file_name</p>
+</blockquote>
+<p>Find all files larger than 100M in the specified directory</p>
+<blockquote>
+<p>$ find $path -size +100M</p>
+</blockquote>
+<p>View disk io</p>
+<blockquote>
+<p># iostat</p>
+</blockquote>
+<p>Check disk read performance</p>
+<blockquote>
+<p># hdparm -t /dev/sda</p>
+</blockquote>
+<p>View disk statistics such as power-on time/interface type, etc.</p>
+<blockquote>
+<p># smartctl -a /dev/sda</p>
+</blockquote>
+<p>View CPU information</p>
+<blockquote>
+<p># cat /proc/cpuinfo</p>
+</blockquote>
+<p>Check the number of physical CPUs</p>
+<blockquote>
+<p># cat /proc/cpuinfo| grep "physical id"</p>
+</blockquote>
+<p>Check the number of cores in each physical CPU (i.e. the number of cores)</p>
+<blockquote>
+<p># cat /proc/cpuinfo| grep "cpu cores"</p>
+</blockquote>
+<p>Check the number of logical CPUs</p>
+<blockquote>
+<p># cat /proc/cpuinfo| grep "processor" </p>
+</blockquote>
+<p>View memory information</p>
+<blockquote>
+<p># cat /proc/meminfo</p>
+</blockquote>
+<p>View remaining memory</p>
+<blockquote>
+<p># free -m</p>
+</blockquote>
+<h1>2 Statistics, load, process related</h1>
+<p>View overall statistics, including processes, virtual memory, disk, and CPU</p>
+<blockquote>
+<p># vmstat</p>
+</blockquote>
+<p>View current load</p>
+<blockquote>
+<p># top</p>
+</blockquote>
+<p>Then enter M to sort by memory usage, enter P to sort by CPU usage, enter H to view threads, and enter c to switch to view detailed startup commands.</p>
+<p>Check the resource usage of all threads in a process</p>
+<blockquote>
+<p># top -H -p $pid</p>
+</blockquote>
+<p>The pid shown here is converted into hexadecimal</p>
+<blockquote>
+<p># echo 'obase=16;$pid'|bc</p>
+</blockquote>
+<p>Then search for the corresponding thread in jstack;</p>
+<p> </p>
+<p>View all current processes</p>
+<blockquote>
+<p># ps aux</p>
+</blockquote>
+<p>View all threads in the process</p>
+<blockquote>
+<p># ps -T -p $pid</p>
+</blockquote>
+<p>kill process</p>
+<blockquote>
+<p># kill $pid</p>
+</blockquote>
+<p>Force kill process</p>
+<blockquote>
+<p># kill -9 $pid</p>
+</blockquote>
+<h1>3 crontab related</h1>
+<p>View crontab</p>
+<blockquote>
+<p># crontab -l</p>
+</blockquote>
+<p>Edit crontab</p>
+<blockquote>
+<p># crontab -e</p>
+</blockquote>
+<p>View crontab log</p>
+<blockquote>
+<p># tail -f /var/log/cron</p>
+</blockquote>
+<h1>4 Network port related</h1>
+<p>View network information</p>
+<blockquote>
+<p># ifconfig</p>
+</blockquote>
+<p>View ip routing information</p>
+<blockquote>
+<p># ip route get 1</p>
+</blockquote>
+<p>Check the port bound to a certain process or which process a certain port is bound to.</p>
+<blockquote>
+<p># netstat -tnlp|grep $pid<br/># netstat -tnlp|grep $port</p>
+</blockquote>
+<p>Check port occupancy</p>
+<blockquote>
+<p># lsof -i:$port</p>
+</blockquote>
+<p>Check the binding and connection status of a certain port</p>
+<blockquote>
+<p># netstat -nat|grep $port</p>
+</blockquote>
+<p>Capture packets for ports</p>
+<blockquote>
+<p># tcpdump -i eth1 tcp port $port -Xxv</p>
+</blockquote>
+<p>Modify static ip</p>
+<blockquote>
+<p># vi /etc/sysconfig/network-scripts/ifcfg-ens33</p>
+<p>TYPE=Ethernet</p>
+<p>PROXY_METHOD=none</p>
+<p>BROWSER_ONLY=no</p>
+<p>BOOTPROTO=static</p>
+<p>IPADDR=192.168.1.252</p>
+<p>NETMAST=255.255.255.0</p>
+<p>GATEWAY=192.168.1.1</p>
+<p>DEFROUTE=yes</p>
+<p>IPV4_FAILURE_FATAL=no</p>
+<p>IPV6INIT=yes</p>
+<p>IPV6_AUTOCONF=yes</p>
+<p>IPV6_DEFROUTE=yes</p>
+<p>IPV6_FAILURE_FATAL=no</p>
+<p>IPV6_ADDR_GEN_MODE=stable-privacy</p>
+<p>NAME=ens33</p>
+<p>UUID=989f4fa4-d0d5-4592-8891-99a50a1bb4a7</p>
+<p>DEVICE=ens33</p>
+<p>ONBOOT=yes</p>
+<p># service network restart</p>
+</blockquote>
+<h1>5 Compression and decompression related</h1>
+<p>Make the directory into a tarball</p>
+<blockquote>
+<p>$ tar cvf $tar_name.tar $dir_name</p>
+<p>$ tar cvf $tar_name.tar $dir_name --exclude $exclude_file --exclude $exclude_dir</p>
+</blockquote>
+<p>Exclude specified directories</p>
+<blockquote>
+<p>$ tar cvf $tar_name.tar $dir_name --exclude $dir_name/$exclude_name</p>
+</blockquote>
+<p>Unzip the tarball</p>
+<blockquote>
+<p>$ tar xvf $tar_name.tar</p>
+</blockquote>
+<p>Unzip the tarball to the specified directory -C $target_dir</p>
+<p>Compress the tar file and get *.tar.gz</p>
+<blockquote>
+<p>$ gzip $tar_name.tar</p>
+</blockquote>
+<p>Unzip tar.gz</p>
+<blockquote>
+<p>$ tar xvf $tar_name.tar.gz</p>
+</blockquote>
+<p><br/>Make the specified directory into a zip package</p>
+<blockquote>
+<p>$ zip -r $zip_name.zip $dir_name</p>
+</blockquote>
+<p>Unzip the zip package</p>
+<blockquote>
+<p>$ unzip $zip_name.zip</p>
+</blockquote>
+<p>Unzip the zip package to the specified directory -d $target_dir</p>
+<h1>6 Software package related</h1>
+<p>View installed packages</p>
+<blockquote>
+<p># yum list installed</p>
+</blockquote>
+<p>Find packages</p>
+<blockquote>
+<p># yum search $name</p>
+</blockquote>
+<p>Install packages</p>
+<blockquote>
+<p># yum install $name</p>
+</blockquote>
+<p>Download the software package and all dependencies to the specified directory</p>
+<blockquote>
+<p># yum install --downloadonly --downloaddir=$dir $name</p>
+</blockquote>
+<p>Uninstall a package</p>
+<blockquote>
+<p># yum remove $name</p>
+</blockquote>
+<p>Check which package a command is in</p>
+<blockquote>
+<p># yum whatprovides $cmd</p>
+</blockquote>
+<p>rpm installation</p>
+<blockquote>
+<p># rpm -ivh $name.rpm</p>
+</blockquote>
+<p>yum install rpm package</p>
+<blockquote>
+<p># yum localinstall $name.rpm</p>
+</blockquote>
+<p>The difference between the above two is that yum localinstall will automatically install the discovered dependencies.</p>
+<p>rpm query installed</p>
+<blockquote>
+<p># rpm -qa | grep $name</p>
+</blockquote>
+<p>rpm uninstall</p>
+<blockquote>
+<p># rpm -e --nodeps $name</p>
+</blockquote>
+<h1>7 Shell related</h1>
+<p>View current Shell</p>
+<blockquote>
+<p># echo $SHELL</p>
+</blockquote>
+<p>View all shells</p>
+<blockquote>
+<p># cat /etc/shells</p>
+</blockquote>
+<p>Modify default Shell</p>
+<blockquote>
+<p># chsh -s /bin/zsh</p>
+</blockquote>
+<h1>8 others</h1>
+<p>Check which users are currently logged in</p>
+<blockquote>
+<p># w</p>
+</blockquote>
+<p>Switch to other users to execute commands</p>
+<blockquote>
+<p># su - $user -c 'whoami'</p>
+</blockquote>
+<p>Find where the command is</p>
+<blockquote>
+<p># whereis $cmd</p>
+</blockquote>
+<p>View command path</p>
+<blockquote>
+<p># which $cmd</p>
+</blockquote>
+<p>View previously executed commands</p>
+<blockquote>
+<p># history</p>
+</blockquote>
+<p>View system limits</p>
+<blockquote>
+<p># ulimit -a</p>
+</blockquote>
+<p>Execute commands in the background</p>
+<blockquote>
+<p># nohup $cmd $arg 1&gt;output.log 2&gt;&amp;1 &amp;</p>
+</blockquote>
+<p>Set time zone</p>
+<blockquote>
+<p># timedatectl set-timezone Asia/Shanghai</p>
+</blockquote>
+<p>copy</p>
+<blockquote>
+<p># cp -R /source /target</p>
+</blockquote>
+<p>Copy shows progress and speed</p>
+<blockquote>
+<p># rsync -rv --progress /source /target</p>
+</blockquote>
+<h1>6 more</h1>
+<p>iptables related:<br/><a href="https://www.cnblogs.com/barneywill/p/10263530.html" target="_blank">https://www.cnblogs.com/barneywill/p/10263530.html</a></p>
+<p>User group related:<br/><a href="https://www.cnblogs.com/barneywill/p/10303553.html" target="_blank">https://www.cnblogs.com/barneywill/p/10303553.html</a></p>
+<p>Text replacement related:<br/><a href="https://www.cnblogs.com/barneywill/p/10115539.html" target="_blank">https://www.cnblogs.com/barneywill/p/10115539.html</a></p>
+<p>ssh related:<br/><a href="https://www.cnblogs.com/barneywill/p/10271679.html" target="_blank">https://www.cnblogs.com/barneywill/p/10271679.html</a><br/><a href="https://www.cnblogs.com/barneywill/p/10331354.html" target="_blank">https://www.cnblogs.com/barneywill/p/10331354.html</a></p>
+<p>Background running related:<br/><a href="https://www.cnblogs.com/barneywill/p/10266211.html" target="_blank">https://www.cnblogs.com/barneywill/p/10266211.html</a></p>
+<p>Related to remote copying files:<br/><a href="https://www.cnblogs.com/barneywill/p/10115108.html" target="_blank">https://www.cnblogs.com/barneywill/p/10115108.html</a></p>
+<p>Check the release version:<br/><a href="https://www.cnblogs.com/barneywill/p/10251262.html" target="_blank">https://www.cnblogs.com/barneywill/p/10251262.html</a></p>
+<p>Upload and download related:<br/><a href="https://www.cnblogs.com/barneywill/p/10265704.html" target="_blank">https://www.cnblogs.com/barneywill/p/10265704.html</a></p>
+<p>sudo related:<br/><a href="https://www.cnblogs.com/barneywill/p/10272455.html" target="_blank">https://www.cnblogs.com/barneywill/p/10272455.html</a></p>
+<p>curl related:<br/><a href="https://www.cnblogs.com/barneywill/p/10279555.html" target="_blank">https://www.cnblogs.com/barneywill/p/10279555.html</a></p>
+<p>Related to mounting hard disk:</p>
+<p><a href="https://www.cnblogs.com/barneywill/p/10365848.html" target="_blank">https://www.cnblogs.com/barneywill/p/10365848.html</a></p>
+<p>Connectivity related:</p>
+<p><a href="https://www.cnblogs.com/barneywill/p/10386968.html" target="_blank">https://www.cnblogs.com/barneywill/p/10386968.html</a></p>
+</div>
+</div>
+<!-- Post Footer -->
+<div class="post-footer">
+<div class="post-navigation">
+<a class="nav-button" href="../blog.html">← Back to Home</a>
+<a class="nav-button" href="0240.html">Next Post →</a>
+</div>
+</div>
+</article>
+</div>
+</body>
+</html>

@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Hive Chinese annotation garbled code</title>
+<link href="../css/style3.css" rel="stylesheet"/>
+</head>
+<body>
+<div class="container">
+<!-- Header Navigation -->
+<div class="header">
+<h1><a href="../blog.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+</div>
+<!-- Post Container -->
+<article class="post">
+<!-- Post Header -->
+<div class="post-header">
+<h1>Hive Chinese annotation garbled code</h1>
+<div class="post-meta">
+<div class="post-meta-item">
+<span class="meta-icon">📅</span>
+<span>February 26, 2019</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">📖</span>
+<span>1 min read</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">👁️</span>
+<span>819 views</span>
+</div>
+</div>
+</div>
+<!-- Post Content -->
+<div class="post-content">
+<div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<p>When viewing the table structure in Hive, the Chinese comments are garbled. There are two situations, one is desc $table, and the other is show create table $table.</p>
+<h1>1 database character set</h1>
+<p>examine</p>
+<blockquote>
+<p>mysql&gt; show variables like '%char%';<br/>mysql&gt; show create table COLUMNS_V2;<br/>mysql&gt; show create table TABLE_PARAMS;</p>
+</blockquote>
+<p>Revise</p>
+<blockquote>
+<p>mysql&gt; alter database hive character set latin1; <br/>mysql&gt; alter table COLUMNS_V2 modify column COMMENT varchar(256) character set utf8;<br/>mysql&gt; alter table TABLE_PARAMS modify column PARAM_VALUE varchar(4000) character set utf8;</p>
+</blockquote>
+<p>At this time, desc $table should be able to display Chinese normally, but show create table $table is still garbled. At this time, there are two options:</p>
+<h2>2.1 Continue to use Hive</h2>
+<p>Modify org.apache.hadoop.Hive.ql.exec.DDLTask,</p>
+<blockquote>
+<p>outStream.writeBytes(createTab_stmt.toString());<br/>-&gt;<br/>outStream.write(createTab_stmt.toString().getBytes(“UTF-8”));</p>
+<p>outStream.writeBytes(createTab_stmt.render());<br/>-&gt;<br/>outStream.write(createTab_stmt.render().getBytes(“UTF-8”));</p>
+</blockquote>
+<p>And repackage and replace Hive-exec.jar. It is not recommended to change too much.</p>
+<h2>2.2 Use Spark-SQL or beeline to connect to Spark thrift server</h2>
+<p> </p>
+</div>
+</div>
+<!-- Post Footer -->
+<div class="post-footer">
+<div class="post-navigation">
+<a class="nav-button" href="../blog.html">← Back to Home</a>
+<a class="nav-button" href="0203.html">Next Post →</a>
+</div>
+</div>
+</article>
+</div>
+</body>
+</html>

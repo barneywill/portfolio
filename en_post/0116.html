@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Using JVM tool in Docker container</title>
+<link href="../css/style3.css" rel="stylesheet"/>
+</head>
+<body>
+<div class="container">
+<!-- Header Navigation -->
+<div class="header">
+<h1><a href="../blog.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+</div>
+<!-- Post Container -->
+<article class="post">
+<!-- Post Header -->
+<div class="post-header">
+<h1>Using JVM tool in Docker container</h1>
+<div class="post-meta">
+<div class="post-meta-item">
+<span class="meta-icon">📅</span>
+<span>June 15, 2019</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">📖</span>
+<span>3 min read</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">👁️</span>
+<span>1804 views</span>
+</div>
+</div>
+</div>
+<!-- Post Content -->
+<div class="post-content">
+<div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<p>Java applications often need to use JVM tools to perform some operations. If the Java application is deployed in a Docker container, how to use the JVM tool?</p>
+<p>First, we need to look at the Docker image used.</p>
+<ul>
+<li>For example, commonly used openjdk images are divided into jdk and jre. Only the jdk version has JVM tools, so you can directly use the jdk version of openjdk;</li>
+<li>For example, the commonly used tomcat image does not have jdk and jre options. By default, jre is used, so there is no JVM tool. The jdk directory in the tomcat image is as follows:</li>
+</ul>
+<div class="cnblogs_code">
+<pre><span style="color: rgba(0, 128, 0, 1)">#</span><span style="color: rgba(0, 128, 0, 1)"> ls /usr/lib/jvm/java-1.8-openjdk</span>
+<span style="color: rgba(0, 0, 0, 1)">bin  jre  lib
+</span><span style="color: rgba(0, 128, 0, 1)">#</span><span style="color: rgba(0, 128, 0, 1)"> ls /usr/lib/jvm/java-1.8-openjdk/bin</span>
+<span style="color: rgba(0, 0, 0, 1)">appletviewer  orbd          rmid          tnameserv
+java          pack200       rmiregistry   unpack200
+keytool       policytool    servertool
+</span><span style="color: rgba(0, 128, 0, 1)">#</span><span style="color: rgba(0, 128, 0, 1)"> ls /usr/lib/jvm/java-1.8-openjdk/lib</span>
+amd64</pre>
+</div>
+<p>At this time, you can use the mounting method to mount the jdk file into the container and then execute it. First, you must find the corresponding jdk file. The first step is to find the operating system version of the current container.</p>
+<p> </p>
+<p>Several common versions:</p>
+<p>Alpine</p>
+<div class="cnblogs_code">
+<pre>cat /etc/os-<span style="color: rgba(0, 0, 0, 1)">release
+NAME</span>=<span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">Alpine Linux</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">
+ID</span>=<span style="color: rgba(0, 0, 0, 1)">alpine
+VERSION_ID</span>=3.9.3<span style="color: rgba(0, 0, 0, 1)">
+PRETTY_NAME</span>=<span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">Alpine Linux v3.9</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">
+HOME_URL</span>=<span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">https://alpinelinux.org/</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">
+BUG_REPORT_URL</span>=<span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">https://bugs.alpinelinux.org/</span><span style="color: rgba(128, 0, 0, 1)">"</span></pre>
+</div>
+<p>Debian</p>
+<div class="cnblogs_code">
+<pre><span style="color: rgba(0, 128, 0, 1)">#</span><span style="color: rgba(0, 128, 0, 1)"> cat /etc/os-release</span>
+PRETTY_NAME=<span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">Debian GNU/Linux 9 (stretch)</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">
+NAME</span>=<span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">Debian GNU/Linux</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">
+VERSION_ID</span>=<span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">9</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">
+VERSION</span>=<span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">9 (stretch)</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">
+ID</span>=<span style="color: rgba(0, 0, 0, 1)">debian
+HOME_URL</span>=<span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">https://www.debian.org/</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">
+SUPPORT_URL</span>=<span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">https://www.debian.org/support</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">
+BUG_REPORT_URL</span>=<span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">https://bugs.debian.org/</span><span style="color: rgba(128, 0, 0, 1)">"</span></pre>
+</div>
+<p>Centos</p>
+<div class="cnblogs_code">
+<pre><span style="color: rgba(0, 128, 0, 1)">#</span><span style="color: rgba(0, 128, 0, 1)"> cat /etc/os-release</span>
+NAME=<span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">CentOS Linux</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">
+VERSION</span>=<span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">7 (Core)</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">
+ID</span>=<span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">centos</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">
+ID_LIKE</span>=<span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">rhel fedora</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">
+VERSION_ID</span>=<span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">7</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">
+PRETTY_NAME</span>=<span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">CentOS Linux 7 (Core)</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">
+ANSI_COLOR</span>=<span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">0;31</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">
+CPE_NAME</span>=<span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">cpe:/o:centos:centos:7</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">
+HOME_URL</span>=<span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">https://www.centos.org/</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">
+BUG_REPORT_URL</span>=<span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">https://bugs.centos.org/</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">
+
+CENTOS_MANTISBT_PROJECT</span>=<span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">CentOS-7</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">
+CENTOS_MANTISBT_PROJECT_VERSION</span>=<span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">7</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">
+REDHAT_SUPPORT_PRODUCT</span>=<span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">centos</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">
+REDHAT_SUPPORT_PRODUCT_VERSION</span>=<span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">7</span><span style="color: rgba(128, 0, 0, 1)">"</span></pre>
+</div>
+<p> </p>
+<p>Then find the corresponding jdk image according to the operating system version, such as openjdk</p>
+<blockquote>
+<p>openjdk:&lt;version&gt; based on debian<br/>openjdk:&lt;version&gt;-alpine Based on alpine</p>
+</blockquote>
+<p>The tomcat image is based on alpine, so download openjdk:8-jdk-alpine. 8 is the specific jdk version. After downloading, copy the jdk directory.</p>
+<blockquote>
+<p>/usr/lib/jvm/java-1.8-openjdk/</p>
+</blockquote>
+<p>If you want to use JVM tools, there are several ways:</p>
+<ul>
+<li>Copy files directly to the container;</li>
+<li>Mount the required files into the container;</li>
+<li>Mount the jdk directory into the container and directly replace the original jdk directory;</li>
+</ul>
+<p>The first two methods only require a few files, one is $JAVA_HOME/lib/tools.jar, and the other is specific JVM tools such as jmap, jstack, jstat, etc. in $JAVA_HOME/bin/. Copy or mount the files to the specified location in the container to use;</p>
+<p>The last one is the simplest. All JVM tools can be used after mounting the jdk directory;</p>
+<div class="cnblogs_code">
+<pre><span style="color: rgba(0, 128, 0, 1)">#</span><span style="color: rgba(0, 128, 0, 1)"> docker exec - it $container_id jstat - gcutil $pid</span>
+<span style="color: rgba(0, 0, 0, 1)">  S0     S1     E      O      M     CCS    YGC     YGCT    FGC    FGCT     GCT
+  </span>0.00 100.00  73.20  60.74  95.79  93.92    417    3.163     8    1.213    4.376</pre>
+</div>
+<p> </p>
+<p>refer to:</p>
+<p>https://hub.docker.com/_/openjdk</p>
+<p>https://hub.docker.com/_/tomcat</p>
+<p> </p>
+</div>
+</div>
+<!-- Post Footer -->
+<div class="post-footer">
+<div class="post-navigation">
+<a class="nav-button" href="../blog.html">← Back to Home</a>
+<a class="nav-button" href="0117.html">Next Post →</a>
+</div>
+</div>
+</article>
+</div>
+</body>
+</html>

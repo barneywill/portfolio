@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Commonly used JVM tools for Java basics</title>
+<link href="../css/style3.css" rel="stylesheet"/>
+</head>
+<body>
+<div class="container">
+<!-- Header Navigation -->
+<div class="header">
+<h1><a href="../blog.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+</div>
+<!-- Post Container -->
+<article class="post">
+<!-- Post Header -->
+<div class="post-header">
+<h1>Commonly used JVM tools for Java basics</h1>
+<div class="post-meta">
+<div class="post-meta-item">
+<span class="meta-icon">📅</span>
+<span>January 30, 2019</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">📖</span>
+<span>1 min read</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">👁️</span>
+<span>327 views</span>
+</div>
+</div>
+</div>
+<!-- Post Content -->
+<div class="post-content">
+<div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<p>View all current Java processes</p>
+<blockquote>
+<p># jps</p>
+</blockquote>
+<p>Check the heap memory usage of a process</p>
+<blockquote>
+<p># jmap - heap $pid</p>
+</blockquote>
+<p>Check the distribution of objects in the heap memory of a process</p>
+<blockquote>
+<p># jmap - histo $pid</p>
+</blockquote>
+<p>Export the heap memory of a process to a file</p>
+<blockquote>
+<p># jmap - dump:format=b,file=test.dump $pid</p>
+</blockquote>
+<p>Analyze heap memory export file</p>
+<blockquote>
+<p># jhat test.dump</p>
+</blockquote>
+<p>You can also use eclipse Memory Analyzer: http://www.eclipse.org/mat/</p>
+<p>Check the gc status of a process</p>
+<blockquote>
+<p># jstat - gcutil $pid</p>
+</blockquote>
+<p>View the thread stack of a process</p>
+<blockquote>
+<p># jstack $pid</p>
+</blockquote>
+<p>View the signature of a class in a jar package</p>
+<blockquote>
+<p># javap - cp $jar_path $class_name</p>
+</blockquote>
+<p>View all files (classes, configurations, etc.) in a jar, equivalent to list</p>
+<blockquote>
+<p># vim $jar_name</p>
+<p>or</p>
+<p># unzip - l $jar_name</p>
+</blockquote>
+<p> </p>
+</div>
+</div>
+<!-- Post Footer -->
+<div class="post-footer">
+<div class="post-navigation">
+<a class="nav-button" href="../blog.html">← Back to Home</a>
+<a class="nav-button" href="0239.html">Next Post →</a>
+</div>
+</div>
+</article>
+</div>
+</body>
+</html>

@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Bluetooth Devices Frequently Disconnect on Linux</title>
+<link href="../css/style3.css" rel="stylesheet"/>
+</head>
+<body>
+<div class="container">
+<!-- Header Navigation -->
+<div class="header">
+<h1><a href="../blog.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+</div>
+<!-- Post Container -->
+<article class="post">
+<!-- Post Header -->
+<div class="post-header">
+<h1>Bluetooth Devices Frequently Disconnect on Linux</h1>
+<div class="post-meta">
+<div class="post-meta-item">
+<span class="meta-icon">📅</span>
+<span>December 13, 2020</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">📖</span>
+<span>1 min read</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">👁️</span>
+<span>2408 views</span>
+</div>
+</div>
+</div>
+<!-- Post Content -->
+<div class="post-content">
+<div class="blogpost-body cnblogs-markdown" id="cnblogs_post_body">
+<p>After the Linux system has been running for a period of time, the Bluetooth device fails, but the connection status is still displayed in the system. At this time, you need to turn off and on Bluetooth and then reconnect the device to restore it.</p>
+<p>To completely solve the problem, you need to modify grub</p>
+<pre><code># vim /etc/default/grub
+GRUB_CMDLINE_LINUX="usbcore.autosuspend=-1 "
+</code></pre>
+<p>Update after modification</p>
+<pre><code># grub-update
+</code></pre>
+<p>If there is no grub-update command, such as opensuse, use the following command</p>
+<pre><code># grub2-mkconfig - o /boot/grub2/grub.cfg
+</code></pre>
+<p>Restart the system after making changes</p>
+<pre><code># reboot
+</code></pre>
+<p>Then check whether it takes effect</p>
+<pre><code># cat /sys/module/usbcore/parameters/autosuspend
+-1
+</code></pre>
+</div>
+</div>
+<!-- Post Footer -->
+<div class="post-footer">
+<div class="post-navigation">
+<a class="nav-button" href="../blog.html">← Back to Home</a>
+<a class="nav-button" href="0047.html">Next Post →</a>
+</div>
+</div>
+</article>
+</div>
+</body>
+</html>

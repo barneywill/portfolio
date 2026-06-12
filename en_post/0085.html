@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Jenkins Appears Hung</title>
+<link href="../css/style3.css" rel="stylesheet"/>
+</head>
+<body>
+<div class="container">
+<!-- Header Navigation -->
+<div class="header">
+<h1><a href="../blog.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+</div>
+<!-- Post Container -->
+<article class="post">
+<!-- Post Header -->
+<div class="post-header">
+<h1>Jenkins Appears Hung</h1>
+<div class="post-meta">
+<div class="post-meta-item">
+<span class="meta-icon">📅</span>
+<span>October 31, 2019</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">📖</span>
+<span>1 min read</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">👁️</span>
+<span>1274 views</span>
+</div>
+</div>
+</div>
+<!-- Post Content -->
+<div class="post-content">
+<div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<p>After jenkins is installed and started, use systemctl to monitor the process.</p>
+<blockquote>
+<p># systemctl enable jenkins</p>
+</blockquote>
+<p>However, the Jenkins process still often hangs and will not restart automatically. The status checked through systemctl is:</p>
+<blockquote>
+<p># systemctl status jenkins</p>
+<p>● jenkins.service - LSB: Jenkins Automation Server</p>
+<p>   Loaded: loaded (/etc/rc.d/init.d/jenkins; bad; vendor preset: disabled)</p>
+<p>   Active: active (exited) since Tue 2019-09-24 18:52:26 CST; 1 months 1 days ago</p>
+<p>     Docs: man:systemd-sysv-generator(8)</p>
+<p>    Tasks: 0</p>
+<p>   Memory: 0B</p>
+</blockquote>
+<p>There is no abnormality in the logs. The possible reasons are as follows:</p>
+<p>Possibly the Linux kernel's <strong>oom-killer</strong> ("out-of memory killer") killed your JVM. It sends a SIGKILL signal to selected processes if the physical memory is no longer sufficient to accomodate all processes. Check that output of <code>journalctl</code> for lines containing the string <code>oom-killer</code> to confirm.</p>
+<p><strong>It is normal that the oom-killer strikes only after a certain period</strong>. Normally, Linux does not impose restrictions on the amount of virtual memory that a process requests (so your JVM can easily allocate 2 GiB of RAM on a 512 MiB system). However, if the process starts actually using the allocated memory (in your case: amount of used heap grows), then the kernel may find that the amount of physical memory is no longer sufficient. This is the point where the oom-killer will select a promising candiate process to be killed. Jenkins, as a non-system process that consumes a lot of memory, has very good chances to be the one that will be killed.</p>
+<p><strong>You can solve the situation by</strong></p>
+<ul>
+<li>adding more physical memory to your system</li>
+<li>reducing JVM memory settings (e.g., smaller heap)</li>
+</ul>
+<p>Modify the memory occupied by jenkins</p>
+<blockquote>
+<p># vi /etc/sysconfig/jenkins</p>
+<p>JENKINS_JAVA_OPTIONS="-Xmx512m"</p>
+</blockquote>
+<p> </p>
+<p>Reference: https://stackoverflow.com/questions/42607771/jenkins-active-exited</p>
+<p> </p>
+</div>
+</div>
+<!-- Post Footer -->
+<div class="post-footer">
+<div class="post-navigation">
+<a class="nav-button" href="../blog.html">← Back to Home</a>
+<a class="nav-button" href="0086.html">Next Post →</a>
+</div>
+</div>
+</article>
+</div>
+</body>
+</html>

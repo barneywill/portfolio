@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Number of copies of Kudu</title>
+<link href="../css/style3.css" rel="stylesheet"/>
+</head>
+<body>
+<div class="container">
+<!-- Header Navigation -->
+<div class="header">
+<h1><a href="../blog.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+</div>
+<!-- Post Container -->
+<article class="post">
+<!-- Post Header -->
+<div class="post-header">
+<h1>Number of copies of Kudu</h1>
+<div class="post-meta">
+<div class="post-meta-item">
+<span class="meta-icon">📅</span>
+<span>May 27, 2019</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">📖</span>
+<span>1 min read</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">👁️</span>
+<span>2834 views</span>
+</div>
+</div>
+</div>
+<!-- Post Content -->
+<div class="post-content">
+<div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<p>The number of copies of Kudu is set on the table and can be viewed through the command</p>
+<div class="cnblogs_code">
+<pre><span style="color: rgba(0, 128, 0, 1)">#</span><span style="color: rgba(0, 128, 0, 1)"> sudo - u kudu kudu cluster ksck $master</span>
+<span style="color: rgba(0, 0, 0, 1)">...
+Summary by table
+            Name            </span>| RF | Status  | Total Tablets | Healthy | Recovering | Under-replicated |<span style="color: rgba(0, 0, 0, 1)"> Unavailable
+</span>----------------------------------------------------------+----+---------+---------------+---------+------------+------------------+-------------<span style="color: rgba(0, 0, 0, 1)">
+ impala::test_db.test_table </span>| 3  | HEALTHY | 4             | 4       | 0          | 0                |<span style="color: rgba(0, 0, 0, 1)"> 0
+...</span></pre>
+</div>
+<p>RF is replication factor;</p>
+<p> </p>
+<p>The number of replicas can only be specified when creating the table and cannot be modified after creation, and the number of replicas must be an odd number.</p>
+<p><em>By default, Kudu tables created through Impala use a tablet replication factor of 3. To specify the replication factor for a Kudu table, add a TBLPROPERTIES clause to the CREATE TABLE statement as shown below where n is the replication factor you want to use:</em></p>
+<blockquote>
+<p><em>TBLPROPERTIES ('kudu.num_tablet_replicas' = 'n')</em></p>
+</blockquote>
+<p><em>A replication factor must be an odd number.</em></p>
+<p><em>Changing the kudu.num_tablet_replicas table property using ALTER TABLE currently has no effect.</em></p>
+<p> </p>
+<p>refer to:<br/>https://kudu.apache.org/docs/kudu_impala_integration.html</p>
+<p> </p>
+</div>
+</div>
+<!-- Post Footer -->
+<div class="post-footer">
+<div class="post-navigation">
+<a class="nav-button" href="../blog.html">← Back to Home</a>
+<a class="nav-button" href="0130.html">Next Post →</a>
+</div>
+</div>
+</article>
+</div>
+</body>
+</html>

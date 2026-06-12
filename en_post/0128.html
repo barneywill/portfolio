@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>kudu vs parquet</title>
+<link href="../css/style3.css" rel="stylesheet"/>
+</head>
+<body>
+<div class="container">
+<!-- Header Navigation -->
+<div class="header">
+<h1><a href="../blog.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+</div>
+<!-- Post Container -->
+<article class="post">
+<!-- Post Header -->
+<div class="post-header">
+<h1>kudu vs parquet</h1>
+<div class="post-meta">
+<div class="post-meta-item">
+<span class="meta-icon">📅</span>
+<span>May 27, 2019</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">📖</span>
+<span>1 min read</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">👁️</span>
+<span>1847 views</span>
+</div>
+</div>
+</div>
+<!-- Post Content -->
+<div class="post-content">
+<div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<h1>A comparison</h1>
+<p>Storage space comparison:</p>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201905/1509647-20190527173851357-1924966828.png"/></p>
+<p>Query performance comparison:</p>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201905/1509647-20190527174116841-786786839.png"/></p>
+<p> </p>
+<h1>2. Design plan</h1>
+<p>Split the data into: historical data (HDFS+Parquet+snappy) + recent data (Kudu), which can have various advantages:</p>
+<ul>
+<li>1) Overall disk usage is less than 10%;</li>
+<li>2) Less time-consuming query;</li>
+<li>3) Recent data is updated in real time;</li>
+<li>4) Recent data can be modified;</li>
+<li>5) The Kudu cluster restart time is reduced by 90%;</li>
+<li>6) Impala parallel scan: scan Kudu + scan HDFS;</li>
+</ul>
+<p> </p>
+<h1>Three transformation plans</h1>
+<p>Take advantage of views</p>
+<blockquote>
+<p>create view v_table as<br/>select * from parquet_table where dt &lt; 'seven days ago'<br/>union all<br/>select * from kudu_table where dt &gt;= 'seven days ago';</p>
+</blockquote>
+<p>The client can replace kudu_table with v_table;</p>
+<p> </p>
+<h1>Four others</h1>
+<p>Kudu question:</p>
+<ul>
+<li>The Kudu client version used by Flume Kudu sink is too low and has bugs. The token will not be automatically refreshed and an error will be reported after 7 days because the token is invalid. The bug can be solved after upgrading Kudu client, but the guava library version used by Kudu client and Flume is conflicting;</li>
+<li>After partitioning by dt, the number of tablets is too large, the disk space is too large, and the memory is too much;</li>
+<li>Because of the large number of tablets and large disk space, it takes 10-20 minutes to initialize each time the Kudu cluster is restarted;</li>
+<li>When Kudu takes up too much memory, it will refuse write operations;</li>
+<li>Using Kudu as a single data warehouse supports writing and querying at the same time, which can easily affect each other. A large number of writes will affect queries, and a large number of queries will affect writes, which will lead to data loss or slow query;</li>
+<li>Kudu supports updates. All data can be deleted with a delete or drop, which is more dangerous as a single data warehouse;</li>
+</ul>
+<p> </p>
+</div>
+</div>
+<!-- Post Footer -->
+<div class="post-footer">
+<div class="post-navigation">
+<a class="nav-button" href="../blog.html">← Back to Home</a>
+<a class="nav-button" href="0129.html">Next Post →</a>
+</div>
+</div>
+</article>
+</div>
+</body>
+</html>

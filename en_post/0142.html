@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Flume Kudu sink runs for a while and Kudu client reports an error</title>
+<link href="../css/style3.css" rel="stylesheet"/>
+</head>
+<body>
+<div class="container">
+<!-- Header Navigation -->
+<div class="header">
+<h1><a href="../blog.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+</div>
+<!-- Post Container -->
+<article class="post">
+<!-- Post Header -->
+<div class="post-header">
+<h1>Flume Kudu sink runs for a while and Kudu client reports an error</h1>
+<div class="post-meta">
+<div class="post-meta-item">
+<span class="meta-icon">📅</span>
+<span>May 06, 2019</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">📖</span>
+<span>8 min read</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">👁️</span>
+<span>1196 views</span>
+</div>
+</div>
+</div>
+<!-- Post Content -->
+<div class="post-content">
+<div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<p>Flume Kudu sink reports an error after running for a while:</p>
+<div class="cnblogs_code">
+<pre>19/05/05 10:15:56 WARN client.ConnectToCluster: Error receiving a response <span style="color: rgba(0, 0, 255, 1)">from</span>: master:7051<span style="color: rgba(0, 0, 0, 1)">
+org.apache.kudu.client.RecoverableException: [Peer master</span>-master:7051<span style="color: rgba(0, 0, 0, 1)">] Connection disconnected
+    at org.apache.kudu.client.TabletClient.cleanup(TabletClient.java:</span>657<span style="color: rgba(0, 0, 0, 1)">)
+    at org.apache.kudu.client.TabletClient.channelDisconnected(TabletClient.java:</span>610<span style="color: rgba(0, 0, 0, 1)">)
+    at org.apache.kudu.client.shaded.org.jboss.netty.channel.SimpleChannelUpstreamHandler.handleUpstream(SimpleChannelUpstreamHandler.java:</span>102<span style="color: rgba(0, 0, 0, 1)">)
+    at org.apache.kudu.client.TabletClient.handleUpstream(TabletClient.java:</span>603<span style="color: rgba(0, 0, 0, 1)">)
+    at org.apache.kudu.client.shaded.org.jboss.netty.channel.DefaultChannelPipeline.sendUpstream(DefaultChannelPipeline.java:</span>564<span style="color: rgba(0, 0, 0, 1)">)
+    at org.apache.kudu.client.shaded.org.jboss.netty.channel.DefaultChannelPipeline$DefaultChannelHandlerContext.sendUpstream(DefaultChannelPipeline.java:</span>791<span style="color: rgba(0, 0, 0, 1)">)
+    at org.apache.kudu.client.shaded.org.jboss.netty.channel.SimpleChannelUpstreamHandler.channelDisconnected(SimpleChannelUpstreamHandler.java:</span>208<span style="color: rgba(0, 0, 0, 1)">)
+    at org.apache.kudu.client.shaded.org.jboss.netty.channel.SimpleChannelUpstreamHandler.handleUpstream(SimpleChannelUpstreamHandler.java:</span>102<span style="color: rgba(0, 0, 0, 1)">)
+    at org.apache.kudu.client.shaded.org.jboss.netty.channel.DefaultChannelPipeline.sendUpstream(DefaultChannelPipeline.java:</span>564<span style="color: rgba(0, 0, 0, 1)">)
+    at org.apache.kudu.client.shaded.org.jboss.netty.channel.DefaultChannelPipeline$DefaultChannelHandlerContext.sendUpstream(DefaultChannelPipeline.java:</span>791<span style="color: rgba(0, 0, 0, 1)">)
+    at org.apache.kudu.client.shaded.org.jboss.netty.channel.SimpleChannelUpstreamHandler.channelDisconnected(SimpleChannelUpstreamHandler.java:</span>208<span style="color: rgba(0, 0, 0, 1)">)
+    at org.apache.kudu.client.shaded.org.jboss.netty.channel.SimpleChannelUpstreamHandler.handleUpstream(SimpleChannelUpstreamHandler.java:</span>102<span style="color: rgba(0, 0, 0, 1)">)
+    at org.apache.kudu.client.shaded.org.jboss.netty.channel.DefaultChannelPipeline.sendUpstream(DefaultChannelPipeline.java:</span>564<span style="color: rgba(0, 0, 0, 1)">)
+    at org.apache.kudu.client.shaded.org.jboss.netty.channel.DefaultChannelPipeline$DefaultChannelHandlerContext.sendUpstream(DefaultChannelPipeline.java:</span>791<span style="color: rgba(0, 0, 0, 1)">)
+    at org.apache.kudu.client.shaded.org.jboss.netty.handler.codec.oneone.OneToOneDecoder.handleUpstream(OneToOneDecoder.java:</span>60<span style="color: rgba(0, 0, 0, 1)">)
+    at org.apache.kudu.client.shaded.org.jboss.netty.channel.DefaultChannelPipeline.sendUpstream(DefaultChannelPipeline.java:</span>564<span style="color: rgba(0, 0, 0, 1)">)
+    at org.apache.kudu.client.shaded.org.jboss.netty.channel.DefaultChannelPipeline$DefaultChannelHandlerContext.sendUpstream(DefaultChannelPipeline.java:</span>791<span style="color: rgba(0, 0, 0, 1)">)
+    at org.apache.kudu.client.shaded.org.jboss.netty.handler.codec.frame.FrameDecoder.cleanup(FrameDecoder.java:</span>493<span style="color: rgba(0, 0, 0, 1)">)
+    at org.apache.kudu.client.shaded.org.jboss.netty.handler.codec.frame.FrameDecoder.channelDisconnected(FrameDecoder.java:</span>365<span style="color: rgba(0, 0, 0, 1)">)
+    at org.apache.kudu.client.shaded.org.jboss.netty.channel.SimpleChannelUpstreamHandler.handleUpstream(SimpleChannelUpstreamHandler.java:</span>102<span style="color: rgba(0, 0, 0, 1)">)
+    at org.apache.kudu.client.shaded.org.jboss.netty.channel.DefaultChannelPipeline.sendUpstream(DefaultChannelPipeline.java:</span>564<span style="color: rgba(0, 0, 0, 1)">)
+    at org.apache.kudu.client.shaded.org.jboss.netty.channel.DefaultChannelPipeline$DefaultChannelHandlerContext.sendUpstream(DefaultChannelPipeline.java:</span>791<span style="color: rgba(0, 0, 0, 1)">)
+    at org.apache.kudu.client.shaded.org.jboss.netty.handler.codec.frame.FrameDecoder.cleanup(FrameDecoder.java:</span>493<span style="color: rgba(0, 0, 0, 1)">)
+    at org.apache.kudu.client.shaded.org.jboss.netty.handler.codec.frame.FrameDecoder.channelDisconnected(FrameDecoder.java:</span>365<span style="color: rgba(0, 0, 0, 1)">)
+    at org.apache.kudu.client.shaded.org.jboss.netty.handler.ssl.SslHandler.channelDisconnected(SslHandler.java:</span>580<span style="color: rgba(0, 0, 0, 1)">)
+    at org.apache.kudu.client.shaded.org.jboss.netty.channel.SimpleChannelUpstreamHandler.handleUpstream(SimpleChannelUpstreamHandler.java:</span>102<span style="color: rgba(0, 0, 0, 1)">)
+    at org.apache.kudu.client.shaded.org.jboss.netty.channel.DefaultChannelPipeline.sendUpstream(DefaultChannelPipeline.java:</span>564<span style="color: rgba(0, 0, 0, 1)">)
+    at org.apache.kudu.client.shaded.org.jboss.netty.channel.DefaultChannelPipeline.sendUpstream(DefaultChannelPipeline.java:</span>559<span style="color: rgba(0, 0, 0, 1)">)
+    at org.apache.kudu.client.shaded.org.jboss.netty.channel.Channels.fireChannelDisconnected(Channels.java:</span>396<span style="color: rgba(0, 0, 0, 1)">)
+    at org.apache.kudu.client.shaded.org.jboss.netty.channel.socket.nio.AbstractNioWorker.close(AbstractNioWorker.java:</span>360<span style="color: rgba(0, 0, 0, 1)">)
+    at org.apache.kudu.client.shaded.org.jboss.netty.channel.socket.nio.NioClientSocketPipelineSink.eventSunk(NioClientSocketPipelineSink.java:</span>58<span style="color: rgba(0, 0, 0, 1)">)
+    at org.apache.kudu.client.shaded.org.jboss.netty.channel.DefaultChannelPipeline$DefaultChannelHandlerContext.sendDownstream(DefaultChannelPipeline.java:</span>779<span style="color: rgba(0, 0, 0, 1)">)
+    at org.apache.kudu.client.shaded.org.jboss.netty.handler.ssl.SslHandler.closeOutboundAndChannel(SslHandler.java:</span>1513<span style="color: rgba(0, 0, 0, 1)">)
+    at org.apache.kudu.client.shaded.org.jboss.netty.handler.ssl.SslHandler.handleDownstream(SslHandler.java:</span>514<span style="color: rgba(0, 0, 0, 1)">)
+    at org.apache.kudu.client.shaded.org.jboss.netty.channel.DefaultChannelPipeline.sendDownstream(DefaultChannelPipeline.java:</span>591<span style="color: rgba(0, 0, 0, 1)">)
+    at org.apache.kudu.client.shaded.org.jboss.netty.channel.DefaultChannelPipeline$DefaultChannelHandlerContext.sendDownstream(DefaultChannelPipeline.java:</span>784<span style="color: rgba(0, 0, 0, 1)">)
+    at org.apache.kudu.client.shaded.org.jboss.netty.handler.codec.oneone.OneToOneEncoder.handleDownstream(OneToOneEncoder.java:</span>54<span style="color: rgba(0, 0, 0, 1)">)
+    at org.apache.kudu.client.shaded.org.jboss.netty.channel.DefaultChannelPipeline.sendDownstream(DefaultChannelPipeline.java:</span>591<span style="color: rgba(0, 0, 0, 1)">)
+    at org.apache.kudu.client.shaded.org.jboss.netty.channel.DefaultChannelPipeline.sendDownstream(DefaultChannelPipeline.java:</span>582<span style="color: rgba(0, 0, 0, 1)">)
+    at org.apache.kudu.client.shaded.org.jboss.netty.channel.Channels.close(Channels.java:</span>812<span style="color: rgba(0, 0, 0, 1)">)
+    at org.apache.kudu.client.TabletClient.exceptionCaught(TabletClient.java:</span>726<span style="color: rgba(0, 0, 0, 1)">)
+    at org.apache.kudu.client.shaded.org.jboss.netty.channel.SimpleChannelUpstreamHandler.handleUpstream(SimpleChannelUpstreamHandler.java:</span>112<span style="color: rgba(0, 0, 0, 1)">)
+    at org.apache.kudu.client.TabletClient.handleUpstream(TabletClient.java:</span>603<span style="color: rgba(0, 0, 0, 1)">)
+    at org.apache.kudu.client.shaded.org.jboss.netty.channel.DefaultChannelPipeline.sendUpstream(DefaultChannelPipeline.java:</span>564<span style="color: rgba(0, 0, 0, 1)">)
+    at org.apache.kudu.client.shaded.org.jboss.netty.channel.DefaultChannelPipeline$DefaultChannelHandlerContext.sendUpstream(DefaultChannelPipeline.java:</span>791<span style="color: rgba(0, 0, 0, 1)">)
+    at org.apache.kudu.client.shaded.org.jboss.netty.channel.SimpleChannelUpstreamHandler.exceptionCaught(SimpleChannelUpstreamHandler.java:</span>153<span style="color: rgba(0, 0, 0, 1)">)
+    at org.apache.kudu.client.shaded.org.jboss.netty.channel.SimpleChannelUpstreamHandler.handleUpstream(SimpleChannelUpstreamHandler.java:</span>112<span style="color: rgba(0, 0, 0, 1)">)
+    at org.apache.kudu.client.shaded.org.jboss.netty.channel.DefaultChannelPipeline.sendUpstream(DefaultChannelPipeline.java:</span>564<span style="color: rgba(0, 0, 0, 1)">)
+    at org.apache.kudu.client.shaded.org.jboss.netty.channel.DefaultChannelPipeline$DefaultChannelHandlerContext.sendUpstream(DefaultChannelPipeline.java:</span>791<span style="color: rgba(0, 0, 0, 1)">)
+    at org.apache.kudu.client.shaded.org.jboss.netty.channel.SimpleChannelUpstreamHandler.exceptionCaught(SimpleChannelUpstreamHandler.java:</span>153<span style="color: rgba(0, 0, 0, 1)">)
+    at org.apache.kudu.client.shaded.org.jboss.netty.channel.SimpleChannelUpstreamHandler.handleUpstream(SimpleChannelUpstreamHandler.java:</span>112<span style="color: rgba(0, 0, 0, 1)">)
+    at org.apache.kudu.client.shaded.org.jboss.netty.channel.DefaultChannelPipeline.sendUpstream(DefaultChannelPipeline.java:</span>564<span style="color: rgba(0, 0, 0, 1)">)
+    at org.apache.kudu.client.shaded.org.jboss.netty.channel.DefaultChannelPipeline$DefaultChannelHandlerContext.sendUpstream(DefaultChannelPipeline.java:</span>791<span style="color: rgba(0, 0, 0, 1)">)
+    at org.apache.kudu.client.shaded.org.jboss.netty.handler.codec.oneone.OneToOneDecoder.handleUpstream(OneToOneDecoder.java:</span>60<span style="color: rgba(0, 0, 0, 1)">)
+    at org.apache.kudu.client.shaded.org.jboss.netty.channel.DefaultChannelPipeline.sendUpstream(DefaultChannelPipeline.java:</span>564<span style="color: rgba(0, 0, 0, 1)">)
+    at org.apache.kudu.client.shaded.org.jboss.netty.channel.DefaultChannelPipeline$DefaultChannelHandlerContext.sendUpstream(DefaultChannelPipeline.java:</span>791<span style="color: rgba(0, 0, 0, 1)">)
+    at org.apache.kudu.client.shaded.org.jboss.netty.handler.codec.frame.FrameDecoder.exceptionCaught(FrameDecoder.java:</span>377<span style="color: rgba(0, 0, 0, 1)">)
+    at org.apache.kudu.client.shaded.org.jboss.netty.channel.SimpleChannelUpstreamHandler.handleUpstream(SimpleChannelUpstreamHandler.java:</span>112<span style="color: rgba(0, 0, 0, 1)">)
+    at org.apache.kudu.client.shaded.org.jboss.netty.channel.DefaultChannelPipeline.sendUpstream(DefaultChannelPipeline.java:</span>564<span style="color: rgba(0, 0, 0, 1)">)
+    at org.apache.kudu.client.shaded.org.jboss.netty.channel.DefaultChannelPipeline$DefaultChannelHandlerContext.sendUpstream(DefaultChannelPipeline.java:</span>791<span style="color: rgba(0, 0, 0, 1)">)
+    at org.apache.kudu.client.shaded.org.jboss.netty.handler.ssl.SslHandler.exceptionCaught(SslHandler.java:</span>626<span style="color: rgba(0, 0, 0, 1)">)
+    at org.apache.kudu.client.shaded.org.jboss.netty.channel.SimpleChannelUpstreamHandler.handleUpstream(SimpleChannelUpstreamHandler.java:</span>112<span style="color: rgba(0, 0, 0, 1)">)
+    at org.apache.kudu.client.shaded.org.jboss.netty.channel.DefaultChannelPipeline.sendUpstream(DefaultChannelPipeline.java:</span>564<span style="color: rgba(0, 0, 0, 1)">)
+    at org.apache.kudu.client.shaded.org.jboss.netty.channel.DefaultChannelPipeline.sendUpstream(DefaultChannelPipeline.java:</span>559<span style="color: rgba(0, 0, 0, 1)">)
+    at org.apache.kudu.client.shaded.org.jboss.netty.channel.Channels.fireExceptionCaught(Channels.java:</span>525<span style="color: rgba(0, 0, 0, 1)">)
+    at org.apache.kudu.client.shaded.org.jboss.netty.channel.AbstractChannelSink.exceptionCaught(AbstractChannelSink.java:</span>48<span style="color: rgba(0, 0, 0, 1)">)
+    at org.apache.kudu.client.shaded.org.jboss.netty.channel.DefaultChannelPipeline.notifyHandlerException(DefaultChannelPipeline.java:</span>658<span style="color: rgba(0, 0, 0, 1)">)
+    at org.apache.kudu.client.shaded.org.jboss.netty.channel.DefaultChannelPipeline.sendUpstream(DefaultChannelPipeline.java:</span>566<span style="color: rgba(0, 0, 0, 1)">)
+    at org.apache.kudu.client.shaded.org.jboss.netty.channel.DefaultChannelPipeline$DefaultChannelHandlerContext.sendUpstream(DefaultChannelPipeline.java:</span>791<span style="color: rgba(0, 0, 0, 1)">)
+    at org.apache.kudu.client.shaded.org.jboss.netty.handler.timeout.ReadTimeoutHandler.messageReceived(ReadTimeoutHandler.java:</span>184<span style="color: rgba(0, 0, 0, 1)">)
+    at org.apache.kudu.client.shaded.org.jboss.netty.channel.SimpleChannelUpstreamHandler.handleUpstream(SimpleChannelUpstreamHandler.java:</span>70<span style="color: rgba(0, 0, 0, 1)">)
+    at org.apache.kudu.client.shaded.org.jboss.netty.channel.DefaultChannelPipeline.sendUpstream(DefaultChannelPipeline.java:</span>564<span style="color: rgba(0, 0, 0, 1)">)
+    at org.apache.kudu.client.shaded.org.jboss.netty.channel.DefaultChannelPipeline$DefaultChannelHandlerContext.sendUpstream(DefaultChannelPipeline.java:</span>791<span style="color: rgba(0, 0, 0, 1)">)
+    at org.apache.kudu.client.shaded.org.jboss.netty.channel.Channels.fireMessageReceived(Channels.java:</span>296<span style="color: rgba(0, 0, 0, 1)">)
+    at org.apache.kudu.client.shaded.org.jboss.netty.handler.codec.oneone.OneToOneDecoder.handleUpstream(OneToOneDecoder.java:</span>70<span style="color: rgba(0, 0, 0, 1)">)
+    at org.apache.kudu.client.shaded.org.jboss.netty.channel.DefaultChannelPipeline.sendUpstream(DefaultChannelPipeline.java:</span>564<span style="color: rgba(0, 0, 0, 1)">)
+    at org.apache.kudu.client.shaded.org.jboss.netty.channel.DefaultChannelPipeline$DefaultChannelHandlerContext.sendUpstream(DefaultChannelPipeline.java:</span>791<span style="color: rgba(0, 0, 0, 1)">)
+    at org.apache.kudu.client.shaded.org.jboss.netty.channel.Channels.fireMessageReceived(Channels.java:</span>296<span style="color: rgba(0, 0, 0, 1)">)
+    at org.apache.kudu.client.shaded.org.jboss.netty.handler.codec.frame.FrameDecoder.unfoldAndFireMessageReceived(FrameDecoder.java:</span>462<span style="color: rgba(0, 0, 0, 1)">)
+    at org.apache.kudu.client.shaded.org.jboss.netty.handler.codec.frame.FrameDecoder.callDecode(FrameDecoder.java:</span>443<span style="color: rgba(0, 0, 0, 1)">)
+    at org.apache.kudu.client.shaded.org.jboss.netty.handler.codec.frame.FrameDecoder.messageReceived(FrameDecoder.java:</span>303<span style="color: rgba(0, 0, 0, 1)">)
+    at org.apache.kudu.client.shaded.org.jboss.netty.channel.SimpleChannelUpstreamHandler.handleUpstream(SimpleChannelUpstreamHandler.java:</span>70<span style="color: rgba(0, 0, 0, 1)">)
+    at org.apache.kudu.client.shaded.org.jboss.netty.channel.DefaultChannelPipeline.sendUpstream(DefaultChannelPipeline.java:</span>564<span style="color: rgba(0, 0, 0, 1)">)
+    at org.apache.kudu.client.shaded.org.jboss.netty.channel.DefaultChannelPipeline$DefaultChannelHandlerContext.sendUpstream(DefaultChannelPipeline.java:</span>791<span style="color: rgba(0, 0, 0, 1)">)
+    at org.apache.kudu.client.shaded.org.jboss.netty.channel.Channels.fireMessageReceived(Channels.java:</span>296<span style="color: rgba(0, 0, 0, 1)">)
+    at org.apache.kudu.client.shaded.org.jboss.netty.handler.codec.frame.FrameDecoder.unfoldAndFireMessageReceived(FrameDecoder.java:</span>462<span style="color: rgba(0, 0, 0, 1)">)
+    at org.apache.kudu.client.shaded.org.jboss.netty.handler.codec.frame.FrameDecoder.callDecode(FrameDecoder.java:</span>443<span style="color: rgba(0, 0, 0, 1)">)
+    at org.apache.kudu.client.shaded.org.jboss.netty.handler.codec.frame.FrameDecoder.messageReceived(FrameDecoder.java:</span>303<span style="color: rgba(0, 0, 0, 1)">)
+    at org.apache.kudu.client.shaded.org.jboss.netty.channel.SimpleChannelUpstreamHandler.handleUpstream(SimpleChannelUpstreamHandler.java:</span>70<span style="color: rgba(0, 0, 0, 1)">)
+    at org.apache.kudu.client.shaded.org.jboss.netty.channel.DefaultChannelPipeline.sendUpstream(DefaultChannelPipeline.java:</span>564<span style="color: rgba(0, 0, 0, 1)">)
+    at org.apache.kudu.client.shaded.org.jboss.netty.channel.DefaultChannelPipeline.sendUpstream(DefaultChannelPipeline.java:</span>559<span style="color: rgba(0, 0, 0, 1)">)
+    at org.apache.kudu.client.shaded.org.jboss.netty.channel.Channels.fireMessageReceived(Channels.java:</span>268<span style="color: rgba(0, 0, 0, 1)">)
+    at org.apache.kudu.client.shaded.org.jboss.netty.channel.Channels.fireMessageReceived(Channels.java:</span>255<span style="color: rgba(0, 0, 0, 1)">)
+    at org.apache.kudu.client.shaded.org.jboss.netty.channel.socket.nio.NioWorker.read(NioWorker.java:</span>88<span style="color: rgba(0, 0, 0, 1)">)
+    at org.apache.kudu.client.shaded.org.jboss.netty.channel.socket.nio.AbstractNioWorker.process(AbstractNioWorker.java:</span>108<span style="color: rgba(0, 0, 0, 1)">)
+    at org.apache.kudu.client.shaded.org.jboss.netty.channel.socket.nio.AbstractNioSelector.run(AbstractNioSelector.java:</span>337<span style="color: rgba(0, 0, 0, 1)">)
+    at org.apache.kudu.client.shaded.org.jboss.netty.channel.socket.nio.AbstractNioWorker.run(AbstractNioWorker.java:</span>89<span style="color: rgba(0, 0, 0, 1)">)
+    at org.apache.kudu.client.shaded.org.jboss.netty.channel.socket.nio.NioWorker.run(NioWorker.java:</span>178<span style="color: rgba(0, 0, 0, 1)">)
+    at org.apache.kudu.client.shaded.org.jboss.netty.util.ThreadRenamingRunnable.run(ThreadRenamingRunnable.java:</span>108<span style="color: rgba(0, 0, 0, 1)">)
+    at org.apache.kudu.client.shaded.org.jboss.netty.util.internal.DeadLockProofWorker$</span>1.run(DeadLockProofWorker.java:42<span style="color: rgba(0, 0, 0, 1)">)
+    at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:</span>1149<span style="color: rgba(0, 0, 0, 1)">)
+    at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:</span>624<span style="color: rgba(0, 0, 0, 1)">)
+    at java.lang.Thread.run(Thread.java:</span>748<span style="color: rgba(0, 0, 0, 1)">)
+</span>19/05/05 10:15:56 WARN client.ConnectToCluster: Unable to find the leader master (master:7051<span style="color: rgba(0, 0, 0, 1)">), will retry
+</span>19/05/05 10:15:56 WARN client.ConnectToCluster: Error receiving a response <span style="color: rgba(0, 0, 255, 1)">from</span>: master:7051<span style="color: rgba(0, 0, 0, 1)">
+org.apache.kudu.client.RecoverableException: [Peer master</span>-master:7051<span style="color: rgba(0, 0, 0, 1)">] Connection disconnected
+    at org.apache.kudu.client.TabletClient.cleanup(TabletClient.java:</span>657<span style="color: rgba(0, 0, 0, 1)">)
+    at org.apache.kudu.client.TabletClient.channelDisconnected(TabletClient.java:</span>610<span style="color: rgba(0, 0, 0, 1)">)
+    at org.apache.kudu.client.shaded.org.jboss.netty.channel.SimpleChannelUpstreamHandler.handleUpstream(SimpleChannelUpstreamHandler.java:</span>102<span style="color: rgba(0, 0, 0, 1)">)
+    at org.apache.kudu.client.TabletClient.handleUpstream(TabletClient.java:</span>603<span style="color: rgba(0, 0, 0, 1)">)
+    at org.apache.kudu.client.shaded.org.jboss.netty.channel.DefaultChannelPipeline.sendUpstream(DefaultChannelPipeline.java:</span>564<span style="color: rgba(0, 0, 0, 1)">)
+    at org.apache.kudu.client.shaded.org.jboss.netty.channel.DefaultChannelPipeline$DefaultChannelHandlerContext.sendUpstream(DefaultChannelPipeline.java:</span>791<span style="color: rgba(0, 0, 0, 1)">)
+    at org.apache.kudu.client.shaded.org.jboss.netty.channel.SimpleChannelUpstreamHandler.channelDisconnected(SimpleChannelUpstreamHandler.java:</span>208<span style="color: rgba(0, 0, 0, 1)">)
+    at org.apache.kudu.client.shaded.org.jboss.netty.channel.SimpleChannelUpstreamHandler.handleUpstream(SimpleChannelUpstreamHandler.java:</span>102<span style="color: rgba(0, 0, 0, 1)">)
+    at org.apache.kudu.client.shaded.org.jboss.netty.channel.DefaultChannelPipeline.sendUpstream(DefaultChannelPipeline.java:</span>564<span style="color: rgba(0, 0, 0, 1)">)
+    at org.apache.kudu.client.shaded.org.jboss.netty.channel.DefaultChannelPipeline$DefaultChannelHandlerContext.sendUpstream(DefaultChannelPipeline.java:</span>791<span style="color: rgba(0, 0, 0, 1)">)
+    at org.apache.kudu.client.shaded.org.jboss.netty.channel.SimpleChannelUpstreamHandler.channelDisconnected(SimpleChannelUpstreamHandler.java:</span>208<span style="color: rgba(0, 0, 0, 1)">)
+    at org.apache.kudu.client.shaded.org.jboss.netty.channel.SimpleChannelUpstreamHandler.handleUpstream(SimpleChannelUpstreamHandler.java:</span>102<span style="color: rgba(0, 0, 0, 1)">)
+    at org.apache.kudu.client.shaded.org.jboss.netty.channel.DefaultChannelPipeline.sendUpstream(DefaultChannelPipeline.java:</span>564<span style="color: rgba(0, 0, 0, 1)">)
+    at org.apache.kudu.client.shaded.org.jboss.netty.channel.DefaultChannelPipeline$DefaultChannelHandlerContext.sendUpstream(DefaultChannelPipeline.java:</span>791<span style="color: rgba(0, 0, 0, 1)">)
+    at org.apache.kudu.client.shaded.org.jboss.netty.handler.codec.oneone.OneToOneDecoder.handleUpstream(OneToOneDecoder.java:</span>60<span style="color: rgba(0, 0, 0, 1)">)
+    at org.apache.kudu.client.shaded.org.jboss.netty.channel.DefaultChannelPipeline.sendUpstream(DefaultChannelPipeline.java:</span>564<span style="color: rgba(0, 0, 0, 1)">)
+    at org.apache.kudu.client.shaded.org.jboss.netty.channel.DefaultChannelPipeline$DefaultChannelHandlerContext.sendUpstream(DefaultChannelPipeline.java:</span>791<span style="color: rgba(0, 0, 0, 1)">)
+    at org.apache.kudu.client.shaded.org.jboss.netty.handler.codec.frame.FrameDecoder.cleanup(FrameDecoder.java:</span>493<span style="color: rgba(0, 0, 0, 1)">)
+    at org.apache.kudu.client.shaded.org.jboss.netty.handler.codec.frame.FrameDecoder.channelDisconnected(FrameDecoder.java:</span>365<span style="color: rgba(0, 0, 0, 1)">)
+    at org.apache.kudu.client.shaded.org.jboss.netty.channel.SimpleChannelUpstreamHandler.handleUpstream(SimpleChannelUpstreamHandler.java:</span>102<span style="color: rgba(0, 0, 0, 1)">)
+    at org.apache.kudu.client.shaded.org.jboss.netty.channel.DefaultChannelPipeline.sendUpstream(DefaultChannelPipeline.java:</span>564<span style="color: rgba(0, 0, 0, 1)">)
+    at org.apache.kudu.client.shaded.org.jboss.netty.channel.DefaultChannelPipeline$DefaultChannelHandlerContext.sendUpstream(DefaultChannelPipeline.java:</span>791<span style="color: rgba(0, 0, 0, 1)">)
+    at org.apache.kudu.client.shaded.org.jboss.netty.handler.codec.frame.FrameDecoder.cleanup(FrameDecoder.java:</span>493<span style="color: rgba(0, 0, 0, 1)">)
+    at org.apache.kudu.client.shaded.org.jboss.netty.handler.codec.frame.FrameDecoder.channelDisconnected(FrameDecoder.java:</span>365<span style="color: rgba(0, 0, 0, 1)">)
+    at org.apache.kudu.client.shaded.org.jboss.netty.handler.ssl.SslHandler.channelDisconnected(SslHandler.java:</span>580<span style="color: rgba(0, 0, 0, 1)">)
+    at org.apache.kudu.client.shaded.org.jboss.netty.channel.SimpleChannelUpstreamHandler.handleUpstream(SimpleChannelUpstreamHandler.java:</span>102<span style="color: rgba(0, 0, 0, 1)">)
+    at org.apache.kudu.client.shaded.org.jboss.netty.channel.DefaultChannelPipeline.sendUpstream(DefaultChannelPipeline.java:</span>564<span style="color: rgba(0, 0, 0, 1)">)
+    at org.apache.kudu.client.shaded.org.jboss.netty.channel.DefaultChannelPipeline.sendUpstream(DefaultChannelPipeline.java:</span>559<span style="color: rgba(0, 0, 0, 1)">)
+    at org.apache.kudu.client.shaded.org.jboss.netty.channel.Channels.fireChannelDisconnected(Channels.java:</span>396<span style="color: rgba(0, 0, 0, 1)">)
+    at org.apache.kudu.client.shaded.org.jboss.netty.channel.socket.nio.AbstractNioWorker.close(AbstractNioWorker.java:</span>360<span style="color: rgba(0, 0, 0, 1)">)
+    at org.apache.kudu.client.shaded.org.jboss.netty.channel.socket.nio.NioClientSocketPipelineSink.eventSunk(NioClientSocketPipelineSink.java:</span>58<span style="color: rgba(0, 0, 0, 1)">)
+    at org.apache.kudu.client.shaded.org.jboss.netty.channel.DefaultChannelPipeline$DefaultChannelHandlerContext.sendDownstream(DefaultChannelPipeline.java:</span>779<span style="color: rgba(0, 0, 0, 1)">)
+    at org.apache.kudu.client.shaded.org.jboss.netty.handler.ssl.SslHandler.closeOutboundAndChannel(SslHandler.java:</span>1513<span style="color: rgba(0, 0, 0, 1)">)
+    at org.apache.kudu.client.shaded.org.jboss.netty.handler.ssl.SslHandler.handleDownstream(SslHandler.java:</span>514<span style="color: rgba(0, 0, 0, 1)">)
+    at org.apache.kudu.client.shaded.org.jboss.netty.channel.DefaultChannelPipeline.sendDownstream(DefaultChannelPipeline.java:</span>591<span style="color: rgba(0, 0, 0, 1)">)
+    at org.apache.kudu.client.shaded.org.jboss.netty.channel.DefaultChannelPipeline$DefaultChannelHandlerContext.sendDownstream(DefaultChannelPipeline.java:</span>784<span style="color: rgba(0, 0, 0, 1)">)
+    at org.apache.kudu.client.shaded.org.jboss.netty.handler.codec.oneone.OneToOneEncoder.handleDownstream(OneToOneEncoder.java:</span>54<span style="color: rgba(0, 0, 0, 1)">)
+    at org.apache.kudu.client.shaded.org.jboss.netty.channel.DefaultChannelPipeline.sendDownstream(DefaultChannelPipeline.java:</span>591<span style="color: rgba(0, 0, 0, 1)">)
+    at org.apache.kudu.client.shaded.org.jboss.netty.channel.DefaultChannelPipeline.sendDownstream(DefaultChannelPipeline.java:</span>582<span style="color: rgba(0, 0, 0, 1)">)
+    at org.apache.kudu.client.shaded.org.jboss.netty.channel.Channels.close(Channels.java:</span>812<span style="color: rgba(0, 0, 0, 1)">)
+    at org.apache.kudu.client.TabletClient.exceptionCaught(TabletClient.java:</span>726<span style="color: rgba(0, 0, 0, 1)">)
+    at org.apache.kudu.client.shaded.org.jboss.netty.channel.SimpleChannelUpstreamHandler.handleUpstream(SimpleChannelUpstreamHandler.java:</span>112<span style="color: rgba(0, 0, 0, 1)">)
+    at org.apache.kudu.client.TabletClient.handleUpstream(TabletClient.java:</span>603<span style="color: rgba(0, 0, 0, 1)">)
+    at org.apache.kudu.client.shaded.org.jboss.netty.channel.DefaultChannelPipeline.sendUpstream(DefaultChannelPipeline.java:</span>564<span style="color: rgba(0, 0, 0, 1)">)
+    at org.apache.kudu.client.shaded.org.jboss.netty.channel.DefaultChannelPipeline$DefaultChannelHandlerContext.sendUpstream(DefaultChannelPipeline.java:</span>791<span style="color: rgba(0, 0, 0, 1)">)
+    at org.apache.kudu.client.shaded.org.jboss.netty.channel.SimpleChannelUpstreamHandler.exceptionCaught(SimpleChannelUpstreamHandler.java:</span>153<span style="color: rgba(0, 0, 0, 1)">)
+    at org.apache.kudu.client.shaded.org.jboss.netty.channel.SimpleChannelUpstreamHandler.handleUpstream(SimpleChannelUpstreamHandler.java:</span>112<span style="color: rgba(0, 0, 0, 1)">)
+    at org.apache.kudu.client.shaded.org.jboss.netty.channel.DefaultChannelPipeline.sendUpstream(DefaultChannelPipeline.java:</span>564<span style="color: rgba(0, 0, 0, 1)">)
+    at org.apache.kudu.client.shaded.org.jboss.netty.channel.DefaultChannelPipeline$DefaultChannelHandlerContext.sendUpstream(DefaultChannelPipeline.java:</span>791<span style="color: rgba(0, 0, 0, 1)">)
+    at org.apache.kudu.client.shaded.org.jboss.netty.channel.SimpleChannelUpstreamHandler.exceptionCaught(SimpleChannelUpstreamHandler.java:</span>153<span style="color: rgba(0, 0, 0, 1)">)
+    at org.apache.kudu.client.shaded.org.jboss.netty.channel.SimpleChannelUpstreamHandler.handleUpstream(SimpleChannelUpstreamHandler.java:</span>112<span style="color: rgba(0, 0, 0, 1)">)
+    at org.apache.kudu.client.shaded.org.jboss.netty.channel.DefaultChannelPipeline.sendUpstream(DefaultChannelPipeline.java:</span>564<span style="color: rgba(0, 0, 0, 1)">)
+    at org.apache.kudu.client.shaded.org.jboss.netty.channel.DefaultChannelPipeline$DefaultChannelHandlerContext.sendUpstream(DefaultChannelPipeline.java:</span>791<span style="color: rgba(0, 0, 0, 1)">)
+    at org.apache.kudu.client.shaded.org.jboss.netty.handler.codec.oneone.OneToOneDecoder.handleUpstream(OneToOneDecoder.java:</span>60<span style="color: rgba(0, 0, 0, 1)">)
+    at org.apache.kudu.client.shaded.org.jboss.netty.channel.DefaultChannelPipeline.sendUpstream(DefaultChannelPipeline.java:</span>564<span style="color: rgba(0, 0, 0, 1)">)
+    at org.apache.kudu.client.shaded.org.jboss.netty.channel.DefaultChannelPipeline$DefaultChannelHandlerContext.sendUpstream(DefaultChannelPipeline.java:</span>791<span style="color: rgba(0, 0, 0, 1)">)
+    at org.apache.kudu.client.shaded.org.jboss.netty.handler.codec.frame.FrameDecoder.exceptionCaught(FrameDecoder.java:</span>377<span style="color: rgba(0, 0, 0, 1)">)
+    at org.apache.kudu.client.shaded.org.jboss.netty.channel.SimpleChannelUpstreamHandler.handleUpstream(SimpleChannelUpstreamHandler.java:</span>112<span style="color: rgba(0, 0, 0, 1)">)
+    at org.apache.kudu.client.shaded.org.jboss.netty.channel.DefaultChannelPipeline.sendUpstream(DefaultChannelPipeline.java:</span>564<span style="color: rgba(0, 0, 0, 1)">)
+    at org.apache.kudu.client.shaded.org.jboss.netty.channel.DefaultChannelPipeline$DefaultChannelHandlerContext.sendUpstream(DefaultChannelPipeline.java:</span>791<span style="color: rgba(0, 0, 0, 1)">)
+    at org.apache.kudu.client.shaded.org.jboss.netty.handler.ssl.SslHandler.exceptionCaught(SslHandler.java:</span>626<span style="color: rgba(0, 0, 0, 1)">)
+    at org.apache.kudu.client.shaded.org.jboss.netty.channel.SimpleChannelUpstreamHandler.handleUpstream(SimpleChannelUpstreamHandler.java:</span>112<span style="color: rgba(0, 0, 0, 1)">)
+    at org.apache.kudu.client.shaded.org.jboss.netty.channel.DefaultChannelPipeline.sendUpstream(DefaultChannelPipeline.java:</span>564<span style="color: rgba(0, 0, 0, 1)">)
+    at org.apache.kudu.client.shaded.org.jboss.netty.channel.DefaultChannelPipeline.sendUpstream(DefaultChannelPipeline.java:</span>559<span style="color: rgba(0, 0, 0, 1)">)
+    at org.apache.kudu.client.shaded.org.jboss.netty.channel.Channels.fireExceptionCaught(Channels.java:</span>525<span style="color: rgba(0, 0, 0, 1)">)
+    at org.apache.kudu.client.shaded.org.jboss.netty.channel.AbstractChannelSink.exceptionCaught(AbstractChannelSink.java:</span>48<span style="color: rgba(0, 0, 0, 1)">)
+    at org.apache.kudu.client.shaded.org.jboss.netty.channel.DefaultChannelPipeline.notifyHandlerException(DefaultChannelPipeline.java:</span>658<span style="color: rgba(0, 0, 0, 1)">)
+    at org.apache.kudu.client.shaded.org.jboss.netty.channel.DefaultChannelPipeline.sendUpstream(DefaultChannelPipeline.java:</span>566<span style="color: rgba(0, 0, 0, 1)">)
+    at org.apache.kudu.client.shaded.org.jboss.netty.channel.DefaultChannelPipeline$DefaultChannelHandlerContext.sendUpstream(DefaultChannelPipeline.java:</span>791<span style="color: rgba(0, 0, 0, 1)">)
+    at org.apache.kudu.client.shaded.org.jboss.netty.handler.timeout.ReadTimeoutHandler.messageReceived(ReadTimeoutHandler.java:</span>184<span style="color: rgba(0, 0, 0, 1)">)
+    at org.apache.kudu.client.shaded.org.jboss.netty.channel.SimpleChannelUpstreamHandler.handleUpstream(SimpleChannelUpstreamHandler.java:</span>70<span style="color: rgba(0, 0, 0, 1)">)
+    at org.apache.kudu.client.shaded.org.jboss.netty.channel.DefaultChannelPipeline.sendUpstream(DefaultChannelPipeline.java:</span>564<span style="color: rgba(0, 0, 0, 1)">)
+    at org.apache.kudu.client.shaded.org.jboss.netty.channel.DefaultChannelPipeline$DefaultChannelHandlerContext.sendUpstream(DefaultChannelPipeline.java:</span>791<span style="color: rgba(0, 0, 0, 1)">)
+    at org.apache.kudu.client.shaded.org.jboss.netty.channel.Channels.fireMessageReceived(Channels.java:</span>296<span style="color: rgba(0, 0, 0, 1)">)
+    at org.apache.kudu.client.shaded.org.jboss.netty.handler.codec.oneone.OneToOneDecoder.handleUpstream(OneToOneDecoder.java:</span>70<span style="color: rgba(0, 0, 0, 1)">)
+    at org.apache.kudu.client.shaded.org.jboss.netty.channel.DefaultChannelPipeline.sendUpstream(DefaultChannelPipeline.java:</span>564<span style="color: rgba(0, 0, 0, 1)">)
+    at org.apache.kudu.client.shaded.org.jboss.netty.channel.DefaultChannelPipeline$DefaultChannelHandlerContext.sendUpstream(DefaultChannelPipeline.java:</span>791<span style="color: rgba(0, 0, 0, 1)">)
+    at org.apache.kudu.client.shaded.org.jboss.netty.channel.Channels.fireMessageReceived(Channels.java:</span>296<span style="color: rgba(0, 0, 0, 1)">)
+    at org.apache.kudu.client.shaded.org.jboss.netty.handler.codec.frame.FrameDecoder.unfoldAndFireMessageReceived(FrameDecoder.java:</span>462<span style="color: rgba(0, 0, 0, 1)">)
+    at org.apache.kudu.client.shaded.org.jboss.netty.handler.codec.frame.FrameDecoder.callDecode(FrameDecoder.java:</span>443<span style="color: rgba(0, 0, 0, 1)">)
+    at org.apache.kudu.client.shaded.org.jboss.netty.handler.codec.frame.FrameDecoder.messageReceived(FrameDecoder.java:</span>303<span style="color: rgba(0, 0, 0, 1)">)
+    at org.apache.kudu.client.shaded.org.jboss.netty.channel.SimpleChannelUpstreamHandler.handleUpstream(SimpleChannelUpstreamHandler.java:</span>70<span style="color: rgba(0, 0, 0, 1)">)
+    at org.apache.kudu.client.shaded.org.jboss.netty.channel.DefaultChannelPipeline.sendUpstream(DefaultChannelPipeline.java:</span>564<span style="color: rgba(0, 0, 0, 1)">)
+    at org.apache.kudu.client.shaded.org.jboss.netty.channel.DefaultChannelPipeline$DefaultChannelHandlerContext.sendUpstream(DefaultChannelPipeline.java:</span>791<span style="color: rgba(0, 0, 0, 1)">)
+    at org.apache.kudu.client.shaded.org.jboss.netty.channel.Channels.fireMessageReceived(Channels.java:</span>296<span style="color: rgba(0, 0, 0, 1)">)
+    at org.apache.kudu.client.shaded.org.jboss.netty.handler.codec.frame.FrameDecoder.unfoldAndFireMessageReceived(FrameDecoder.java:</span>462<span style="color: rgba(0, 0, 0, 1)">)
+    at org.apache.kudu.client.shaded.org.jboss.netty.handler.codec.frame.FrameDecoder.callDecode(FrameDecoder.java:</span>443<span style="color: rgba(0, 0, 0, 1)">)
+    at org.apache.kudu.client.shaded.org.jboss.netty.handler.codec.frame.FrameDecoder.messageReceived(FrameDecoder.java:</span>303<span style="color: rgba(0, 0, 0, 1)">)
+    at org.apache.kudu.client.shaded.org.jboss.netty.channel.SimpleChannelUpstreamHandler.handleUpstream(SimpleChannelUpstreamHandler.java:</span>70<span style="color: rgba(0, 0, 0, 1)">)
+    at org.apache.kudu.client.shaded.org.jboss.netty.channel.DefaultChannelPipeline.sendUpstream(DefaultChannelPipeline.java:</span>564<span style="color: rgba(0, 0, 0, 1)">)
+    at org.apache.kudu.client.shaded.org.jboss.netty.channel.DefaultChannelPipeline.sendUpstream(DefaultChannelPipeline.java:</span>559<span style="color: rgba(0, 0, 0, 1)">)
+    at org.apache.kudu.client.shaded.org.jboss.netty.channel.Channels.fireMessageReceived(Channels.java:</span>268<span style="color: rgba(0, 0, 0, 1)">)
+    at org.apache.kudu.client.shaded.org.jboss.netty.channel.Channels.fireMessageReceived(Channels.java:</span>255<span style="color: rgba(0, 0, 0, 1)">)
+    at org.apache.kudu.client.shaded.org.jboss.netty.channel.socket.nio.NioWorker.read(NioWorker.java:</span>88<span style="color: rgba(0, 0, 0, 1)">)
+    at org.apache.kudu.client.shaded.org.jboss.netty.channel.socket.nio.AbstractNioWorker.process(AbstractNioWorker.java:</span>108<span style="color: rgba(0, 0, 0, 1)">)
+    at org.apache.kudu.client.shaded.org.jboss.netty.channel.socket.nio.AbstractNioSelector.run(AbstractNioSelector.java:</span>337<span style="color: rgba(0, 0, 0, 1)">)
+    at org.apache.kudu.client.shaded.org.jboss.netty.channel.socket.nio.AbstractNioWorker.run(AbstractNioWorker.java:</span>89<span style="color: rgba(0, 0, 0, 1)">)
+    at org.apache.kudu.client.shaded.org.jboss.netty.channel.socket.nio.NioWorker.run(NioWorker.java:</span>178<span style="color: rgba(0, 0, 0, 1)">)
+    at org.apache.kudu.client.shaded.org.jboss.netty.util.ThreadRenamingRunnable.run(ThreadRenamingRunnable.java:</span>108<span style="color: rgba(0, 0, 0, 1)">)
+    at org.apache.kudu.client.shaded.org.jboss.netty.util.internal.DeadLockProofWorker$</span>1.run(DeadLockProofWorker.java:42<span style="color: rgba(0, 0, 0, 1)">)
+    at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:</span>1149<span style="color: rgba(0, 0, 0, 1)">)
+    at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:</span>624<span style="color: rgba(0, 0, 0, 1)">)
+    at java.lang.Thread.run(Thread.java:</span>748)</pre>
+</div>
+<p>At this time, Kudu master reports the following error:</p>
+<blockquote>
+<p>W0506 10:19:37.484565 24970 negotiation.cc:320] Unauthorized connection attempt: Server connection negotiation failed: server connection from client:55518: authentication token expired</p>
+</blockquote>
+<p>Before Kudu client 1.5, the token validity period of the Kudu client link was 7 days. When the time is greater than 7 days, the token becomes invalid and the client will not actively refresh the token, resulting in an error when writing data;</p>
+<p>The corresponding version configuration in Flume Kudu sink is</p>
+<div class="cnblogs_code">
+<pre>        &lt;kudu.version&gt;1.4.0-cdh5.12.1&lt;/kudu.version&gt;
+
+        &lt;dependency&gt;
+            &lt;groupId&gt;org.apache.kudu&lt;/groupId&gt;
+            &lt;artifactId&gt;kudu-client&lt;/artifactId&gt;
+            &lt;version&gt;${kudu.version}&lt;/version&gt;
+        &lt;/dependency&gt;</pre>
+</div>
+<p>Changed to 1.6.0 and above</p>
+<blockquote>
+<p>&lt;kudu.version&gt;1.6.0&lt;/kudu.version&gt;</p>
+</blockquote>
+<p> </p>
+<p>other:</p>
+<p>If you use Kudu-Flume-sink directly, an error will be reported:</p>
+<div class="cnblogs_code">
+<pre>19/05/06 11:05:25<span style="color: rgba(0, 0, 0, 1)"> ERROR node.PollingPropertiesFileConfigurationProvider: Unhandled error
+java.lang.NoSuchMethodError: com.google.common.base.Preconditions.checkNotNull(Ljava</span>/lang/Object;Ljava/lang/String;Ljava/lang/Object;)Ljava/lang/<span style="color: rgba(0, 0, 0, 1)">Object;
+    at org.apache.kudu.flume.sink.KuduSink.configure(KuduSink.java:</span>185<span style="color: rgba(0, 0, 0, 1)">)
+    at org.apache.flume.conf.Configurables.configure(Configurables.java:</span>41<span style="color: rgba(0, 0, 0, 1)">)
+    at org.apache.flume.node.AbstractConfigurationProvider.loadSinks(AbstractConfigurationProvider.java:</span>453<span style="color: rgba(0, 0, 0, 1)">)
+    at org.apache.flume.node.AbstractConfigurationProvider.getConfiguration(AbstractConfigurationProvider.java:</span>106<span style="color: rgba(0, 0, 0, 1)">)
+    at org.apache.flume.node.PollingPropertiesFileConfigurationProvider$FileWatcherRunnable.run(PollingPropertiesFileConfigurationProvider.java:</span>145<span style="color: rgba(0, 0, 0, 1)">)
+    at java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:</span>511<span style="color: rgba(0, 0, 0, 1)">)
+    at java.util.concurrent.FutureTask.runAndReset(FutureTask.java:</span>308<span style="color: rgba(0, 0, 0, 1)">)
+    at java.util.concurrent.ScheduledThreadPoolExecutor$ScheduledFutureTask.access$</span>301(ScheduledThreadPoolExecutor.java:180<span style="color: rgba(0, 0, 0, 1)">)
+    at java.util.concurrent.ScheduledThreadPoolExecutor$ScheduledFutureTask.run(ScheduledThreadPoolExecutor.java:</span>294<span style="color: rgba(0, 0, 0, 1)">)
+    at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:</span>1149<span style="color: rgba(0, 0, 0, 1)">)
+    at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:</span>624<span style="color: rgba(0, 0, 0, 1)">)
+    at java.lang.Thread.run(Thread.java:</span>748)</pre>
+</div>
+<p>Because the guava relied on in Kudu-Flume-sink is 20.0</p>
+<blockquote>
+<p>&lt;guava.version&gt;20.0&lt;/guava.version&gt;</p>
+</blockquote>
+<p>The guava relied on in flume1.9.0 is 11.0</p>
+<p><br/>refer to:</p>
+<p>https://mvnrepository.com/artifact/org.apache.kudu/kudu-flume-sink<br/>http://central.maven.org/maven2/org/apache/kudu/kudu-parent/1.6.0/kudu-parent-1.6.0.pom</p>
+<p> </p>
+</div>
+</div>
+<!-- Post Footer -->
+<div class="post-footer">
+<div class="post-navigation">
+<a class="nav-button" href="../blog.html">← Back to Home</a>
+<a class="nav-button" href="0143.html">Next Post →</a>
+</div>
+</div>
+</article>
+</div>
+</body>
+</html>

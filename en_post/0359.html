@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>ZooKeeper 3 - Election Algorithm</title>
+<link href="../css/style3.css" rel="stylesheet"/>
+</head>
+<body>
+<div class="container">
+<!-- Header Navigation -->
+<div class="header">
+<h1><a href="../blog.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+</div>
+<!-- Post Container -->
+<article class="post">
+<!-- Post Header -->
+<div class="post-header">
+<h1>ZooKeeper 3 - Election Algorithm</h1>
+<div class="post-meta">
+<div class="post-meta-item">
+<span class="meta-icon">📅</span>
+<span>November 01, 2018</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">📖</span>
+<span>4 min read</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">👁️</span>
+<span>1083 views</span>
+</div>
+</div>
+</div>
+<!-- Post Content -->
+<div class="post-content">
+<div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<p>When talking about the ZooKeeper election algorithm, we have to mention the Paxos algorithm, because the ZooKeeper election algorithm is a variant of the Paxos algorithm;</p>
+<p> </p>
+<p>The problem Paxos wants to solve is: there are many participants in a distributed network environment, but each participant is unreliable and may be disconnected at any time. How do these participants reach an agreement on a certain view?</p>
+<blockquote>
+<p>There are many similar problems in real life. For example, a team wants to organize a team building. There are 10 people in the team. Everyone has their own place they want to go. How to reach an agreement on the destination of the team building?</p>
+<p>The simplest way is to call the entire team to the conference room for a meeting. You can quickly determine a destination that is satisfactory to most people based on the principle of the minority obeying the majority;</p>
+<p>If the question is changed to: A team of 10 people are on business trips to 10 places around the world, with different schedules, and can only be contacted by email. How to determine the destination for team building?</p>
+</blockquote>
+<h2 id="section-0359-1">1 Paxos algorithm</h2>
+<p><a class="external-link" href="https://en.wikipedia.org/wiki/Paxos_(computer_science)" rel="noopener nofollow">https://en.wikipedia.org/wiki/Paxos_(computer_science)</a></p>
+<p><a class="external-link" href="https://zh.wikipedia.org/zh-cn/Paxos%E7%AE%97%E6%B3%95" rel="noopener nofollow">https://zh.wikipedia.org/zh-cn/Paxos%E7%AE%97%E6%B3%95</a> </p>
+<p><strong>Paxos</strong> is a family of protocols for solving <a class="external-link" href="https://en.wikipedia.org/wiki/Consensus_(computer_science)" rel="noopener nofollow" title="Consensus (computer science)">consensus</a> in a network of unreliable processors. Consensus is the process of agreeing on one result among a group of participants. This problem becomes difficult when the participants or their communication medium may experience failures.</p>
+<h2 id="Zookeeper-1.1Roles">1.1 Roles</h2>
+<p>Paxos describes the actions of the processors by their roles in the protocol: client, acceptor, proposer, learner, and leader. In typical implementations, a single processor may play one or more roles at the same time. This does not affect the correctness of the protocol—it is usual to coalesce roles to improve the latency and/or number of messages in the protocol.</p>
+<ul>
+<li>Client 
+<ul>
+<li>The Client issues a request to the distributed system, and waits for a response. For instance, a write request on a file in a distributed file server.</li>
+</ul>
+</li>
+<li>Acceptor (Voters) 
+<ul>
+<li>The Acceptors act as the fault-tolerant "memory" of the protocol. Acceptors are collected into groups called Quorums. Any message sent to an Acceptor must be sent to a Quorum of Acceptors. Any message received from an Acceptor is ignored unless a copy is received from each Acceptor in a Quorum.</li>
+</ul>
+</li>
+<li>Proposer 
+<ul>
+<li>A Proposer advocates a client request, attempting to convince the Acceptors to agree on it, and acting as a coordinator to move the protocol forward when conflicts occur.</li>
+</ul>
+</li>
+<li>Learner 
+<ul>
+<li>Learners act as the replication factor for the protocol. Once a Client request has been agreed on by the Acceptors, the Learner may take action (i.e.: execute the request and send a response to the client). To improve availability of processing, additional Learners can be added.</li>
+</ul>
+</li>
+<li>Leader 
+<ul>
+<li>Paxos requires a distinguished Proposer (called the leader) to make progress. Many processes may believe they are leaders, but the protocol only guarantees progress if one of them is eventually chosen. If two processes believe they are leaders, they may stall the protocol by continuously proposing conflicting updates. However, the safety properties are still preserved in that case.</li>
+</ul>
+</li>
+</ul>
+<blockquote>
+<p>There are many clients, and each client has many ideas, but only one idea from one client will eventually be accepted by everyone; if the client wants an idea to be accepted, it will first tell the proposer the idea. After the proposer receives an idea, it will be submitted to multiple acceptors for voting. If more than half of the acceptors vote, it means that the idea is accepted by everyone; the learner will receive the vote results of the acceptor in time;</p>
+<p>Since the actual voting process is concurrent, the voting process is divided into multiple stages, and the concept of version is added, which is somewhat similar to optimistic locking;</p>
+</blockquote>
+<blockquote>
+<p>A vivid example is that in a corrupt country, the government has a project to be tendered, and then there are many companies (clients) who want to get the project (idea). The decision to give the project to is made by a group of high-level government officials (acceptors), but they keep it secret. The company needs to go through some political and business takeovers. An intermediary (proposor) delivers bribes (version) to senior people. After receiving a bribe, each senior person will indicate that he will no longer accept other bribes no higher than this bribe and support the company of the current bribe. If a company can successfully bribe most senior people in the group, then this company can get the project;</p>
+</blockquote>
+<h2 id="Zookeeper-1.2BasicPaxos"><span class="mw-headline">1.2 Basic Paxos</span></h2>
+<ul>
+<li>
+<h3 id="Zookeeper-Phase1a:Prepare"><span class="mw-headline">Phase 1a: <em>Prepare</em></span></h3>
+</li>
+<li>
+<h3 id="Zookeeper-Phase1b:Promise"><span class="mw-headline">Phase 1b: <em>Promise</em></span></h3>
+</li>
+<li>
+<h3 id="Zookeeper-Phase2a:AcceptRequest"><span class="mw-headline">Phase 2a: <em>Accept Request</em></span></h3>
+</li>
+<li>
+<h3 id="Zookeeper-Phase2b:Accepted"><span class="mw-headline">Phase 2b: <em>Accepted</em></span></h3>
+</li>
+</ul>
+<p>First, the roles of parliamentarians are divided into proposers, acceptors, and learners (allowing to wear multiple hats). Proposers make proposals, and the proposal information includes the proposal number and the value of the proposal; the acceptor can accept the proposal after receiving the proposal. If the proposal is accepted by a majority of acceptors, the proposal is said to be approved (chosen); learners can only "learn" approved proposals. After dividing the roles, the problem can be defined more precisely:</p>
+<ol>
+<li>Resolutions (values) can only be approved after being proposed by proposers (unapproved resolutions are called "proposals");</li>
+<li>In an execution instance of the Paxos algorithm, only one value is chosen (chosen);</li>
+<li>Learners can only obtain chosen values.</li>
+</ol>
+<p>The author obtained the Paxos algorithm by continuously strengthening the above three constraints (mainly the second one).</p>
+<pre>P1: An acceptor must accept the first proposal received.</pre>
+<pre>P1a: If and only if the acceptor has not responded to a prepare request with a number greater than n, the acceptor accepts the proposal numbered n.</pre>
+<pre>P2: Once a proposal with value v is chosen, then subsequent proposals that are chosen must have value v.</pre>
+<pre>P2a: Once a proposal with value v is chosen, any subsequent proposal accepted by an acceptor must have value v.</pre>
+<pre>P2b: Once a proposal with value v is chosen, any subsequent proposals proposed by the proposer must have value v.</pre>
+<pre>P2c: If a proposal numbered n has value v, then there is a majority, or none of them accepts a proposal numbered less than n Either the highest-numbered proposal among all proposals numbered less than n that they have accepted has value v.</pre>
+<h2 id="Zookeeper-2ZookeeperLeaderElection">2 Zookeeper Leader Election</h2>
+<p>Each ZooKeeper server is equivalent to client+proposor+acceptor+learner</p>
+<p>Vote (proposal number, proposed value): myid, zxid, epoch</p>
+<p>Initial value:</p>
+<div class="cnblogs_code">
+<pre>currentVote = <span style="color: rgba(0, 0, 255, 1)">new</span> Vote(myid, getLastLoggedZxid(), getCurrentEpoch());</pre>
+</div>
+<p>Other people’s votes:</p>
+<div class="cnblogs_code">
+<pre>HashMap&lt;Long, Vote&gt; recvset = <span style="color: rgba(0, 0, 255, 1)">new</span> HashMap&lt;Long, Vote&gt;();</pre>
+</div>
+<pre></pre>
+<p>The election algorithm of ZooKeeper has been greatly simplified. The value and version of Paxos are merged into Vote to ensure that a new leader can be elected in the shortest time while avoiding data loss and data synchronization. Let’s look at the following situations:</p>
+<ul>
+<li>When the cluster is started for the first time, the zxid and epoch of all servers are the same. After half of the servers in the cluster are started, whoever has the largest myid will become the leader; for example, there are 5 servers with IDs 1/2/3/4/5. When you start 1/2/3/4/5 sequentially, 3 will become the leader after starting, and 4/5 will become the follower after starting; when you start 5/4/3/2/1 sequentially, 5 will become the leader after 3 starts;</li>
+<li>The cluster restarts. After half of the servers in the cluster are started, whoever has the largest epoch (the leader will add epoch+1 after each election is successful) will become the leader. If everyone's epochs are the same, whoever has the largest zxid (that is, who has the latest data) will become the leader;</li>
+</ul>
+<p> </p>
+<p>Election core class and calling process:</p>
+<p>org.apache.zookeeper.server.quorum.Election</p>
+<p>org.apache.zookeeper.server.quorum.FastLeaderElection implements Election</p>
+<p>         <strong>lookForLeader</strong></p>
+<p>                  sendNotifications</p>
+<p>                  <strong>totalOrderPredicate</strong></p>
+<p>                  termPredicate</p>
+<p>                          org.apache.zookeeper.server.quorum.flexible.QuorumMaj</p>
+<p>                                   <strong>containsQuorum</strong></p>
+<p>                  QuorumPeer.setPeerState</p>
+<p> </p>
+<p>Judgment whether more than half</p>
+<div class="cnblogs_code">
+<pre>    <span style="color: rgba(0, 0, 255, 1)">public</span> <span style="color: rgba(0, 0, 255, 1)">boolean</span> containsQuorum(HashSet&lt;Long&gt;<span style="color: rgba(0, 0, 0, 1)"> set){
+
+        </span><span style="color: rgba(0, 0, 255, 1)">return</span> (set.size() &gt;<span style="color: rgba(0, 0, 0, 1)"> half);
+
+    }</span></pre>
+</div>
+<p>Vote size judgment </p>
+<div class="cnblogs_code">
+<pre>    <span style="color: rgba(0, 0, 255, 1)">protected</span> <span style="color: rgba(0, 0, 255, 1)">boolean</span> totalOrderPredicate(<span style="color: rgba(0, 0, 255, 1)">long</span> newId, <span style="color: rgba(0, 0, 255, 1)">long</span> newZxid, <span style="color: rgba(0, 0, 255, 1)">long</span> newEpoch, <span style="color: rgba(0, 0, 255, 1)">long</span> curId, <span style="color: rgba(0, 0, 255, 1)">long</span> curZxid, <span style="color: rgba(0, 0, 255, 1)">long</span><span style="color: rgba(0, 0, 0, 1)"> curEpoch) {
+
+        LOG.debug(</span>"id: " + newId + ", proposed id: " + curId + ", zxid: 0x" +<span style="color: rgba(0, 0, 0, 1)">
+
+                Long.toHexString(newZxid) </span>+ ", proposed zxid: 0x" +<span style="color: rgba(0, 0, 0, 1)"> Long.toHexString(curZxid));
+
+        </span><span style="color: rgba(0, 0, 255, 1)">if</span>(self.getQuorumVerifier().getWeight(newId) == 0<span style="color: rgba(0, 0, 0, 1)">){
+
+            </span><span style="color: rgba(0, 0, 255, 1)">return</span> <span style="color: rgba(0, 0, 255, 1)">false</span><span style="color: rgba(0, 0, 0, 1)">;
+
+        }
+
+       
+
+        </span><span style="color: rgba(0, 128, 0, 1)">/*</span><span style="color: rgba(0, 128, 0, 1)">
+
+         * We return true if one of the following three cases hold:
+
+         * 1- New epoch is higher
+
+         * 2- New epoch is the same as current epoch, but new zxid is higher
+
+         * 3- New epoch is the same as current epoch, new zxid is the same
+
+         *  as current zxid, but server id is higher.
+
+         </span><span style="color: rgba(0, 128, 0, 1)">*/</span>
+
+       
+
+        <span style="color: rgba(0, 0, 255, 1)">return</span> ((newEpoch &gt; curEpoch) ||<span style="color: rgba(0, 0, 0, 1)">
+
+                ((newEpoch </span>== curEpoch) &amp;&amp;<span style="color: rgba(0, 0, 0, 1)">
+
+                ((newZxid </span>&gt; curZxid) || ((newZxid == curZxid) &amp;&amp; (newId &gt;<span style="color: rgba(0, 0, 0, 1)"> curId)))));
+
+    }</span></pre>
+</div>
+<p> </p>
+<p>refer to:</p>
+<p>https://zookeeper.apache.org/doc/r3.4.13/zookeeperInternals.html#sc_atomicBroadcast</p>
+<p>https://lamport.azurewebsites.net/pubs/paxos-simple.pdf</p>
+<p> </p>
+</div>
+</div>
+<!-- Post Footer -->
+<div class="post-footer">
+<div class="post-navigation">
+<a class="nav-button" href="../blog.html">← Back to Home</a>
+<a class="nav-button" href="0360.html">Next Post →</a>
+</div>
+</div>
+</article>
+</div>
+</body>
+</html>

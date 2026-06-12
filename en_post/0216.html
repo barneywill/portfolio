@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Kerberos 1 - Introduction, installation, use</title>
+<link href="../css/style3.css" rel="stylesheet"/>
+</head>
+<body>
+<div class="container">
+<!-- Header Navigation -->
+<div class="header">
+<h1><a href="../blog.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+</div>
+<!-- Post Container -->
+<article class="post">
+<!-- Post Header -->
+<div class="post-header">
+<h1>Kerberos 1 - Introduction, installation, use</h1>
+<div class="post-meta">
+<div class="post-meta-item">
+<span class="meta-icon">📅</span>
+<span>February 19, 2019</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">📖</span>
+<span>7 min read</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">👁️</span>
+<span>1309 views</span>
+</div>
+</div>
+</div>
+<!-- Post Content -->
+<div class="post-content">
+<div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<p>kerberos5-1.17</p>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201902/1509647-20190218183415676-110417039.png"/></p>
+<p>Official: https://Kerberos.org/</p>
+<p> </p>
+<h1>1 Introduction</h1>
+<p>The Kerberos protocol is designed to provide reliable authentication over open and insecure networks where communications between the hosts belonging to it may be intercepted. However, one should be aware that Kerberos does not provide any guarantees if the computers being used are vulnerable: the authentication servers, application servers (imap, pop, smtp, telnet, ftp, ssh , AFS, lpr, ...) and clients must be kept constantly updated so that the authenticity of the requesting users and service providers can be guaranteed.</p>
+<p>The above points justify the sentence: "Kerberos is an authentication protocol for trusted hosts on untrusted networks". By way of example, and to reiterate the concept: Kerberos' strategies are useless if someone who obtains privileged access to a server, can copy the file containing the secret key. Indeed, the intruder will put this key on another machine, and will only have to obtain a simple spoof DNS or IP address for that server to appear to clients as the authentic server.</p>
+<p> </p>
+<p>Kerberos is a network authentication protocol. It is designed to provide strong authentication for client/server applications by using secret-key cryptography. A free implementation of this protocol is available from the Massachusetts Institute of Technology. Kerberos is available in many commercial products as well.</p>
+<p><em>Kerberos is a network identity authentication protocol that uses key encryption algorithms to provide secure identity authentication for CS applications;</em></p>
+<p>The Internet is an insecure place. Many of the protocols used in the Internet do not provide any security. Tools to "sniff" passwords off of the network are in common use by malicious hackers. Thus, applications which send an unencrypted password over the network are extremely vulnerable. Worse yet, other client/server applications rely on the client program to be "honest" about the identity of the user who is using it. Other applications rely on the client to restrict its activities to those which it is allowed to do, with no other enforcement by the server.</p>
+<p><em>The Internet is not secure. Many protocols on the Internet do not provide any security mechanisms. Tools for sniffing passwords are widely used by hackers on the Internet. Therefore, applications that send clear text passwords on the Internet are very vulnerable. To make matters worse, some CS applications believe that the client user is honest, and some applications rely on the client for security restrictions.</em></p>
+<p>Some sites attempt to use firewalls to solve their network security problems. Unfortunately, firewalls assume that "the bad guys" are on the outside, which is often a very bad assumption. Most of the really damaging incidents of computer crime are carried out by insiders. Firewalls also have a significant disadvantage in that they restrict how your users can use the Internet. (After all, firewalls are simply a less extreme example of the dictum that there is nothing more secure than a computer which is not connected to the network --- and powered off!) In many places, these restrictions are simply unrealistic and unacceptable.</p>
+<p><em>Many websites use firewalls to solve network security problems. Unfortunately, firewalls assume that the bad guys are on the outside. This is a very bad assumption. The vast majority of computer crimes are committed from the inside;</em></p>
+<p>Kerberos was created by MIT as a solution to these network security problems. The Kerberos protocol uses strong cryptography so that a client can prove its identity to a server (and vice versa) across an insecure network connection. After a client and server has used Kerberos to prove their identity, they can also encrypt all of their communications to assure privacy and data integrity as they go about their business.</p>
+<p><em>Kerberos is a solution proposed by MIT to deal with network security problems; the Kerberos protocol uses a strong encryption algorithm so the client can authenticate its identity through an unsecured network connection; when the client and server use Kerberos to authenticate their identity, they can encrypt all connection information to ensure data privacy and integrity;</em></p>
+<p>Kerberos is freely available from MIT, under copyright permissions very similar those used for the BSD operating system and the X Window System. MIT provides Kerberos in source form so that anyone who wishes to use it may look over the code for themselves and assure themselves that the code is trustworthy. In addition, for those who prefer to rely on a professionally supported product, Kerberos is available as a product from many different vendors.</p>
+<p><em>Kerberos is free and open source;</em></p>
+<p>In summary, Kerberos is a solution to your network security problems. It provides the tools of authentication and strong cryptography over the network to help you secure your information systems across your entire enterprise. We hope you find Kerberos as useful as it has been to us. At MIT, Kerberos has been invaluable to our Information/Technology architecture.</p>
+<p><em>Kerberos provides many tools for authentication and strong encryption algorithms;</em></p>
+<p> </p>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201902/1509647-20190218205553763-1218018747.png"/></p>
+<h2>Role</h2>
+<h3>Key Distribution Center (KDC)</h3>
+<p>The authentication server in a Kerberos environment, based on its ticket distribution function for access to the services, is called Key Distribution Center or more briefly KDC. Since it resides entirely on a single physical server (it often coincides with a single process) it can be logically considered divided into three parts: Database, Authentication Server (AS) and Ticket Granting Server (TGS).</p>
+<h4>1）Database</h4>
+<p>The database is the container for entries associated with users and services.</p>
+<h4>2）Authentication Server (AS)</h4>
+<p>The Authentication Server is the part of the KDC which replies to the initial authentication request from the client, when the user, not yet authenticated, must enter the password. In response to an authentication request, the AS issues a special ticket known as the Ticket Granting Ticket, or more briefly TGT, the principal associated with which is krbtgt/REALM@REALM. If the users are actually who they say they are (and we'll see later how they demonstrate this) they can use the TGT to obtain other service tickets, without having to re-enter their password.</p>
+<h4>3）Ticket Granting Server (TGS)</h4>
+<p>The Ticket Granting Server is the KDC component which distributes service tickets to clients with a valid TGT, guaranteeing the authenticity of the identity for obtaining the requested resource on the application servers. The TGS can be considered as an application server (given that to access it it is necessary to present the TGT) which provides the issuing of service tickets as a service. It is important not to confuse the abbreviations TGT and TGS: the first indicates a ticket and the second a service.</p>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201902/1509647-20190219224635990-92948094.png"/></p>
+<p> </p>
+<h2>concept</h2>
+<h3>realm</h3>
+<p>The term realm indicates an authentication administrative domain. Its intention is to establish the boundaries within which an authentication server has the authority to authenticate a user, host or service.<br/>Basically, a user/service belongs to a realm if and only if he/it shares a secret (password/key) with the authentication server of that realm.<br/>The name of a realm is case sensitive, i.e. there is a difference between upper and lower case letters, but normally realms always appear in upper case letters.</p>
+<h3>principal</h3>
+<p>A principal is the name used to refer to the entries in the authentication server database. A principal is associated with each user, host or service of a given realm. A principal in Kerberos 5 is of the following type:<br/>component1/component2/.../componentN@REALM<br/>However, in practice a maximum of two components are used. For an entry referring to a user the principal is the following type:<br/>Name[/Instance]@REALM<br/>The instance is optional and is normally used to better qualify the type of user. For example administrator users normally have the admin instance. The following are examples of principals referred to users:<br/>pippo@EXAMPLE.COM    admin/admin@EXAMPLE.COM    pluto/admin@EXAMPLE.COM</p>
+<h3>Ticket</h3>
+<p>A ticket is something a client presents to an application server to demonstrate the authenticity of its identity. Tickets are issued by the authentication server and are encrypted using the secret key of the service they are intended for. Since this key is a secret shared only between the authentication server and the server providing the service, not even the client which requested the ticket can know it or change its contents. The main information contained in a ticket includes:</p>
+<ul>
+<li>The requesting user's principal (generally the username);</li>
+<li>The principal of the service it is intended for;</li>
+<li>The IP address of the client machine from which the ticket can be used. In Kerberos 5 this field is optional and may also be multiple in order to be able to run clients under NAT or multihomed.</li>
+<li>The date and time (in timestamp format) when the tickets validity commences;</li>
+<li>The ticket's maximum lifetime</li>
+<li>The session key (this has a fundamental role which is described below);</li>
+</ul>
+<h1>2. Installation</h1>
+<h2>kdc</h2>
+<blockquote>
+<p># yum install krb5-libs krb5-server krb5-workstation</p>
+</blockquote>
+<h2>client</h2>
+<blockquote>
+<p># yum install krb5-devel krb5-workstation</p>
+</blockquote>
+<h1>Three uses</h1>
+<h2>kdc</h2>
+<p>1 Modify the configuration: replace domain name, modify ip, comment default_ccache_name</p>
+<blockquote>
+<p># vi /etc/krb5.conf<br/>default_realm = ANYTHING.COM<br/>#default_ccache_name = KEYRING:persistent:%{uid}<br/>[realms]<br/>ANYTHING.COM = {<br/>kdc = 192.168.0.1<br/>admin_server = 192.168.0.1<br/>}<br/>[domain_realm]<br/>.anything.com = ANYTHING.COM<br/>anything.com = ANYTHING.COM</p>
+<p># vi /var/kerberos/krb5kdc/kdc.conf<br/>ANYTHING.COM = {<br/>  #master_key_type = aes256-cts<br/>  max_renewable_life = 7d 0h 0m 0s<br/>  default_principal_flags = +renewable</p>
+<p># vi /var/kerberos/krb5kdc/kadm5.acl<br/>*/admin@ANYTHING.COM *</p>
+</blockquote>
+<p>2 Create database</p>
+<blockquote>
+<p># kdb5_util create - r ANYTHING.COM - s</p>
+</blockquote>
+<p>3 Create the administrator user admin</p>
+<blockquote>
+<p># /usr/sbin/kadmin.local - q "addprinc admin/admin"</p>
+</blockquote>
+<p>4 Start kdc</p>
+<blockquote>
+<p>systemctl start krb5kdc <br/>systemctl start kadmin </p>
+<p>systemctl enable krb5kdc <br/>systemctl enable kadmin</p>
+</blockquote>
+<p>5 Native ticket verification</p>
+<blockquote>
+<p># kinit admin/admin<br/># klist</p>
+</blockquote>
+<p>7 Local admin authentication (no password required on kdc)</p>
+<blockquote>
+<p># kadmin.local<br/>kadmin.local:  ?<br/>Available kadmin.local requests:</p>
+<p>add_principal, addprinc, ank<br/>                         Add principal<br/>delete_principal, delprinc<br/>                         Delete principal<br/>modify_principal, modprinc<br/>                         Modify principal<br/>rename_principal, renprinc<br/>                         Rename principal<br/>change_password, cpw     Change password<br/>get_principal, getprinc  Get principal<br/>list_principals, listprincs, get_principals, getprincs<br/>                         List principals<br/>add_policy, addpol       Add policy<br/>modify_policy, modpol    Modify policy<br/>delete_policy, delpol    Delete policy<br/>get_policy, getpol       Get policy<br/>list_policies, listpols, get_policies, getpols<br/>                         List policies<br/>get_privs, getprivs      Get privileges<br/>ktadd, xst               Add entry(s) to a keytab<br/>ktremove, ktrem          Remove entry(s) from a keytab<br/>lock                     Lock database exclusively (use with extreme caution!)<br/>unlock                   Release exclusive database lock<br/>purgekeys                Purge previously retained old keys from a principal<br/>get_strings, getstrs     Show string attributes on a principal<br/>set_string, setstr       Set a string attribute on a principal<br/>del_string, delstr       Delete a string attribute on a principal<br/>list_requests, lr, ?     List available requests.<br/>quit, exit, q            Exit program.</p>
+</blockquote>
+<p>You can also execute commands directly through parameters, such as</p>
+<blockquote>
+<p># kadmin.local - q 'listprincs'</p>
+</blockquote>
+<p>Using kadmin on non-kdc servers</p>
+<h2>client</h2>
+<p>1 Synchronize /etc/krb5.conf on kdc</p>
+<p>2 Remote admin verification</p>
+<blockquote>
+<p># kadmin - p 'admin/admin'</p>
+</blockquote>
+<p>3 Remote ticket verification</p>
+<blockquote>
+<p># kinit admin/admin<br/># klist</p>
+</blockquote>
+<p> </p>
+<h2>Other commonly used commands</h2>
+<p>1) Log in directly</p>
+<blockquote>
+<p># kinit admin/admin@ANYTHING.COM</p>
+</blockquote>
+<p>2) View</p>
+<blockquote>
+<p># klist</p>
+</blockquote>
+<p>3) Exit</p>
+<blockquote>
+<p># kdestroy</p>
+</blockquote>
+<p>4) Export keytab</p>
+<blockquote>
+<p># kadmin.local - q 'ktadd - k /path/to/test.keytab - norandkey admin/admin@ANYTHING.COM'</p>
+</blockquote>
+<p>5) View keytab</p>
+<blockquote>
+<p># klist - k /path/to/test.keytab</p>
+</blockquote>
+<p>6) Log in using keytab</p>
+<blockquote>
+<p># kinit - kt /path/to/test.keytab admin/admin@ANYTHING.COM</p>
+</blockquote>
+<p>7) Change password</p>
+<blockquote>
+<p># kadmin.local<br/>kadmin.local:  change_password admin/admin@ANYTHING.COM</p>
+</blockquote>
+<p>It can also be modified through kpasswd. The above method of using kadmin.local is equivalent to resetting the password.</p>
+<p>8) Add principal</p>
+<blockquote>
+<p># kadmin.local - q 'addprinc $user/$host@$REALM'</p>
+</blockquote>
+<p>Add the parameter -randkey to use a random password</p>
+<p> </p>
+<p>Reference: https://web.mit.edu/Kerberos/</p>
+<p> </p>
+</div>
+</div>
+<!-- Post Footer -->
+<div class="post-footer">
+<div class="post-navigation">
+<a class="nav-button" href="../blog.html">← Back to Home</a>
+<a class="nav-button" href="0217.html">Next Post →</a>
+</div>
+</div>
+</article>
+</div>
+</body>
+</html>

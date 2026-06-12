@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>MAT Startup Error on macOS</title>
+<link href="../css/style3.css" rel="stylesheet"/>
+</head>
+<body>
+<div class="container">
+<!-- Header Navigation -->
+<div class="header">
+<h1><a href="../blog.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+</div>
+<!-- Post Container -->
+<article class="post">
+<!-- Post Header -->
+<div class="post-header">
+<h1>MAT Startup Error on macOS</h1>
+<div class="post-meta">
+<div class="post-meta-item">
+<span class="meta-icon">📅</span>
+<span>June 10, 2021</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">📖</span>
+<span>1 min read</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">👁️</span>
+<span>849 views</span>
+</div>
+</div>
+</div>
+<!-- Post Content -->
+<div class="post-content">
+<div class="blogpost-body cnblogs-markdown" id="cnblogs_post_body">
+<h2 id="section-0041-1">mat download interface</h2>
+<p><a href="http://www.eclipse.org/mat/downloads.php" rel="noopener nofollow" target="_blank">http://www.eclipse.org/mat/downloads.php</a></p>
+<h2 id="section-0041-2">mac version download address</h2>
+<p><a href="http://www.eclipse.org/downloads/download.php?file=/mat/1.11.0/rcp/MemoryAnalyzer-1.11.0.20201202-macosx.cocoa.x86_64.dmg&amp;mirror_id=1142" rel="noopener nofollow" target="_blank">http://www.eclipse.org/downloads/download.php?file=/mat/1.11.0/rcp/MemoryAnalyzer-1.11.0.20201202-macosx.cocoa.x86_64.dmg&amp;mirror_id=1142</a></p>
+<h2 id="section-0041-3">Error when starting after installation</h2>
+<p>Failed to create the Java Virtual Machine</p>
+<h2 id="section-0041-4">The eclipse.ini configuration path in mat is as follows</h2>
+<p>cat /Applications/mat.app/Contents/Eclipse/MemoryAnalyzer.ini<br/>
+-startup<br/>
+../Eclipse/plugins/org.eclipse.equinox.launcher_1.5.700.v20200207-2156.jar<br/>
+--launcher.library<br/>
+../Eclipse/plugins/org.eclipse.equinox.launcher.cocoa.macosx.x86_64_1.1.1100.v20190907-0426<br/>
+-vmargs<br/>
+-Xmx1024m<br/>
+-Dorg.eclipse.swt.internal.carbon.smallFonts<br/>
+-XstartOnFirstThread</p>
+<h2 id="section-0041-5">change</h2>
+<p>Increase<br/>
+-vm<br/>
+/Library/Java/JavaVirtualMachines/jdk1.8.0_181.jdk/Contents/Home/bin<br/>
+Just increase -Xmx at the same time</p>
+</div>
+</div>
+<!-- Post Footer -->
+<div class="post-footer">
+<div class="post-navigation">
+<a class="nav-button" href="../blog.html">← Back to Home</a>
+<a class="nav-button" href="0042.html">Next Post →</a>
+</div>
+</div>
+</article>
+</div>
+</body>
+</html>

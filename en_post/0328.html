@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Scheduling framework</title>
+<link href="../css/style3.css" rel="stylesheet"/>
+</head>
+<body>
+<div class="container">
+<!-- Header Navigation -->
+<div class="header">
+<h1><a href="../blog.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+</div>
+<!-- Post Container -->
+<article class="post">
+<!-- Post Header -->
+<div class="post-header">
+<h1>Scheduling framework</h1>
+<div class="post-meta">
+<div class="post-meta-item">
+<span class="meta-icon">📅</span>
+<span>December 12, 2018</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">📖</span>
+<span>2 min read</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">👁️</span>
+<span>2517 views</span>
+</div>
+</div>
+</div>
+<!-- Post Content -->
+<div class="post-content">
+<div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<h1>Common scheduling framework implementation methods</h1>
+<div class="table-wrap">
+<table class="confluenceTable">
+<tbody>
+<tr>
+<td class="confluenceTd" rowspan="3">
+<p>Open source</p>
+</td>
+<td class="confluenceTd">
+<p>Oozie</p>
+</td>
+<td class="confluenceTd">
+<p>Mature, stable and reliable, can be directly used in production environment</p>
+</td>
+<td class="confluenceTd">
+<p> </p>
+</td>
+</tr>
+<tr>
+<td class="confluenceTd">
+<p>Azkaban</p>
+</td>
+<td class="confluenceTd">
+<p>Single point, simple and crude, there are two independent sets of scheduling implementations, which require secondary development before they can be used.</p>
+</td>
+<td class="confluenceTd">
+<p> </p>
+</td>
+</tr>
+<tr>
+<td class="confluenceTd">
+<p>Airflow</p>
+</td>
+<td class="confluenceTd">
+<p> </p>
+</td>
+<td class="confluenceTd">
+<p>The code and process configuration are all Python</p>
+</td>
+</tr>
+<tr>
+<td class="confluenceTd" rowspan="3">
+<p>Encapsulate it yourself</p>
+</td>
+<td class="confluenceTd" rowspan="2">
+<p>Based on quartz stand-alone</p>
+</td>
+<td class="confluenceTd">
+<p>Use zk for distributed control</p>
+</td>
+<td class="confluenceTd">
+<p>Commonly used quartz+zk as a scheduling system</p>
+</td>
+</tr>
+<tr>
+<td class="confluenceTd">
+<p>Use db heartbeat for distributed control</p>
+</td>
+<td class="confluenceTd">
+<p>For example, Alibaba Zeus (no longer open source 3 years ago, and still needs some secondary development before it can be used)</p>
+</td>
+</tr>
+<tr>
+<td class="confluenceTd">
+<p>Distributed based on quartz</p>
+</td>
+<td class="confluenceTd">
+<p>quartz itself uses db lock for distributed control</p>
+</td>
+<td class="confluenceTd">
+<p> </p>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>For details on Azkaban implementation, see:<a href="https://www.cnblogs.com/barneywill/p/9895130.html">https://www.cnblogs.com/barneywill/p/9895130.html</a></p>
+<p>For details on Oozie implementation, see:<a href="https://www.cnblogs.com/barneywill/p/9895091.html">https://www.cnblogs.com/barneywill/p/9895091.html</a></p>
+<p>Ps：</p>
+<ul>
+<li>Quartz has two deployment methods:<strong>Standalone</strong>as well as<strong>distributed</strong>(now also supports the new TerracottaJobStore),<strong>Standalone</strong>Due to the RAMJobStore used, there is no way to automatically resume previously interrupted tasks after restarting, so based on<strong>Standalone</strong>The encapsulation mainly consists of two points, one is scheduler distributed control, and the other is automatic task recovery after scheduler restarts. These two points are<strong>distributed</strong>has been implemented in , so based on<strong>Standalone</strong>The encapsulation seems unnecessary;</li>
+<li>Both Azkaban and zeus provide their own execution nodes (executor server in Azkaban and worker in zeus) to execute tasks, and both execute tasks by starting local processes. This will cause two problems:
+<ul>
+<li>The scheduling node scheduler needs to maintain a list of available execution node executors (zeus uses long connections, which does a better job), and resumes tasks when the execution node executor is abnormal, and it is easy to cause some problems due to untimely status synchronization. This is a relatively huge overhead, and Oozie does not need this at all;</li>
+<li>Start a local process to execute a task. Although the resources of the task process can be flexibly controlled, there are tasks<strong>Repeatedly execute at the same time</strong>risk, unless the task itself is guaranteed not to be executed repeatedly at the same time through zk;</li>
+</ul>
+</li>
+<li>
+<p>Compared with Azkaban, zeus does not do well in one thing, it is all-in-one, that is, the master and slave are deployed together. There are two problems, one is the waste of resources, and the other is the mutual influence between the master and the slave;</p>
+</li>
+</ul>
+<p> </p>
+<div class="table-wrap">
+<table class="confluenceTable">
+<tbody>
+<tr>
+<td class="confluenceTd">
+<p> </p>
+</td>
+<td class="confluenceTd">
+<p>Oozie</p>
+</td>
+<td class="confluenceTd">
+<p>Azkaban</p>
+</td>
+<td class="confluenceTd">
+<p>Zeus</p>
+</td>
+</tr>
+<tr>
+<td class="confluenceTd">
+<p>Version</p>
+</td>
+<td class="confluenceTd">
+<p>4.3（5.0Beta）</p>
+</td>
+<td class="confluenceTd">
+<p>3.45</p>
+</td>
+<td class="confluenceTd">
+<p> </p>
+</td>
+</tr>
+<tr>
+<td class="confluenceTd">
+<p>High availability</p>
+</td>
+<td class="confluenceTd">
+<p><strong>Support(zk)</strong></p>
+</td>
+<td class="confluenceTd">
+<p>Not supported (single point exists)</p>
+</td>
+<td class="confluenceTd">
+<p><strong>Support (db heartbeat)</strong></p>
+</td>
+</tr>
+<tr>
+<td class="confluenceTd">
+<p>High stability</p>
+</td>
+<td class="confluenceTd">
+<p><strong>yes</strong></p>
+</td>
+<td class="confluenceTd">
+<p>unknown</p>
+</td>
+<td class="confluenceTd">
+<p>unknown</p>
+</td>
+</tr>
+<tr>
+<td class="confluenceTd">
+<p>Function</p>
+</td>
+<td class="confluenceTd">
+<p><strong>Rich</strong></p>
+</td>
+<td class="confluenceTd">
+<p>Simple</p>
+</td>
+<td class="confluenceTd">
+<p>Simple</p>
+</td>
+</tr>
+<tr>
+<td class="confluenceTd">
+<p>interface</p>
+</td>
+<td class="confluenceTd">
+<p>Ext2</p>
+</td>
+<td class="confluenceTd">
+<p><strong>most</strong></p>
+</td>
+<td class="confluenceTd">
+<p>Gwt</p>
+</td>
+</tr>
+<tr>
+<td class="confluenceTd">
+<p>Is secondary development required?</p>
+</td>
+<td class="confluenceTd">
+<p><strong>no</strong></p>
+</td>
+<td class="confluenceTd">
+<p>yes</p>
+</td>
+<td class="confluenceTd">
+<p>yes</p>
+</td>
+</tr>
+<tr>
+<td class="confluenceTd">
+<p>Is manual intervention required?</p>
+</td>
+<td class="confluenceTd">
+<p><strong>no</strong></p>
+</td>
+<td class="confluenceTd">
+<p>yes</p>
+</td>
+<td class="confluenceTd">
+<p><strong>no</strong></p>
+</td>
+</tr>
+<tr>
+<td class="confluenceTd">
+<p>Restart the server process to automatically recover</p>
+</td>
+<td class="confluenceTd">
+<p><strong>yes</strong></p>
+</td>
+<td class="confluenceTd">
+<p>no</p>
+</td>
+<td class="confluenceTd">
+<p><strong>yes</strong></p>
+</td>
+</tr>
+<tr>
+<td class="confluenceTd">
+<p>Is there a risk of repeated tasks?</p>
+</td>
+<td class="confluenceTd">
+<p><strong>no</strong></p>
+</td>
+<td class="confluenceTd">
+<p>yes</p>
+</td>
+<td class="confluenceTd">
+<p>yes</p>
+</td>
+</tr>
+<tr>
+<td class="confluenceTd">
+<p>Code quality</p>
+</td>
+<td class="confluenceTd">
+<p><strong>high</strong></p>
+</td>
+<td class="confluenceTd">
+<p>generally</p>
+</td>
+<td class="confluenceTd">
+<p>generally</p>
+</td>
+</tr>
+<tr>
+<td class="confluenceTd">
+<p>code update</p>
+</td>
+<td class="confluenceTd">
+<p><strong>normal</strong></p>
+</td>
+<td class="confluenceTd">
+<p>too often</p>
+</td>
+<td class="confluenceTd">
+<p>Stop open source and no one maintains it</p>
+</td>
+</tr>
+<tr>
+<td class="confluenceTd">
+<p>Master-slave separation (separation of task allocation and execution)</p>
+</td>
+<td class="confluenceTd">
+<p><strong>yes</strong></p>
+</td>
+<td class="confluenceTd">
+<p><strong>yes</strong></p>
+</td>
+<td class="confluenceTd">
+<p>no</p>
+</td>
+</tr>
+<tr>
+<td class="confluenceTd">
+<p>Minimum resource usage</p>
+</td>
+<td class="confluenceTd">
+<p>2 servers</p>
+<p>Yarn</p>
+</td>
+<td class="confluenceTd">
+<p>1 web server</p>
+<p>2 executor servers</p>
+</td>
+<td class="confluenceTd">
+<p>2 servers</p>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p> </p>
+<h1>Scheduling related terms</h1>
+<div class="table-wrap">
+<table class="confluenceTable">
+<tbody>
+<tr>
+<td class="confluenceTd">
+<p>Task</p>
+</td>
+<td class="confluenceTd">
+<p>Task/Job</p>
+</td>
+<td class="confluenceTd">
+<p>a specific operation</p>
+</td>
+</tr>
+<tr>
+<td class="confluenceTd">
+<p>Workflow</p>
+</td>
+<td class="confluenceTd">
+<p>Workflow</p>
+</td>
+<td class="confluenceTd">
+<p>Made up of multiple tasks</p>
+</td>
+</tr>
+<tr>
+<td class="confluenceTd">
+<p>Scheduling</p>
+</td>
+<td class="confluenceTd">
+<p>Coordinator</p>
+</td>
+<td class="confluenceTd">
+<p>Trigger workflow according to conditions, such as timing</p>
+</td>
+</tr>
+<tr>
+<td class="confluenceTd">
+<p>definition</p>
+</td>
+<td class="confluenceTd">
+<p>Definition</p>
+</td>
+<td class="confluenceTd">
+<p>Describe what needs to be done, such as task definition, workflow definition, and scheduling definition</p>
+</td>
+</tr>
+<tr>
+<td class="confluenceTd">
+<p>Example</p>
+</td>
+<td class="confluenceTd">
+<p>Instance</p>
+</td>
+<td class="confluenceTd">
+<p>A specific execution defined, including execution time, status, etc.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<p> </p>
+<h1 id="section-0328-1">Scheduling framework common abstraction</h1>
+<h2 id="section-0328-2">1 Task, workflow, scheduling</h2>
+<p> <img alt="" src="https://img2018.cnblogs.com/blog/1509647/201812/1509647-20181212175553729-1356937850.png"/></p>
+<p> </p>
+<h2 id="section-0328-3">2 Definition and examples</h2>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201812/1509647-20181212175612987-989643361.png"/></p>
+<p> </p>
+<h2 id="section-0328-4">3 abstract</h2>
+<p>l  <strong>ModelModel</strong>Divided into three types:<strong>Task</strong><strong>Task/Job</strong><strong>, WorkflowWorkflow</strong><strong>, Scheduling Coordinator</strong>, one or more tasks are combined into a workflow. The workflow can be triggered manually or configured with a schedule. Common schedules include timing;</p>
+<p>l  <strong>DefinitionDefinition</strong>Each execution of is a<strong>Example</strong><strong>Instance</strong>，<strong>Example</strong>Record start and end time, status, log, etc.;</p>
+<p> </p>
+<p><strong><em>The abstractions of all scheduling frameworks are the same or similar, so in theory the scheduling framework A can be</em></strong><strong><em>Task, workflow, and scheduling definitions </em></strong><strong><em><span style="text-decoration: underline">Translate</span> </em></strong><strong><em>For scheduling framework B</em></strong><strong><em>Task, workflow, and scheduling definitions</em></strong><strong><em>, to realize switching of scheduling framework;</em></strong></p>
+<p> </p>
+<p>An analogy is that scheduling frame A is a Chinese worker, scheduling frame B is a Japanese worker, and the Chinese worker is sick. Now it is necessary to add a translator C to tell the Japanese worker the content and time of the Chinese worker's work, and at the same time, continuously synchronize the progress of the Japanese worker's work to the Chinese worker. All changes are transparent to the leadership;</p>
+</div>
+<p> </p>
+</div>
+</div>
+<!-- Post Footer -->
+<div class="post-footer">
+<div class="post-navigation">
+<a class="nav-button" href="../blog.html">← Back to Home</a>
+<a class="nav-button" href="0329.html">Next Post →</a>
+</div>
+</div>
+</article>
+</div>
+</body>
+</html>

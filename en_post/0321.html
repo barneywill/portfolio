@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Oozie 3 - Oozie upgraded from 4.3 to 5.0</title>
+<link href="../css/style3.css" rel="stylesheet"/>
+</head>
+<body>
+<div class="container">
+<!-- Header Navigation -->
+<div class="header">
+<h1><a href="../blog.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+</div>
+<!-- Post Container -->
+<article class="post">
+<!-- Post Header -->
+<div class="post-header">
+<h1>Oozie 3 - Oozie upgraded from 4.3 to 5.0</h1>
+<div class="post-meta">
+<div class="post-meta-item">
+<span class="meta-icon">📅</span>
+<span>December 13, 2018</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">📖</span>
+<span>1 min read</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">👁️</span>
+<span>596 views</span>
+</div>
+</div>
+</div>
+<!-- Post Content -->
+<div class="post-content">
+<div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<p>The official documentation is as follows:</p>
+<p>http://oozie.apache.org/docs/5.0.0/AG_OozieUpgrade.html</p>
+<p>What is written here is relatively simple, and the approximate process is as follows:<br/>1 Download the 5.0 code and compile it;<br/>2 Unzip the 5.0 package and replace Oozie-site.XML;<br/>3 Stop all processes;<br/>4. Upgrade DB according to the official documentation;<br/>5 Restart Oozie;<br/>6 Restore all processes;</p>
+<p><br/>At this time, the upgrade is completed. If you are careful enough, you will find that there is still a small problem. The Job DAG cannot be displayed. In Oozie's Job DAG image implementation in 5.0, graphviz is used instead, which needs to be installed.</p>
+<blockquote>
+<p>yum install graphviz</p>
+</blockquote>
+<p> </p>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201812/1509647-20181213162956877-1635587739.png"/></p>
+<p> </p>
+</div>
+</div>
+<!-- Post Footer -->
+<div class="post-footer">
+<div class="post-navigation">
+<a class="nav-button" href="../blog.html">← Back to Home</a>
+<a class="nav-button" href="0322.html">Next Post →</a>
+</div>
+</div>
+</article>
+</div>
+</body>
+</html>

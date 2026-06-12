@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Kafka 1 - Introduction, installation and use</title>
+<link href="../css/style3.css" rel="stylesheet"/>
+</head>
+<body>
+<div class="container">
+<!-- Header Navigation -->
+<div class="header">
+<h1><a href="../blog.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+</div>
+<!-- Post Container -->
+<article class="post">
+<!-- Post Header -->
+<div class="post-header">
+<h1>Kafka 1 - Introduction, installation and use</h1>
+<div class="post-meta">
+<div class="post-meta-item">
+<span class="meta-icon">📅</span>
+<span>November 06, 2018</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">📖</span>
+<span>10 min read</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">👁️</span>
+<span>725 views</span>
+</div>
+</div>
+</div>
+<!-- Post Content -->
+<div class="post-content">
+<div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<p>kafka2.0</p>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201811/1509647-20181107112126875-840401567.png"/></p>
+<p> </p>
+<p><a href="http://kafka.apache.org" rel="noopener nofollow">http://kafka.apache.org</a></p>
+<p> </p>
+<h1><span>1 Introduction</span></h1>
+<p>Kafka® is used for building <strong>real-time data pipelines and streaming apps</strong>. It is <strong>horizontally scalable</strong>, <strong>fault-tolerant</strong>, <strong>wicked fast</strong>, and <strong>runs in production in thousands of companies</strong>.</p>
+<blockquote>
+<p>Kafka is often used to build real-time data pipelines or streaming applications. It supports horizontal scalability, is fault-tolerant, and is extremely fast. It has been used in the production environments of thousands of companies. written in <strong>Scala</strong> by <strong>LinkedIn</strong></p>
+</blockquote>
+<p>A streaming platform has <strong>three key capabilities</strong>:</p>
+<ul>
+<li><strong>Publish and subscribe</strong> to streams of records, similar to a <strong>message queue</strong> or enterprise messaging system.</li>
+<li><strong>Store</strong> streams of records in a fault-tolerant durable way.</li>
+<li><strong>Process</strong> streams of records as they occur.</li>
+</ul>
+<blockquote>
+<p>Key capabilities: publish and subscribe, message storage, real-time processing</p>
+</blockquote>
+<p>First a few concepts:</p>
+<ul>
+<li>Kafka is run as a <strong>cluster</strong> on one or more servers that can span multiple datacenters.</li>
+<li>The Kafka cluster stores streams of <em>records</em> in categories called <strong><em>topics</em></strong>.</li>
+<li>Each record consists of <strong>a key, a value, and a timestamp</strong>.</li>
+</ul>
+<blockquote>
+<p>Kafka runs on one or more servers in a cluster. The categories of message records stored in Kafka are called topics. Each message record contains key, value and timestamp.</p>
+</blockquote>
+<p> </p>
+<h2>1 Limitations of traditional MQ</h2>
+<p>Messaging traditionally has two models: <a href="http://en.wikipedia.org/wiki/Message_queue" rel="noopener nofollow">queuing</a> and <a href="http://en.wikipedia.org/wiki/Publish%E2%80%93subscribe_pattern" rel="noopener nofollow">publish-subscribe</a>. In a queue, a pool of consumers may read from a server and each record goes to one of them; in publish-subscribe the record is broadcast to all consumers. Each of these two models has a strength and a weakness. The strength of queuing is that it allows you to divide up the processing of data over multiple consumer instances, which lets you scale your processing. Unfortunately, queues aren't multi-subscriber—once one process reads the data it's gone. Publish-subscribe allows you broadcast data to multiple processes, but has no way of scaling processing since every message goes to every subscriber.</p>
+<blockquote>
+<p>There are two traditional message queue models: queue and publish and subscribe;</p>
+<p>In the queue model, there are many consumers who can read messages from one server, and each message will only be processed by one consumer;</p>
+<p>In the publish-subscribe model, each message is broadcast to all consumers;</p>
+<p>Both have advantages and disadvantages. The advantage of the queue model is that it allows you to distribute message processing to multiple consumers in parallel, which can increase the message processing speed; the disadvantage is that once a consumer reads a message, the message disappears; the advantage of the publish-subscribe model is that it allows you to broadcast a message to multiple consumers; the disadvantage is that messages cannot be processed in parallel;</p>
+<p>As you can see later, Kafka has the advantages of both models;</p>
+</blockquote>
+<p>A traditional queue retains records in-order on the server, and if multiple consumers consume from the queue then the server hands out records in the order they are stored. However, although the server hands out records in order, the records are delivered asynchronously to consumers, so they may arrive out of order on different consumers. This effectively means the ordering of the records is lost in the presence of parallel consumption. Messaging systems often work around this by having a notion of "exclusive consumer" that allows only one process to consume from a queue, but of course this means that there is no parallelism in processing.</p>
+<blockquote>
+<p>The traditional message queue maintains the order of messages on the server side. If there are multiple consumers consuming messages from the queue at the same time, the server will dispatch the messages in the order of the messages. However, since the consumer consumes messages asynchronously, it is very likely to be out of order during consumption. This indicates that the order of messages is lost in parallel message processing. At this time, the usual approach is to only allow one consumer to consume messages to ensure the order in which messages are processed.</p>
+</blockquote>
+<p> </p>
+<h2>2 Role &amp; API</h2>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201811/1509647-20181107112141546-825668721.png"/></p>
+<p> </p>
+<p>Kafka has five core APIs:</p>
+<div>
+<ul>
+<li><strong>The <a href="http://kafka.apache.org/documentation.html#producerapi" rel="noopener nofollow">Producer API</a> allows an application to publish a stream of records to one or more Kafka topics.</strong></li>
+<li><strong>The <a href="http://kafka.apache.org/documentation.html#consumerapi" rel="noopener nofollow">Consumer API</a> allows an application to subscribe to one or more topics and process the stream of records produced to them.</strong></li>
+<li>The <a href="http://kafka.apache.org/documentation/streams" rel="noopener nofollow">Streams API</a> allows an application to act as a <em>stream processor</em>, consuming an input stream from one or more topics and producing an output stream to one or more output topics, effectively transforming the input streams to output streams.</li>
+<li>The <a href="http://kafka.apache.org/documentation.html#connect" rel="noopener nofollow">Connector API</a> allows building and running reusable producers or consumers that connect Kafka topics to existing applications or data systems. For example, a connector to a relational database might capture every change to a table.</li>
+<li>The <a href="http://kafka.apache.org/documentation/#adminapi" rel="noopener nofollow">AdminClient</a> API allows managing and inspecting topics, brokers, and other Kafka objects.</li>
+</ul>
+</div>
+<blockquote>
+<p>The most commonly used ones in Kafka are Producer API (sending messages) and Consumer API (consuming messages), as well as Streams API, Connector API, and AdminClient API;</p>
+</blockquote>
+<p>In Kafka the communication between the clients and the servers is done with a simple, high-performance, language agnostic <a href="https://kafka.apache.org/protocol.html" rel="noopener nofollow">TCP protocol</a>. This protocol is versioned and maintains backwards compatibility with older version. We provide a Java client for Kafka, but clients are available in <a href="https://cwiki.apache.org/confluence/display/KAFKA/Clients" rel="noopener nofollow">many languages</a>.</p>
+<p> </p>
+<h2>3 Topic &amp; Partition</h2>
+<p>A <strong>topic</strong> is a category or feed name to which records are published. Topics in Kafka are always multi-subscriber; that is, a topic can have zero, one, or many <strong>consumers</strong> that subscribe to the data written to it.</p>
+<blockquote>
+<p>Topic refers to the category of message records. The message sent needs to specify a topic. At the same time, a topic can be consumed by multiple consumers;</p>
+</blockquote>
+<p>For each topic, the Kafka cluster maintains a partitioned log that looks like this:</p>
+<blockquote>
+<p>Each topic has one or more partitions, and each partition corresponds to a log file.</p>
+</blockquote>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201811/1509647-20181107112158126-1769207494.png"/></p>
+<p> </p>
+<p>Each <strong>partition</strong> is an ordered, immutable sequence of records that is continually appended to—a structured commit log. The records in the partitions are each assigned a sequential id number called the <strong><em>offset</em></strong><strong> </strong>that uniquely identifies each record within the partition.</p>
+<blockquote>
+<p>Each partition consists of sequential messages, which are sequentially appended to a log file; each message in the partition has a sequential ID called offset to uniquely define a message in a partition;</p>
+</blockquote>
+<p>The Kafka cluster durably <strong>persists</strong> all published records—whether or not they have been consumed—using a configurable <strong>retention</strong> period. For example, if the retention policy is set to two days, then for the two days after a record is published, it is available for consumption, after which it will be discarded to free up space. Kafka's <strong>performance</strong> is effectively constant with respect to data size so storing data for a long time is not a problem.</p>
+<blockquote>
+<p>The Kafka cluster will persist all messages (regardless of whether they have been consumed). There is also a retention time configuration. When the retention time is set to 2 days, a message can be consumed within 2 days after it is published. If it exceeds 2 days, it will be discarded to free up space. Therefore, the performance of Kafka has nothing to do with the data size, even if the data is stored for a long time, there is no problem;</p>
+</blockquote>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201811/1509647-20181107112211068-1579651601.png"/></p>
+<p> </p>
+<p>In fact, the only metadata retained on a per-consumer basis is the <strong>offset</strong> or position of that consumer in the log. This <strong>offset</strong> is controlled by the consumer: normally a consumer will advance its offset linearly as it reads records, but, in fact, since the position is controlled by the consumer it can consume records in any order it likes. For example a consumer can reset to an older offset to reprocess data from the past or skip ahead to the most recent record and start consuming from "now".</p>
+<blockquote>
+<p>The only metadata on the consumer side is the offset of each partition currently consumed; offset is controlled by the consumer. Usually a consumer continues to increase the offset while it continues to read messages. A consumer can also re-consume part of the message or skip part of the message by modifying the offset;</p>
+</blockquote>
+<p>The <strong>partitions</strong> in the log serve several purposes. First, they allow the log to <strong>scale</strong> beyond a size that will fit on a single server. Each individual partition must fit on the servers that host it, but a topic may have many partitions so it can handle an arbitrary amount of data. Second they act as the unit of <strong>parallelism</strong>—more on that in a bit.</p>
+<blockquote>
+<p>A topic can have multiple partitions, which has two advantages. One is to allow the data volume of the topic to exceed the capacity limit of a single machine, and the other is to support concurrency (including sending and consumption);</p>
+</blockquote>
+<p> </p>
+<p>The <strong>partitions</strong> of the log are distributed over the servers in the Kafka cluster with each server handling data and requests for a share of the partitions. Each partition is replicated across a configurable number of servers for fault tolerance.</p>
+<blockquote>
+<p>The partitions are distributed among all servers in the Kafka cluster. Each server will process the request of one or more partitions. Each partition will be backed up between servers according to the configured number to achieve fault tolerance;</p>
+</blockquote>
+<p>Each <strong>partition</strong> has one server which acts as the "<strong>leader</strong>" and zero or more servers which act as "<strong>followers</strong>". The leader handles all read and write requests for the partition while the followers passively replicate the leader. If the leader fails, one of the followers will automatically become the new leader. Each server acts as a leader for some of its partitions and a follower for others so load is <strong>well balanced</strong> within the cluster.</p>
+<blockquote>
+<p>Each partition has one server called the leader, and 0 or more servers called followers. The number here is determined by the number of replicas. The leader will process all read and write requests for the partition, and the followers only passively synchronize the leader's data. If the leader dies, one of the followers will automatically become the new leader. Each server will serve as the leader of some partitions and as the follower of other partitions.</p>
+</blockquote>
+<p> </p>
+<h2>4 Producer &amp; Consumer</h2>
+<p><strong>Producers</strong> publish data to the topics of their choice. The producer is responsible for choosing which record to assign to which partition within the topic. This can be done in a round-robin fashion simply to balance load or it can be done according to some semantic partition function (say based on some key in the record). </p>
+<p><strong>Consumers</strong> label themselves with a <em>consumer <strong>group</strong></em><strong> </strong>name, and each record published to a topic is delivered to one consumer instance within each subscribing consumer group. Consumer instances can be in separate processes or on separate machines.</p>
+<blockquote>
+<p>The producer is used to send messages to topics. The producer can decide which partition to send the message to. The random strategy is commonly used here. In addition, it can also be partitioned according to the key, that is, messages with the same key will be sent to a partition;</p>
+<p>Consumers are grouped by group, and each message in the topic will only be consumed by one consumer in a group;</p>
+</blockquote>
+<p><strong>If all the consumer instances have the same consumer group, then the records will effectively be load balanced over the consumer instances.</strong></p>
+<blockquote>
+<p>If all consumerrs are in a group, load balancing will be automatically performed between them;</p>
+</blockquote>
+<p><strong>If all the consumer instances have different consumer groups, then each record will be broadcast to all the consumer processes.</strong></p>
+<blockquote>
+<p>If all consumers are in different groups, each message will be broadcast to all consumers;</p>
+</blockquote>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201811/1509647-20181107112224538-609622010.png"/></p>
+<p> </p>
+<p>A two server Kafka cluster hosting four partitions (P0-P3) with two consumer groups. Consumer group A has two consumer instances and group B has four.</p>
+<p>The way consumption is implemented in Kafka is by dividing up the partitions in the log over the consumer instances so that each instance is the exclusive consumer of a "fair share" of partitions at any point in time. This process of maintaining membership in the group is handled by the Kafka protocol dynamically. If new instances join the group they will take over some partitions from other members of the group; if an instance dies, its partitions will be distributed to the remaining instances.</p>
+<blockquote>
+<p>Message consumption on Kafka is achieved by evenly allocating partitions among all consumers;</p>
+</blockquote>
+<p>Kafka only provides a total <strong>order</strong> over records <em>within</em> a partition, not between different partitions in a topic. Per-partition ordering combined with the ability to partition data by key is sufficient for most applications. However, if you require a total order over records this can be achieved with a topic that has only one partition, though this will mean only one consumer process per consumer group.</p>
+<blockquote>
+<p>Kafka only supports the order of messages within partitions. This feature, coupled with the ability to control message partitions through keys, can meet the ordering requirements of most applications for message consumption. If you want to strictly require the orderliness of message consumption within a topic, this can only be achieved by having only one partition in the topic + only one consumer in the consumer group;</p>
+</blockquote>
+<p> </p>
+<h2>5 Guarantee</h2>
+<p>At a high-level Kafka gives the following guarantees:</p>
+<ul>
+<li>Messages sent by a producer to a particular topic partition will be appended in the order they are sent. That is, if a record M1 is sent by the same producer as a record M2, and M1 is sent first, then M1 will have a lower offset than M2 and appear earlier in the log.</li>
+<li>A consumer instance sees records in the order they are stored in the log.</li>
+<li>For a topic with replication factor N, we will tolerate up to N-1 server failures without losing any records committed to the log.</li>
+</ul>
+<blockquote>
+<p>The messages sent by a producer to a topic and a partition are appended in the order in which they are sent, that is, the sending order determines the storage order; a consumer consumes the messages of a topic and a partition in the order in which they are stored, that is, the storage order determines the consumption order; N replicas can tolerate N-1 servers to hang up;</p>
+</blockquote>
+<p> </p>
+<h1>2. Installation and use</h1>
+<blockquote>
+<div class="line number1 index0 alt2"><code class="bash plain">&gt; </code><code class="bash functions">tar</code> <code class="bash plain">-xzf kafka_2.11-2.0.0.tgz</code></div>
+<div class="line number2 index1 alt1"><code class="bash plain">&gt; </code><code class="bash functions">cd</code> <code class="bash plain">kafka_2.11-2.0.0</code></div>
+</blockquote>
+<h2>1 Stand-alone startup</h2>
+<blockquote>
+<div class="line number2 index1 alt1"><code class="bash plain">&gt; bin</code><code class="bash plain">/zookeeper-server-start</code><code class="bash plain">.sh config</code><code class="bash plain">/zookeeper</code><code class="bash plain">.properties</code></div>
+<div class="line number2 index1 alt1"><code class="bash plain">&gt; bin</code><code class="bash plain">/kafka-server-start</code><code class="bash plain">.sh config</code><code class="bash plain">/server</code><code class="bash plain">.properties</code></div>
+</blockquote>
+<h2 class="line number2 index1 alt1">2 Command line client</h2>
+<h3 class="line number2 index1 alt1">2.1 Create and view topics</h3>
+<blockquote>
+<div class="line number2 index1 alt1"><code class="bash plain">&gt; bin</code><code class="bash plain">/kafka-topics</code><code class="bash plain">.sh --create --zookeeper localhost:2181 --replication-factor 1 --partitions 1 --topic </code><code class="bash functions">test</code></div>
+<div class="line number2 index1 alt1"><code class="bash plain">&gt; bin</code><code class="bash plain">/kafka-topics</code><code class="bash plain">.sh --list --zookeeper localhost:2181</code></div>
+</blockquote>
+<div class="line number2 index1 alt1">
+<blockquote>
+<div class="line number1 index0 alt2"><code class="bash plain">&gt; bin</code><code class="bash plain">/kafka-topics</code><code class="bash plain">.sh --describe --zookeeper localhost:2181 --topic my-replicated-topic</code></div>
+<div class="line number2 index1 alt1"><code class="bash plain">Topic:my-replicated-topic   PartitionCount:1    ReplicationFactor:3 Configs:</code></div>
+<div class="line number3 index2 alt2"><code class="bash spaces">    </code><code class="bash plain">Topic: my-replicated-topic  Partition: 0    Leader: 1   Replicas: 1,2,0 Isr: 1,2,0</code></div>
+</blockquote>
+</div>
+<div class="line number3 index2 alt2">
+<ul>
+<li>"<strong>leader</strong>" is the node responsible for all reads and writes for the given partition. Each node will be the leader for a randomly selected portion of the partitions.</li>
+<li>"<strong>replicas</strong>" is the list of nodes that replicate the log for this partition regardless of whether they are the leader or even if they are currently alive.</li>
+<li>"<strong>isr</strong>" is the set of "in-sync" replicas. This is the subset of the replicas list that is currently alive and caught-up to the leader.</li>
+</ul>
+</div>
+<h3 class="line number2 index1 alt1">2.2 Producing and consuming news</h3>
+<blockquote>
+<div class="line number2 index1 alt1"><code class="bash plain">&gt; bin</code><code class="bash plain">/kafka-console-producer</code><code class="bash plain">.sh --broker-list localhost:9092 --topic </code><code class="bash functions">test</code></div>
+<div class="line number2 index1 alt1"><code class="bash plain">&gt; bin</code><code class="bash plain">/kafka-console-consumer</code><code class="bash plain">.sh --bootstrap-server localhost:9092 --topic </code><code class="bash functions">test</code> <code class="bash plain">--from-beginning</code></div>
+</blockquote>
+<h3 class="line number2 index1 alt1">2.3 Modify and view broker configuration</h3>
+<blockquote>
+<div class="line number2 index1 alt1"><code class="bash plain">&gt; bin</code><code class="bash plain">/kafka-configs</code><code class="bash plain">.sh --bootstrap-server localhost:9092 --entity-</code><code class="bash functions">type</code> <code class="bash plain">brokers --entity-name 0 --alter --add-config log.cleaner.threads=2</code></div>
+<div class="line number2 index1 alt1"><code class="bash plain">&gt; bin</code><code class="bash plain">/kafka-configs</code><code class="bash plain">.sh --bootstrap-server localhost:9092 --entity-</code><code class="bash functions">type</code> <code class="bash plain">brokers --entity-name 0 --describe</code></div>
+</blockquote>
+<div class="line number2 index1 alt1">
+<blockquote>
+<div class="line number1 index0 alt2"><code class="bash plain">&gt; bin</code><code class="bash plain">/kafka-configs</code><code class="bash plain">.sh --bootstrap-server localhost:9092 --entity-</code><code class="bash functions">type</code> <code class="bash plain">brokers --entity-name 0 --alter --delete-config log.cleaner.threads</code></div>
+</blockquote>
+</div>
+<div class="line number1 index0 alt2">From Kafka version 1.1 onwards, some of the broker configs can be updated without restarting the broker. See the <code>Dynamic Update Mode</code>column in <a href="http://kafka.apache.org/documentation/#brokerconfigs" rel="noopener nofollow">Broker Configs</a> for the update mode of each broker config.
+<ul>
+<li><code>read-only</code>: Requires a broker restart for update</li>
+<li><code>per-broker</code>: May be updated dynamically for each broker</li>
+<li><code>cluster-wide</code>: May be updated dynamically as a cluster-wide default. May also be updated as a per-broker value for testing.</li>
+</ul>
+</div>
+<h2>3 Cluster startup</h2>
+<h3>3.1 Configuration</h3>
+<blockquote>
+<div class="line number2 index1 alt1">
+<pre>broker.id=1<br/>listeners=PLAINTEXT://:9093<br/>log.dirs=/tmp/kafka-logs-1<br/>zookeeper.connect=$zookeeper_server1:port1</pre>
+</div>
+</blockquote>
+<p>The <code><a href="http://broker.id" rel="noopener nofollow">broker.id</a></code> property is the unique and permanent name of each node in the cluster. </p>
+<p>Other important configuration:</p>
+<p>auto.create.topics.enable Whether to automatically create the topic if it does not exist when sending a message</p>
+<p>delete.topic.enable Whether to allow deletion of topic</p>
+<p>num.partitions The default number of partitions when automatically creating a topic</p>
+<p>default.replication.factor The default number of replicas when automatically creating a topic</p>
+<p><span><span><a href="http://broker.id/" rel="noopener nofollow">broker.id</a><span>.generation.enable whether the broker's ID increases automatically</span></span></span></p>
+<p><span><span><a href="http://host.name" rel="noopener nofollow">host.name</a></span></span></p>
+<p>log.dirs data storage directory, defaults to /tmp, must be modified</p>
+<p><span>log.cleanup.policy data cleaning policy</span></p>
+<p>log.retention.bytes</p>
+<p><span><span><a href="http://log.retention.ms" rel="noopener nofollow">log.retention.ms</a></span></span></p>
+<p><span><span><span><a href="http://log.roll.ms" rel="noopener nofollow">log.roll.ms</a></span></span></span></p>
+<p>log.segment.bytes</p>
+<p><span><span><span><a href="http://replica.lag.time.max.ms" rel="noopener nofollow">replica.lag.time.max.ms</a></span></span></span></p>
+<p>log.message.timestamp.type</p>
+<p>num.network.threads</p>
+<p><a href="http://num.io" rel="noopener nofollow">num.io</a>.threads</p>
+<p>compression.type</p>
+<p> </p>
+</div>
+</div>
+<!-- Post Footer -->
+<div class="post-footer">
+<div class="post-navigation">
+<a class="nav-button" href="../blog.html">← Back to Home</a>
+<a class="nav-button" href="0353.html">Next Post →</a>
+</div>
+</div>
+</article>
+</div>
+</body>
+</html>

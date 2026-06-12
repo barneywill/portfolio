@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Flink 1 - Introduction, installation and use</title>
+<link href="../css/style3.css" rel="stylesheet"/>
+</head>
+<body>
+<div class="container">
+<!-- Header Navigation -->
+<div class="header">
+<h1><a href="../blog.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+</div>
+<!-- Post Container -->
+<article class="post">
+<!-- Post Header -->
+<div class="post-header">
+<h1>Flink 1 - Introduction, installation and use</h1>
+<div class="post-meta">
+<div class="post-meta-item">
+<span class="meta-icon">📅</span>
+<span>January 22, 2019</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">📖</span>
+<span>8 min read</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">👁️</span>
+<span>1528 views</span>
+</div>
+</div>
+</div>
+<!-- Post Content -->
+<div class="post-content">
+<div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<p> Flink 1.7</p>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201901/1509647-20190121163753461-778772614.png"/></p>
+<p>Official: https://flink.apache.org/</p>
+<p> </p>
+<h1>1 Introduction</h1>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201901/1509647-20190121214142689-832586480.png"/></p>
+<p> </p>
+<p>Apache Flink is an open source platform for distributed stream and batch data processing. Flink’s core is a streaming dataflow engine that provides data distribution, communication, and fault tolerance for distributed computations over data streams. Flink builds batch processing on top of the streaming engine, overlaying native iteration support, managed memory, and program optimization.</p>
+<p>Flink is an open source distributed streaming and batch processing platform; the core of Flink is a streaming data flow engine, and then batch processing is implemented based on the streaming engine. Just the opposite of Spark, the core of Spark is a batch processing engine, and then stream processing is implemented based on the batch processing engine;</p>
+<p> </p>
+<h2>1 Cluster deployment structure view</h2>
+<p>Understand the cluster-level concept in flink: master-slave, namely JobManager-TaskManager (task slot)</p>
+<h3>master-worker structure-1</h3>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201901/1509647-20190122203235962-2038303250.png"/></p>
+<h3>master-worker structure-2</h3>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201901/1509647-20190122203422164-992292977.png"/></p>
+<h3>Role</h3>
+<h4>1 JobManager -- master</h4>
+<p> The JobManagers (also called masters) coordinate the distributed execution. They schedule tasks, coordinate checkpoints, coordinate recovery on failures, etc.</p>
+<p> There is always at least one Job Manager. A high-availability setup will have multiple JobManagers, one of which one is always the leader, and the others are standby.</p>
+<p><em> JobManager is responsible for coordinating distributed execution, including scheduling tasks, coordinating checkpoints, coordinating error recovery, etc.; at least one JobManager is required. If there are multiple (ha), only one can be the leader, and the others are standbys;</em></p>
+<h4>2 TaskManager -- i.e. worker</h4>
+<p> The TaskManagers (also called workers) execute the tasks (or more specifically, the subtasks) of a dataflow, and buffer and exchange the data streams.</p>
+<p> There must always be at least one TaskManager.</p>
+<p><em> TaskManager is responsible for specifically executing tasks in the data flow; at least one TaskManager is required;</em></p>
+<h5>2.1 Task Slot</h5>
+<p>  Each worker (TaskManager) is a <em>JVM process</em>, and may execute one or more subtasks in separate threads. To control how many tasks a worker accepts, a worker has so called task slots (at least one).</p>
+<p>  Each <em>task slot</em> represents a fixed subset of resources of the TaskManager. A TaskManager with three slots, for example, will dedicate 1/3 of its managed memory to each slot. Slotting the resources means that a subtask will not compete with subtasks from other jobs for managed memory, but instead has a certain amount of reserved managed memory. Note that no CPU isolation happens here; currently slots only separate the managed memory of tasks.</p>
+<p><em>  Each worker (TaskManager) is a JVM process, and each worker is divided into multiple task slots. A task slot represents a part of independent resources (i.e., memory) in the worker, so that there is no memory competition between subtasks in different task slots;</em></p>
+<h4>3 client</h4>
+<p> The client is not part of the runtime and program execution, but is used to prepare and send a dataflow to the JobManager. After that, the client can disconnect, or stay connected to receive progress reports. The client runs either as part of the Java/Scala program that triggers the execution, or in the command line process ./bin/flink run ....</p>
+<p><em> The client is responsible for submitting the data stream to the JobManager. After the submission is completed, the client can be disconnected; the client usually starts like this ./bin/flink run ....</em></p>
+<p> </p>
+<h2>2 Hello World application-word frequency statistics</h2>
+<p>Let’s use code and diagrams to understand several application-level concepts in flink: dataflow, task, operator (subtask), stream (partition), task slot</p>
+<p>batch code</p>
+<div class="cnblogs_code">
+<pre><span style="color: rgba(0, 0, 255, 1)">import</span><span style="color: rgba(0, 0, 0, 1)"> org.apache.flink.api.scala._
+
+object WordCount {
+  def main(args: Array[String]) {
+
+    val env </span>=<span style="color: rgba(0, 0, 0, 1)"> ExecutionEnvironment.getExecutionEnvironment
+    val text </span>=<span style="color: rgba(0, 0, 0, 1)"> env.fromElements(
+      </span>"Who's there?"<span style="color: rgba(0, 0, 0, 1)">,
+      </span>"I think I hear them. Stand, ho! Who's there?"<span style="color: rgba(0, 0, 0, 1)">)
+
+    val counts </span>= text.flatMap { _.toLowerCase.split("\\W+"<span style="color: rgba(0, 0, 0, 1)">) filter { _.nonEmpty } }
+      .map { (_, </span>1<span style="color: rgba(0, 0, 0, 1)">) }
+      .groupBy(</span>0<span style="color: rgba(0, 0, 0, 1)">)
+      .sum(</span>1<span style="color: rgba(0, 0, 0, 1)">)
+
+    counts.print()
+  }
+}</span></pre>
+</div>
+<p>streaming code</p>
+<div class="cnblogs_code">
+<pre><span style="color: rgba(0, 0, 255, 1)">import</span><span style="color: rgba(0, 0, 0, 1)"> org.apache.flink.streaming.api.scala._
+</span><span style="color: rgba(0, 0, 255, 1)">import</span><span style="color: rgba(0, 0, 0, 1)"> org.apache.flink.streaming.api.windowing.time.Time
+
+object WindowWordCount {
+  def main(args: Array[String]) {
+
+    val env </span>=<span style="color: rgba(0, 0, 0, 1)"> StreamExecutionEnvironment.getExecutionEnvironment
+    val text </span>= env.socketTextStream("localhost", 9999<span style="color: rgba(0, 0, 0, 1)">)
+
+    val counts </span>= text.flatMap { _.toLowerCase.split("\\W+"<span style="color: rgba(0, 0, 0, 1)">) filter { _.nonEmpty } }
+      .map { (_, </span>1<span style="color: rgba(0, 0, 0, 1)">) }
+      .keyBy(</span>0<span style="color: rgba(0, 0, 0, 1)">)
+      .timeWindow(Time.seconds(</span>5<span style="color: rgba(0, 0, 0, 1)">))
+      .sum(</span>1<span style="color: rgba(0, 0, 0, 1)">)
+
+    counts.print()
+
+    env.execute(</span>"Window Stream WordCount"<span style="color: rgba(0, 0, 0, 1)">)
+  }
+}</span></pre>
+</div>
+<h3>Illustrated execution process-1</h3>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201901/1509647-20190122221038469-1137220399.png"/></p>
+<p>Explanation: The application code actually describes a dataflow. A dataflow consists of multiple operators: Source Operator, Transformation Operator, Sink Operator, and a stream is formed between operators;</p>
+<p> </p>
+<h3>Illustrated execution process-2</h3>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201901/1509647-20190122215240876-578968913.png"/></p>
+<p>Explanation: Each operator can be split into multiple subtasks for execution, so that the stream after the operator also forms multiple partitions; in addition, shuffle is required between some operators;</p>
+<p> </p>
+<p>Programs in Flink are inherently parallel and distributed. During execution, a stream has one or more stream partitions, and each operator has one or more operator subtasks. The operator subtasks are independent of one another, and execute in different threads and possibly on different machines or containers.</p>
+<p>The number of operator subtasks is the parallelism of that particular operator. The parallelism of a stream is always that of its producing operator. Different operators of the same program may have different levels of parallelism.</p>
+<p>During the execution of flink, a stream has one or more partitions, and each operator has one or more subtasks. The subtasks under an operator are independent of each other (executed in different threads and executed in different machines or containers as much as possible);</p>
+<p> </p>
+<p>Streams can transport data between two operators in a one-to-one (or forwarding) pattern, or in a redistributing pattern:</p>
+<ul>
+<li>One-to-one streams (for example between the Source and the map() operators in the figure above) preserve the partitioning and ordering of the elements. That means that subtask[1] of the map() operator will see the same elements in the same order as they were produced by subtask[1] of the Source operator.</li>
+<li>Redistributing streams (as between map() and keyBy/window above, as well as between keyBy/window and Sink) change the partitioning of streams. Each operator subtask sends data to different target subtasks, depending on the selected transformation. Examples are keyBy() (which re-partitions by hashing the key), broadcast(), or rebalance() (which re-partitions randomly). In a redistributing exchange the ordering among the elements is only preserved within each pair of sending and receiving subtasks (for example, subtask[1] of map() and subtask[2] of keyBy/window). So in this example, the ordering within each key is preserved, but the parallelism does introduce non-determinism regarding the order in which the aggregated results for different keys arrive at the sink.</li>
+</ul>
+<p>There are two types of operators, one is one-to-one or forwarding, and the other is redistributing (shuffle);</p>
+<p>The forwarding operator in flink is similar to the map of transformation in Spark, the redistributing operator is similar to the reduceByKey of transformation in Spark (requires shuffle), and the sink operator is similar to the action in Spark;</p>
+<p> </p>
+<h3>Illustrated execution process-3</h3>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201901/1509647-20190122221445926-397607556.png"/></p>
+<p>Explanation: Multiple operators can be chained together to form a task;</p>
+<p> </p>
+<p>For distributed execution, Flink chains operator subtasks together into tasks. Each task is executed by one thread. Chaining operators together into tasks is a useful optimization: it reduces the overhead of thread-to-thread handover and buffering, and increases overall throughput while decreasing latency. </p>
+<p>Chaining operations to form tasks is a very useful optimization: it reduces data exchange between threads, increases throughput and reduces latency;</p>
+<p> </p>
+<h3>Illustrated execution process-4</h3>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201901/1509647-20190122222652739-628253053.png"/></p>
+<p>Explanation: Subtasks of a task will be assigned to different task slots for execution, and subtasks of different tasks can share a task slot;</p>
+<p> </p>
+<p>By default, Flink allows subtasks to share slots even if they are subtasks of different tasks, so long as they are from the same job. The result is that one slot may hold an entire pipeline of the job. Allowing this <em>slot sharing</em> has two main benefits:</p>
+<ul>
+<li>
+<p>A Flink cluster needs exactly as many task slots as the highest parallelism used in the job. No need to calculate how many tasks (with varying parallelism) a program contains in total.</p>
+</li>
+<li>
+<p>It is easier to get better resource utilization. Without slot sharing, the non-intensive <em>source/map()</em> subtasks would block as many resources as the resource intensive <em>window</em> subtasks. With slot sharing, increasing the base parallelism in our example from two to six yields full utilization of the slotted resources, while making sure that the heavy subtasks are fairly distributed among the TaskManagers.</p>
+</li>
+</ul>
+<p>By default, flink allows subtasks of different tasks under a job to share a task slot; sharing task slots has two benefits: 1) The number of task slots represents the highest number of concurrencies in a job; 2) Reasonable use of resources;</p>
+<p>As a rule-of-thumb, a good default number of task slots would be the number of CPU cores. With hyper-threading, each slot then takes 2 or more hardware thread contexts.</p>
+<p>Usually the number of task slots is set to the number of cores of the CPU;</p>
+<p> </p>
+<h2>3 API</h2>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201901/1509647-20190123102536707-723274600.png"/></p>
+<p>Four levels of abstraction (API) description:</p>
+<ul>
+<li>The lowest level abstraction simply offers stateful streaming. It is embedded into the DataStream API via the Process Function. It allows users freely process events from one or more streams, and use consistent fault tolerant state. In addition, users can register event time and processing time callbacks, allowing programs to realize sophisticated computations.</li>
+<li>In practice, most applications would not need the above described low level abstraction, but would instead program against the Core APIs like the DataStream API (bounded/unbounded streams) and the DataSet API (bounded data sets). These fluent APIs offer the common building blocks for data processing, like various forms of user-specified transformations, joins, aggregations, windows, state, etc. Data types processed in these APIs are represented as classes in the respective programming languages.</li>
+<li>The Table API is a declarative DSL centered around tables, which may be dynamically changing tables (when representing streams). The Table API follows the (extended) relational model: Tables have a schema attached (similar to tables in relational databases) and the API offers comparable operations, such as select, project, join, group-by, aggregate, etc. Table API programs declaratively define what logical operation should be done rather than specifying exactly how the code for the operation looks. Though the Table API is extensible by various types of user-defined functions, it is less expressive than the Core APIs, but more concise to use (less code to write). In addition, Table API programs also go through an optimizer that applies optimization rules before execution.</li>
+<li>The highest level abstraction offered by Flink is SQL. This abstraction is similar to the Table API both in semantics and expressiveness, but represents programs as SQL query expressions. The SQL abstraction closely interacts with the Table API, and SQL queries can be executed over tables defined in the Table API.</li>
+</ul>
+<p> </p>
+<p>DataStream common APIs: https://ci.apache.org/projects/flink/flink-docs-release-1.7/dev/stream/operators/index.html</p>
+<p>Common APIs for DataSet: https://ci.apache.org/projects/flink/flink-docs-release-1.7/dev/batch/index.html#dataset-transformations</p>
+<p>Similar to the transformation operator in Spark</p>
+<p> </p>
+<p>refer to: </p>
+<p>https://ci.apache.org/projects/flink/flink-docs-release-1.7/concepts/programming-model.html<br/>https://ci.apache.org/projects/flink/flink-docs-release-1.7/concepts/runtime.html</p>
+<h1>2. Installation</h1>
+<h2>download</h2>
+<blockquote>
+<p># wget http://mirrors.tuna.tsinghua.edu.cn/apache/flink/flink-1.7.1/flink-1.7.1-bin-hadoop28-scala_2.11.tgz<br/># tar xvf flink-1.7.1-bin-hadoop28-scala_2.11.tgz<br/># cd flink-1.7.1</p>
+</blockquote>
+<h2>Cluster environment SSH no need to log in (please skip for single machine)</h2>
+<p>For details, see:<a href="https://www.cnblogs.com/barneywill/p/10271679.html" target="_blank">https://www.cnblogs.com/barneywill/p/10271679.html</a></p>
+<h2>start up</h2>
+<h3>1 Start in standalone mode</h3>
+<p>start up</p>
+<blockquote>
+<p># bin/start-cluster.sh</p>
+</blockquote>
+<p>For details, see: https://ci.apache.org/projects/flink/flink-docs-release-1.7/tutorials/local_setup.html</p>
+<h3>2 Single master multi-worker startup</h3>
+<p>Configuration</p>
+<blockquote>
+<p># cat conf/flink-conf.yaml<br/>jobmanager.rpc.address: $master_server<br/>jobmanager.rpc.port: 6123</p>
+</blockquote>
+<p>Synchronize flink-conf.yaml to all nodes</p>
+<blockquote>
+<p># cat conf/slaves<br/>$slave1<br/>$slave2<br/>$slave3</p>
+</blockquote>
+<p>start up</p>
+<blockquote>
+<p># bin/start-cluster.sh</p>
+</blockquote>
+<p>For details, see: https://ci.apache.org/projects/flink/flink-docs-release-1.7/ops/deployment/cluster_setup.html</p>
+<h3>3 ha mode startup (multiple masters and multiple workers)</h3>
+<p>Configuration</p>
+<blockquote>
+<p># cat conf/flink-conf.yaml<br/>#jobmanager.rpc.address: $master_server<br/>#jobmanager.rpc.port: 6123</p>
+<p>high-availability: zookeeper<br/>high-availability.storageDir: hdfs:///flink/ha/<br/>high-availability.zookeeper.quorum: $zk_server1:2181</p>
+<p>rest.port: 8081</p>
+</blockquote>
+<p>Synchronize flink-conf.yaml to all nodes</p>
+<p>The main modification is: open the high-availability related configuration, and comment out jobmanager.rpc.address and jobmanager.rpc.port. The official explanation is as follows:</p>
+<p><em>The config parameter defining the network address to connect to for communication with the job manager. This value is only interpreted in setups where a single JobManager with static name or address exists (simple standalone setups, or container setups with dynamic service name resolution). It is not used in many high-availability setups, when a leader-election service (like ZooKeeper) is used to elect and discover the JobManager leader from potentially multiple standby JobManagers.</em></p>
+<blockquote>
+<p># cat conf/masters<br/>$master1:8081<br/>$master2:8081</p>
+</blockquote>
+<blockquote>
+<p># cat conf/slaves<br/>$slave1<br/>$slave2<br/>$slave3</p>
+</blockquote>
+<p>start up</p>
+<blockquote>
+<p># bin/start-cluster.sh</p>
+</blockquote>
+<p>You can also start them one by one</p>
+<blockquote>
+<p># bin/jobmanager.sh start<br/># bin/taskmanager.sh start</p>
+</blockquote>
+<h3>4 Others (YARN, Mesos, etc.)</h3>
+<p>Start the flink cluster on YARN</p>
+<blockquote>
+<p>./bin/yarn-session.sh - n 4 - jm 1024m - tm 4096m</p>
+</blockquote>
+<p> </p>
+<p>Visit http://$master1:8081</p>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201901/1509647-20190122160804829-858702224.png"/></p>
+<p> </p>
+<h1>Three uses</h1>
+<p>Submit task</p>
+<blockquote>
+<p>$ ./bin/flink run examples/streaming/SocketWindowWordCount.jar --port 9000</p>
+</blockquote>
+<p>Submit tasks to YARN</p>
+<blockquote>
+<p>./bin/flink run - m yarn-cluster - yn 4 - yjm 1024m - ytm 4096m ./examples/batch/WordCount.jar</p>
+</blockquote>
+<p> </p>
+</div>
+</div>
+<!-- Post Footer -->
+<div class="post-footer">
+<div class="post-navigation">
+<a class="nav-button" href="../blog.html">← Back to Home</a>
+<a class="nav-button" href="0253.html">Next Post →</a>
+</div>
+</div>
+</article>
+</div>
+</body>
+</html>

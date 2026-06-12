@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>ELK analyzes Nginx logs</title>
+<link href="../css/style3.css" rel="stylesheet"/>
+</head>
+<body>
+<div class="container">
+<!-- Header Navigation -->
+<div class="header">
+<h1><a href="../blog.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+</div>
+<!-- Post Container -->
+<article class="post">
+<!-- Post Header -->
+<div class="post-header">
+<h1>ELK analyzes Nginx logs</h1>
+<div class="post-meta">
+<div class="post-meta-item">
+<span class="meta-icon">📅</span>
+<span>January 26, 2019</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">📖</span>
+<span>1 min read</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">👁️</span>
+<span>509 views</span>
+</div>
+</div>
+</div>
+<!-- Post Content -->
+<div class="post-content">
+<div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<p>Install elk (Elasticsearch, logstach, kibana) in advance</p>
+<h1>1. Start Logstash</h1>
+<p>$LOGSTASH_HOME defaults to /usr/share/Logstash or /opt/Logstash</p>
+<h2>1 Nginx log uses default format</h2>
+<blockquote>
+<p>    log_format  main  '$remote_addr - $remote_user [$time_local] "$request" '</p>
+<p>                      '$status $body_bytes_sent "$http_referer" '</p>
+<p>                      '"$http_user_agent" "$http_x_forwarded_for"';</p>
+</blockquote>
+<h2>2 Download geo library</h2>
+<blockquote>
+<p># cd /etc/logstash<br/># wget https://geolite.maxmind.com/download/geoip/database/GeoLite2-City.tar.gz<br/># tar xvf GeoLite2-City.tar.gz</p>
+</blockquote>
+<h2>3 Add Logstash configuration</h2>
+<blockquote>
+<p># cat /etc/logstash/conf.d/nginx_access.conf</p>
+<p>input {</p>
+<p>    file {</p>
+<p>        path =&gt; [ "/path/to/nginx/access.log" ]</p>
+<p>        start_position =&gt; "beginning"</p>
+<p>        ignore_older =&gt; 0</p>
+<p>    }</p>
+<p>}</p>
+<p>filter {</p>
+<p>    grok {</p>
+<p>        match =&gt; { "message" =&gt; "%{IPORHOST:client_ip} (%{USER:ident}|-) (%{USER:auth}|-) \[%{HTTPDATE:timestamp}\] \"(?:%{WORD:verb} (%{NOTSPACE:request}|-)(?: HTTP/%{NUMBER:http_version})?|-)\" (%{NUMBER:response}|-) (?:%{NUMBER:bytes}|-) %{QS:referrer} %{QS:agent}" }</p>
+<p>    }</p>
+<p>    geoip {</p>
+<p>      source =&gt; "client_ip"</p>
+<p>      target =&gt; "geoip"</p>
+<p>      database =&gt; "/etc/logstash/GeoLite2-City_20190122/GeoLite2-City.mmdb"</p>
+<p>      add_field =&gt; [ "[geoip][coordinates]", "%{[geoip][longitude]}" ]</p>
+<p>      add_field =&gt; [ "[geoip][coordinates]", "%{[geoip][latitude]}" ]</p>
+<p>    }</p>
+<p>    mutate {</p>
+<p>      convert =&gt; [ "[geoip][coordinates]", "float" ]</p>
+<p>      convert =&gt; [ "response","integer" ]</p>
+<p>      convert =&gt; [ "bytes","integer" ]</p>
+<p>      replace =&gt; { "type" =&gt; "nginx_access" }</p>
+<p>      remove_field =&gt; "message"</p>
+<p>    }</p>
+<p>    date {</p>
+<p>      match =&gt; [ "timestamp","dd/MMM/yyyy:HH:mm:ss Z"]</p>
+<p>    }</p>
+<p>    mutate {</p>
+<p>      remove_field =&gt; "timestamp"</p>
+<p>    }</p>
+<p>}</p>
+<p>output {</p>
+<p>    elasticsearch {</p>
+<p>        hosts =&gt; ["$es_server:9200"]</p>
+<p>        index =&gt; "logstash-nginx-access-%{+YYYY.MM.dd}"</p>
+<p>    }</p>
+<p>    stdout {codec =&gt; rubydebug}</p>
+<p>}</p>
+</blockquote>
+<p>Modify the Nginx log path and Elasticsearch host;</p>
+<p>If you have modified the Nginx log format, you also need to modify the grok format. The grok format can be debugged here: http://grokdebug.herokuapp.com/</p>
+<p>If the format is incorrect, _grokparsefailure will be reported</p>
+<h2>4 Test whether the configuration is normal</h2>
+<blockquote>
+<p>$LOGSTASH_HOME/bin/logstash -t -f /etc/logstash/conf.d/nginx_access.conf</p>
+</blockquote>
+<p>Normally it should print Configuration OK</p>
+<h2>5 Start Logstash</h2>
+<blockquote>
+<p>$LOGSTASH_HOME/bin/logstash -f /etc/logstash/conf.d/nginx_access.conf</p>
+</blockquote>
+<h1>2 View Elasticsearch</h1>
+<blockquote>
+<p># curl http://$es_server:9200/_cat/indices?v<br/>health status index                            uuid                   pri rep docs.count docs.deleted store.size pri.store.size<br/>green  open   logstash-nginx-access-2019.01.26 -szaQCE3THyq-fXbU18riQ   5   1       7875            0    862.7kb        465.2kb</p>
+</blockquote>
+<p>At this point there should be an index in Elasticsearch</p>
+<h1>3. Configure kibana</h1>
+<p>Open the browser: http://$kibana_server:5000</p>
+<p>Configure the index pattern as: Logstash-Nginx-access-*<br/>Configure Time-field as: @timestamp</p>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201901/1509647-20190126195006808-1251357812.png"/></p>
+<p>Then you can configure various visualizations and dashboards</p>
+<p> </p>
+</div>
+</div>
+<!-- Post Footer -->
+<div class="post-footer">
+<div class="post-navigation">
+<a class="nav-button" href="../blog.html">← Back to Home</a>
+<a class="nav-button" href="0246.html">Next Post →</a>
+</div>
+</div>
+</article>
+</div>
+</body>
+</html>

@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Running Multiple SELECT DISTINCT Expressions in Impala</title>
+<link href="../css/style3.css" rel="stylesheet"/>
+</head>
+<body>
+<div class="container">
+<!-- Header Navigation -->
+<div class="header">
+<h1><a href="../blog.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+</div>
+<!-- Post Container -->
+<article class="post">
+<!-- Post Header -->
+<div class="post-header">
+<h1>Running Multiple SELECT DISTINCT Expressions in Impala</h1>
+<div class="post-meta">
+<div class="post-meta-item">
+<span class="meta-icon">📅</span>
+<span>September 28, 2019</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">📖</span>
+<span>1 min read</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">👁️</span>
+<span>5052 views</span>
+</div>
+</div>
+</div>
+<!-- Post Content -->
+<div class="post-content">
+<div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<p>Impala will report an error when executing multiple count distinct in a select, such as executing</p>
+<blockquote>
+<p>select key, count(distinct column_a), count(distinct column_b) from test_table group by key</p>
+</blockquote>
+<p>Will report an error</p>
+<blockquote>
+<p>Query submitted at: 2019-09-28 00:34:20 (Coordinator: http://DataOne-001:25000)<br/>ERROR: AnalysisException: all DISTINCT aggregate functions need to have the same set of parameters as count(DISTINCT column_a); 
+<br/>deviating function: count(DISTINCT column_b)<br/>Consider using NDV() instead of COUNT(DISTINCT) if estimated counts are acceptable. Enable the APPX_COUNT_DISTINCT query option to 
+<br/>perform this rewrite automatically.</p>
+</blockquote>
+<p>There are several methods at this time:</p>
+<h2>1 Use approximations</h2>
+<p>1.1 set APPX_COUNT_DISTINCT = true<br/>1.2 count distinct is changed to ndv, that is, ndv(column_a)<br/>The underlying implementation of these two methods is the same. Setting APPX_COUNT_DISTINCT will automatically rewrite count distinct as ndv. The full name of ndv is (number of distinct values). Use
+<br/>Cardinality (cardinality counting), the underlying implementation is a probability algorithm similar to HLLC (Hyper LogLog Counting), see the reference for details;</p>
+<p><em>An aggregate function that returns an approximate value similar to the result of <code class="ph codeph">COUNT(DISTINCT <var class="keyword varname">col</var>)</code>, the <span class="q">"number of distinct values". It is much faster than the combination of <code class="ph codeph">COUNT</code> and <code class="ph codeph">DISTINCT</code>, and uses a constant amount of memory and thus is less memory-intensive for columns with high cardinality.</span></em></p>
+<h2>2 Use exact values</h2>
+<p>Rewrite it into multiple subqueries and then join, such as</p>
+<blockquote>
+<p>select a.key, a.count_a, b.count_b from <br/>(select key, count(distinct column_a) count_a from test_table group by key) a join<br/>(select key, count(distinct column_b) count_b from test_table group by key) b on a.key = b.key</p>
+</blockquote>
+<p> </p>
+<p>Reference:</p>
+<p>ndv</p>
+<p><a href="http://impala.apache.org/docs/build/html/topics/impala_ndv.html#ndv" rel="noopener nofollow">http://impala.apache.org/docs/build/html/topics/impala_ndv.html#ndv</a></p>
+<p>APPX_COUNT_DISTINCT</p>
+<p><a href="http://impala.apache.org/docs/build/html/topics/impala_appx_count_distinct.html" rel="noopener nofollow">http://impala.apache.org/docs/build/html/topics/impala_appx_count_distinct.html</a></p>
+<p>other</p>
+<p><a href="https://stackoverflow.com/questions/39236076/impala-all-distinct-aggregate-functions-need-to-have-the-same-set-of-parameters" rel="noopener nofollow">https://stackoverflow.com/questions/39236076/impala-all-distinct-aggregate-functions-need-to-have-the-same-set-of-parameters</a></p>
+<p> </p>
+</div>
+</div>
+<!-- Post Footer -->
+<div class="post-footer">
+<div class="post-navigation">
+<a class="nav-button" href="../blog.html">← Back to Home</a>
+<a class="nav-button" href="0091.html">Next Post →</a>
+</div>
+</div>
+</article>
+</div>
+</body>
+</html>

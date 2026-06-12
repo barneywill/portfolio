@@ -1,0 +1,622 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Programming Practices Comparison Java vs Scala</title>
+<link href="../css/style3.css" rel="stylesheet"/>
+</head>
+<body>
+<div class="container">
+<!-- Header Navigation -->
+<div class="header">
+<h1><a href="../blog.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+</div>
+<!-- Post Container -->
+<article class="post">
+<!-- Post Header -->
+<div class="post-header">
+<h1>Programming Practices Comparison Java vs Scala</h1>
+<div class="post-meta">
+<div class="post-meta-item">
+<span class="meta-icon">📅</span>
+<span>December 28, 2018</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">📖</span>
+<span>20 min read</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">👁️</span>
+<span>635 views</span>
+</div>
+</div>
+</div>
+<!-- Post Content -->
+<div class="post-content">
+<div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<p>scala</p>
+<p>official address <a href="https://www.scala-lang.org/" rel="noopener nofollow" target="_blank">https://www.scala-lang.org/</a></p>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201812/1509647-20181228180305245-1771195010.png"/></p>
+<p>This article tries its best to include some major significant differences between Java and Scala in programming practice, showing the simplicity and elegance of Scala code; Scala takes over both &lt;Object Oriented Programming&gt; and &lt;Functional Programming&gt;. Many open source components are developed with Scala (such as Spark, Kafka, etc.). Although Java has supported lambda expressions since 8, it is already close to Scala in some aspects, but...</p>
+<p>Look directly at the code comparison:</p>
+<h1>1 Loop</h1>
+<h2>1 for</h2>
+<p>Get even numbers between 0-10</p>
+<p>scala</p>
+<div class="cnblogs_code">
+<pre>    <span style="color: rgba(0, 0, 255, 1)">for</span> (i &lt;- 0 to 10 <span style="color: rgba(0, 0, 255, 1)">if</span> i % 2 == 0<span style="color: rgba(0, 0, 0, 1)">) println(i)
+    </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)">or</span>
+    <span style="color: rgba(0, 0, 255, 1)">for</span> (i &lt;- 0 to 5) println(i * 2<span style="color: rgba(0, 0, 0, 1)">)
+    </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)">or</span>
+    <span style="color: rgba(0, 0, 255, 1)">for</span> (i &lt;- 0 until 6) println(i * 2)<br/>    //or<br/>    Array.range(0, 10, 2).foreach(println)</pre>
+</div>
+<p> java</p>
+<div class="cnblogs_code">
+<pre>        <span style="color: rgba(0, 0, 255, 1)">for</span> (<span style="color: rgba(0, 0, 255, 1)">int</span> i = 0; i &lt;= 10; i++<span style="color: rgba(0, 0, 0, 1)">) {
+            </span><span style="color: rgba(0, 0, 255, 1)">if</span> (i % 2 == 0<span style="color: rgba(0, 0, 0, 1)">) {
+                System.out.println(i);
+            }
+        }
+        </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)">or</span>
+        <span style="color: rgba(0, 0, 255, 1)">for</span> (<span style="color: rgba(0, 0, 255, 1)">int</span> i = 0; i &lt;= 10; i += 2<span style="color: rgba(0, 0, 0, 1)">) {
+            System.out.println(i);
+        }
+        </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)">or</span>
+        <span style="color: rgba(0, 0, 255, 1)">for</span> (<span style="color: rgba(0, 0, 255, 1)">int</span> i = 0; i &lt;= 5; i++<span style="color: rgba(0, 0, 0, 1)">) {
+            System.out.println(i </span>* 2<span style="color: rgba(0, 0, 0, 1)">);
+        }</span></pre>
+</div>
+<p>output<br/>0<br/>2<br/>4<br/>6<br/>8<br/>10</p>
+<h2>2 foreach</h2>
+<p>iterative output</p>
+<p>scala</p>
+<div class="cnblogs_code">
+<pre>val list = List(2, 4, 1, 3, 5<span style="color: rgba(0, 0, 0, 1)">)
+list.foreach(println)</span></pre>
+</div>
+<p>java</p>
+<div class="cnblogs_code">
+<pre>        List&lt;Integer&gt; list = Arrays.asList(<span style="color: rgba(0, 0, 255, 1)">new</span> Integer[]{2, 4, 1, 3, 5<span style="color: rgba(0, 0, 0, 1)">});
+        </span><span style="color: rgba(0, 0, 255, 1)">for</span><span style="color: rgba(0, 0, 0, 1)"> (Integer item : list) {
+            System.out.println(item);
+        }
+        </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)">or</span>
+        list.forEach((item) -&gt; System.out.println(item));</pre>
+</div>
+<p>output<br/>2<br/>4<br/>1<br/>3<br/>5</p>
+<h1>2. Functional</h1>
+<p>Functional expression refers to functions as a type of variables. Let’s look at common packaging applications.</p>
+<p>scala</p>
+<div class="cnblogs_code">
+<pre>    def wrapper(str : String, f : ((String) =&gt; String)): Unit =<span style="color: rgba(0, 0, 0, 1)"> {
+      println(</span>"wrapper start"<span style="color: rgba(0, 0, 0, 1)">)
+      println(f(str))
+      println(</span>"wrapper end"<span style="color: rgba(0, 0, 0, 1)">)
+    }
+    def say(str : String) : String </span>= "hello " +<span style="color: rgba(0, 0, 0, 1)"> str
+    wrapper(</span>"test"<span style="color: rgba(0, 0, 0, 1)">, say)
+    </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)">or</span>
+    wrapper("test", (str =&gt; "hello " + str))</pre>
+</div>
+<p>java</p>
+<div class="cnblogs_code">
+<pre>    <span style="color: rgba(0, 0, 255, 1)">interface</span><span style="color: rgba(0, 0, 0, 1)"> SayInterface {
+        </span><span style="color: rgba(0, 0, 255, 1)">public</span><span style="color: rgba(0, 0, 0, 1)"> String say(String str);
+    }
+    </span><span style="color: rgba(0, 0, 255, 1)">public</span> <span style="color: rgba(0, 0, 255, 1)">void</span><span style="color: rgba(0, 0, 0, 1)"> wrapper1(String str, SayInterface si) {
+        System.out.println(</span>"wrapper start"<span style="color: rgba(0, 0, 0, 1)">);
+        System.out.println(si.say(str));
+        System.out.println(</span>"wrapper end"<span style="color: rgba(0, 0, 0, 1)">);
+    }
+    </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)">or</span>
+    <span style="color: rgba(0, 0, 255, 1)">public</span> <span style="color: rgba(0, 0, 255, 1)">void</span> wrapper2(String str, Function&lt;String, String&gt;<span style="color: rgba(0, 0, 0, 1)"> f) {
+        System.out.println(</span>"wrapper start"<span style="color: rgba(0, 0, 0, 1)">);
+        System.out.println(f.apply(str));
+        System.out.println(</span>"wrapper end"<span style="color: rgba(0, 0, 0, 1)">);
+    }
+
+        </span><span style="color: rgba(0, 0, 255, 1)">this</span>.wrapper1("test", <span style="color: rgba(0, 0, 255, 1)">new</span><span style="color: rgba(0, 0, 0, 1)"> SayInterface() {
+            @Override
+            </span><span style="color: rgba(0, 0, 255, 1)">public</span><span style="color: rgba(0, 0, 0, 1)"> String say(String str) {
+                </span><span style="color: rgba(0, 0, 255, 1)">return</span> "hello " +<span style="color: rgba(0, 0, 0, 1)"> str;
+            }
+        });
+        </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)">or</span>
+        <span style="color: rgba(0, 0, 255, 1)">this</span>.wrapper1("test", ((item) -&gt; "hello " +<span style="color: rgba(0, 0, 0, 1)"> item));
+        </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)">or</span>
+        <span style="color: rgba(0, 0, 255, 1)">this</span>.wrapper2("test", ((item) -&gt; "hello " + item));</pre>
+</div>
+<p>In early Java, functional expression was equivalent to command mode. It was necessary to define a command interface, and then different interface implementations could be passed in. This formed a strategy mode, such as jdk's sorting interface;</p>
+<p>output<br/>wrapper start<br/>hello test<br/>wrapper end</p>
+<h1>Three Array Collection</h1>
+<h2>1 Array addition</h2>
+<p>scala</p>
+<div class="cnblogs_code">
+<pre>    val arr1 = Array(1, 2<span style="color: rgba(0, 0, 0, 1)">)
+    val arr2 </span>= ArrayBuffer(1, 3<span style="color: rgba(0, 0, 0, 1)">)
+    arr2 </span>+= (4<span style="color: rgba(0, 0, 0, 1)">)
+    val arr3 </span>= arr1 ++<span style="color: rgba(0, 0, 0, 1)"> arr2
+    println(arr3.mkString(</span>","))</pre>
+</div>
+<p>java</p>
+<div class="cnblogs_code">
+<pre>        Integer[] arr1 = <span style="color: rgba(0, 0, 255, 1)">new</span> Integer[]{1, 2<span style="color: rgba(0, 0, 0, 1)">};
+        Integer[] arr2 </span>= <span style="color: rgba(0, 0, 255, 1)">new</span> Integer[]{1, 3<span style="color: rgba(0, 0, 0, 1)">};
+        Integer[] arr3 </span>= <span style="color: rgba(0, 0, 255, 1)">new</span> Integer[arr1.length +<span style="color: rgba(0, 0, 0, 1)"> arr2.length];
+        </span><span style="color: rgba(0, 0, 255, 1)">for</span> (<span style="color: rgba(0, 0, 255, 1)">int</span> i = 0; i &lt; arr1.length; i++<span style="color: rgba(0, 0, 0, 1)">) {
+            arr3[i] </span>=<span style="color: rgba(0, 0, 0, 1)"> arr1[i];
+        }
+        </span><span style="color: rgba(0, 0, 255, 1)">for</span> (<span style="color: rgba(0, 0, 255, 1)">int</span> i = 0; i &lt; arr2.length; i++<span style="color: rgba(0, 0, 0, 1)">) {
+            arr3[arr1.length </span>+ i] =<span style="color: rgba(0, 0, 0, 1)"> arr2[i];
+        }
+        </span><span style="color: rgba(0, 0, 255, 1)">for</span><span style="color: rgba(0, 0, 0, 1)"> (Integer item : arr3) {
+            System.out.println(item);
+        }
+        </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)">or</span>
+        List&lt;Integer&gt; list = <span style="color: rgba(0, 0, 255, 1)">new</span> ArrayList&lt;&gt;<span style="color: rgba(0, 0, 0, 1)">();
+        list.addAll(Arrays.asList(arr2));
+        list.addAll(Arrays.asList(arr3));
+        list.add(</span>4<span style="color: rgba(0, 0, 0, 1)">);
+        list.forEach((item) </span>-&gt; System.out.println(item));</pre>
+</div>
+<p>output<br/>1,2,1,3</p>
+<h2>2 Create Map and add entry</h2>
+<p>scala</p>
+<div class="cnblogs_code">
+<pre><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)">    val map1 = Map("a" -&gt; 1, "b" -&gt; 2, "c" -&gt; 3)</span>
+    var map1 = Map("a" -&gt; 1, "b" -&gt; 2<span style="color: rgba(0, 0, 0, 1)">)
+    map1 </span>+= ("c" -&gt; 3<span style="color: rgba(0, 0, 0, 1)">)
+    map1.foreach(println)</span></pre>
+</div>
+<p>java</p>
+<div class="cnblogs_code">
+<pre>        Map&lt;String, Integer&gt; map1 = <span style="color: rgba(0, 0, 255, 1)">new</span> HashMap&lt;&gt;<span style="color: rgba(0, 0, 0, 1)">();
+        map1.put(</span>"a", 1<span style="color: rgba(0, 0, 0, 1)">);
+        map1.put(</span>"b", 2<span style="color: rgba(0, 0, 0, 1)">);
+        map1.put(</span>"c", 3<span style="color: rgba(0, 0, 0, 1)">);
+        map1.forEach((key, value) </span>-&gt; System.out.println(key + ", " + value));</pre>
+</div>
+<p>output<br/>(a,1)<br/>(b,2)<br/>(c,3)</p>
+<h2>3 Merge two Maps</h2>
+<p>When the keys in the two Maps are the same, add the values</p>
+<p>scala</p>
+<div class="cnblogs_code">
+<pre>    val map1 = Map("a" -&gt; 1, "b" -&gt; 2<span style="color: rgba(0, 0, 0, 1)">)
+    val map2 </span>= Map("a" -&gt; 1, "c" -&gt; 3<span style="color: rgba(0, 0, 0, 1)">)
+    Array.concat(map1.toArray, map2.toArray).groupBy(_._1).map(item </span>=&gt; (item._1, item._2.map(_._2).reduce(_ + _))).foreach(println)</pre>
+</div>
+<p>java</p>
+<div class="cnblogs_code">
+<pre>        Map&lt;String, Integer&gt; map1 = <span style="color: rgba(0, 0, 255, 1)">new</span> HashMap&lt;&gt;<span style="color: rgba(0, 0, 0, 1)">();
+        map1.put(</span>"a", 1<span style="color: rgba(0, 0, 0, 1)">);
+        map1.put(</span>"b", 2<span style="color: rgba(0, 0, 0, 1)">);
+        Map</span>&lt;String, Integer&gt; map2 = <span style="color: rgba(0, 0, 255, 1)">new</span> HashMap&lt;&gt;<span style="color: rgba(0, 0, 0, 1)">();
+        map2.put(</span>"a", 1<span style="color: rgba(0, 0, 0, 1)">);
+        map2.put(</span>"c", 3<span style="color: rgba(0, 0, 0, 1)">);
+        </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)">merge map1 and map2 to mapMerge</span>
+        Map&lt;String, Integer&gt; mapMerge = <span style="color: rgba(0, 0, 255, 1)">new</span> HashMap&lt;&gt;<span style="color: rgba(0, 0, 0, 1)">();
+        mapMerge.putAll(map1);
+        </span><span style="color: rgba(0, 0, 255, 1)">for</span><span style="color: rgba(0, 0, 0, 1)"> (String key : map2.keySet()) {
+            </span><span style="color: rgba(0, 0, 255, 1)">if</span><span style="color: rgba(0, 0, 0, 1)"> (mapMerge.containsKey(key)) {
+                mapMerge.put(key, mapMerge.get(key) </span>+<span style="color: rgba(0, 0, 0, 1)"> map2.get(key));
+            } </span><span style="color: rgba(0, 0, 255, 1)">else</span><span style="color: rgba(0, 0, 0, 1)"> {
+                mapMerge.put(key, map2.get(key));
+            }
+        }
+        mapMerge.forEach((key, value) </span>-&gt; System.out.println(key + ", " + value));</pre>
+</div>
+<p>output<br/>(b,2)<br/>(a,2)<br/>(c,3)</p>
+<h2>4 mkString</h2>
+<p>Comma separated output of collection elements</p>
+<p>scala</p>
+<div class="cnblogs_code">
+<pre>    val arr = Array(2, 4, 1, 3, 5<span style="color: rgba(0, 0, 0, 1)">)
+    println(arr.mkString(</span>","))</pre>
+</div>
+<p>java</p>
+<div class="cnblogs_code">
+<pre>    <span style="color: rgba(0, 0, 255, 1)">public</span><span style="color: rgba(0, 0, 0, 1)"> String mkStringInJava(Object[] arr, String seperator) {
+        StringBuffer buf </span>= <span style="color: rgba(0, 0, 255, 1)">new</span><span style="color: rgba(0, 0, 0, 1)"> StringBuffer();
+        </span><span style="color: rgba(0, 0, 255, 1)">for</span><span style="color: rgba(0, 0, 0, 1)"> (Object item : arr) {
+            buf.append(seperator).append(item);
+        }
+        </span><span style="color: rgba(0, 0, 255, 1)">return</span><span style="color: rgba(0, 0, 0, 1)"> buf.toString().substring(seperator.length());
+    }
+
+        Integer[] arr </span>= <span style="color: rgba(0, 0, 255, 1)">new</span> Integer[]{2, 4, 1, 3, 5<span style="color: rgba(0, 0, 0, 1)">};
+        System.out.println(</span><span style="color: rgba(0, 0, 255, 1)">this</span>.mkStringInJava(arr, ","));</pre>
+</div>
+<p>output<br/>2,4,1,3,5</p>
+<h2>5 Statistics of minimum, maximum and average values</h2>
+<p>scala</p>
+<div class="cnblogs_code">
+<pre>    val arr = Array(2, 4, 1, 3, 5<span style="color: rgba(0, 0, 0, 1)">)
+    println(arr.min </span>+ ", " + arr.max + ", " + arr.sum.toDouble / arr.length)</pre>
+</div>
+<p>java</p>
+<div class="cnblogs_code">
+<pre>        Integer[] arr = <span style="color: rgba(0, 0, 255, 1)">new</span> Integer[]{2, 4, 1, 3, 5<span style="color: rgba(0, 0, 0, 1)">};
+        Integer min </span>= <span style="color: rgba(0, 0, 255, 1)">null</span><span style="color: rgba(0, 0, 0, 1)">;
+        Integer max </span>= <span style="color: rgba(0, 0, 255, 1)">null</span><span style="color: rgba(0, 0, 0, 1)">;
+        Integer sum </span>= 0<span style="color: rgba(0, 0, 0, 1)">;
+        </span><span style="color: rgba(0, 0, 255, 1)">for</span><span style="color: rgba(0, 0, 0, 1)"> (Integer item : arr) {
+            sum </span>+=<span style="color: rgba(0, 0, 0, 1)"> item;
+            </span><span style="color: rgba(0, 0, 255, 1)">if</span> (min == <span style="color: rgba(0, 0, 255, 1)">null</span> || min &gt;<span style="color: rgba(0, 0, 0, 1)"> item) {
+                min </span>=<span style="color: rgba(0, 0, 0, 1)"> item;
+            }
+            </span><span style="color: rgba(0, 0, 255, 1)">if</span> (max == <span style="color: rgba(0, 0, 255, 1)">null</span> || max &lt;<span style="color: rgba(0, 0, 0, 1)"> item) {
+                max </span>=<span style="color: rgba(0, 0, 0, 1)"> item;
+            }
+        }
+        System.out.println(min </span>+ ", " + max + ", " + ((<span style="color: rgba(0, 0, 255, 1)">double</span>)sum / arr.length));</pre>
+</div>
+<p>output<br/>1, 5, 3.0</p>
+<h2>6 Simple sorting</h2>
+<p>Forward sequence, flashback</p>
+<p>scala</p>
+<div class="cnblogs_code">
+<pre>    val arr = Array(2, 4, 1, 3, 5<span style="color: rgba(0, 0, 0, 1)">)
+    </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)">1</span>
+    println(arr.sorted.mkString(","<span style="color: rgba(0, 0, 0, 1)">))
+    </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)">2</span>
+    println(arr.sorted.reverse.mkString(","<span style="color: rgba(0, 0, 0, 1)">))
+    </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)">3</span>
+    println(arr.sortWith((v1 : Int, v2 : Int) =&gt; v2 &lt; v1).mkString(","))</pre>
+</div>
+<p>java</p>
+<div class="cnblogs_code">
+<pre>        Integer[] arr = <span style="color: rgba(0, 0, 255, 1)">new</span> Integer[]{2, 4, 1, 3, 5<span style="color: rgba(0, 0, 0, 1)">};
+        </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)">1</span>
+<span style="color: rgba(0, 0, 0, 1)">        Arrays.sort(arr);
+        </span><span style="color: rgba(0, 0, 255, 1)">for</span><span style="color: rgba(0, 0, 0, 1)"> (Integer item : arr) {
+            System.out.println(item);
+        }
+        </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)">or</span>
+        Arrays.asList(arr).forEach((v) -&gt;<span style="color: rgba(0, 0, 0, 1)"> System.out.println(v));
+        </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)">2</span>
+        <span style="color: rgba(0, 0, 255, 1)">for</span> (<span style="color: rgba(0, 0, 255, 1)">int</span> i = arr.length - 1; i &gt;= 0; i--<span style="color: rgba(0, 0, 0, 1)">) {
+            System.out.println(arr[i]);
+        }
+        </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)">3</span>
+        Arrays.sort(arr, <span style="color: rgba(0, 0, 255, 1)">new</span> Comparator&lt;Integer&gt;<span style="color: rgba(0, 0, 0, 1)">(){
+            @Override
+            </span><span style="color: rgba(0, 0, 255, 1)">public</span> <span style="color: rgba(0, 0, 255, 1)">int</span><span style="color: rgba(0, 0, 0, 1)"> compare(Integer o1, Integer o2) {
+                </span><span style="color: rgba(0, 0, 255, 1)">return</span> o2 -<span style="color: rgba(0, 0, 0, 1)"> o1;
+            }
+        });
+        </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)">or</span>
+        Arrays.sort(arr, ((Integer v1, Integer v2) -&gt; v2 -<span style="color: rgba(0, 0, 0, 1)"> v1));
+        </span><span style="color: rgba(0, 0, 255, 1)">for</span><span style="color: rgba(0, 0, 0, 1)"> (Integer item : arr) {
+            System.out.println(item);
+        }</span></pre>
+</div>
+<p>output<br/>1,2,3,4,5<br/>5,4,3,2,1<br/>5,4,3,2,1</p>
+<h2>7 flatMap distinct</h2>
+<p>Split each element in the array into multiple elements and remove duplicates</p>
+<p>scala</p>
+<div class="cnblogs_code">
+<pre>    val arr = Array("1,2,3", "1,4,5"<span style="color: rgba(0, 0, 0, 1)">)
+    arr.flatMap(_.split(</span>",")).distinct.foreach(println)</pre>
+</div>
+<p>java</p>
+<div class="cnblogs_code">
+<pre>        String[] arr = <span style="color: rgba(0, 0, 255, 1)">new</span> String[]{"1,2,3", "1,4,5"<span style="color: rgba(0, 0, 0, 1)">};
+        Set</span>&lt;String&gt; set = <span style="color: rgba(0, 0, 255, 1)">new</span> HashSet&lt;&gt;<span style="color: rgba(0, 0, 0, 1)">();
+        </span><span style="color: rgba(0, 0, 255, 1)">for</span><span style="color: rgba(0, 0, 0, 1)"> (String item : arr) {
+            set.addAll(Arrays.asList(item.split(</span>","<span style="color: rgba(0, 0, 0, 1)">)));
+        }
+        set.forEach((item) </span>-&gt; System.out.println(item));</pre>
+</div>
+<p>output<br/>1<br/>2<br/>3<br/>4<br/>5</p>
+<h2>8 foldLeft</h2>
+<p>Sum the odd-numbered elements in an array</p>
+<p>scala</p>
+<div class="cnblogs_code">
+<pre>    val arr = Array(2, 4, 1, 3, 5<span style="color: rgba(0, 0, 0, 1)">)
+    println(arr.foldLeft(</span>0)((result, item) =&gt; result + (<span style="color: rgba(0, 0, 255, 1)">if</span> (item % 2 != 0) item <span style="color: rgba(0, 0, 255, 1)">else</span> 0)))</pre>
+</div>
+<p>java</p>
+<div class="cnblogs_code">
+<pre>        Integer[] arr = <span style="color: rgba(0, 0, 255, 1)">new</span> Integer[]{2, 4, 1, 3, 5<span style="color: rgba(0, 0, 0, 1)">};
+        Integer sumOdd </span>= 0<span style="color: rgba(0, 0, 0, 1)">;
+        </span><span style="color: rgba(0, 0, 255, 1)">for</span><span style="color: rgba(0, 0, 0, 1)"> (Integer item : arr) {
+            </span><span style="color: rgba(0, 0, 255, 1)">if</span> (item % 2 == 1<span style="color: rgba(0, 0, 0, 1)">) {
+                sumOdd </span>+=<span style="color: rgba(0, 0, 0, 1)"> item;
+            }
+        }
+        System.out.println(sumOdd);</span></pre>
+</div>
+<p>output<br/>9</p>
+<h2>9 filter map collect</h2>
+<p>Extract elements less than 3 from the array into a new set, and add each element in the new set * 3</p>
+<p>scala</p>
+<div class="cnblogs_code">
+<pre>    val arr = Array(2, 4, 1, 3, 5<span style="color: rgba(0, 0, 0, 1)">)
+    arr.filter(_ </span>&lt; 3).map(_ * 3<span style="color: rgba(0, 0, 0, 1)">).foreach(println)
+    </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)">or</span>
+    arr.collect({<span style="color: rgba(0, 0, 255, 1)">case</span> item : Int <span style="color: rgba(0, 0, 255, 1)">if</span> item &lt; 3 =&gt; item * 3}).foreach(println)</pre>
+</div>
+<p>java</p>
+<div class="cnblogs_code">
+<pre>        Integer[] arr = <span style="color: rgba(0, 0, 255, 1)">new</span> Integer[]{2, 4, 1, 3, 5<span style="color: rgba(0, 0, 0, 1)">};
+        List</span>&lt;Integer&gt; result = <span style="color: rgba(0, 0, 255, 1)">new</span> ArrayList&lt;&gt;<span style="color: rgba(0, 0, 0, 1)">();
+        </span><span style="color: rgba(0, 0, 255, 1)">for</span><span style="color: rgba(0, 0, 0, 1)"> (Integer item : arr) {
+            </span><span style="color: rgba(0, 0, 255, 1)">if</span> (item &lt; 3<span style="color: rgba(0, 0, 0, 1)">) {
+                result.add(item </span>* 3<span style="color: rgba(0, 0, 0, 1)">);
+            }
+        }
+        result.forEach((item) </span>-&gt; System.out.println(item));</pre>
+</div>
+<p>output<br/>6<br/>3</p>
+<h1>3 Tuple and Bean</h1>
+<h2>1 Define bean class</h2>
+<p>scala</p>
+<div class="cnblogs_code">
+<pre>    <span style="color: rgba(0, 0, 255, 1)">class</span><span style="color: rgba(0, 0, 0, 1)"> Dummy(val name : String, val age : Int){
+      override def toString </span>= name + "," +<span style="color: rgba(0, 0, 0, 1)"> age
+    }</span></pre>
+</div>
+<p>java</p>
+<div class="cnblogs_code">
+<pre>        <span style="color: rgba(0, 0, 255, 1)">class</span><span style="color: rgba(0, 0, 0, 1)"> Dummy {
+            </span><span style="color: rgba(0, 0, 255, 1)">public</span><span style="color: rgba(0, 0, 0, 1)"> Dummy(String name, Integer age) {
+                </span><span style="color: rgba(0, 0, 255, 1)">this</span>.name =<span style="color: rgba(0, 0, 0, 1)"> name;
+                </span><span style="color: rgba(0, 0, 255, 1)">this</span>.age =<span style="color: rgba(0, 0, 0, 1)"> age;
+            }
+            @Override
+            </span><span style="color: rgba(0, 0, 255, 1)">public</span><span style="color: rgba(0, 0, 0, 1)"> String toString() {
+                </span><span style="color: rgba(0, 0, 255, 1)">return</span> <span style="color: rgba(0, 0, 255, 1)">this</span>.name + "," + <span style="color: rgba(0, 0, 255, 1)">this</span><span style="color: rgba(0, 0, 0, 1)">.age;
+            }
+            </span><span style="color: rgba(0, 0, 255, 1)">private</span> String name = <span style="color: rgba(0, 0, 255, 1)">null</span><span style="color: rgba(0, 0, 0, 1)">;
+            </span><span style="color: rgba(0, 0, 255, 1)">private</span> Integer age = <span style="color: rgba(0, 0, 255, 1)">null</span><span style="color: rgba(0, 0, 0, 1)">;
+            </span><span style="color: rgba(0, 0, 255, 1)">public</span><span style="color: rgba(0, 0, 0, 1)"> String getName() {
+                </span><span style="color: rgba(0, 0, 255, 1)">return</span><span style="color: rgba(0, 0, 0, 1)"> name;
+            }
+            </span><span style="color: rgba(0, 0, 255, 1)">public</span> <span style="color: rgba(0, 0, 255, 1)">void</span><span style="color: rgba(0, 0, 0, 1)"> setName(String name) {
+                </span><span style="color: rgba(0, 0, 255, 1)">this</span>.name =<span style="color: rgba(0, 0, 0, 1)"> name;
+            }
+            </span><span style="color: rgba(0, 0, 255, 1)">public</span><span style="color: rgba(0, 0, 0, 1)"> Integer getAge() {
+                </span><span style="color: rgba(0, 0, 255, 1)">return</span><span style="color: rgba(0, 0, 0, 1)"> age;
+            }
+            </span><span style="color: rgba(0, 0, 255, 1)">public</span> <span style="color: rgba(0, 0, 255, 1)">void</span><span style="color: rgba(0, 0, 0, 1)"> setAge(Integer age) {
+                </span><span style="color: rgba(0, 0, 255, 1)">this</span>.age =<span style="color: rgba(0, 0, 0, 1)"> age;
+            }
+        }</span></pre>
+</div>
+<p>Familiar Java bean class definitions, field, getter, setter, constructor, toString, etc.;</p>
+<h2>2 Bean complex sorting</h2>
+<p>scala</p>
+<div class="cnblogs_code">
+<pre>    val arr1 = Array(<span style="color: rgba(0, 0, 255, 1)">new</span> Dummy("a", 1), <span style="color: rgba(0, 0, 255, 1)">new</span> Dummy("b", 3), <span style="color: rgba(0, 0, 255, 1)">new</span> Dummy("a", 2), <span style="color: rgba(0, 0, 255, 1)">new</span> Dummy("b", 1<span style="color: rgba(0, 0, 0, 1)">))
+    </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)">1</span>
+    println(arr1.sortBy(_.name).mkString("-"<span style="color: rgba(0, 0, 0, 1)">))
+    </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)">2</span>
+    println(arr1.sortBy(_.age).mkString("-"<span style="color: rgba(0, 0, 0, 1)">))
+    </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)">3</span>
+    println(arr1.sortWith((item1, item2) =&gt; <span style="color: rgba(0, 0, 255, 1)">if</span> (item1.name.equals(item2.name)) item1.age &lt; item2.age <span style="color: rgba(0, 0, 255, 1)">else</span> item1.name.compareTo(item2.name) &lt; 0).mkString("-"))</pre>
+</div>
+<p>java</p>
+<div class="cnblogs_code">
+<pre>        Dummy[] arr = <span style="color: rgba(0, 0, 255, 1)">new</span> Dummy[]{<span style="color: rgba(0, 0, 255, 1)">new</span> Dummy("a", 1), <span style="color: rgba(0, 0, 255, 1)">new</span> Dummy("b", 3), <span style="color: rgba(0, 0, 255, 1)">new</span> Dummy("a", 2), <span style="color: rgba(0, 0, 255, 1)">new</span> Dummy("b", 1<span style="color: rgba(0, 0, 0, 1)">)};
+        </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)">1</span>
+        Arrays.sort(arr, <span style="color: rgba(0, 0, 255, 1)">new</span> Comparator&lt;Dummy&gt;<span style="color: rgba(0, 0, 0, 1)">(){
+            @Override
+            </span><span style="color: rgba(0, 0, 255, 1)">public</span> <span style="color: rgba(0, 0, 255, 1)">int</span><span style="color: rgba(0, 0, 0, 1)"> compare(Dummy d1, Dummy d2) {
+                </span><span style="color: rgba(0, 0, 255, 1)">return</span><span style="color: rgba(0, 0, 0, 1)"> d1.getName().compareTo(d2.getName());
+            }
+        });
+        </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)">or</span>
+        Arrays.sort(arr, ((Dummy d1, Dummy d2) -&gt;<span style="color: rgba(0, 0, 0, 1)"> d1.getName().compareTo(d2.getName())));
+        </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)">or</span>
+<span style="color: rgba(0, 0, 0, 1)">        Arrays.sort(arr, Comparator.comparing(Dummy::getName));
+        System.out.println(</span><span style="color: rgba(0, 0, 255, 1)">this</span>.mkStringInJava(arr, "-"<span style="color: rgba(0, 0, 0, 1)">));
+        </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)">2</span>
+<span style="color: rgba(0, 0, 0, 1)">        Arrays.sort(arr, Comparator.comparing(Dummy::getAge));
+        System.out.println(</span><span style="color: rgba(0, 0, 255, 1)">this</span>.mkStringInJava(arr, "-"<span style="color: rgba(0, 0, 0, 1)">));
+        </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)">3</span>
+        Arrays.sort(arr, ((Dummy d1, Dummy d2) -&gt;<span style="color: rgba(0, 0, 0, 1)"> {
+            Integer result </span>=<span style="color: rgba(0, 0, 0, 1)"> d1.getName().compareTo(d2.getName());
+            </span><span style="color: rgba(0, 0, 255, 1)">return</span> result != 0 ? result : d1.getAge() -<span style="color: rgba(0, 0, 0, 1)"> d2.getAge();
+        }));
+        System.out.println(</span><span style="color: rgba(0, 0, 255, 1)">this</span>.mkStringInJava(arr, "-"));</pre>
+</div>
+<p>output<br/>a,1-a,2-b,3-b,1<br/>a,1-b,1-a,2-b,3<br/>a,1-a,2-b,1-b,3</p>
+<h2>3 Tuple</h2>
+<p>scala</p>
+<div class="cnblogs_code">
+<pre>    def statistics(arr : Array[Int]) : (Int, Int, Double) = (arr.min, arr.max, arr.sum.toDouble /<span style="color: rgba(0, 0, 0, 1)"> arr.length)
+    val arr </span>= Array(2, 4, 1, 3, 5<span style="color: rgba(0, 0, 0, 1)">)
+    val s </span>=<span style="color: rgba(0, 0, 0, 1)"> statistics(arr)
+    println(s._1 </span>+ ", " + s._2 + ", " + s._3)</pre>
+</div>
+<p>java</p>
+<div class="cnblogs_code">
+<pre>    <span style="color: rgba(0, 0, 255, 1)">class</span><span style="color: rgba(0, 0, 0, 1)"> Statistics {
+        </span><span style="color: rgba(0, 0, 255, 1)">private</span> Integer min = <span style="color: rgba(0, 0, 255, 1)">null</span><span style="color: rgba(0, 0, 0, 1)">;
+        </span><span style="color: rgba(0, 0, 255, 1)">private</span> Integer max = <span style="color: rgba(0, 0, 255, 1)">null</span><span style="color: rgba(0, 0, 0, 1)">;
+        </span><span style="color: rgba(0, 0, 255, 1)">private</span> Double avg = <span style="color: rgba(0, 0, 255, 1)">null</span><span style="color: rgba(0, 0, 0, 1)">;
+        </span><span style="color: rgba(0, 0, 255, 1)">public</span><span style="color: rgba(0, 0, 0, 1)"> Integer getMin() {
+            </span><span style="color: rgba(0, 0, 255, 1)">return</span><span style="color: rgba(0, 0, 0, 1)"> min;
+        }
+        </span><span style="color: rgba(0, 0, 255, 1)">public</span> <span style="color: rgba(0, 0, 255, 1)">void</span><span style="color: rgba(0, 0, 0, 1)"> setMin(Integer min) {
+            </span><span style="color: rgba(0, 0, 255, 1)">this</span>.min =<span style="color: rgba(0, 0, 0, 1)"> min;
+        }
+        </span><span style="color: rgba(0, 0, 255, 1)">public</span><span style="color: rgba(0, 0, 0, 1)"> Integer getMax() {
+            </span><span style="color: rgba(0, 0, 255, 1)">return</span><span style="color: rgba(0, 0, 0, 1)"> max;
+        }
+        </span><span style="color: rgba(0, 0, 255, 1)">public</span> <span style="color: rgba(0, 0, 255, 1)">void</span><span style="color: rgba(0, 0, 0, 1)"> setMax(Integer max) {
+            </span><span style="color: rgba(0, 0, 255, 1)">this</span>.max =<span style="color: rgba(0, 0, 0, 1)"> max;
+        }
+        </span><span style="color: rgba(0, 0, 255, 1)">public</span><span style="color: rgba(0, 0, 0, 1)"> Double getAvg() {
+            </span><span style="color: rgba(0, 0, 255, 1)">return</span><span style="color: rgba(0, 0, 0, 1)"> avg;
+        }
+        </span><span style="color: rgba(0, 0, 255, 1)">public</span> <span style="color: rgba(0, 0, 255, 1)">void</span><span style="color: rgba(0, 0, 0, 1)"> setAvg(Double avg) {
+            </span><span style="color: rgba(0, 0, 255, 1)">this</span>.avg =<span style="color: rgba(0, 0, 0, 1)"> avg;
+        }
+    }
+    </span><span style="color: rgba(0, 0, 255, 1)">public</span><span style="color: rgba(0, 0, 0, 1)"> Statistics statistics(Integer[] arr) {
+        Statistics result </span>= <span style="color: rgba(0, 0, 255, 1)">new</span><span style="color: rgba(0, 0, 0, 1)"> Statistics();
+        Integer min </span>= <span style="color: rgba(0, 0, 255, 1)">null</span><span style="color: rgba(0, 0, 0, 1)">;
+        Integer max </span>= <span style="color: rgba(0, 0, 255, 1)">null</span><span style="color: rgba(0, 0, 0, 1)">;
+        Integer sum </span>= 0<span style="color: rgba(0, 0, 0, 1)">;
+        </span><span style="color: rgba(0, 0, 255, 1)">for</span><span style="color: rgba(0, 0, 0, 1)"> (Integer item : arr) {
+            sum </span>+=<span style="color: rgba(0, 0, 0, 1)"> item;
+            </span><span style="color: rgba(0, 0, 255, 1)">if</span> (min == <span style="color: rgba(0, 0, 255, 1)">null</span> || min &gt;<span style="color: rgba(0, 0, 0, 1)"> item) {
+                min </span>=<span style="color: rgba(0, 0, 0, 1)"> item;
+            }
+            </span><span style="color: rgba(0, 0, 255, 1)">if</span> (max == <span style="color: rgba(0, 0, 255, 1)">null</span> || max &lt;<span style="color: rgba(0, 0, 0, 1)"> item) {
+                max </span>=<span style="color: rgba(0, 0, 0, 1)"> item;
+            }
+        }
+        result.setMin(min);
+        result.setMax(max);
+        result.setAvg((</span><span style="color: rgba(0, 0, 255, 1)">double</span>)sum /<span style="color: rgba(0, 0, 0, 1)"> arr.length);
+        </span><span style="color: rgba(0, 0, 255, 1)">return</span><span style="color: rgba(0, 0, 0, 1)"> result;
+    }
+
+        Integer[] arr </span>= <span style="color: rgba(0, 0, 255, 1)">new</span> Integer[]{2, 4, 1, 3, 5<span style="color: rgba(0, 0, 0, 1)">};
+        Statistics s </span>=<span style="color: rgba(0, 0, 0, 1)"> statistics(arr);
+        System.out.println(s.getMin() </span>+ ", " + s.getMax() + ", " + s.getAvg());</pre>
+</div>
+<p>When a method in Java returns multiple values, it usually needs to be implemented with the help of a class (multiple values ​​are used as attributes of the class);</p>
+<p>output<br/>1, 5, 3.0</p>
+<h2>4 Tuple sorting</h2>
+<p>scala</p>
+<p> </p>
+<div class="cnblogs_code">
+<pre>    val arr = Array(("a", 1), ("b", 3), ("a", 2), ("b", 1<span style="color: rgba(0, 0, 0, 1)">))
+    println(arr.sortBy(_._1).mkString(</span>"-"<span style="color: rgba(0, 0, 0, 1)">))
+    println(arr.sortBy(_._2).mkString(</span>"-"<span style="color: rgba(0, 0, 0, 1)">))
+    println(arr.sortWith((item1, item2) </span>=&gt; <span style="color: rgba(0, 0, 255, 1)">if</span> (item1._1.equals(item2._1)) item1._2 &lt; item2._2 <span style="color: rgba(0, 0, 255, 1)">else</span> item1._1.compareTo(item2._1) &lt; 0).mkString("-"))</pre>
+</div>
+<p>Java requires third-party libraries to support a limited number of Tuples, which are not demonstrated here;</p>
+<p>output<br/>(a,1)-(a,2)-(b,3)-(b,1)<br/>(a,1)-(b,1)-(a,2)-(b,3)<br/>(a,1)-(a,2)-(b,1)-(b,3)</p>
+<h1>Four IO</h1>
+<h2>1 read read file</h2>
+<p>scala</p>
+<div class="cnblogs_code">
+<pre>    Source.fromFile("test.log").getLines().foreach(println)</pre>
+</div>
+<p>java</p>
+<div class="cnblogs_code">
+<pre>        BufferedReader reader = <span style="color: rgba(0, 0, 255, 1)">null</span><span style="color: rgba(0, 0, 0, 1)">;
+        </span><span style="color: rgba(0, 0, 255, 1)">try</span><span style="color: rgba(0, 0, 0, 1)"> {
+            reader </span>= <span style="color: rgba(0, 0, 255, 1)">new</span> BufferedReader(<span style="color: rgba(0, 0, 255, 1)">new</span> FileReader(<span style="color: rgba(0, 0, 255, 1)">new</span> File("test.log"<span style="color: rgba(0, 0, 0, 1)">)));
+            String line </span>= <span style="color: rgba(0, 0, 255, 1)">null</span><span style="color: rgba(0, 0, 0, 1)">;
+            </span><span style="color: rgba(0, 0, 255, 1)">while</span> ((line = reader.readLine()) != <span style="color: rgba(0, 0, 255, 1)">null</span><span style="color: rgba(0, 0, 0, 1)">) {
+                System.out.println(line);
+            }
+        } </span><span style="color: rgba(0, 0, 255, 1)">catch</span><span style="color: rgba(0, 0, 0, 1)"> (FileNotFoundException e) {
+            e.printStackTrace();
+        } </span><span style="color: rgba(0, 0, 255, 1)">catch</span><span style="color: rgba(0, 0, 0, 1)"> (IOException e) {
+            e.printStackTrace();
+        } </span><span style="color: rgba(0, 0, 255, 1)">finally</span><span style="color: rgba(0, 0, 0, 1)"> {
+            </span><span style="color: rgba(0, 0, 255, 1)">if</span> (reader != <span style="color: rgba(0, 0, 255, 1)">null</span><span style="color: rgba(0, 0, 0, 1)">) {
+                </span><span style="color: rgba(0, 0, 255, 1)">try</span><span style="color: rgba(0, 0, 0, 1)"> {
+                    reader.close();
+                } </span><span style="color: rgba(0, 0, 255, 1)">catch</span><span style="color: rgba(0, 0, 0, 1)"> (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }</span></pre>
+</div>
+<h2>2 write write file</h2>
+<p>scala</p>
+<div class="cnblogs_code">
+<pre>    var writer : PrintWriter = <span style="color: rgba(0, 0, 255, 1)">null</span>
+    <span style="color: rgba(0, 0, 255, 1)">try</span><span style="color: rgba(0, 0, 0, 1)"> {
+      writer </span>= <span style="color: rgba(0, 0, 255, 1)">new</span> PrintWriter("test.log"<span style="color: rgba(0, 0, 0, 1)">)
+      writer.write(</span>"test"<span style="color: rgba(0, 0, 0, 1)">)
+      writer.flush()
+    } </span><span style="color: rgba(0, 0, 255, 1)">catch</span> {<span style="color: rgba(0, 0, 255, 1)">case</span> e : Exception =&gt;<span style="color: rgba(0, 0, 0, 1)"> e.printStackTrace}
+    </span><span style="color: rgba(0, 0, 255, 1)">finally</span> {<span style="color: rgba(0, 0, 255, 1)">try</span> {<span style="color: rgba(0, 0, 255, 1)">if</span> (writer != <span style="color: rgba(0, 0, 255, 1)">null</span>) writer.close()} <span style="color: rgba(0, 0, 255, 1)">catch</span> {<span style="color: rgba(0, 0, 255, 1)">case</span> e : Exception =&gt; e.printStackTrace}}</pre>
+</div>
+<p>java</p>
+<div class="cnblogs_code">
+<pre>        BufferedWriter writer = <span style="color: rgba(0, 0, 255, 1)">null</span><span style="color: rgba(0, 0, 0, 1)">;
+        </span><span style="color: rgba(0, 0, 255, 1)">try</span><span style="color: rgba(0, 0, 0, 1)"> {
+            writer </span>= <span style="color: rgba(0, 0, 255, 1)">new</span> BufferedWriter(<span style="color: rgba(0, 0, 255, 1)">new</span> FileWriter(<span style="color: rgba(0, 0, 255, 1)">new</span> File("test.log"<span style="color: rgba(0, 0, 0, 1)">)));
+            writer.write(</span>"test"<span style="color: rgba(0, 0, 0, 1)">);
+            writer.flush();
+        } </span><span style="color: rgba(0, 0, 255, 1)">catch</span><span style="color: rgba(0, 0, 0, 1)"> (IOException e) {
+            e.printStackTrace();
+        } </span><span style="color: rgba(0, 0, 255, 1)">finally</span><span style="color: rgba(0, 0, 0, 1)"> {
+            </span><span style="color: rgba(0, 0, 255, 1)">if</span> (writer != <span style="color: rgba(0, 0, 255, 1)">null</span><span style="color: rgba(0, 0, 0, 1)">) {
+                </span><span style="color: rgba(0, 0, 255, 1)">try</span><span style="color: rgba(0, 0, 0, 1)"> {
+                    writer.close();
+                } </span><span style="color: rgba(0, 0, 255, 1)">catch</span><span style="color: rgba(0, 0, 0, 1)"> (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }</span></pre>
+</div>
+<h1>Five Actor Timing</h1>
+<p>akka.actor</p>
+<h2>1 Actor</h2>
+<p>scala</p>
+<div class="cnblogs_code">
+<pre><span style="color: rgba(0, 0, 255, 1)">import</span><span style="color: rgba(0, 0, 0, 1)"> akka.actor.{Actor, ActorSystem, Props}
+</span><span style="color: rgba(0, 0, 255, 1)">import</span><span style="color: rgba(0, 0, 0, 1)"> akka.util.Timeout
+    </span><span style="color: rgba(0, 0, 255, 1)">class</span> TestActor <span style="color: rgba(0, 0, 255, 1)">extends</span><span style="color: rgba(0, 0, 0, 1)"> Actor {
+      def receive </span>=<span style="color: rgba(0, 0, 0, 1)"> {
+        </span><span style="color: rgba(0, 0, 255, 1)">case</span> arg =&gt;<span style="color: rgba(0, 0, 0, 1)"> {
+          val result </span>= "hello : " +<span style="color: rgba(0, 0, 0, 1)"> arg
+          println(result)
+          Thread.sleep(</span>3000<span style="color: rgba(0, 0, 0, 1)">)
+          result
+        }
+      }
+    }
+    val system </span>= ActorSystem("ActorSystem"<span style="color: rgba(0, 0, 0, 1)">)
+    val actor </span>= system.actorOf(Props(<span style="color: rgba(0, 0, 255, 1)">new</span> TestActor), "TestActor"<span style="color: rgba(0, 0, 0, 1)">)
+    actor </span>! "world async"<span style="color: rgba(0, 0, 0, 1)">
+    implicit val timeout </span>= Timeout(5<span style="color: rgba(0, 0, 0, 1)">, TimeUnit.SECONDS)
+    </span><span style="color: rgba(0, 0, 255, 1)">import</span><span style="color: rgba(0, 0, 0, 1)"> akka.pattern._
+    val feature </span>= actor ? "world async with feature"<span style="color: rgba(0, 0, 0, 1)">
+    feature.foreach(result </span>=&gt; println(result))</pre>
+</div>
+<p>java</p>
+<blockquote>
+<p>java.util.concurrent.LinkedBlockingQueue<br/>java.util.concurrent.ThreadPoolExecutor<br/>java.util.concurrent.Callable<br/>java.util.concurrent.Future<br/>Implementation effect: asynchronous and non-blocking, the object receives the message and puts it into the queue, and the built-in ThreadPool continuously processes the message;</p>
+</blockquote>
+<h2>2 timing</h2>
+<p>scala</p>
+<div class="cnblogs_code">
+<pre>    val system = ActorSystem("ActorSystem"<span style="color: rgba(0, 0, 0, 1)">)
+    </span><span style="color: rgba(0, 0, 255, 1)">import</span><span style="color: rgba(0, 0, 0, 1)"> system.dispatcher
+    system.scheduler.schedule(Duration.create(</span>1000, TimeUnit. MILLISECONDS), Duration.create(1000<span style="color: rgba(0, 0, 0, 1)">, TimeUnit. MILLISECONDS))(
+      println(</span>"hello"<span style="color: rgba(0, 0, 0, 1)">)
+    )</span></pre>
+</div>
+<p>java</p>
+<blockquote>
+<p>java.util.Timer<br/>java.util.TimerTask<br/>Implementation effect: execute tasks regularly;</p>
+</blockquote>
+<h1>6 continue/break</h1>
+<p>scala</p>
+<div class="cnblogs_code">
+<pre><span style="color: rgba(0, 0, 255, 1)">import</span><span style="color: rgba(0, 0, 0, 1)"> scala.util.control.Breaks._
+
+breakable {
+  ...
+  </span><span style="color: rgba(0, 0, 255, 1)">break</span><span style="color: rgba(0, 0, 0, 1)">
+  ...
+}</span></pre>
+</div>
+<p>Java native support</p>
+<p> </p>
+</div>
+</div>
+<!-- Post Footer -->
+<div class="post-footer">
+<div class="post-navigation">
+<a class="nav-button" href="../blog.html">← Back to Home</a>
+<a class="nav-button" href="0291.html">Next Post →</a>
+</div>
+</div>
+</article>
+</div>
+</body>
+</html>

@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>How to add dependencies when Oozie submits Spark tasks</title>
+<link href="../css/style3.css" rel="stylesheet"/>
+</head>
+<body>
+<div class="container">
+<!-- Header Navigation -->
+<div class="header">
+<h1><a href="../blog.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+</div>
+<!-- Post Container -->
+<article class="post">
+<!-- Post Header -->
+<div class="post-header">
+<h1>How to add dependencies when Oozie submits Spark tasks</h1>
+<div class="post-meta">
+<div class="post-meta-item">
+<span class="meta-icon">📅</span>
+<span>December 12, 2018</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">📖</span>
+<span>1 min read</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">👁️</span>
+<span>1660 views</span>
+</div>
+</div>
+</div>
+<!-- Post Content -->
+<div class="post-content">
+<div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<p>How to add dependencies to Spark tasks:</p>
+<p>1 If running in local mode, you can add dependencies through --jars;</p>
+<p>2 If it is run in YARN mode, you can add dependencies through Spark.YARN.jars;</p>
+<p>Both of these methods will not work on Oozie. First of all, there is no way and should not be run locally on Oozie. Secondly, you will find that configuring through Spark.YARN.jars will not take effect at all. Let’s see why.</p>
+<p>View LauncherMapper's log</p>
+<p> </p>
+<p>Spark Version 2.1.1</p>
+<p>Spark Action Main class        : org.apache.spark.deploy.SparkSubmit</p>
+<p> </p>
+<p>Oozie Spark action configuration</p>
+<p>=================================================================</p>
+<p>...</p>
+<p>                    --conf</p>
+<p>                    spark.yarn.jars=<a rel="nofollow">hdfs://hdfs_name/jarpath/*.jar</a></p>
+<p>                    --conf</p>
+<p>                    spark.yarn.jars=<a rel="nofollow">hdfs://hdfs_name/oozie/share/lib_20180801121138/spark/spark-yarn_2.11-2.1.1.jar</a></p>
+<p> </p>
+<p>It can be seen that Oozie will add a new Spark.YARN.jars configuration by itself. If two identical keys are provided, how will Spark handle it?</p>
+<p> </p>
+<p><strong>org.apache.spark.deploy.SparkSubmit</strong></p>
+<blockquote>
+<p>    val appArgs = new SparkSubmitArguments(args)</p>
+</blockquote>
+<p> </p>
+<p><strong>org.apache.spark.launcher.SparkSubmitOptionParser</strong></p>
+<blockquote>
+<p>        if (!handle(name, value)) {</p>
+</blockquote>
+<p> </p>
+<p><strong>org.apache.spark.deploy.SparkSubmitArguments</strong></p>
+<blockquote>
+<p>  override protected def handle(opt: String, value: String): Boolean = {</p>
+<p>  ...</p>
+<p>      case CONF =&gt;</p>
+<p>        value.split("=", 2).toSeq match {</p>
+<p>          case Seq(k, v) =&gt; sparkProperties(k) = v</p>
+<p>          case _ =&gt; SparkSubmit.printErrorAndExit(s"Spark config without '=': $value")</p>
+<p>        }</p>
+</blockquote>
+<p> </p>
+<p>It can be seen that it will be directly overwritten, using the last configuration, that is, the configuration of Oozie, instead of the configuration provided by the application itself. In this way, the application needs to package the special dependencies into the application jar. Specifically, use maven's maven-assembly-plugin to configure &lt;dependencySets&gt;&lt;dependencySet&gt;&lt;includes&gt;&lt;include&gt;. The detailed configuration is as follows:</p>
+<p> </p>
+<p>&lt;assembly xmlns="<a class="external-link" href="http://maven.apache.org/plugins/maven-assembly-plugin/assembly/1.1.0" rel="noopener nofollow">http://maven.apache.org/plugins/maven-assembly-plugin/assembly/1.1.0</a>"</p>
+<p>          xmlns:xsi="<a class="external-link" href="http://www.w3.org/2001/XMLSchema-instance" rel="noopener nofollow">http://www.w3.org/2001/XMLSchema-instance</a>"</p>
+<p>          xsi:schemaLocation="<a class="external-link" href="http://maven.apache.org/plugins/maven-assembly-plugin/assembly/1.1.0" rel="noopener nofollow">http://maven.apache.org/plugins/maven-assembly-plugin/assembly/1.1.0</a> <a class="external-link" href="http://maven.apache.org/xsd/assembly-1.1.0.xsd" rel="noopener nofollow">http://maven.apache.org/xsd/assembly-1.1.0.xsd</a>"&gt;</p>
+<p>    &lt;!-- TODO: a jarjar format would be better --&gt;</p>
+<p>    &lt;id&gt;jar-with-dependencies&lt;/id&gt;</p>
+<p>    &lt;formats&gt;</p>
+<p>        &lt;format&gt;jar&lt;/format&gt;</p>
+<p>    &lt;/formats&gt;</p>
+<p>    &lt;includeBaseDirectory&gt;false&lt;/includeBaseDirectory&gt;</p>
+<p>    &lt;dependencySets&gt;</p>
+<p>        &lt;dependencySet&gt;</p>
+<p>            &lt;outputDirectory&gt;/&lt;/outputDirectory&gt;</p>
+<p>            &lt;useProjectArtifact&gt;true&lt;/useProjectArtifact&gt;</p>
+<p>            &lt;unpack&gt;true&lt;/unpack&gt;</p>
+<p>            &lt;scope&gt;runtime&lt;/scope&gt;</p>
+<p><strong>            &lt;includes&gt;</strong></p>
+<p><strong>                &lt;include&gt;redis.clients:jedis&lt;/include&gt;</strong></p>
+<p><strong>                &lt;include&gt;org.apache.commons:commons-pool2&lt;/include&gt;</strong></p>
+<p><strong>            &lt;/includes&gt;</strong></p>
+<p>        &lt;/dependencySet&gt;</p>
+<p>    &lt;/dependencySets&gt;</p>
+<p>&lt;/assembly&gt;</p>
+<p> </p>
+<p>Here we just copy the contents of jar-with-dependencies.XML provided by default and add the includes configuration;</p>
+</div>
+</div>
+<!-- Post Footer -->
+<div class="post-footer">
+<div class="post-navigation">
+<a class="nav-button" href="../blog.html">← Back to Home</a>
+<a class="nav-button" href="0336.html">Next Post →</a>
+</div>
+</div>
+</article>
+</div>
+</body>
+</html>

@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>jmap Error in an OpenJDK Docker Container</title>
+<link href="../css/style3.css" rel="stylesheet"/>
+</head>
+<body>
+<div class="container">
+<!-- Header Navigation -->
+<div class="header">
+<h1><a href="../blog.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+</div>
+<!-- Post Container -->
+<article class="post">
+<!-- Post Header -->
+<div class="post-header">
+<h1>jmap Error in an OpenJDK Docker Container</h1>
+<div class="post-meta">
+<div class="post-meta-item">
+<span class="meta-icon">📅</span>
+<span>November 01, 2019</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">📖</span>
+<span>1 min read</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">👁️</span>
+<span>1817 views</span>
+</div>
+</div>
+</div>
+<!-- Post Content -->
+<div class="post-content">
+<div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<p>After docker starts openjdk, you can view the process</p>
+<blockquote>
+<p># docker exec - it XXX jps</p>
+<p>10 XXX.jar</p>
+</blockquote>
+<p>It can be seen that the started java process ID is always 10, and then the JVM command can be executed, such as</p>
+<blockquote>
+<p># docker exec - it XXX jstack 10</p>
+<p># docker exec - it XXX jstat - gcutil 10</p>
+<p># docker exec - it XXX jmap - histo 10</p>
+</blockquote>
+<p>However, an error will be reported when executing jmap - heap or -dump:</p>
+<div class="cnblogs_code">
+<pre>Attaching to process ID 10<span style="color: rgba(0, 0, 0, 1)">, please wait...
+Error attaching to process: sun.jvm.hotspot.debugger.DebuggerException: Can</span><span style="color: rgba(128, 0, 0, 1)">'</span><span style="color: rgba(128, 0, 0, 1)">t attach to the process: ptrace(PTRACE_ATTACH, ..) failed for 10: Operation not permitted</span>
+sun.jvm.hotspot.debugger.DebuggerException: sun.jvm.hotspot.debugger.DebuggerException: Can<span style="color: rgba(128, 0, 0, 1)">'</span><span style="color: rgba(128, 0, 0, 1)">t attach to the process: ptrace(PTRACE_ATTACH, ..) failed for 10: Operation not permitted</span>
+    at sun.jvm.hotspot.debugger.linux.LinuxDebuggerLocal$LinuxDebuggerLocalWorkerThread.execute(LinuxDebuggerLocal.java:163<span style="color: rgba(0, 0, 0, 1)">)
+    at sun.jvm.hotspot.debugger.linux.LinuxDebuggerLocal.attach(LinuxDebuggerLocal.java:</span>278<span style="color: rgba(0, 0, 0, 1)">)
+    at sun.jvm.hotspot.HotSpotAgent.attachDebugger(HotSpotAgent.java:</span>671<span style="color: rgba(0, 0, 0, 1)">)
+    at sun.jvm.hotspot.HotSpotAgent.setupDebuggerLinux(HotSpotAgent.java:</span>611<span style="color: rgba(0, 0, 0, 1)">)
+    at sun.jvm.hotspot.HotSpotAgent.setupDebugger(HotSpotAgent.java:</span>337<span style="color: rgba(0, 0, 0, 1)">)
+    at sun.jvm.hotspot.HotSpotAgent.go(HotSpotAgent.java:</span>304<span style="color: rgba(0, 0, 0, 1)">)
+    at sun.jvm.hotspot.HotSpotAgent.attach(HotSpotAgent.java:</span>140<span style="color: rgba(0, 0, 0, 1)">)
+    at sun.jvm.hotspot.tools.Tool.start(Tool.java:</span>185<span style="color: rgba(0, 0, 0, 1)">)
+    at sun.jvm.hotspot.tools.Tool.execute(Tool.java:</span>118<span style="color: rgba(0, 0, 0, 1)">)
+    at sun.jvm.hotspot.tools.HeapSummary.main(HeapSummary.java:</span>49<span style="color: rgba(0, 0, 0, 1)">)
+    at sun.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+    at sun.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:</span>62<span style="color: rgba(0, 0, 0, 1)">)
+    at sun.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:</span>43<span style="color: rgba(0, 0, 0, 1)">)
+    at java.lang.reflect.Method.invoke(Method.java:</span>498<span style="color: rgba(0, 0, 0, 1)">)
+    at sun.tools.jmap.JMap.runTool(JMap.java:</span>201<span style="color: rgba(0, 0, 0, 1)">)
+    at sun.tools.jmap.JMap.main(JMap.java:</span>130<span style="color: rgba(0, 0, 0, 1)">)
+Caused by: sun.jvm.hotspot.debugger.DebuggerException: Can</span><span style="color: rgba(128, 0, 0, 1)">'</span><span style="color: rgba(128, 0, 0, 1)">t attach to the process: ptrace(PTRACE_ATTACH, ..) failed for 10: Operation not permitted</span>
+<span style="color: rgba(0, 0, 0, 1)">    at sun.jvm.hotspot.debugger.linux.LinuxDebuggerLocal.attach0(Native Method)
+    at sun.jvm.hotspot.debugger.linux.LinuxDebuggerLocal.access$</span>100(LinuxDebuggerLocal.java:62<span style="color: rgba(0, 0, 0, 1)">)
+    at sun.jvm.hotspot.debugger.linux.LinuxDebuggerLocal$1AttachTask.doit(LinuxDebuggerLocal.java:</span>269<span style="color: rgba(0, 0, 0, 1)">)
+    at sun.jvm.hotspot.debugger.linux.LinuxDebuggerLocal$LinuxDebuggerLocalWorkerThread.run(LinuxDebuggerLocal.java:</span>138)</pre>
+</div>
+<p>This is because docker disables ptrace,</p>
+<p>1) If you start manually through the docker command, add parameters</p>
+<p># docker run --cap-add <span class="token operator">SYS_PTRACE <span class="token punctuation">...</span></span></p>
+<p><span class="token operator"><span class="token punctuation">2) If started through marathon</span></span></p>
+<p><picture>
+<source srcset="../img/1509647-20191101220753601-887415497.webp" type="image/webp"/>
+<img alt="" src="../img/1509647-20191101220753601-887415497.png"/>
+</picture></p>
+<p> </p>
+<p>Then the problem is fixed</p>
+<p> </p>
+</div>
+</div>
+<!-- Post Footer -->
+<div class="post-footer">
+<div class="post-navigation">
+<a class="nav-button" href="../blog.html">← Back to Home</a>
+<a class="nav-button" href="0085.html">Next Post →</a>
+</div>
+</div>
+</article>
+</div>
+</body>
+</html>

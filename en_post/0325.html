@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Kylin frequent OOM problem</title>
+<link href="../css/style3.css" rel="stylesheet"/>
+</head>
+<body>
+<div class="container">
+<!-- Header Navigation -->
+<div class="header">
+<h1><a href="../blog.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+</div>
+<!-- Post Container -->
+<article class="post">
+<!-- Post Header -->
+<div class="post-header">
+<h1>Kylin frequent OOM problem</h1>
+<div class="post-meta">
+<div class="post-meta-item">
+<span class="meta-icon">📅</span>
+<span>December 13, 2018</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">📖</span>
+<span>2 min read</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">👁️</span>
+<span>946 views</span>
+</div>
+</div>
+</div>
+<!-- Post Content -->
+<div class="post-content">
+<div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<p>A kylin cluster in the company will exit OOM one by one every Tuesday afternoon, very regularly. The kylin cluster has 5 nodes, and the memory allocated to each node has been continuously increased to more than 70G, but the problem remains the same;</p>
+<p><br/>After investigation, it was found that the number of requests for the kylin cluster does increase every Tuesday afternoon. It may be a bug in kylin, or it may be due to other reasons. When the memory usage of the node kylin process increases, printing the thread stack shows that many threads are stuck, synchronized, and various managers, such as CubeManager, DictionaryManager, MetadataManager, and Metadata. Taking taManager as an example, looking at the kylin code, we found that these Managers have similar routines, including clearCache and getInstance (synchronized). Then Constructor will be called in getInstance, and a bunch of things will be loaded in Constructor. This loading process is relatively slow, so getInstance will be synchronized for a long time:</p>
+<p><br/>org.apache.kylin.metadata.MetadataManager</p>
+<div class="cnblogs_code">
+<pre>    <span style="color: rgba(0, 0, 255, 1)">public</span> <span style="color: rgba(0, 0, 255, 1)">static</span> <span style="color: rgba(0, 0, 255, 1)">void</span><span style="color: rgba(0, 0, 0, 1)"> clearCache() {
+        CACHE.clear();
+    }
+    
+    </span><span style="color: rgba(0, 0, 255, 1)">public</span> <span style="color: rgba(0, 0, 255, 1)">static</span><span style="color: rgba(0, 0, 0, 1)"> MetadataManager getInstance(KylinConfig config) {
+        MetadataManager r </span>=<span style="color: rgba(0, 0, 0, 1)"> CACHE.get(config);
+        </span><span style="color: rgba(0, 0, 255, 1)">if</span> (r != <span style="color: rgba(0, 0, 255, 1)">null</span><span style="color: rgba(0, 0, 0, 1)">) {
+            </span><span style="color: rgba(0, 0, 255, 1)">return</span><span style="color: rgba(0, 0, 0, 1)"> r;
+        }
+
+        </span><span style="color: rgba(0, 0, 255, 1)">synchronized</span> (MetadataManager.<span style="color: rgba(0, 0, 255, 1)">class</span><span style="color: rgba(0, 0, 0, 1)">) {
+            r </span>=<span style="color: rgba(0, 0, 0, 1)"> CACHE.get(config);
+            </span><span style="color: rgba(0, 0, 255, 1)">if</span> (r != <span style="color: rgba(0, 0, 255, 1)">null</span><span style="color: rgba(0, 0, 0, 1)">) {
+                </span><span style="color: rgba(0, 0, 255, 1)">return</span><span style="color: rgba(0, 0, 0, 1)"> r;
+            }
+            </span><span style="color: rgba(0, 0, 255, 1)">try</span><span style="color: rgba(0, 0, 0, 1)"> {
+                r </span>= <span style="color: rgba(0, 0, 255, 1)">new</span><span style="color: rgba(0, 0, 0, 1)"> MetadataManager(config);
+                CACHE.put(config, r);
+                </span><span style="color: rgba(0, 0, 255, 1)">if</span> (CACHE.size() &gt; 1<span style="color: rgba(0, 0, 0, 1)">) {
+                    logger.warn(</span>"More than one singleton exist"<span style="color: rgba(0, 0, 0, 1)">);
+                }
+
+                </span><span style="color: rgba(0, 0, 255, 1)">return</span><span style="color: rgba(0, 0, 0, 1)"> r;
+            } </span><span style="color: rgba(0, 0, 255, 1)">catch</span><span style="color: rgba(0, 0, 0, 1)"> (IOException e) {
+                </span><span style="color: rgba(0, 0, 255, 1)">throw</span> <span style="color: rgba(0, 0, 255, 1)">new</span> IllegalStateException("Failed to init MetadataManager from " +<span style="color: rgba(0, 0, 0, 1)"> config, e);
+            }
+        }
+    }
+
+    </span><span style="color: rgba(0, 0, 255, 1)">private</span> MetadataManager(KylinConfig config) <span style="color: rgba(0, 0, 255, 1)">throws</span><span style="color: rgba(0, 0, 0, 1)"> IOException {
+        init(config);
+    }
+
+    </span><span style="color: rgba(0, 0, 255, 1)">private</span> <span style="color: rgba(0, 0, 255, 1)">void</span> init(KylinConfig config) <span style="color: rgba(0, 0, 255, 1)">throws</span><span style="color: rgba(0, 0, 0, 1)"> IOException {
+        </span><span style="color: rgba(0, 0, 255, 1)">this</span>.config =<span style="color: rgba(0, 0, 0, 1)"> config;
+        </span><span style="color: rgba(0, 0, 255, 1)">this</span>.srcTableMap = <span style="color: rgba(0, 0, 255, 1)">new</span> CaseInsensitiveStringCache&lt;&gt;(config, "table"<span style="color: rgba(0, 0, 0, 1)">);
+        </span><span style="color: rgba(0, 0, 255, 1)">this</span>.srcTableExdMap = <span style="color: rgba(0, 0, 255, 1)">new</span> CaseInsensitiveStringCache&lt;&gt;(config, "table_ext"<span style="color: rgba(0, 0, 0, 1)">);
+        </span><span style="color: rgba(0, 0, 255, 1)">this</span>.dataModelDescMap = <span style="color: rgba(0, 0, 255, 1)">new</span> CaseInsensitiveStringCache&lt;&gt;(config, "data_model"<span style="color: rgba(0, 0, 0, 1)">);
+        </span><span style="color: rgba(0, 0, 255, 1)">this</span>.extFilterMap = <span style="color: rgba(0, 0, 255, 1)">new</span> CaseInsensitiveStringCache&lt;&gt;(config, "external_filter"<span style="color: rgba(0, 0, 0, 1)">);
+
+        reloadAllSourceTable();
+        reloadAllTableExt();
+        reloadAllDataModel();
+        reloadAllExternalFilter();
+
+        </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> touch lower level metadata before registering my listener</span>
+        Broadcaster.getInstance(config).registerListener(<span style="color: rgba(0, 0, 255, 1)">new</span> SrcTableSyncListener(), "table"<span style="color: rgba(0, 0, 0, 1)">);
+        Broadcaster.getInstance(config).registerListener(</span><span style="color: rgba(0, 0, 255, 1)">new</span> SrcTableExtSyncListener(), "table_ext"<span style="color: rgba(0, 0, 0, 1)">);
+        Broadcaster.getInstance(config).registerListener(</span><span style="color: rgba(0, 0, 255, 1)">new</span> DataModelSyncListener(), "data_model"<span style="color: rgba(0, 0, 0, 1)">);
+        Broadcaster.getInstance(config).registerListener(</span><span style="color: rgba(0, 0, 255, 1)">new</span> ExtFilterSyncListener(), "external_filter"<span style="color: rgba(0, 0, 0, 1)">);
+    }</span></pre>
+</div>
+<p> </p>
+<p>After checking the codes of various versions of kylin, I found that they all use this routine. It seems that kylin does not think this is a problem. This will indeed lead to some potential problems. For example, when the load is high, there will be a sudden refresh, and a large number of requests will be synchronized. Will this cause OOM?</p>
+<p><br/>Further inspection of the thread stack revealed that the tomcat thread pool was almost full at that time. This is also easy to understand. The previous requests were synchronized, and new requests continued to come in, and then the thread pool was full. It suddenly occurred to me that once synchronized ended, all requests began to be processed at the same time, and some of the requests may occupy more memory, so the memory may instantly It’s unbearable. This is an avalanche effect. The above scenario is actually similar to the stress test scenario, that is, the server is running at full load and all threads in the thread pool are processing requests. If the number of thread pools configured in tomcat is too large, the server will not be able to support it. This is the reason for OOM. If you do not change this configuration, no matter how large the memory configuration is, OOM will still occur. Just make the tomcat thread pool configuration smaller;</p>
+<p> </p>
+<p>Another method is to add control to the Load Balancer. Once the response is slow, mark it as unhealthy and distribute the requests to other nodes. This way, a large number of requests will not accumulate on the synchronized nodes and problems can be avoided;</p>
+</div>
+</div>
+<!-- Post Footer -->
+<div class="post-footer">
+<div class="post-navigation">
+<a class="nav-button" href="../blog.html">← Back to Home</a>
+<a class="nav-button" href="0326.html">Next Post →</a>
+</div>
+</div>
+</article>
+</div>
+</body>
+</html>

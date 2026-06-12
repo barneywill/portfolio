@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>yum offline environment installation software</title>
+<link href="../css/style3.css" rel="stylesheet"/>
+</head>
+<body>
+<div class="container">
+<!-- Header Navigation -->
+<div class="header">
+<h1><a href="../blog.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+</div>
+<!-- Post Container -->
+<article class="post">
+<!-- Post Header -->
+<div class="post-header">
+<h1>yum offline environment installation software</h1>
+<div class="post-meta">
+<div class="post-meta-item">
+<span class="meta-icon">📅</span>
+<span>February 15, 2019</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">📖</span>
+<span>1 min read</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">👁️</span>
+<span>540 views</span>
+</div>
+</div>
+</div>
+<!-- Post Content -->
+<div class="post-content">
+<div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<p>First check the system version number, and then select one to download from CentOS-7-x86_64-DVD-1708.iso and CentOS-7-x86_64-Everything-1708.iso according to the version number. Here is 7.4.1708</p>
+<blockquote>
+<p># cat /etc/redhat-release <br/>CentOS Linux release 7.4.1708 (Core) </p>
+<p># wget http://vault.centos.org/7.4.1708/isos/x86_64/CentOS-7-x86_64-DVD-1708.iso<br/># mkdir /mnt/centos7<br/># mount - o loop,ro CentOS-7-x86_64-DVD-1708.iso /mnt/centos7</p>
+</blockquote>
+<p>Back up the previous repo</p>
+<blockquote>
+<p># mkdir /etc/yum.repo.d/bak<br/># mv /etc/yum.repo.d/*.repo /etc/yum.repo.d/bak/</p>
+</blockquote>
+<p> </p>
+<p>Choose one of the following</p>
+<h2>1 Directly use iso as source</h2>
+<blockquote>
+<p># vi /etc/yum.repos.d/centos7_iso.repo<br/>[centos7-Server]<br/>name=ServerFault Answer<br/>baseurl=file:///mnt/centos7<br/>gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-7<br/>enabled=1<br/>gpgcheck=1</p>
+</blockquote>
+<h2>2 Copy the iso to a local folder as the source</h2>
+<blockquote>
+<p># cp - a /mnt/centos7/ /yum/</p>
+<p># vi /etc/yum.repos.d/centos7_localhost.repo<br/>[centos7-Server]<br/>name=ServerFault Answer<br/>baseurl=file:///yum/centos7<br/>gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-7<br/>enabled=1<br/>gpgcheck=1</p>
+</blockquote>
+<h2>3 Build Nginx or httpd or ftpd service as a LAN source</h2>
+<blockquote>
+<p># vi /etc/yum.repos.d/centos7_localnetwork.repo<br/>[centos7-Server]<br/>name=ServerFault Answer<br/>baseurl=http://192.168.0.1/<br/>gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-7<br/>enabled=1<br/>gpgcheck=1</p>
+</blockquote>
+<p>The Nginx configuration is as follows (add a location)</p>
+<blockquote>
+<p> location / {<br/>            root   /yum/centos7;<br/>			autoindex on;<br/>        }</p>
+</blockquote>
+<p> </p>
+<p>test</p>
+<blockquote>
+<p># yum repolist<br/># yum install $anything</p>
+</blockquote>
+<p> </p>
+</div>
+</div>
+<!-- Post Footer -->
+<div class="post-footer">
+<div class="post-navigation">
+<a class="nav-button" href="../blog.html">← Back to Home</a>
+<a class="nav-button" href="0228.html">Next Post →</a>
+</div>
+</div>
+</article>
+</div>
+</body>
+</html>

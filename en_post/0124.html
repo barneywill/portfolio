@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Spark cannot read Hive table</title>
+<link href="../css/style3.css" rel="stylesheet"/>
+</head>
+<body>
+<div class="container">
+<!-- Header Navigation -->
+<div class="header">
+<h1><a href="../blog.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+</div>
+<!-- Post Container -->
+<article class="post">
+<!-- Post Header -->
+<div class="post-header">
+<h1>Spark cannot read Hive table</h1>
+<div class="post-meta">
+<div class="post-meta-item">
+<span class="meta-icon">📅</span>
+<span>June 01, 2019</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">📖</span>
+<span>4 min read</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">👁️</span>
+<span>5405 views</span>
+</div>
+</div>
+</div>
+<!-- Post Content -->
+<div class="post-content">
+<div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<p>spark 2.4.3</p>
+<p>Spark reads Hive table, steps:</p>
+<h1>1）hive-site.xml</h1>
+<p>Hive-site.XML is placed under $SPARK_HOME/conf</p>
+<h1>2）enableHiveSupport</h1>
+<blockquote>
+<p>SparkSession.builder.enableHiveSupport().getOrCreate()</p>
+</blockquote>
+<h1>3) Test code</h1>
+<div class="cnblogs_code">
+<pre>    val sparkConf =<span style="color: rgba(0, 0, 0, 1)"> new SparkConf().setAppName(getName)
+    val sc </span>=<span style="color: rgba(0, 0, 0, 1)"> new SparkContext(sparkConf)
+    val spark </span>=<span style="color: rgba(0, 0, 0, 1)"> SparkSession.builder.config(sparkConf).enableHiveSupport().getOrCreate()
+    spark.sql(</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">show databases</span><span style="color: rgba(128, 0, 0, 1)">"</span>).rdd.foreach(println)</pre>
+</div>
+<p>After using $SPARK_HOME/bin/Spark-submit to submit the task, I found that the Hive database could not be read. The relevant logs are as follows</p>
+<div class="cnblogs_code">
+<pre>19/05/31 13:11:31 WARN SparkContext: Using an existing SparkContext; some configuration may <span style="color: rgba(0, 0, 255, 1)">not</span><span style="color: rgba(0, 0, 0, 1)"> take effect.
+</span>19/05/31 13:11:31 INFO SharedState: loading hive config file: file:/export/spark-2.4.3-bin-hadoop2.6/conf/hive-<span style="color: rgba(0, 0, 0, 1)">site.xml
+</span>19/05/31 13:11:31 INFO SharedState: spark.sql.warehouse.dir <span style="color: rgba(0, 0, 255, 1)">is</span> <span style="color: rgba(0, 0, 255, 1)">not</span> set, but hive.metastore.warehouse.dir <span style="color: rgba(0, 0, 255, 1)">is</span> set. Setting spark.sql.warehouse.dir to the value of hive.metastore.warehouse.dir (<span style="color: rgba(128, 0, 0, 1)">'</span><span style="color: rgba(128, 0, 0, 1)">/user/hive/warehouse</span><span style="color: rgba(128, 0, 0, 1)">'</span><span style="color: rgba(0, 0, 0, 1)">).
+</span>19/05/31 13:11:31 INFO SharedState: Warehouse path <span style="color: rgba(0, 0, 255, 1)">is</span> <span style="color: rgba(128, 0, 0, 1)">'</span><span style="color: rgba(128, 0, 0, 1)">/user/hive/warehouse</span><span style="color: rgba(128, 0, 0, 1)">'</span><span style="color: rgba(0, 0, 0, 1)">.
+</span>19/05/31 13:11:31 INFO StateStoreCoordinatorRef: Registered StateStoreCoordinator endpoin</pre>
+</div>
+<p>The description has been read Hive-site.XML;</p>
+<p>After further testing, I found that using $SPARK_HOME/bin/Spark-SQL or $SPARK_HOME/bin/Spark-Shell can read the Hive database. It’s amazing, isn’t it?</p>
+<p>The class started by $SPARK_HOME/bin/Spark-Shell is org.apache.Spark.repl.Main</p>
+<div class="cnblogs_code">
+<pre><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">${SPARK_HOME}</span><span style="color: rgba(128, 0, 0, 1)">"</span>/bin/spark-submit --<span style="color: rgba(0, 0, 255, 1)">class</span> org.apache.spark.repl.Main --name <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">Spark shell</span><span style="color: rgba(128, 0, 0, 1)">"</span> <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">$@</span><span style="color: rgba(128, 0, 0, 1)">"</span></pre>
+</div>
+<p>Follow up the org.apache.Spark.repl.Main code</p>
+<div class="cnblogs_code">
+<pre><span style="color: rgba(0, 0, 0, 1)">...
+      val builder </span>=<span style="color: rgba(0, 0, 0, 1)"> SparkSession.builder.config(conf)
+      </span><span style="color: rgba(0, 0, 255, 1)">if</span> (conf.get(CATALOG_IMPLEMENTATION.key, <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">hive</span><span style="color: rgba(128, 0, 0, 1)">"</span>).toLowerCase(Locale.ROOT) == <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">hive</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">) {
+        </span><span style="color: rgba(0, 0, 255, 1)">if</span><span style="color: rgba(0, 0, 0, 1)"> (SparkSession.hiveClassesArePresent) {
+          </span>// In the case that the property <span style="color: rgba(0, 0, 255, 1)">is</span> <span style="color: rgba(0, 0, 255, 1)">not</span> set at all, builder<span style="color: rgba(128, 0, 0, 1)">'</span><span style="color: rgba(128, 0, 0, 1)">s config</span>
+          // does <span style="color: rgba(0, 0, 255, 1)">not</span> have this value set to <span style="color: rgba(128, 0, 0, 1)">'</span><span style="color: rgba(128, 0, 0, 1)">hive</span><span style="color: rgba(128, 0, 0, 1)">'</span><span style="color: rgba(0, 0, 0, 1)"> yet. The original default
+          </span>// behavior <span style="color: rgba(0, 0, 255, 1)">is</span><span style="color: rgba(0, 0, 0, 1)"> that when there are hive classes, we use hive catalog.
+          sparkSession </span>=<span style="color: rgba(0, 0, 0, 1)"> builder.enableHiveSupport().getOrCreate()
+          logInfo(</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">Created Spark session with Hive support</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">)
+        } </span><span style="color: rgba(0, 0, 255, 1)">else</span><span style="color: rgba(0, 0, 0, 1)"> {
+          </span>// Need to change it back to <span style="color: rgba(128, 0, 0, 1)">'</span><span style="color: rgba(128, 0, 0, 1)">in-memory</span><span style="color: rgba(128, 0, 0, 1)">'</span> <span style="color: rgba(0, 0, 255, 1)">if</span><span style="color: rgba(0, 0, 0, 1)"> no hive classes are found
+          </span>// <span style="color: rgba(0, 0, 255, 1)">in</span> the case that the property <span style="color: rgba(0, 0, 255, 1)">is</span> set to hive <span style="color: rgba(0, 0, 255, 1)">in</span> spark-<span style="color: rgba(0, 0, 0, 1)">defaults.conf
+          builder.config(CATALOG_IMPLEMENTATION.key, </span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">in-memory</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">)
+          sparkSession </span>=<span style="color: rgba(0, 0, 0, 1)"> builder.getOrCreate()
+          logInfo(</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">Created Spark session</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">)
+        }
+      } </span><span style="color: rgba(0, 0, 255, 1)">else</span><span style="color: rgba(0, 0, 0, 1)"> {
+        </span>// In the case that the property <span style="color: rgba(0, 0, 255, 1)">is</span> set but <span style="color: rgba(0, 0, 255, 1)">not</span> to <span style="color: rgba(128, 0, 0, 1)">'</span><span style="color: rgba(128, 0, 0, 1)">hive</span><span style="color: rgba(128, 0, 0, 1)">'</span><span style="color: rgba(0, 0, 0, 1)">, the internal
+        </span>// default <span style="color: rgba(0, 0, 255, 1)">is</span> <span style="color: rgba(128, 0, 0, 1)">'</span><span style="color: rgba(128, 0, 0, 1)">in-memory</span><span style="color: rgba(128, 0, 0, 1)">'</span>. So the sparkSession will use <span style="color: rgba(0, 0, 255, 1)">in</span>-<span style="color: rgba(0, 0, 0, 1)">memory catalog.
+        sparkSession </span>=<span style="color: rgba(0, 0, 0, 1)"> builder.getOrCreate()
+        logInfo(</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">Created Spark session</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">)
+      }
+      sparkContext </span>=<span style="color: rgba(0, 0, 0, 1)"> sparkSession.sparkContext
+      sparkSession
+...</span></pre>
+</div>
+<p>There are some differences between the found and tested codes. The key is in the penultimate line. Here, the SparkSession is first created, and then the SparkContext is obtained from the SparkSession. In addition, I noticed that there was a WARN level log before.</p>
+<blockquote>
+<p>19/05/31 13:11:31 WARN SparkContext: Using an existing SparkContext; some configuration may not take effect.</p>
+</blockquote>
+<p>Modify test code</p>
+<div class="cnblogs_code">
+<pre>    val sparkConf =<span style="color: rgba(0, 0, 0, 1)"> new SparkConf().setAppName(getName)
+    </span>//val sc =<span style="color: rgba(0, 0, 0, 1)"> new SparkContext(sparkConf)
+    val spark </span>=<span style="color: rgba(0, 0, 0, 1)"> SparkSession.builder.config(sparkConf).enableHiveSupport().getOrCreate()
+    val sc </span>=<span style="color: rgba(0, 0, 0, 1)"> spark.sparkContext
+    spark.sql(</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">show databases</span><span style="color: rgba(128, 0, 0, 1)">"</span>).rdd.foreach(println)</pre>
+</div>
+<p>This time it was indeed ok. I will look at the detailed reasons when I have time. To be continued;</p>
+<p> </p>
+</div>
+</div>
+<!-- Post Footer -->
+<div class="post-footer">
+<div class="post-navigation">
+<a class="nav-button" href="../blog.html">← Back to Home</a>
+<a class="nav-button" href="0125.html">Next Post →</a>
+</div>
+</div>
+</article>
+</div>
+</body>
+</html>

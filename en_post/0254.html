@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Hive reads and writes Elasticsearch data through external tables</title>
+<link href="../css/style3.css" rel="stylesheet"/>
+</head>
+<body>
+<div class="container">
+<!-- Header Navigation -->
+<div class="header">
+<h1><a href="../blog.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+</div>
+<!-- Post Container -->
+<article class="post">
+<!-- Post Header -->
+<div class="post-header">
+<h1>Hive reads and writes Elasticsearch data through external tables</h1>
+<div class="post-meta">
+<div class="post-meta-item">
+<span class="meta-icon">📅</span>
+<span>January 21, 2019</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">📖</span>
+<span>1 min read</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">👁️</span>
+<span>3732 views</span>
+</div>
+</div>
+</div>
+<!-- Post Content -->
+<div class="post-content">
+<div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<p>Hive reads and writes Elasticsearch data through external tables, which is similar to reading and writing HBase data. The difference is that you need to download Elasticsearch-hadoop-Hive-6.6.2.jar, and then use the EsStorageHandler in it;</p>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201901/1509647-20190121205227441-1515656179.png"/></p>
+<p>Connect the massive data storage and deep processing power of Hadoop with the real-time search and analytics of Elasticsearch. The Elasticsearch-Hadoop (ES-Hadoop) connector lets you get quick insight from your big data and makes working in the Hadoop ecosystem even better.</p>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201901/1509647-20190121205832529-1367391414.png"/></p>
+<p>Official: https://www.elastic.co/products/hadoop<br/>Download: https://www.elastic.co/downloads/hadoop</p>
+<p> </p>
+<p>The latest version currently is 6.6.2</p>
+<blockquote>
+<p># wget https://artifacts.elastic.co/downloads/elasticsearch-hadoop/elasticsearch-hadoop-6.6.2.zip<br/># unzip elasticsearch-hadoop-6.6.2.zip</p>
+</blockquote>
+<p>Use Elasticsearch-hadoop-6.6.2/dist/Elasticsearch-hadoop-Hive-6.6.2.jar</p>
+<blockquote>
+<p>add jar /path/to/elasticsearch-hadoop-hive-6.6.2.jar;</p>
+<p>CREATE EXTERNAL TABLE hive_elasticsearch_table (<br/>id string,<br/>name string,<br/>desc string<br/>)<br/>STORED BY 'org.elasticsearch.hadoop.hive.EsStorageHandler'<br/>TBLPROPERTIES(<br/>'es.nodes' = '$es_server1:9200,$es_server2:9200',<br/>'es.index.auto.create' = 'false',<br/>'es.resource' = 'testdoc/testtype',<br/>'es.read.metadata' = 'true',<br/>'es.mapping.names' = 'id:_metadata._id, name:name, desc:desc');</p>
+</blockquote>
+<p> The main thing is to configure Elasticsearch.nodes, Elasticsearch.resource and Elasticsearch.mapping.names. One is the Elasticsearch server address, the other is the index name and type name, and the other is the one-to-one mapping of Hive fields and Elasticsearch fields. Then you can read and write Elasticsearch data in Hive:</p>
+<blockquote>
+<p>select * from hive_elasticsearch_table limit 10;<br/>insert into table hive_elasticsearch_table select '2', 'testname', 'testdesc';</p>
+</blockquote>
+<p>But it turns out that the ID has been hashed.</p>
+<blockquote>
+<p>+------------------------------+--------------------------------+--------------------------------+--+<br/>| hive_elasticsearch_table.id  | hive_elasticsearch_table.name  | hive_elasticsearch_table.desc  |<br/>+------------------------------+--------------------------------+--------------------------------+--+<br/>| 6mpoc2gBohlnD12tvBoF         | testname                       | testdesc                       |<br/>+------------------------------+--------------------------------+--------------------------------+--+</p>
+</blockquote>
+<p>You also need to add another Elasticsearch.mapping.id to define which field is the id of the document</p>
+<blockquote>
+<p>CREATE EXTERNAL TABLE hive_elasticsearch_table (<br/>id string,<br/>name string,<br/>desc string<br/>)<br/>STORED BY 'org.elasticsearch.hadoop.hive.EsStorageHandler'<br/>TBLPROPERTIES(<br/>'es.nodes' = '$es_server1:9200,$es_server2:9200',<br/>'es.index.auto.create' = 'false',<br/>'es.resource' = 'testdoc/testtype',<br/>'es.read.metadata' = 'true',<br/>'es.mapping.id' = 'id',<br/>'es.mapping.names' = 'id:_metadata._id, name:name, desc:desc');</p>
+</blockquote>
+<p>It's normal this time</p>
+<blockquote>
+<p>+------------------------------+--------------------------------+--------------------------------+--+<br/>| hive_elasticsearch_table.id  | hive_elasticsearch_table.name  | hive_elasticsearch_table.desc  |<br/>+------------------------------+--------------------------------+--------------------------------+--+<br/>| 6mpoc2gBohlnD12tvBoF         | testname                       | testdesc                       |<br/>| 4                            | hello                          | world                          |<br/>+------------------------------+--------------------------------+--------------------------------+--+</p>
+</blockquote>
+<p> </p>
+<p>For details on field type mapping, see: https://www.elastic.co/guide/en/Elasticsearch/hadoop/current/mapping.html </p>
+<p> </p>
+</div>
+</div>
+<!-- Post Footer -->
+<div class="post-footer">
+<div class="post-navigation">
+<a class="nav-button" href="../blog.html">← Back to Home</a>
+<a class="nav-button" href="0255.html">Next Post →</a>
+</div>
+</div>
+</article>
+</div>
+</body>
+</html>

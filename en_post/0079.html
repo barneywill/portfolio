@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Installing CentOS with KVM from the CentOS Command Line</title>
+<link href="../css/style3.css" rel="stylesheet"/>
+</head>
+<body>
+<div class="container">
+<!-- Header Navigation -->
+<div class="header">
+<h1><a href="../blog.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+</div>
+<!-- Post Container -->
+<article class="post">
+<!-- Post Header -->
+<div class="post-header">
+<h1>Installing CentOS with KVM from the CentOS Command Line</h1>
+<div class="post-meta">
+<div class="post-meta-item">
+<span class="meta-icon">📅</span>
+<span>December 26, 2019</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">📖</span>
+<span>9 min read</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">👁️</span>
+<span>945 views</span>
+</div>
+</div>
+</div>
+<!-- Post Content -->
+<div class="post-content">
+<div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<h1><picture>
+<source srcset="../img/1509647-20191226220712867-1355861161.webp" type="image/webp"/>
+<img alt="" src="../img/1509647-20191226220712867-1355861161.png"/>
+</picture></h1>
+<p> </p>
+<p> Official: http://www.Linux-kvm.org</p>
+<h1>1 Introduction to KVM</h1>
+<p>KVM (for Kernel-based Virtual Machine) is a full virtualization solution for Linux on x86 hardware containing virtualization extensions (Intel VT or AMD-V). It consists of a loadable kernel module, kvm.ko, that provides the core virtualization infrastructure and a processor specific module, kvm-intel.ko or kvm-amd.ko.</p>
+<p>Using KVM, one can run multiple virtual machines running unmodified Linux or Windows images. Each virtual machine has private virtualized hardware: a network card, disk, graphics adapter, etc.</p>
+<p>KVM is open source software. The kernel component of KVM is included in mainline Linux, as of 2.6.20. The userspace component of KVM is included in mainline QEMU, as of 1.3.</p>
+<h1>2. Install KVM</h1>
+<p>Check whether the CPU supports virtualization</p>
+<blockquote>
+<p># grep - Ei 'vmx|svm' /proc/cpuinfo</p>
+</blockquote>
+<p>Where vmx is intel and svm is amd</p>
+<p>Install</p>
+<blockquote>
+<p># yum install qemu-kvm qemu-kvm-tools qemu-img virt-manager libvirt libvirt-python libvirt-client bridge-utils virt-viewer virt-install</p>
+</blockquote>
+<p>start up</p>
+<blockquote>
+<p># lsmod |grep kvm<br/># systemctl start libvirtd</p>
+</blockquote>
+<h1>3. Modify user</h1>
+<blockquote>
+<p># vi /etc/libvirt/qemu.conf<br/>#user = "root"<br/>#group = "root"</p>
+</blockquote>
+<p>Uncomment the above two lines</p>
+<blockquote>
+<p># systemctl restart libvirtd</p>
+</blockquote>
+<h1>4. Download CentOS</h1>
+<p>http://isoredirect.centos.org/centos/7/isos/x86_64/</p>
+<p><br/>Recommended mirror: http://mirrors.cqu.edu.cn/CentOS/7.7.1908/isos/x86_64/</p>
+<h1>5. Install CentOS</h1>
+<h2>1 nat mode</h2>
+<p><picture>
+<source srcset="../img/1509647-20191226222033147-218042829.webp" type="image/webp"/>
+<img alt="" src="../img/1509647-20191226222033147-218042829.png"/>
+</picture></p>
+<p> </p>
+<p> </p>
+<blockquote>
+<p># virt-install --name=$myname --memory=61440,maxmemory=61440 --vcpus=16,maxvcpus=16 --os-type=linux --os-variant=rhel7 --location=/root/CentOS-7-x86_64-Minimal-1908.iso --disk path=/kvm/$myname/root.img,size=150 --disk path=/data1/$myname/data1.img,size=300 --bridge=virbr0 --graphics=none --console=pty,target_type=serial --extra-args="console=tty0 console=ttyS0"</p>
+</blockquote>
+<p>Notice:<br/>1) --bridge=virbr0, use kvm to automatically install bridge's virbr0;<br/>2) You can configure multiple --disks as needed, and the size unit is G. In the simplest case, you only need to configure one disk to install the system;</p>
+<h2>2 bridge method</h2>
+<p><picture>
+<source srcset="../img/1509647-20191226222051119-873009452.webp" type="image/webp"/>
+<img alt="" src="../img/1509647-20191226222051119-873009452.png"/>
+</picture></p>
+<p> </p>
+<p> </p>
+<h3>1 Configure bridge</h3>
+<div class="cnblogs_code">
+<pre><span style="color: rgba(0, 128, 0, 1)">#</span><span style="color: rgba(0, 128, 0, 1)"> cat /etc/sysconfig/network-scripts/ifcfg-br0 </span>
+DEVICE=<span style="color: rgba(0, 0, 0, 1)">br0
+ONBOOT</span>=<span style="color: rgba(0, 0, 0, 1)">yes
+TYPE</span>=<span style="color: rgba(0, 0, 0, 1)">Bridge
+BOOTPROTO</span>=<span style="color: rgba(0, 0, 0, 1)">static
+IPADDR</span>=192.168.1.100<span style="color: rgba(0, 0, 0, 1)">
+GATEWAY</span>=192.168.1.1<span style="color: rgba(0, 0, 0, 1)">
+DNS1</span>=192.168.1.1<span style="color: rgba(0, 0, 0, 1)">
+DEFROUTE</span>=yes</pre>
+</div>
+<h3><br/>2 Modify eth0</h3>
+<blockquote>
+<p># vi /etc/sysconfig/network-scripts/ifcfg-eth0</p>
+</blockquote>
+<p>last append<br/>BRIDGE=br0</p>
+<h3>3 Restart the network</h3>
+<blockquote>
+<p># systemctl restart network</p>
+</blockquote>
+<h3>4 View bridge</h3>
+<blockquote>
+<p># brctl show</p>
+</blockquote>
+<h3>5 Install CentOS</h3>
+<blockquote>
+<p># virt-install --name=$myname --memory=61440,maxmemory=61440 --vcpus=16,maxvcpus=16 --os-type=linux --os-variant=rhel7 --location=/root/CentOS-7-x86_64-Minimal-1908.iso --disk path=/kvm/$myname/root.img,size=150 --disk path=/data1/$myname/data1.img,size=300 --bridge=br0 --graphics=none --console=pty,target_type=serial --extra-args="console=tty0 console=ttyS0"</p>
+</blockquote>
+<p>Note: --bridge=br0, use the br0 just created;</p>
+<p><br/>PS: If you first install CentOS in nat mode and want to change it to bridge, you can modify it.</p>
+<p>1) Via command</p>
+<div class="cnblogs_code">
+<pre><span style="color: rgba(0, 128, 0, 1)">#</span><span style="color: rgba(0, 128, 0, 1)"> virsh edit $myname</span>
+
+    &lt;interface type=<span style="color: rgba(128, 0, 0, 1)">'</span><span style="color: rgba(128, 0, 0, 1)">bridge</span><span style="color: rgba(128, 0, 0, 1)">'</span>&gt;
+      &lt;mac address=<span style="color: rgba(128, 0, 0, 1)">'</span><span style="color: rgba(128, 0, 0, 1)">52:54:00:e7:32:0d</span><span style="color: rgba(128, 0, 0, 1)">'</span>/&gt;
+      &lt;source bridge=<span style="color: rgba(128, 0, 0, 1)">'</span><span style="color: rgba(128, 0, 0, 1)">br0</span><span style="color: rgba(128, 0, 0, 1)">'</span>/&gt;
+      &lt;model type=<span style="color: rgba(128, 0, 0, 1)">'</span><span style="color: rgba(128, 0, 0, 1)">virtio</span><span style="color: rgba(128, 0, 0, 1)">'</span>/&gt;
+      &lt;address type=<span style="color: rgba(128, 0, 0, 1)">'</span><span style="color: rgba(128, 0, 0, 1)">pci</span><span style="color: rgba(128, 0, 0, 1)">'</span> domain=<span style="color: rgba(128, 0, 0, 1)">'</span><span style="color: rgba(128, 0, 0, 1)">0x0000</span><span style="color: rgba(128, 0, 0, 1)">'</span> bus=<span style="color: rgba(128, 0, 0, 1)">'</span><span style="color: rgba(128, 0, 0, 1)">0x00</span><span style="color: rgba(128, 0, 0, 1)">'</span> slot=<span style="color: rgba(128, 0, 0, 1)">'</span><span style="color: rgba(128, 0, 0, 1)">0x03</span><span style="color: rgba(128, 0, 0, 1)">'</span> function=<span style="color: rgba(128, 0, 0, 1)">'</span><span style="color: rgba(128, 0, 0, 1)">0x0</span><span style="color: rgba(128, 0, 0, 1)">'</span>/&gt;
+    &lt;/interface&gt;</pre>
+</div>
+<p>Modify type to bridge and bridge to br0</p>
+<p>2) Modify files directly</p>
+<blockquote>
+<p># vi /etc/libvirt/qemu/$myname.xml</p>
+</blockquote>
+<p>Restart after modification</p>
+<blockquote>
+<p># sytemctl restart libvirtd</p>
+</blockquote>
+<h1>6. Install CentOS through text interface</h1>
+<h2>1 Initial interface</h2>
+<div class="cnblogs_code">
+<pre>================================================================================
+================================================================================<span style="color: rgba(0, 0, 0, 1)">
+Installation
+
+ </span>1) [x] Language settings                 2<span style="color: rgba(0, 0, 0, 1)">) [!] Time settings
+        (English (United States))                (Timezone </span><span style="color: rgba(0, 0, 255, 1)">is</span> <span style="color: rgba(0, 0, 255, 1)">not</span><span style="color: rgba(0, 0, 0, 1)"> set.)
+ </span>3) [!] Installation source               4<span style="color: rgba(0, 0, 0, 1)">) [!] Software selection
+        (Processing...)                          (Processing...)
+ </span>5) [!] Installation Destination          6<span style="color: rgba(0, 0, 0, 1)">) [x] Kdump
+        (No disks selected)                      (Kdump </span><span style="color: rgba(0, 0, 255, 1)">is</span><span style="color: rgba(0, 0, 0, 1)"> enabled)
+ </span>7) [ ] Network configuration             8<span style="color: rgba(0, 0, 0, 1)">) [!] Root password
+        (Not connected)                          (Password </span><span style="color: rgba(0, 0, 255, 1)">is</span> <span style="color: rgba(0, 0, 255, 1)">not</span><span style="color: rgba(0, 0, 0, 1)"> set.)
+ </span>9<span style="color: rgba(0, 0, 0, 1)">) [!] User creation
+        (No user will be created)
+  Please make your choice </span><span style="color: rgba(0, 0, 255, 1)">from</span> above [<span style="color: rgba(128, 0, 0, 1)">'</span><span style="color: rgba(128, 0, 0, 1)">q</span><span style="color: rgba(128, 0, 0, 1)">'</span> to quit | <span style="color: rgba(128, 0, 0, 1)">'</span><span style="color: rgba(128, 0, 0, 1)">b</span><span style="color: rgba(128, 0, 0, 1)">'</span> to begin installation |
+  <span style="color: rgba(128, 0, 0, 1)">'</span><span style="color: rgba(128, 0, 0, 1)">r</span><span style="color: rgba(128, 0, 0, 1)">'</span><span style="color: rgba(0, 0, 0, 1)"> to refresh]: 
+
+[anaconda] </span>1:main* 2:shell  3:log  4:storage-lo&gt; Switch tab: Alt+Tab | Help: F1 </pre>
+</div>
+<p><br/>Note: [!] is optional, you can complete various configuration modifications according to the numbers and prompts;</p>
+<h2>2 About partitioning method</h2>
+<p>Among them, 5) [!] You need to select the partition method in the Installation Destination. The size of each partition cannot be customized in text mode. The automatic partition logic is 50G for /directory, and the others are allocated to the /home directory. If you want to adjust the default partition size after installation, you need to select LVM here.</p>
+<div class="cnblogs_code">
+<pre>================================================================================
+================================================================================<span style="color: rgba(0, 0, 0, 1)">
+Partition Scheme Options
+
+[ ] </span>1<span style="color: rgba(0, 0, 0, 1)">) Standard Partition
+
+[ ] </span>2<span style="color: rgba(0, 0, 0, 1)">) Btrfs
+
+[x] </span>3<span style="color: rgba(0, 0, 0, 1)">) LVM
+
+[ ] </span>4<span style="color: rgba(0, 0, 0, 1)">) LVM Thin Provisioning
+
+Select a partition scheme configuration.
+
+  Please make your choice </span><span style="color: rgba(0, 0, 255, 1)">from</span> above [<span style="color: rgba(128, 0, 0, 1)">'</span><span style="color: rgba(128, 0, 0, 1)">q</span><span style="color: rgba(128, 0, 0, 1)">'</span> to quit | <span style="color: rgba(128, 0, 0, 1)">'</span><span style="color: rgba(128, 0, 0, 1)">c</span><span style="color: rgba(128, 0, 0, 1)">'</span> to <span style="color: rgba(0, 0, 255, 1)">continue</span> |
+  <span style="color: rgba(128, 0, 0, 1)">'</span><span style="color: rgba(128, 0, 0, 1)">r</span><span style="color: rgba(128, 0, 0, 1)">'</span><span style="color: rgba(0, 0, 0, 1)"> to refresh]: c
+Generating updated storage configuration
+Checking storage configuration...</span></pre>
+</div>
+<h2>3 Prepare to install</h2>
+<div class="cnblogs_code">
+<pre>================================================================================
+================================================================================<span style="color: rgba(0, 0, 0, 1)">
+Installation
+
+ </span>1) [x] Language settings                 2<span style="color: rgba(0, 0, 0, 1)">) [x] Time settings
+        (English (United States))                (Asia</span>/<span style="color: rgba(0, 0, 0, 1)">Shanghai timezone)
+ </span>3) [x] Installation source               4<span style="color: rgba(0, 0, 0, 1)">) [x] Software selection
+        (Local media)                            (Minimal Install)
+ </span>5) [x] Installation Destination          6<span style="color: rgba(0, 0, 0, 1)">) [x] Kdump
+        (Automatic partitioning                  (Kdump </span><span style="color: rgba(0, 0, 255, 1)">is</span><span style="color: rgba(0, 0, 0, 1)"> enabled)
+        selected)                         </span>8<span style="color: rgba(0, 0, 0, 1)">) [x] Root password
+ </span>7) [ ] Network configuration                    (Password <span style="color: rgba(0, 0, 255, 1)">is</span><span style="color: rgba(0, 0, 0, 1)"> set.)
+        (Not connected)
+ </span>9<span style="color: rgba(0, 0, 0, 1)">) [ ] User creation
+        (No user will be created)
+  Please make your choice </span><span style="color: rgba(0, 0, 255, 1)">from</span> above [<span style="color: rgba(128, 0, 0, 1)">'</span><span style="color: rgba(128, 0, 0, 1)">q</span><span style="color: rgba(128, 0, 0, 1)">'</span> to quit | <span style="color: rgba(128, 0, 0, 1)">'</span><span style="color: rgba(128, 0, 0, 1)">b</span><span style="color: rgba(128, 0, 0, 1)">'</span> to begin installation |
+  <span style="color: rgba(128, 0, 0, 1)">'</span><span style="color: rgba(128, 0, 0, 1)">r</span><span style="color: rgba(128, 0, 0, 1)">'</span><span style="color: rgba(0, 0, 0, 1)"> to refresh]: b
+[anaconda] </span>1:main* 2:shell  3:log  4:storage-lo&gt; Switch tab: Alt+Tab | Help: F1 </pre>
+</div>
+<p><br/>until the installation is completed;</p>
+<h1>7. Adjust the default partition size of the disk</h1>
+<p>The default partition size is 50G in the / directory, and the others are allocated to the /home directory. If you want to adjust it, the operation process is as follows</p>
+<div class="cnblogs_code">
+<pre><span style="color: rgba(0, 128, 0, 1)">#</span><span style="color: rgba(0, 128, 0, 1)"> df - h</span>
+Filesystem               Size  Used Avail Use%<span style="color: rgba(0, 0, 0, 1)"> Mounted on
+devtmpfs                  30G     0   30G   0</span>% /<span style="color: rgba(0, 0, 0, 1)">dev
+tmpfs                     30G     0   30G   0</span>% /dev/<span style="color: rgba(0, 0, 0, 1)">shm
+tmpfs                     30G  </span>8.6M   30G   1% /<span style="color: rgba(0, 0, 0, 1)">run
+tmpfs                     30G     0   30G   0</span>% /sys/fs/<span style="color: rgba(0, 0, 0, 1)">cgroup
+</span>/dev/mapper/centos-root  50G  1.3G   49G   2% /
+/dev/vda1               1014M  149M  866M  15% /<span style="color: rgba(0, 0, 0, 1)">boot
+</span>/dev/mapper/centos-home   84G   33M   84G   1% /<span style="color: rgba(0, 0, 0, 1)">home
+tmpfs                    </span>5.9G     0  5.9G   0% /run/user/<span style="color: rgba(0, 0, 0, 1)">0
+
+</span><span style="color: rgba(0, 128, 0, 1)">#</span><span style="color: rgba(0, 128, 0, 1)"> umount /home</span><span style="color: rgba(0, 128, 0, 1)">
+#</span><span style="color: rgba(0, 128, 0, 1)"> lvremove /dev/mapper/centos-home</span><span style="color: rgba(0, 128, 0, 1)">
+#</span><span style="color: rgba(0, 128, 0, 1)"> lvextend - L +50G /dev/mapper/centos-home</span><span style="color: rgba(0, 128, 0, 1)">
+#</span><span style="color: rgba(0, 128, 0, 1)"> xfs_growfs /dev/mapper/centos-root</span><span style="color: rgba(0, 128, 0, 1)">
+#</span><span style="color: rgba(0, 128, 0, 1)"> lvcreate - L 34G - n home centos</span><span style="color: rgba(0, 128, 0, 1)">
+#</span><span style="color: rgba(0, 128, 0, 1)"> mkfs.xfs /dev/centos/home</span><span style="color: rgba(0, 128, 0, 1)">
+#</span><span style="color: rgba(0, 128, 0, 1)"> mount /dev/mapper/centos-home</span>
+
+<span style="color: rgba(0, 128, 0, 1)">#</span><span style="color: rgba(0, 128, 0, 1)"> df - h</span>
+Filesystem               Size  Used Avail Use%<span style="color: rgba(0, 0, 0, 1)"> Mounted on
+devtmpfs                  30G     0   30G   0</span>% /<span style="color: rgba(0, 0, 0, 1)">dev
+tmpfs                     30G     0   30G   0</span>% /dev/<span style="color: rgba(0, 0, 0, 1)">shm
+tmpfs                     30G  </span>8.6M   30G   1% /<span style="color: rgba(0, 0, 0, 1)">run
+tmpfs                     30G     0   30G   0</span>% /sys/fs/<span style="color: rgba(0, 0, 0, 1)">cgroup
+</span>/dev/mapper/centos-root  100G  1.3G   99G   2% /
+/dev/vda1               1014M  149M  866M  15% /<span style="color: rgba(0, 0, 0, 1)">boot
+</span>/dev/mapper/centos-home   34G   33M   34G   1% /<span style="color: rgba(0, 0, 0, 1)">home
+tmpfs                    </span>5.9G     0  5.9G   0% /run/user/0</pre>
+</div>
+<h1>Eight Network</h1>
+<h2>1 nat mode</h2>
+<p>implement</p>
+<blockquote>
+<p># dhclient eth0</p>
+</blockquote>
+<p>Ready to go online</p>
+<div class="cnblogs_code">
+<pre>[root@test ~]<span style="color: rgba(0, 128, 0, 1)">#</span><span style="color: rgba(0, 128, 0, 1)"> ip addr</span>
+1: lo: &lt;LOOPBACK,UP,LOWER_UP&gt; mtu 65536 qdisc noqueue state UNKNOWN group default qlen 1000<span style="color: rgba(0, 0, 0, 1)">
+    link</span>/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00<span style="color: rgba(0, 0, 0, 1)">
+    inet </span>127.0.0.1/8<span style="color: rgba(0, 0, 0, 1)"> scope host lo
+       valid_lft forever preferred_lft forever
+    inet6 ::</span>1/128<span style="color: rgba(0, 0, 0, 1)"> scope host 
+       valid_lft forever preferred_lft forever
+</span>2: eth0: &lt;BROADCAST,MULTICAST,UP,LOWER_UP&gt; mtu 1500 qdisc pfifo_fast state UP group default qlen 1000<span style="color: rgba(0, 0, 0, 1)">
+    link</span>/ether 52:54:00<span style="color: rgba(0, 0, 0, 1)">:aa:f7:c1 brd ff:ff:ff:ff:ff:ff
+[root@test </span>~]<span style="color: rgba(0, 128, 0, 1)">#</span><span style="color: rgba(0, 128, 0, 1)"> dhclient eth0</span>
+[root@test ~]<span style="color: rgba(0, 128, 0, 1)">#</span><span style="color: rgba(0, 128, 0, 1)"> ip addr</span>
+1: lo: &lt;LOOPBACK,UP,LOWER_UP&gt; mtu 65536 qdisc noqueue state UNKNOWN group default qlen 1000<span style="color: rgba(0, 0, 0, 1)">
+    link</span>/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00<span style="color: rgba(0, 0, 0, 1)">
+    inet </span>127.0.0.1/8<span style="color: rgba(0, 0, 0, 1)"> scope host lo
+       valid_lft forever preferred_lft forever
+    inet6 ::</span>1/128<span style="color: rgba(0, 0, 0, 1)"> scope host 
+       valid_lft forever preferred_lft forever
+</span>2: eth0: &lt;BROADCAST,MULTICAST,UP,LOWER_UP&gt; mtu 1500 qdisc pfifo_fast state UP group default qlen 1000<span style="color: rgba(0, 0, 0, 1)">
+    link</span>/ether 52:54:00<span style="color: rgba(0, 0, 0, 1)">:aa:f7:c1 brd ff:ff:ff:ff:ff:ff
+    inet </span>192.168.122.13/24 brd 192.168.122.255 scope <span style="color: rgba(0, 0, 255, 1)">global</span><span style="color: rgba(0, 0, 0, 1)"> dynamic eth0
+       valid_lft 3597sec preferred_lft 3597sec
+[root@test </span>~]<span style="color: rgba(0, 128, 0, 1)">#</span>
+PING www.a.shifen.com (14.215.177.39) 56(84<span style="color: rgba(0, 0, 0, 1)">) bytes of data.
+</span>64 bytes <span style="color: rgba(0, 0, 255, 1)">from</span> 14.215.177.39 (14.215.177.39): icmp_seq=1 ttl=53 time=23.9 ms</pre>
+</div>
+<h2>2 bridge method</h2>
+<h3>1) Set static IP</h3>
+<div class="cnblogs_code">
+<pre><span style="color: rgba(0, 128, 0, 1)">#</span><span style="color: rgba(0, 128, 0, 1)"> cat /etc/sysconfig/network-scripts/ifcfg-eth0 </span>
+TYPE=<span style="color: rgba(0, 0, 0, 1)">Ethernet
+BOOTPROTO</span>=<span style="color: rgba(0, 0, 0, 1)">static
+DEFROUTE</span>=<span style="color: rgba(0, 0, 0, 1)">yes
+NAME</span>=<span style="color: rgba(0, 0, 0, 1)">eth0
+UUID</span>=0a67f932-b328-49ce-8166-<span style="color: rgba(0, 0, 0, 1)">af12fb0b482f
+DEVICE</span>=<span style="color: rgba(0, 0, 0, 1)">eth0
+ONBOOT</span>=<span style="color: rgba(0, 0, 0, 1)">yes
+IPADDR</span>=192.168.1.101<span style="color: rgba(0, 0, 0, 1)">
+GATEWAY</span>=192.168.1.1<span style="color: rgba(0, 0, 0, 1)">
+DNS1</span>=192.168.1.1<span style="color: rgba(0, 0, 0, 1)">
+DEFROUTE</span>=yes</pre>
+</div>
+<h3><br/>2) Restart the network</h3>
+<p># systemctl restart network</p>
+<h3>3) Test the connectivity between the host (192.168.1.100) and the virtual machine (192.168.1.101)</h3>
+<h1>Nine commonly used commands</h1>
+<p>Set kvm to automatically restart</p>
+<blockquote>
+<p># systemctl enable libvirtd</p>
+</blockquote>
+<p>virsh related</p>
+<div class="cnblogs_code">
+<pre><span style="color: rgba(0, 128, 0, 1)">#</span><span style="color: rgba(0, 128, 0, 1)"> virsh list --all</span><span style="color: rgba(0, 128, 0, 1)">
+#</span><span style="color: rgba(0, 128, 0, 1)"> virsh console $myname</span><span style="color: rgba(0, 128, 0, 1)">
+#</span><span style="color: rgba(0, 128, 0, 1)"> virsh start $myname</span><span style="color: rgba(0, 128, 0, 1)">
+#</span><span style="color: rgba(0, 128, 0, 1)"> virsh shutdown $myname</span><span style="color: rgba(0, 128, 0, 1)">
+#</span><span style="color: rgba(0, 128, 0, 1)"> virsh destroy $myname</span><span style="color: rgba(0, 128, 0, 1)">
+#</span><span style="color: rgba(0, 128, 0, 1)"> virsh undefine $myname<br/># virsh autostart $myname<br/># virsh autostart --disable $myname</span></pre>
+</div>
+<p><br/>After entering the virtual machine, you can install some common commands, such as ifconfig</p>
+<blockquote>
+<p># yum install net-tools</p>
+</blockquote>
+<p>Finally, you can connect to the virtual machine through virsh on the host or remotely through 192.168.1.101;</p>
+<p><br/>Reference:<br/>http://www.linux-kvm.org/page/Main_Page</p>
+</div>
+</div>
+<!-- Post Footer -->
+<div class="post-footer">
+<div class="post-navigation">
+<a class="nav-button" href="../blog.html">← Back to Home</a>
+<a class="nav-button" href="0080.html">Next Post →</a>
+</div>
+</div>
+</article>
+</div>
+</body>
+</html>

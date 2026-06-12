@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>keepalived</title>
+<link href="../css/style3.css" rel="stylesheet"/>
+</head>
+<body>
+<div class="container">
+<!-- Header Navigation -->
+<div class="header">
+<h1><a href="../blog.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+</div>
+<!-- Post Container -->
+<article class="post">
+<!-- Post Header -->
+<div class="post-header">
+<h1>keepalived</h1>
+<div class="post-meta">
+<div class="post-meta-item">
+<span class="meta-icon">📅</span>
+<span>January 28, 2019</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">📖</span>
+<span>4 min read</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">👁️</span>
+<span>4442 views</span>
+</div>
+</div>
+</div>
+<!-- Post Content -->
+<div class="post-content">
+<div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<p>keepalived 2.0.12</p>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201901/1509647-20190127212511718-914533907.png"/></p>
+<p>Official: http://www.keepalived.org/</p>
+<p> </p>
+<h1>1 Introduction</h1>
+<p>Keepalived is a routing software written in C. The main goal of this project is to provide simple and robust facilities for loadbalancing and high-availability to Linux system and Linux based infrastructures. Loadbalancing framework relies on well-known and widely used Linux Virtual Server (IPVS) kernel module providing Layer4 loadbalancing. Keepalived implements a set of checkers to dynamically and adaptively maintain and manage loadbalanced server pool according their health. On the other hand high-availability is achieved by VRRP protocol. VRRP is a fundamental brick for router failover. In addition, Keepalived implements a set of hooks to the VRRP finite state machine providing low-level and high-speed protocol interactions. In order to offer fastest network failure detection, Keepalived implements BFD protocol. VRRP state transition can take into account BFD hint to drive fast state transition. Keepalived frameworks can be used independently or all together to provide resilient infrastructures.</p>
+<p>keepalived is a routing software written in C that uses vrrp protocol (Virtual Router Redundancy Protocol) and arp protocol (Address Resolution Protocol) to achieve simple and robust load balancing and high availability;</p>
+<p> </p>
+<p><em>VRRP organizes a group of routers on the LAN (including a Master (active router) and several Backup routers) into a virtual router, which is called a backup group. This virtual router has its own IP address 10.100.10.1 (this IP address can be the same as the interface address of a router in the backup group, and the same one is called the IP owner). The routers in the backup group also have their own IP addresses (for example, the Master's IP address is 10.100.10.2, and the Backup's IP address is 10.100.10.3). Hosts in the LAN only know the IP address of this virtual router, 10.100.10.1, but do not know the specific IP address of the Master router, 10.100.10.2, and the IP address of the Backup router, 10.100.10.3. They set their default route next hop address to the virtual router's IP address of 10.100.10.1.</em></p>
+<p> </p>
+<h2>principle</h2>
+<p>The master and slave nodes send vrrp packets through broadcast or multicast, and then elect the master based on priority.</p>
+<p>14:20:21.521870 IP 192.168.0.1 &gt; 192.168.0.2: VRRPv2, Advertisement, vrid 99, prio 100, authtype simple, intvl 1s, length 20</p>
+<p>Once the master does not send out vrrp packets in time within a certain period of time, other standbys will send vrrp packets and then elect the master based on priority;</p>
+<p>The master will send the arp package,</p>
+<p>Jan 28 19:04:26 cdp-test-server-05 Keepalived_vrrp[27675]: VRRP_Instance(VI_1) Sending/queueing gratuitous ARPs on eth0 for 192.168.0.3<br/>Jan 28 19:04:26 cdp-test-server-05 Keepalived_vrrp[27675]: Sending gratuitous ARP on eth0 for 192.168.0.3</p>
+<p>Note that this is the gratuitous ARP of the virtual ip (vip).</p>
+<p>Let’s first look at ARP (Address Resolution Protocol, Address Resolution Protocol), which converts IP addresses into MAC addresses.</p>
+<p>The process of ARP: Send an ARP request on Host A with the content of who has [IP_B], tell [IP_A]. The packet carries the IP address of Host B, as well as the IP and MAC of Host A. All hosts that receive the broadcast packet will check whether the requested IP address is their own. If so, they will send an ARP reply (unicast, from B to A) with the content [IP_B] is at [MAC_B]. The packet carries the MAC and IP addresses of hosts A and B.</p>
+<p># arping 192.168.0.1</p>
+<p>In the scenario just now, if Host A sends a request with the content "who has [IP_A], tell [IP_A]", then this is a gratuitous ARP. Why does it request its own IP? Because: normal ARP requests information from other hosts, while gratuitous ARP actively broadcasts its own information to other hosts, so gratuitous ARP does not expect a response;</p>
+<p>All hosts or switches that receive broadcast packets after sending gratuitous ARP can view the VIP and mac (master mac) mapping through the command:</p>
+<p># arp -a</p>
+<p>In this way, other hosts can access the master through vip or bind manually through arp.</p>
+<p># arp -s 192.168.0.3 00-02-b3-3c-16-95</p>
+<p>In addition, you can set vrrp_garp_master_refresh to let the master send gratuitous ARP packets regularly;</p>
+<p>If you are in a cloud host environment, you do not need to consider keepingalived, because multicast and arp of the vrrp protocol are usually prohibited on the cloud. You can consider directly using the virtual IP service of the cloud platform;</p>
+<h1>2. Installation</h1>
+<blockquote>
+<p># yum install keepalived</p>
+</blockquote>
+<p>Master node configuration</p>
+<blockquote>
+<p># vi /etc/keepalived/keepalived.conf</p>
+<p>vrrp_instance VI_1 {</p>
+<p>    state MASTER</p>
+<p>    interface eth0</p>
+<p>    unicast_src_ip 192.168.0.1</p>
+<p>    unicast_peer {</p>
+<p>        192.168.0.2</p>
+<p>    }</p>
+<p>    virtual_router_id 51</p>
+<p>    priority 100</p>
+<p>    advert_int 1</p>
+<p>    authentication {</p>
+<p>        auth_type PASS</p>
+<p>        auth_pass 1111</p>
+<p>    }</p>
+<p>    virtual_ipaddress {</p>
+<p>        192.168.0.3</p>
+<p>    }</p>
+<p>}</p>
+<p> </p>
+<p>virtual_server 192.168.0.3 81 {</p>
+<p>    delay_loop 6</p>
+<p>    lb_algo rr</p>
+<p>    lb_kind DR</p>
+<p>    nat_mask 255.255.255.0</p>
+<p>    persistence_timeout 50</p>
+<p>    protocol TCP</p>
+<p>    #sorry_server 127.0.0.1 80</p>
+<p>    real_server 192.168.0.1 80 {</p>
+<p>        weight 1</p>
+<p>    }</p>
+<p>    real_server 192.168.0.2 80 {</p>
+<p>        weight 1</p>
+<p>    }</p>
+<p>}</p>
+</blockquote>
+<p>The unicast (unicast_src_ip, unicast_peer) method is used here, because multicast cannot be used in many environments. If you want to use multicast, just remove the unicast parameters;</p>
+<p>If real_server and keealived are deployed on the same machine, there is no need to configure virtual_server;</p>
+<p>Comment out</p>
+<blockquote>
+<p>    #vrrp_strict</p>
+</blockquote>
+<p>Otherwise, a drop rule will be generated in iptables;</p>
+<p> </p>
+<p>Modify configuration from node</p>
+<blockquote>
+<p>state BACKUP<br/>unicast_src_ip swap<br/>unicast_peer swap<br/>priority 50</p>
+</blockquote>
+<p>If you enable iptables, you need to add rules</p>
+<blockquote>
+<p># iptables -I INPUT -d 224.0.0.0/8 -j ACCEPT<br/># iptables -A INPUT -p vrrp -j ACCEPT</p>
+</blockquote>
+<p>start up</p>
+<blockquote>
+<p># service keepalived start</p>
+</blockquote>
+<p>view vip</p>
+<blockquote>
+<p># ip a</p>
+</blockquote>
+<p>View tcp package</p>
+<blockquote>
+<p># tcpdump -p vrrp -n</p>
+</blockquote>
+<p> </p>
+<p>Reference: https://docs.oracle.com/cd/E37670_01/E41138/html/section_ksr_psb_nr.html</p>
+<p> </p>
+<p>The log is located in /var/log/messages. If an error is reported:</p>
+<blockquote>
+<p>Jan 27 17:05:05 cdp-test-server-05 Keepalived_vrrp[26508]: Registering Kernel netlink reflector<br/>Jan 27 17:05:05 cdp-test-server-05 Keepalived_vrrp[26508]: Registering Kernel netlink command channel<br/>Jan 27 17:05:05 cdp-test-server-05 Keepalived_vrrp[26508]: Registering gratuitous ARP shared channel<br/>Jan 27 17:05:05 cdp-test-server-05 Keepalived_vrrp[26508]: Opening file '/etc/keepalived/keepalived.conf'.<br/>Jan 27 17:05:05 cdp-test-server-05 Keepalived_vrrp[26508]: (VI_1): Cannot start in MASTER state if not address owner<br/>Jan 27 17:05:05 cdp-test-server-05 Keepalived_vrrp[26508]: Unable to load ipset library - libipset.so.11: cannot open shared object file: No such file or directory<br/>Jan 27 17:05:05 cdp-test-server-05 Keepalived_vrrp[26508]: VRRP_Instance(VI_1) removing protocol VIPs.<br/>Jan 27 17:05:05 cdp-test-server-05 Keepalived_vrrp[26508]: VRRP_Instance(VI_1) removing protocol iptable drop rule<br/>Jan 27 17:05:05 cdp-test-server-05 Keepalived_vrrp[26508]: Using LinkWatch kernel netlink reflector...<br/>Jan 27 17:05:05 cdp-test-server-05 Keepalived_vrrp[26508]: VRRP_Instance(VI_1) Entering BACKUP STATE<br/>Jan 27 17:05:05 cdp-test-server-05 Keepalived_vrrp[26508]: VRRP sockpool: [ifindex(2), proto(112), unicast(0), fd(10,11)]</p>
+</blockquote>
+<p>Need to install ipset</p>
+<blockquote>
+<p># yum install ipset</p>
+</blockquote>
+<p>then normal</p>
+<blockquote>
+<p>Jan 27 21:40:35 cdp-test-server-05 Keepalived_vrrp[7001]: Registering Kernel netlink reflector<br/>Jan 27 21:40:35 cdp-test-server-05 Keepalived_vrrp[7001]: Registering Kernel netlink command channel<br/>Jan 27 21:40:35 cdp-test-server-05 Keepalived_vrrp[7001]: Registering gratuitous ARP shared channel<br/>Jan 27 21:40:35 cdp-test-server-05 Keepalived_vrrp[7001]: Opening file '/etc/keepalived/keepalived.conf'.<br/>Jan 27 21:40:35 cdp-test-server-05 Keepalived_vrrp[7001]: (VI_1): Cannot start in MASTER state if not address owner<br/>Jan 27 21:40:35 cdp-test-server-05 Keepalived_vrrp[7001]: iptc_commit returned 0: No chain/target/match by that name<br/>Jan 27 21:40:35 cdp-test-server-05 Keepalived_vrrp[7001]: VRRP_Instance(VI_1) removing protocol VIPs.<br/>Jan 27 21:40:35 cdp-test-server-05 Keepalived_vrrp[7001]: VRRP_Instance(VI_1) removing protocol iptable drop rule<br/>Jan 27 21:40:35 cdp-test-server-05 Keepalived_vrrp[7001]: Using LinkWatch kernel netlink reflector...<br/>Jan 27 21:40:35 cdp-test-server-05 Keepalived_vrrp[7001]: VRRP_Instance(VI_1) Entering BACKUP STATE<br/>Jan 27 21:40:35 cdp-test-server-05 Keepalived_vrrp[7001]: VRRP sockpool: [ifindex(2), proto(112), unicast(0), fd(10,11)]<br/>Jan 27 21:40:38 cdp-test-server-05 Keepalived_vrrp[7001]: VRRP_Instance(VI_1) Transition to MASTER STATE<br/>Jan 27 21:40:39 cdp-test-server-05 Keepalived_vrrp[7001]: VRRP_Instance(VI_1) Entering MASTER STATE<br/>Jan 27 21:40:39 cdp-test-server-05 Keepalived_vrrp[7001]: VRRP_Instance(VI_1) setting protocol iptable drop rule<br/>Jan 27 21:40:39 cdp-test-server-05 Keepalived_vrrp[7001]: VRRP_Instance(VI_1) setting protocol VIPs.<br/>Jan 27 21:40:39 cdp-test-server-05 Keepalived_vrrp[7001]: Sending gratuitous ARP on eth0 for 192.168.0.3<br/>Jan 27 21:40:39 cdp-test-server-05 Keepalived_vrrp[7001]: VRRP_Instance(VI_1) Sending/queueing gratuitous ARPs on eth0 for 192.168.0.3<br/>Jan 27 21:40:39 cdp-test-server-05 Keepalived_vrrp[7001]: Sending gratuitous ARP on eth0 for 192.168.0.3<br/>Jan 27 21:40:39 cdp-test-server-05 Keepalived_vrrp[7001]: Sending gratuitous ARP on eth0 for 192.168.0.3<br/>Jan 27 21:40:39 cdp-test-server-05 Keepalived_vrrp[7001]: Sending gratuitous ARP on eth0 for 192.168.0.3<br/>Jan 27 21:40:39 cdp-test-server-05 Keepalived_vrrp[7001]: Sending gratuitous ARP on eth0 for 192.168.0.3<br/>Jan 27 21:40:44 cdp-test-server-05 Keepalived_vrrp[7001]: Sending gratuitous ARP on eth0 for 192.168.0.3<br/>Jan 27 21:40:44 cdp-test-server-05 Keepalived_vrrp[7001]: VRRP_Instance(VI_1) Sending/queueing gratuitous ARPs on eth0 for 192.168.0.3<br/>Jan 27 21:40:44 cdp-test-server-05 Keepalived_vrrp[7001]: Sending gratuitous ARP on eth0 for 192.168.0.3<br/>Jan 27 21:40:44 cdp-test-server-05 Keepalived_vrrp[7001]: Sending gratuitous ARP on eth0 for 192.168.0.3<br/>Jan 27 21:40:44 cdp-test-server-05 Keepalived_vrrp[7001]: Sending gratuitous ARP on eth0 for 192.168.0.3<br/>Jan 27 21:40:44 cdp-test-server-05 Keepalived_vrrp[7001]: Sending gratuitous ARP on eth0 for 192.168.0.3</p>
+</blockquote>
+<p> Why send 5 arps continuously? Because vrrp_garp_master_repeat defaults to 5;</p>
+<p> </p>
+<p>Reference: http://gcharriere.com/blog/?p=339</p>
+</div>
+</div>
+<!-- Post Footer -->
+<div class="post-footer">
+<div class="post-navigation">
+<a class="nav-button" href="../blog.html">← Back to Home</a>
+<a class="nav-button" href="0243.html">Next Post →</a>
+</div>
+</div>
+</article>
+</div>
+</body>
+</html>

@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Kafka cluster broker node disappears from ZooKeeper</title>
+<link href="../css/style3.css" rel="stylesheet"/>
+</head>
+<body>
+<div class="container">
+<!-- Header Navigation -->
+<div class="header">
+<h1><a href="../blog.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+</div>
+<!-- Post Container -->
+<article class="post">
+<!-- Post Header -->
+<div class="post-header">
+<h1>Kafka cluster broker node disappears from ZooKeeper</h1>
+<div class="post-meta">
+<div class="post-meta-item">
+<span class="meta-icon">📅</span>
+<span>November 07, 2018</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">📖</span>
+<span>8 min read</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">👁️</span>
+<span>4170 views</span>
+</div>
+</div>
+</div>
+<!-- Post Content -->
+<div class="post-content">
+<div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<p>kafka_2.8.0-0.8.1</p>
+<h1>a phenomenon</h1>
+<p>Problems often occur in a Kafka cluster in the production environment. The phenomenon is that Kafka's broker node on ZooKeeper disappears. At this time, the Kafka process and port are present, and then each broker reports errors, mainly</p>
+<p>1）</p>
+<blockquote>
+<p>[2017-01-09 12:40:53,832] INFO Partition [topic1,3] on broker 1361: Shrinking ISR for partition [topic1,3] from 1351,1361,1341 to 1361 (kafka.cluster.Partition)</p>
+</blockquote>
+<p>2）</p>
+<blockquote>
+<p>[2017-01-09 12:33:53,858] ERROR Conditional update of path /brokers/topics/topic2/partitions/0/state with data {"controller_epoch":20,"leader":1361,"version":1,"leader_epoch":13,"isr":[1361]} and expected version 23 failed due to org.apache.zookeeper.KeeperException$BadVersionException: KeeperErrorCode = BadVersion for /brokers/topics/topic2/partitions/0/state (kafka.utils.ZkUtils$)</p>
+</blockquote>
+<p>At the same time, the client is also reporting errors;</p>
+<p> </p>
+<h1>2. Diagnosis</h1>
+<p>The most recent problem occurred at noon on January 9, 2017. Three brokers (134/135/136) disappeared from ZooKeeper one after another, and finally the service became unavailable. According to the log arrangement process, the process is as follows:</p>
+<blockquote>
+<p>136 is controller</p>
+<p>2017-01-09 12:33:33 134 zk disconnect</p>
+<p>2017-01-09 12:33:33 134 zk connect</p>
+<p>2017-01-09 12:33:36 135 zk disconnect</p>
+<p>2017-01-09 12:33:36 136 zk disconnect[dispear]</p>
+<p>2017-01-09 12:33:36 134 become controller</p>
+<p>2017-01-09 12:33:37 135 zk connect</p>
+<p>2017-01-09 12:33:42 134 zk disconnect[dispear]</p>
+<p>2017-01-09 12:33:44 135 become controller</p>
+<p>135 zk disconnect[dispear]</p>
+<p> </p>
+<p>134 restart</p>
+<p>2017-01-09 12:37:32 134 zk connect</p>
+<p>2017-01-09 12:37:32 134 become controller</p>
+<p>2017-01-09 12:37:39 134 zk disconnect[dispear]</p>
+<p> </p>
+<p>135 restart</p>
+<p>2017-01-09 12:38:14 135 zk connect[ok]</p>
+<p>2017-01-09 12:38:14 135 become controller[ok]</p>
+<p> </p>
+<p>134 restart</p>
+<p>2017-01-09 12:39:41 134 zk connect[ok]</p>
+<p> </p>
+<p>136 restart</p>
+<p>2017-01-09 12:41:19 136 zk connect[ok]</p>
+</blockquote>
+<p>During the period when the service was unavailable from 12:33 to 12:37, the jstacks of the three brokers all had the same two stacks:</p>
+<p>1）</p>
+<blockquote>
+<p>"<strong>delete-topics-thread</strong>" prio=10 tid=0x00007f52ec06c800 nid=0x18b8 waiting on condition [0x00007f52b59dd000]</p>
+<p>   java.lang.Thread.State: <strong>WAITING</strong> (parking)</p>
+<p>        at sun.misc.Unsafe.park(Native Method)</p>
+<p>        - parking to wait for  &lt;0x00000000c55a2140&gt; (a java.util.concurrent.locks.ReentrantLock$NonfairSync)</p>
+<p>        at java.util.concurrent.locks.LockSupport.park(Unknown Source)</p>
+<p>        at java.util.concurrent.locks.AbstractQueuedSynchronizer.parkAndCheckInterrupt(Unknown Source)</p>
+<p>        at java.util.concurrent.locks.AbstractQueuedSynchronizer.acquireQueued(Unknown Source)</p>
+<p>        at java.util.concurrent.locks.AbstractQueuedSynchronizer$ConditionObject.await(Unknown Source)</p>
+<p>        at kafka.controller.TopicDeletionManager.kafka$controller$TopicDeletionManager$$awaitTopicDeletionNotification(TopicDeletionManager.scala:178)</p>
+<p>        at kafka.controller.TopicDeletionManager$DeleteTopicsThread$$anonfun$doWork$1.apply$mcV$sp(TopicDeletionManager.scala:334)</p>
+<p>        at kafka.controller.TopicDeletionManager$DeleteTopicsThread$$anonfun$doWork$1.apply(TopicDeletionManager.scala:333)</p>
+<p>        at kafka.controller.TopicDeletionManager$DeleteTopicsThread$$anonfun$doWork$1.apply(TopicDeletionManager.scala:333)</p>
+<p>        at kafka.utils.Utils$.inLock(Utils.scala:538)</p>
+<p>        <strong>at kafka.controller.TopicDeletionManager$DeleteTopicsThread.doWork(TopicDeletionManager.scala:333)</strong></p>
+<p>        at kafka.utils.ShutdownableThread.run(ShutdownableThread.scala:51)</p>
+</blockquote>
+<p>2）</p>
+<blockquote>
+<p>"<strong>ZkClient-EventThread</strong>-12-kafka-common1.hangzhou-1.zookeeper.internal.lede.com:2182,kafka-common2.hangzhou-1.zookeeper.internal.lede.com:2182,kafka-common3.hangzhou-1.zookeeper.internal.lede.com:2182,kafka-common4.hangzhou-1.zookeeper.internal.lede.com:2182,kafka-common5.hangzhou-1.zookeeper.internal.lede.com:2182" daemon prio=10 tid=0x00007f533435f800 nid=0xbb4 waiting on condition [0x00007f531a8be000]</p>
+<p>   java.lang.Thread.State: <strong>WAITING</strong> (parking)</p>
+<p>        at sun.misc.Unsafe.park(Native Method)</p>
+<p>        - parking to wait for  &lt;0x00000000e41c5cf8&gt; (a java.util.concurrent.CountDownLatch$Sync)</p>
+<p>        at java.util.concurrent.locks.LockSupport.park(Unknown Source)</p>
+<p>        at java.util.concurrent.locks.AbstractQueuedSynchronizer.parkAndCheckInterrupt(Unknown Source)</p>
+<p>        at java.util.concurrent.locks.AbstractQueuedSynchronizer.doAcquireSharedInterruptibly(Unknown Source)</p>
+<p>        at java.util.concurrent.locks.AbstractQueuedSynchronizer.acquireSharedInterruptibly(Unknown Source)</p>
+<p>        at java.util.concurrent.CountDownLatch.await(Unknown Source)</p>
+<p>        at kafka.utils.ShutdownableThread.shutdown(ShutdownableThread.scala:36)</p>
+<p>        at kafka.controller.TopicDeletionManager.shutdown(TopicDeletionManager.scala:93)</p>
+<p>        at kafka.controller.KafkaController$$anonfun$onControllerResignation$1.apply$mcV$sp(KafkaController.scala:340)</p>
+<p>        at kafka.controller.KafkaController$$anonfun$onControllerResignation$1.apply(KafkaController.scala:337)</p>
+<p>        at kafka.controller.KafkaController$$anonfun$onControllerResignation$1.apply(KafkaController.scala:337)</p>
+<p>        at kafka.utils.Utils$.inLock(Utils.scala:538)</p>
+<p>        at kafka.controller.KafkaController.onControllerResignation(KafkaController.scala:337)</p>
+<p>        at kafka.controller.KafkaController$SessionExpirationListener$$anonfun$handleNewSession$1.apply$mcZ$sp(KafkaController.scala:1068)</p>
+<p>        at kafka.controller.KafkaController$SessionExpirationListener$$anonfun$handleNewSession$1.apply(KafkaController.scala:1067)</p>
+<p>        at kafka.controller.KafkaController$SessionExpirationListener$$anonfun$handleNewSession$1.apply(KafkaController.scala:1067)</p>
+<p>        at kafka.utils.Utils$.inLock(Utils.scala:538)</p>
+<p>        <strong>at kafka.controller.KafkaController$SessionExpirationListener.handleNewSession(KafkaController.scala:1067)</strong></p>
+<p>        at org.I0Itec.zkclient.ZkClient$4.run(ZkClient.java:472)</p>
+<p>        at org.I0Itec.zkclient.ZkEventThread.run(ZkEventThread.java:71)</p>
+</blockquote>
+<p> </p>
+<p>Let’s look at the second stack first. There is only one Kafka controller in the cluster. You can view the current controller through /controller on zk. The controller will start a DeleteTopicsThread and register a SessionExpirationListener. When the connection with ZooKeeper is disconnected and reconnected, handleNewSession will be called back (as follows). The main job is to clean up the current controller status and reselect:</p>
+<div class="cnblogs_code">
+<pre>    <span style="color: rgba(0, 128, 0, 1)">/**</span><span style="color: rgba(0, 128, 0, 1)">
+
+     * Called after the zookeeper session has expired and a new session has been created. You would have to re-create
+
+     * any ephemeral nodes here.
+
+     *
+
+     * </span><span style="color: rgba(128, 128, 128, 1)">@throws</span><span style="color: rgba(0, 128, 0, 1)"> Exception
+
+     *             On any error.
+
+     </span><span style="color: rgba(0, 128, 0, 1)">*/</span><span style="color: rgba(0, 0, 0, 1)">
+
+    @</span><span style="color: rgba(0, 0, 255, 1)">throws</span><span style="color: rgba(0, 0, 0, 1)">(classOf[Exception])
+
+    def handleNewSession() {
+
+      info(</span>"ZK expired; shut down all controller components and try to re-elect"<span style="color: rgba(0, 0, 0, 1)">)
+
+      inLock(controllerContext.controllerLock) {
+
+        onControllerResignation()
+
+        controllerElector.elect
+
+      }
+
+    }
+
+  }</span></pre>
+</div>
+<p> </p>
+<p>Among them onControllerResignation (below):</p>
+<div class="cnblogs_code">
+<pre>  <span style="color: rgba(0, 128, 0, 1)">/**</span><span style="color: rgba(0, 128, 0, 1)">
+
+   * This callback is invoked by the zookeeper leader elector when the current broker resigns as the controller. This is
+
+   * required to clean up internal controller data structures
+
+   </span><span style="color: rgba(0, 128, 0, 1)">*/</span><span style="color: rgba(0, 0, 0, 1)">
+
+  def onControllerResignation() {
+
+    inLock(controllerContext.controllerLock) {
+
+      </span><span style="color: rgba(0, 0, 255, 1)">if</span><span style="color: rgba(0, 0, 0, 1)"> (config.autoLeaderRebalanceEnable)
+
+        autoRebalanceScheduler.shutdown()
+
+      deleteTopicManager.shutdown()
+
+      Utils.unregisterMBean(KafkaController.MBeanName)
+
+      partitionStateMachine.shutdown()
+
+      replicaStateMachine.shutdown()
+
+      </span><span style="color: rgba(0, 0, 255, 1)">if</span>(controllerContext.controllerChannelManager != <span style="color: rgba(0, 0, 255, 1)">null</span><span style="color: rgba(0, 0, 0, 1)">) {
+
+        controllerContext.controllerChannelManager.shutdown()
+
+        controllerContext.controllerChannelManager </span>= <span style="color: rgba(0, 0, 255, 1)">null</span><span style="color: rgba(0, 0, 0, 1)">
+
+      }
+
+    }
+
+  }</span></pre>
+</div>
+<p> </p>
+<p>Among them shutdown (as shown below):</p>
+<div class="cnblogs_code">
+<pre>  <span style="color: rgba(0, 128, 0, 1)">/**</span><span style="color: rgba(0, 128, 0, 1)">
+
+   * Invoked when the current controller resigns. At this time, all state for topic deletion should be cleared
+
+   </span><span style="color: rgba(0, 128, 0, 1)">*/</span><span style="color: rgba(0, 0, 0, 1)">
+
+  def shutdown() {
+
+    deleteTopicsThread.shutdown()
+
+    topicsToBeDeleted.clear()
+
+    topicsIneligibleForDeletion.clear()
+
+  }</span></pre>
+</div>
+<p>Among them shutdown (as shown below):</p>
+<div class="cnblogs_code">
+<pre>  def shutdown(): Unit =<span style="color: rgba(0, 0, 0, 1)"> {
+
+    info(</span>"Shutting down"<span style="color: rgba(0, 0, 0, 1)">)
+
+    isRunning.set(</span><span style="color: rgba(0, 0, 255, 1)">false</span><span style="color: rgba(0, 0, 0, 1)">)
+
+    </span><span style="color: rgba(0, 0, 255, 1)">if</span><span style="color: rgba(0, 0, 0, 1)"> (isInterruptible)
+
+      interrupt()
+
+    shutdownLatch.await()
+
+    info(</span>"Shutdown completed"<span style="color: rgba(0, 0, 0, 1)">)
+
+  }</span></pre>
+</div>
+<p>The thread in the second stack is stuck on this line. In addition to the SessionExpirationListener mentioned just now, Kafka will also start a KafkaHealthcheck when it starts:</p>
+<div class="cnblogs_code">
+<pre>    kafkaController = <span style="color: rgba(0, 0, 255, 1)">new</span><span style="color: rgba(0, 0, 0, 1)"> KafkaController(config, zkClient)
+
+   
+
+    </span><span style="color: rgba(0, 128, 0, 1)">/*</span><span style="color: rgba(0, 128, 0, 1)"> start processing requests </span><span style="color: rgba(0, 128, 0, 1)">*/</span><span style="color: rgba(0, 0, 0, 1)">
+
+    apis </span>= <span style="color: rgba(0, 0, 255, 1)">new</span><span style="color: rgba(0, 0, 0, 1)"> KafkaApis(socketServer.requestChannel, replicaManager, zkClient, config.brokerId, config, kafkaController)
+
+    requestHandlerPool </span>= <span style="color: rgba(0, 0, 255, 1)">new</span><span style="color: rgba(0, 0, 0, 1)"> KafkaRequestHandlerPool(config.brokerId, socketServer.requestChannel, apis, config.numIoThreads)
+
+  
+
+    Mx4jLoader.maybeLoad()
+
+ 
+
+    replicaManager.startup()
+
+    kafkaController.startup()
+
+   
+
+    topicConfigManager </span>= <span style="color: rgba(0, 0, 255, 1)">new</span><span style="color: rgba(0, 0, 0, 1)"> TopicConfigManager(zkClient, logManager)
+
+    topicConfigManager.startup()
+
+   
+
+    </span><span style="color: rgba(0, 128, 0, 1)">/*</span><span style="color: rgba(0, 128, 0, 1)"> tell everyone we are alive </span><span style="color: rgba(0, 128, 0, 1)">*/</span><span style="color: rgba(0, 0, 0, 1)">
+
+    kafkaHealthcheck </span>= <span style="color: rgba(0, 0, 255, 1)">new</span><span style="color: rgba(0, 0, 0, 1)"> KafkaHealthcheck(config.brokerId, config.advertisedHostName, config.advertisedPort, config.zkSessionTimeoutMs, zkClient)
+
+    kafkaHealthcheck.startup()</span></pre>
+</div>
+<p align="left">SessionExpireListener will also be registered (as shown below), where the broker node will be registered under /brokers/ids on zk:</p>
+<div class="cnblogs_code">
+<pre>   <span style="color: rgba(0, 128, 0, 1)">/**</span><span style="color: rgba(0, 128, 0, 1)">
+
+     * Called after the zookeeper session has expired and a new session has been created. You would have to re-create
+
+     * any ephemeral nodes here.
+
+     *
+
+     * </span><span style="color: rgba(128, 128, 128, 1)">@throws</span><span style="color: rgba(0, 128, 0, 1)"> Exception
+
+     *             On any error.
+
+     </span><span style="color: rgba(0, 128, 0, 1)">*/</span><span style="color: rgba(0, 0, 0, 1)">
+
+    @</span><span style="color: rgba(0, 0, 255, 1)">throws</span><span style="color: rgba(0, 0, 0, 1)">(classOf[Exception])
+
+    def handleNewSession() {
+
+      info(</span>"re-registering broker info in ZK for broker " +<span style="color: rgba(0, 0, 0, 1)"> brokerId)
+
+      register()
+
+      info(</span>"done re-registering broker"<span style="color: rgba(0, 0, 0, 1)">)
+
+      info(</span>"Subscribing to %s path to watch for new topics"<span style="color: rgba(0, 0, 0, 1)">.format(ZkUtils.BrokerTopicsPath))
+
+}</span></pre>
+</div>
+<p align="left">However, this listener is registered after the controller. In the ZkClient code, these listeners are stored through lists, and the callbacks are serial callbacks one by one. Therefore, if there is a controller on a broker, the KafkaHealthcheck handle must be called after the controller's handleNewSession. NewSession, so when the controller's handleNewSession is stuck, it will not register the broker node under /brokers/ids. It seems that the broker node disappears from zk. It is stuck because the controller is waiting for DeleteTopicsThread to shut down. The workflow of DeleteTopicsThread is:</p>
+<div class="cnblogs_code">
+<pre>  override def run(): Unit =<span style="color: rgba(0, 0, 0, 1)"> {
+
+    info(</span>"Starting "<span style="color: rgba(0, 0, 0, 1)">)
+
+    </span><span style="color: rgba(0, 0, 255, 1)">try</span><span style="color: rgba(0, 0, 0, 1)">{
+
+      </span><span style="color: rgba(0, 0, 255, 1)">while</span><span style="color: rgba(0, 0, 0, 1)">(isRunning.get()){
+
+        doWork()
+
+      }
+
+    } </span><span style="color: rgba(0, 0, 255, 1)">catch</span><span style="color: rgba(0, 0, 0, 1)">{
+
+      </span><span style="color: rgba(0, 0, 255, 1)">case</span> e: Throwable =&gt;
+
+        <span style="color: rgba(0, 0, 255, 1)">if</span><span style="color: rgba(0, 0, 0, 1)">(isRunning.get())
+
+          error(</span>"Error due to "<span style="color: rgba(0, 0, 0, 1)">, e)
+
+    }
+
+    shutdownLatch.countDown()
+
+    info(</span>"Stopped "<span style="color: rgba(0, 0, 0, 1)">)
+
+  }</span></pre>
+</div>
+<p>The first stack is stuck on doWork (below):</p>
+<div class="cnblogs_code">
+<pre> <span style="color: rgba(0, 0, 255, 1)">class</span> DeleteTopicsThread() <span style="color: rgba(0, 0, 255, 1)">extends</span> ShutdownableThread("delete-topics-thread"<span style="color: rgba(0, 0, 0, 1)">) {
+
+    val zkClient </span>=<span style="color: rgba(0, 0, 0, 1)"> controllerContext.zkClient
+
+    override def doWork() {
+
+      inLock(controllerContext.controllerLock) {
+
+        awaitTopicDeletionNotification()
+
+        val topicsQueuedForDeletion </span>= Set.empty[String] ++ topicsToBeDeleted</pre>
+</div>
+<p>Among them awaitTopicDeletionNotification (below):</p>
+<div class="cnblogs_code">
+<pre> <span style="color: rgba(0, 128, 0, 1)">/**</span><span style="color: rgba(0, 128, 0, 1)">
+
+   * Invoked by the delete-topic-thread to wait until events that either trigger, restart or halt topic deletion occur.
+
+   * controllerLock should be acquired before invoking this API
+
+   </span><span style="color: rgba(0, 128, 0, 1)">*/</span>
+
+  <span style="color: rgba(0, 0, 255, 1)">private</span><span style="color: rgba(0, 0, 0, 1)"> def awaitTopicDeletionNotification() {
+
+    </span><span style="color: rgba(0, 0, 255, 1)">while</span>(!<span style="color: rgba(0, 0, 0, 1)">deleteTopicStateChanged) {
+
+      info(</span>"Waiting for signal to start or continue topic deletion"<span style="color: rgba(0, 0, 0, 1)">)
+
+      deleteTopicsCond.await()
+
+    }
+
+    deleteTopicStateChanged </span>= <span style="color: rgba(0, 0, 255, 1)">false</span><span style="color: rgba(0, 0, 0, 1)">
+
+  }</span></pre>
+</div>
+<p>This condition is only awakened in the resumeTopicDeletionThread method:</p>
+<div class="cnblogs_code">
+<pre> <span style="color: rgba(0, 128, 0, 1)">/**</span><span style="color: rgba(0, 128, 0, 1)">
+
+   * Signals the delete-topic-thread to process topic deletion
+
+   </span><span style="color: rgba(0, 128, 0, 1)">*/</span>
+
+  <span style="color: rgba(0, 0, 255, 1)">private</span><span style="color: rgba(0, 0, 0, 1)"> def resumeTopicDeletionThread() {
+
+    deleteTopicStateChanged </span>= <span style="color: rgba(0, 0, 255, 1)">true</span><span style="color: rgba(0, 0, 0, 1)">
+
+    deleteTopicsCond.signal()
+
+  }</span></pre>
+</div>
+<p>This resumeTopicDeletionThread method will be called in 4 situations, otherwise doWork will remain stuck;</p>
+<p> </p>
+<p>Simply put, after the ZooKeeper connection is disconnected and reconnected, the controller will try onControllerResignation (clean up the previous controller state) and reselect, and onControllerResignation will wait for DeleteTopics Thread exits, and DeleteTopicsThread is stuck on doWork, causing the controller process to be stuck. DoWork will be executed normally only in a few situations (this is random); this problem is fixed in the new version of Kafka (0.9 and above), and the shutdown method is modified to:</p>
+<div class="cnblogs_code">
+<pre>  <span style="color: rgba(0, 128, 0, 1)">/**</span><span style="color: rgba(0, 128, 0, 1)">
+
+   * Invoked when the current controller resigns. At this time, all state for topic deletion should be cleared.
+
+   </span><span style="color: rgba(0, 128, 0, 1)">*/</span><span style="color: rgba(0, 0, 0, 1)">
+
+  def shutdown() {
+
+    </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> Only allow one shutdown to go through</span>
+
+    <span style="color: rgba(0, 0, 255, 1)">if</span> (isDeleteTopicEnabled &amp;&amp;<span style="color: rgba(0, 0, 0, 1)"> deleteTopicsThread.initiateShutdown()) {
+
+      </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> Resume the topic deletion so it doesn't block on the condition</span>
+<span style="color: rgba(0, 0, 0, 1)">
+      resumeTopicDeletionThread()
+
+      </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> Await delete topic thread to exit</span>
+<span style="color: rgba(0, 0, 0, 1)">
+      deleteTopicsThread.awaitShutdown()
+
+      topicsToBeDeleted.clear()
+
+      partitionsToBeDeleted.clear()
+
+      topicsIneligibleForDeletion.clear()
+
+    }
+
+  }</span></pre>
+</div>
+<p>The initiateShutdown and awaitShutdown methods are as follows:</p>
+<div class="cnblogs_code">
+<pre>  def initiateShutdown(): Boolean =<span style="color: rgba(0, 0, 0, 1)"> {
+
+    </span><span style="color: rgba(0, 0, 255, 1)">if</span>(isRunning.compareAndSet(<span style="color: rgba(0, 0, 255, 1)">true</span>, <span style="color: rgba(0, 0, 255, 1)">false</span><span style="color: rgba(0, 0, 0, 1)">)) {
+
+      info(</span>"Shutting down"<span style="color: rgba(0, 0, 0, 1)">)
+
+      isRunning.set(</span><span style="color: rgba(0, 0, 255, 1)">false</span><span style="color: rgba(0, 0, 0, 1)">)
+
+      </span><span style="color: rgba(0, 0, 255, 1)">if</span><span style="color: rgba(0, 0, 0, 1)"> (isInterruptible)
+
+        interrupt()
+
+      </span><span style="color: rgba(0, 0, 255, 1)">true</span><span style="color: rgba(0, 0, 0, 1)">
+
+    } </span><span style="color: rgba(0, 0, 255, 1)">else</span>
+
+      <span style="color: rgba(0, 0, 255, 1)">false</span><span style="color: rgba(0, 0, 0, 1)">
+
+  }
+
+ 
+
+    </span><span style="color: rgba(0, 128, 0, 1)">/**</span><span style="color: rgba(0, 128, 0, 1)">
+
+   * After calling initiateShutdown(), use this API to wait until the shutdown is complete
+
+   </span><span style="color: rgba(0, 128, 0, 1)">*/</span><span style="color: rgba(0, 0, 0, 1)">
+
+  def awaitShutdown(): Unit </span>=<span style="color: rgba(0, 0, 0, 1)"> {
+
+    shutdownLatch.await()
+
+    info(</span>"Shutdown completed"<span style="color: rgba(0, 0, 0, 1)">)
+
+  }</span></pre>
+</div>
+<p>It can be seen that the shutdown method in version 0.8 is split into initiateShutdown and awaitShutdown methods, and the resumeTopicDeletionThread method is called in the middle to avoid getting stuck on doWork. This can be solved by upgrading to at least version 0.9. The official upgrade process is as follows:</p>
+<h4><a href="http://kafka.apache.org/documentation/#upgrade_9" rel="noopener nofollow">Upgrading from 0.8.0, 0.8.1.X or 0.8.2.X to 0.9.0.0</a></h4>
+<p>0.9.0.0 has <a href="http://kafka.apache.org/documentation/#upgrade_9_breaking" rel="noopener nofollow">potential breaking changes</a> (please review before upgrading) and an inter-broker protocol change from previous versions. This means that upgraded brokers and clients may not be compatible with older versions. It is important that you upgrade your Kafka cluster before upgrading your clients. If you are using MirrorMaker downstream clusters should be upgraded first as well.</p>
+<p><strong>For a rolling upgrade:</strong></p>
+<ol start="1">
+<li>Update server.properties file on all brokers and add the following property: inter.broker.protocol.version=0.8.2.X</li>
+<li>Upgrade the brokers. This can be done a broker at a time by simply bringing it down, updating the code, and restarting it.</li>
+<li>Once the entire cluster is upgraded, bump the protocol version by editing inter.broker.protocol.version and setting it to 0.9.0.0.</li>
+<li>Restart the brokers one by one for the new protocol version to take effect</li>
+</ol>
+<p><strong>Note:</strong> If you are willing to accept downtime, you can simply take all the brokers down, update the code and start all of them. They will start with the new protocol by default.</p>
+<p><strong>Note:</strong> Bumping the protocol version and restarting can be done any time after the brokers were upgraded. It does not have to be immediately after.</p>
+<p> </p>
+<p>For details, see: http://Kafka.apache.org/documentation/#upgrade_9</p>
+<p> </p>
+</div>
+</div>
+<!-- Post Footer -->
+<div class="post-footer">
+<div class="post-navigation">
+<a class="nav-button" href="../blog.html">← Back to Home</a>
+<a class="nav-button" href="0351.html">Next Post →</a>
+</div>
+</div>
+</article>
+</div>
+</body>
+</html>

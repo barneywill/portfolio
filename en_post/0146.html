@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Kudu 3 - primary key</title>
+<link href="../css/style3.css" rel="stylesheet"/>
+</head>
+<body>
+<div class="container">
+<!-- Header Navigation -->
+<div class="header">
+<h1><a href="../blog.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+</div>
+<!-- Post Container -->
+<article class="post">
+<!-- Post Header -->
+<div class="post-header">
+<h1>Kudu 3 - primary key</h1>
+<div class="post-meta">
+<div class="post-meta-item">
+<span class="meta-icon">📅</span>
+<span>April 13, 2019</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">📖</span>
+<span>1 min read</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">👁️</span>
+<span>1928 views</span>
+</div>
+</div>
+</div>
+<!-- Post Content -->
+<div class="post-content">
+<div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<p>About Kudu’s primary key</p>
+<h3>The primary key may not be changed after the table is created. You must drop and recreate a table to select a new primary key.</h3>
+<p>The primary key column cannot be changed after creation</p>
+<h3>The columns which make up the primary key must be listed first in the schema.</h3>
+<p>Otherwise an error will be reported:</p>
+<blockquote>
+<p>ImpalaRuntimeException: Error creating Kudu table 'impala::default.cv00_atty_kudu' CAUSED BY: NonRecoverableException: Got out-of-order key column: name: "ent_ts" type: STRING is_key: true is_nullable: false cfile_block_size: 0</p>
+</blockquote>
+<h3>The primary key of a row may not be modified using the UPDATE functionality. To modify a row’s primary key, the row must be deleted and re-inserted with the modified key. Such a modification is non-atomic.</h3>
+<p>Primary key columns cannot be updated</p>
+<h3>Columns with DOUBLE, FLOAT, or BOOL types are not allowed as part of a primary key definition. Additionally, all columns that are part of a primary key definition must be NOT NULL.</h3>
+<p>Double, float, and bool type fields cannot be used as primary key columns, and primary key columns cannot be null.</p>
+<h3>Auto-generated primary keys are not supported.</h3>
+<p>Automatically generating primary keys is not supported</p>
+<h3>Cells making up a composite primary key are limited to a total of 16KB after the internal composite-key encoding done by Kudu.</h3>
+<p>Primary key size maximum 16k</p>
+<p><br/>Reference: https://Kudu.apache.org/docs/known_issues.html#_schema_and_usage_limitations</p>
+</div>
+</div>
+<!-- Post Footer -->
+<div class="post-footer">
+<div class="post-navigation">
+<a class="nav-button" href="../blog.html">← Back to Home</a>
+<a class="nav-button" href="0147.html">Next Post →</a>
+</div>
+</div>
+</article>
+</div>
+</body>
+</html>

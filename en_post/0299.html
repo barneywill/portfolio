@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Spark 9 - Implementation principle of COLLECT and TAKE in Spark</title>
+<link href="../css/style3.css" rel="stylesheet"/>
+</head>
+<body>
+<div class="container">
+<!-- Header Navigation -->
+<div class="header">
+<h1><a href="../blog.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+</div>
+<!-- Post Container -->
+<article class="post">
+<!-- Post Header -->
+<div class="post-header">
+<h1>Spark 9 - Implementation principle of COLLECT and TAKE in Spark</h1>
+<div class="post-meta">
+<div class="post-meta-item">
+<span class="meta-icon">📅</span>
+<span>December 21, 2018</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">📖</span>
+<span>3 min read</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">👁️</span>
+<span>2445 views</span>
+</div>
+</div>
+</div>
+<!-- Post Content -->
+<div class="post-content">
+<div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<p>In Spark, there are two ways to get calculation results back to the driver: collect and take. What is the difference between these two ways? Let’s look at the code:</p>
+<p>org.apache.spark.rdd.RDD</p>
+<div class="cnblogs_code">
+<pre>  <span style="color: rgba(0, 128, 0, 1)">/**</span><span style="color: rgba(0, 128, 0, 1)">
+   * Return an array that contains all of the elements in this RDD.
+   *
+   * @note This method should only be used if the resulting array is expected to be small, as
+   * all the data is loaded into the driver's memory.
+   </span><span style="color: rgba(0, 128, 0, 1)">*/</span><span style="color: rgba(0, 0, 0, 1)">
+  def collect(): Array[T] </span>=<span style="color: rgba(0, 0, 0, 1)"> withScope {
+    val results </span>= sc.runJob(<span style="color: rgba(0, 0, 255, 1)">this</span>, (iter: Iterator[T]) =&gt;<span style="color: rgba(0, 0, 0, 1)"> iter.toArray)
+    Array.concat(results: _</span>*<span style="color: rgba(0, 0, 0, 1)">)
+  }
+
+  </span><span style="color: rgba(0, 128, 0, 1)">/**</span><span style="color: rgba(0, 128, 0, 1)">
+   * Take the first num elements of the RDD. It works by first scanning one partition, and use the
+   * results from that partition to estimate the number of additional partitions needed to satisfy
+   * the limit.
+   *
+   * @note This method should only be used if the resulting array is expected to be small, as
+   * all the data is loaded into the driver's memory.
+   *
+   * @note Due to complications in the internal implementation, this method will raise
+   * an exception if called on an RDD of `Nothing` or `Null`.
+   </span><span style="color: rgba(0, 128, 0, 1)">*/</span><span style="color: rgba(0, 0, 0, 1)">
+  def take(num: Int): Array[T] </span>=<span style="color: rgba(0, 0, 0, 1)"> withScope {
+    val scaleUpFactor </span>= Math.max(conf.getInt("spark.rdd.limit.scaleUpFactor", 4), 2<span style="color: rgba(0, 0, 0, 1)">)
+    </span><span style="color: rgba(0, 0, 255, 1)">if</span> (num == 0<span style="color: rgba(0, 0, 0, 1)">) {
+      </span><span style="color: rgba(0, 0, 255, 1)">new</span> Array[T](0<span style="color: rgba(0, 0, 0, 1)">)
+    } </span><span style="color: rgba(0, 0, 255, 1)">else</span><span style="color: rgba(0, 0, 0, 1)"> {
+      val buf </span>= <span style="color: rgba(0, 0, 255, 1)">new</span><span style="color: rgba(0, 0, 0, 1)"> ArrayBuffer[T]
+      val totalParts </span>= <span style="color: rgba(0, 0, 255, 1)">this</span><span style="color: rgba(0, 0, 0, 1)">.partitions.length
+      var partsScanned </span>= 0
+      <span style="color: rgba(0, 0, 255, 1)">while</span> (buf.size &lt; num &amp;&amp; partsScanned &lt;<span style="color: rgba(0, 0, 0, 1)"> totalParts) {
+        </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> The number of partitions to try in this iteration. It is ok for this number to be
+        </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> greater than totalParts because we actually cap it at totalParts in runJob.</span>
+        var numPartsToTry = 1L
+        <span style="color: rgba(0, 0, 255, 1)">if</span> (partsScanned &gt; 0<span style="color: rgba(0, 0, 0, 1)">) {
+          </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> If we didn't find any rows after the previous iteration, quadruple and retry.
+          </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> Otherwise, interpolate the number of partitions we need to try, but overestimate
+          </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> it by 50%. We also cap the estimation in the end.</span>
+          <span style="color: rgba(0, 0, 255, 1)">if</span><span style="color: rgba(0, 0, 0, 1)"> (buf.isEmpty) {
+            numPartsToTry </span>= partsScanned *<span style="color: rgba(0, 0, 0, 1)"> scaleUpFactor
+          } </span><span style="color: rgba(0, 0, 255, 1)">else</span><span style="color: rgba(0, 0, 0, 1)"> {
+            </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> the left side of max is &gt;=1 whenever partsScanned &gt;= 2</span>
+            numPartsToTry = Math.max((1.5 * num * partsScanned / buf.size).toInt - partsScanned, 1<span style="color: rgba(0, 0, 0, 1)">)
+            numPartsToTry </span>= Math.min(numPartsToTry, partsScanned *<span style="color: rgba(0, 0, 0, 1)"> scaleUpFactor)
+          }
+        }
+
+        val left </span>= num -<span style="color: rgba(0, 0, 0, 1)"> buf.size
+        val p </span>= partsScanned.until(math.min(partsScanned +<span style="color: rgba(0, 0, 0, 1)"> numPartsToTry, totalParts).toInt)
+        val res </span>= sc.runJob(<span style="color: rgba(0, 0, 255, 1)">this</span>, (it: Iterator[T]) =&gt;<span style="color: rgba(0, 0, 0, 1)"> it.take(left).toArray, p)
+
+        res.foreach(buf </span>++= _.take(num -<span style="color: rgba(0, 0, 0, 1)"> buf.size))
+        partsScanned </span>+=<span style="color: rgba(0, 0, 0, 1)"> p.size
+      }
+
+      buf.toArray
+    }
+  }</span></pre>
+</div>
+<p>It can be seen that collect directly calculates all results, then turns the results of each partition into an array, and then merges them into an array;</p>
+<p>The implementation of take is a little more complicated. It will first calculate one partition, and then infer how many partitions need to be calculated based on the number of results. Then it will calculate these partitions again, and then see if the results are enough. This is an iterative process. The simpler the calculation or the smaller the number of take, the more likely it is that the condition will be returned in the previous iteration;</p>
+<p> </p>
+</div>
+</div>
+<!-- Post Footer -->
+<div class="post-footer">
+<div class="post-navigation">
+<a class="nav-button" href="../blog.html">← Back to Home</a>
+<a class="nav-button" href="0300.html">Next Post →</a>
+</div>
+</div>
+</article>
+</div>
+</body>
+</html>

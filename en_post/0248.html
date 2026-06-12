@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>rdd.cache in Spark</title>
+<link href="../css/style3.css" rel="stylesheet"/>
+</head>
+<body>
+<div class="container">
+<!-- Header Navigation -->
+<div class="header">
+<h1><a href="../blog.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+</div>
+<!-- Post Container -->
+<article class="post">
+<!-- Post Header -->
+<div class="post-header">
+<h1>rdd.cache in Spark</h1>
+<div class="post-meta">
+<div class="post-meta-item">
+<span class="meta-icon">📅</span>
+<span>January 25, 2019</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">📖</span>
+<span>10 min read</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">👁️</span>
+<span>1735 views</span>
+</div>
+</div>
+</div>
+<!-- Post Content -->
+<div class="post-content">
+<div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<p>spark 2.1.1</p>
+<p>There are some tasks in the Spark application that are very slow and last for 10 hours. One task log is as follows:</p>
+<blockquote>
+<p>2019-01-24 21:38:56,024 [dispatcher-event-loop-22] INFO org.apache.spark.executor.CoarseGrainedExecutorBackend - Got assigned task 4031<br/>2019-01-24 21:38:56,024 [Executor task launch worker for task 4031] INFO  org.apache.spark.executor.Executor  - Running task 11.0 in stage 98.0 (TID 4031)<br/>2019-01-24 21:38:56,050 [Executor task launch worker for task 4031] INFO  org.apache.spark.MapOutputTrackerWorker  - Don't have map outputs for shuffle 13, fetching them<br/>2019-01-24 21:38:56,050 [Executor task launch worker for task 4031] INFO  org.apache.spark.MapOutputTrackerWorker  - Doing the fetch; tracker endpoint = NettyRpcEndpointRef(spark://MapOutputTracker@server1:30384)<br/>2019-01-24 21:38:56,052 [Executor task launch worker for task 4031] INFO  org.apache.spark.MapOutputTrackerWorker  - Got the output locations<br/>2019-01-24 21:38:56,052 [Executor task launch worker for task 4031] INFO  org.apache.spark.storage.ShuffleBlockFetcherIterator  - Getting 200 non-empty blocks out of 200 blocks<br/>2019-01-24 21:38:56,054 [Executor task launch worker for task 4031] INFO  org.apache.spark.storage.ShuffleBlockFetcherIterator  - Started 19 remote fetches in 2 ms</p>
+<p>2019-01-25 07:07:54,200 [Executor task launch worker for task 4031] INFO  org.apache.spark.storage.memory.MemoryStore  - Block rdd_108_11 stored as values in memory (estimated size 222.6 MB, free 1893.2 MB)<br/>2019-01-25 07:07:54,546 [Executor task launch worker for task 4031] INFO  org.apache.spark.storage.memory.MemoryStore  - Block rdd_117_11 stored as values in memory (estimated size 87.5 MB, free 1805.8 MB)<br/>2019-01-25 07:07:54,745 [Executor task launch worker for task 4031] INFO  org.apache.spark.storage.memory.MemoryStore  - Block rdd_118_11 stored as values in memory (estimated size 87.5 MB, free 1718.3 MB)<br/>2019-01-25 07:07:54,987 [Executor task launch worker for task 4031] INFO  org.apache.spark.sql.hive.SparkHiveDynamicPartitionWriterContainer  - Sorting complete. Writing out partition files one at a time.<br/>2019-01-25 07:07:57,425 [Executor task launch worker for task 4031] INFO  org.apache.hadoop.mapreduce.lib.output.FileOutputCommitter  - Saved output of task 'attempt_20190124213852_0098_m_000011_0' to hdfs://namenode/user/hive/warehouse/<br/>db_name.db/table_name/.hive-staging_hive_2019-01-24_21-38-52_251_7997709482427937209-1/-ext-10000/_temporary/0/task_20190124213852_0098_m_000011<br/>2019-01-25 07:07:57,425 [Executor task launch worker for task 4031] INFO  org.apache.spark.mapred.SparkHadoopMapRedUtil  - attempt_20190124213852_0098_m_000011_0: Committed<br/>2019-01-25 07:07:57,426 [Executor task launch worker for task 4031] INFO  org.apache.spark.executor.Executor  - Finished task 11.0 in stage 98.0 (TID 4031). 4259 bytes result sent to driver</p>
+</blockquote>
+<p>There are no logs between 2019-01-24 21:38:56 and 2019-01-25 07:07:54. The application has not ended yet. There are still some very slow tasks running. Check the thread dump of the executor where these tasks are located and find that they are stuck on a thread:</p>
+<blockquote>
+<p>java.lang.Thread.sleep(Native Method)<br/>app.package.AppClass.do(AppClass.scala:228)<br/>org.apache.spark.sql.execution.MapElementsExec$$anonfun$8$$anonfun$apply$1.apply(objects.scala:237)<br/>org.apache.spark.sql.execution.MapElementsExec$$anonfun$8$$anonfun$apply$1.apply(objects.scala:237)<br/>scala.collection.Iterator$$anon$11.next(Iterator.scala:409)<br/>scala.collection.Iterator$$anon$11.next(Iterator.scala:409)<br/>org.apache.spark.storage.memory.MemoryStore.putIteratorAsValues(MemoryStore.scala:216)<br/>org.apache.spark.storage.BlockManager$$anonfun$doPutIterator$1.apply(BlockManager.scala:1005)<br/>org.apache.spark.storage.BlockManager$$anonfun$doPutIterator$1.apply(BlockManager.scala:996)<br/>org.apache.spark.storage.BlockManager.doPut(BlockManager.scala:936)<br/>org.apache.spark.storage.BlockManager.doPutIterator(BlockManager.scala:996)<br/>org.apache.spark.storage.BlockManager.getOrElseUpdate(BlockManager.scala:700)<br/>org.apache.spark.rdd.RDD.getOrCompute(RDD.scala:334)<br/>org.apache.spark.rdd.RDD.iterator(RDD.scala:285)<br/>org.apache.spark.rdd.MapPartitionsRDD.compute(MapPartitionsRDD.scala:38)<br/>org.apache.spark.rdd.RDD.computeOrReadCheckpoint(RDD.scala:323)<br/>org.apache.spark.rdd.RDD.iterator(RDD.scala:287)<br/>org.apache.spark.rdd.MapPartitionsRDD.compute(MapPartitionsRDD.scala:38)<br/>org.apache.spark.rdd.RDD.computeOrReadCheckpoint(RDD.scala:323)<br/>org.apache.spark.rdd.RDD.iterator(RDD.scala:287)<br/>org.apache.spark.rdd.MapPartitionsRDD.compute(MapPartitionsRDD.scala:38)<br/>org.apache.spark.rdd.RDD.computeOrReadCheckpoint(RDD.scala:323)<br/>org.apache.spark.rdd.RDD$$anonfun$8.apply(RDD.scala:336)<br/>org.apache.spark.rdd.RDD$$anonfun$8.apply(RDD.scala:334)<br/>org.apache.spark.storage.BlockManager$$anonfun$doPutIterator$1.apply(BlockManager.scala:1005)<br/>org.apache.spark.storage.BlockManager$$anonfun$doPutIterator$1.apply(BlockManager.scala:996)<br/>org.apache.spark.storage.BlockManager.doPut(BlockManager.scala:936)<br/>org.apache.spark.storage.BlockManager.doPutIterator(BlockManager.scala:996)<br/>org.apache.spark.storage.BlockManager.getOrElseUpdate(BlockManager.scala:700)<br/>org.apache.spark.rdd.RDD.getOrCompute(RDD.scala:334)<br/>org.apache.spark.rdd.RDD.iterator(RDD.scala:285)<br/>org.apache.spark.rdd.UnionRDD.compute(UnionRDD.scala:105)<br/>org.apache.spark.rdd.RDD.computeOrReadCheckpoint(RDD.scala:323)<br/>org.apache.spark.rdd.RDD$$anonfun$8.apply(RDD.scala:336)<br/>org.apache.spark.rdd.RDD$$anonfun$8.apply(RDD.scala:334)<br/>org.apache.spark.storage.BlockManager$$anonfun$doPutIterator$1.apply(BlockManager.scala:1005)<br/>org.apache.spark.storage.BlockManager$$anonfun$doPutIterator$1.apply(BlockManager.scala:996)<br/>org.apache.spark.storage.BlockManager.doPut(BlockManager.scala:936)<br/>org.apache.spark.storage.BlockManager.doPutIterator(BlockManager.scala:996)<br/>org.apache.spark.storage.BlockManager.getOrElseUpdate(BlockManager.scala:700)<br/>org.apache.spark.rdd.RDD.getOrCompute(RDD.scala:334)<br/>org.apache.spark.rdd.RDD.iterator(RDD.scala:285)<br/>org.apache.spark.rdd.UnionRDD.compute(UnionRDD.scala:105)<br/>org.apache.spark.rdd.RDD.computeOrReadCheckpoint(RDD.scala:323)<br/>org.apache.spark.rdd.RDD$$anonfun$8.apply(RDD.scala:336)<br/>org.apache.spark.rdd.RDD$$anonfun$8.apply(RDD.scala:334)<br/>org.apache.spark.storage.BlockManager$$anonfun$doPutIterator$1.apply(BlockManager.scala:1005)<br/>org.apache.spark.storage.BlockManager$$anonfun$doPutIterator$1.apply(BlockManager.scala:996)<br/>org.apache.spark.storage.BlockManager.doPut(BlockManager.scala:936)<br/>org.apache.spark.storage.BlockManager.doPutIterator(BlockManager.scala:996)<br/>org.apache.spark.storage.BlockManager.getOrElseUpdate(BlockManager.scala:700)<br/>org.apache.spark.rdd.RDD.getOrCompute(RDD.scala:334)<br/>org.apache.spark.rdd.RDD.iterator(RDD.scala:285)<br/>org.apache.spark.rdd.MapPartitionsRDD.compute(MapPartitionsRDD.scala:38)<br/>org.apache.spark.rdd.RDD.computeOrReadCheckpoint(RDD.scala:323)<br/>org.apache.spark.rdd.RDD.iterator(RDD.scala:287)<br/>org.apache.spark.scheduler.ShuffleMapTask.runTask(ShuffleMapTask.scala:96)<br/>org.apache.spark.scheduler.ShuffleMapTask.runTask(ShuffleMapTask.scala:53)<br/>org.apache.spark.scheduler.Task.run(Task.scala:99)<br/>org.apache.spark.executor.Executor$TaskRunner.run(Executor.scala:322)<br/>java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1142)<br/>java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:617)<br/>java.lang.Thread.run(Thread.java:745)</p>
+</blockquote>
+<p>Among them, app.package.AppClass.do is a very time-consuming operation and will be performed once on each element of the RDD. The problem is that the RDD has been cached after this operation. Why is it recalculated when it relies on this RDD in the future?</p>
+<p>The problem is simplified as follows:</p>
+<div class="cnblogs_code">
+<pre>rdd.map(item =&gt;<span style="color: rgba(0, 0, 0, 1)"> doLongTime(item))
+rdd.cache
+</span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)">take long time</span>
+<span style="color: rgba(0, 0, 0, 1)">println(rdd.count)
+</span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)">take long time too, why?</span>
+println(rdd.count)</pre>
+</div>
+<p>View code</p>
+<p>The compute of RDD is overridden by subclasses, usually calling RDD.iterator</p>
+<p>org.apache.spark.rdd.RDD</p>
+<div class="cnblogs_code">
+<pre>  <span style="color: rgba(0, 128, 0, 1)">/**</span><span style="color: rgba(0, 128, 0, 1)">
+   * Internal method to this RDD; will read from cache if applicable, or otherwise compute it.
+   * This should ''not'' be called by users directly, but is available for implementors of custom
+   * subclasses of RDD.
+   </span><span style="color: rgba(0, 128, 0, 1)">*/</span>
+  <span style="color: rgba(0, 0, 255, 1)">final</span> def iterator(split: Partition, context: TaskContext): Iterator[T] =<span style="color: rgba(0, 0, 0, 1)"> {
+    </span><span style="color: rgba(0, 0, 255, 1)">if</span> (storageLevel !=<span style="color: rgba(0, 0, 0, 1)"> StorageLevel.NONE) {
+      getOrCompute(split, context)
+    } </span><span style="color: rgba(0, 0, 255, 1)">else</span><span style="color: rgba(0, 0, 0, 1)"> {
+      computeOrReadCheckpoint(split, context)
+    }
+  }
+
+  </span><span style="color: rgba(0, 128, 0, 1)">/**</span><span style="color: rgba(0, 128, 0, 1)">
+   * Gets or computes an RDD partition. Used by RDD.iterator() when an RDD is cached.
+   </span><span style="color: rgba(0, 128, 0, 1)">*/</span>
+  <span style="color: rgba(0, 0, 255, 1)">private</span>[spark] def getOrCompute(partition: Partition, context: TaskContext): Iterator[T] =<span style="color: rgba(0, 0, 0, 1)"> {
+    val blockId </span>=<span style="color: rgba(0, 0, 0, 1)"> RDDBlockId(id, partition.index)
+    var readCachedBlock </span>= <span style="color: rgba(0, 0, 255, 1)">true</span>
+    <span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> This method is called on executors, so we need call SparkEnv.get instead of sc.env.</span>
+    SparkEnv.get.blockManager.getOrElseUpdate(blockId, storageLevel, elementClassTag, () =&gt;<span style="color: rgba(0, 0, 0, 1)"> {
+      readCachedBlock </span>= <span style="color: rgba(0, 0, 255, 1)">false</span><span style="color: rgba(0, 0, 0, 1)">
+      computeOrReadCheckpoint(partition, context)
+    }) match {
+      </span><span style="color: rgba(0, 0, 255, 1)">case</span> Left(blockResult) =&gt;
+        <span style="color: rgba(0, 0, 255, 1)">if</span><span style="color: rgba(0, 0, 0, 1)"> (readCachedBlock) {
+          val existingMetrics </span>=<span style="color: rgba(0, 0, 0, 1)"> context.taskMetrics().inputMetrics
+          existingMetrics.incBytesRead(blockResult.bytes)
+          </span><span style="color: rgba(0, 0, 255, 1)">new</span><span style="color: rgba(0, 0, 0, 1)"> InterruptibleIterator[T](context, blockResult.data.asInstanceOf[Iterator[T]]) {
+            override def next(): T </span>=<span style="color: rgba(0, 0, 0, 1)"> {
+              existingMetrics.incRecordsRead(</span>1<span style="color: rgba(0, 0, 0, 1)">)
+              delegate.next()
+            }
+          }
+        } </span><span style="color: rgba(0, 0, 255, 1)">else</span><span style="color: rgba(0, 0, 0, 1)"> {
+          </span><span style="color: rgba(0, 0, 255, 1)">new</span><span style="color: rgba(0, 0, 0, 1)"> InterruptibleIterator(context, blockResult.data.asInstanceOf[Iterator[T]])
+        }
+      </span><span style="color: rgba(0, 0, 255, 1)">case</span> Right(iter) =&gt;
+        <span style="color: rgba(0, 0, 255, 1)">new</span><span style="color: rgba(0, 0, 0, 1)"> InterruptibleIterator(context, iter.asInstanceOf[Iterator[T]])
+    }
+  }</span></pre>
+</div>
+<p>There will be a judgment based on storageLevel in RDD.iterator. One is to try to recover or calculate from the checkpoint, and the other is to get or calculate from the cache. RDD with cache added will execute RDD.getOrCompute, and RDD.getOrCompute will call BlockManager.getOrElseUpdate.</p>
+<p>org.apache.spark.storage.BlockManager</p>
+<div class="cnblogs_code">
+<pre>  <span style="color: rgba(0, 128, 0, 1)">/**</span><span style="color: rgba(0, 128, 0, 1)">
+   * Retrieve the given block if it exists, otherwise call the provided `makeIterator` method
+   * to compute the block, persist it, and return its values.
+   *
+   * </span><span style="color: rgba(128, 128, 128, 1)">@return</span><span style="color: rgba(0, 128, 0, 1)"> either a BlockResult if the block was successfully cached, or an iterator if the block
+   *         could not be cached.
+   </span><span style="color: rgba(0, 128, 0, 1)">*/</span><span style="color: rgba(0, 0, 0, 1)">
+  def getOrElseUpdate[T](
+      blockId: BlockId,
+      level: StorageLevel,
+      classTag: ClassTag[T],
+      makeIterator: () </span>=&gt; Iterator[T]): Either[BlockResult, Iterator[T]] =<span style="color: rgba(0, 0, 0, 1)"> {
+    </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> Attempt to read the block from local or remote storage. If it's present, then we don't need
+    </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> to go through the local-get-or-put path.</span>
+<span style="color: rgba(0, 0, 0, 1)">    get[T](blockId)(classTag) match {
+      </span><span style="color: rgba(0, 0, 255, 1)">case</span> Some(block) =&gt;
+        <span style="color: rgba(0, 0, 255, 1)">return</span><span style="color: rgba(0, 0, 0, 1)"> Left(block)
+      </span><span style="color: rgba(0, 0, 255, 1)">case</span> _ =&gt;
+        <span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> Need to compute the block.</span>
+<span style="color: rgba(0, 0, 0, 1)">    }
+    </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> Initially we hold no locks on this block.</span>
+    doPutIterator(blockId, makeIterator, level, classTag, keepReadLock = <span style="color: rgba(0, 0, 255, 1)">true</span><span style="color: rgba(0, 0, 0, 1)">) match {
+      </span><span style="color: rgba(0, 0, 255, 1)">case</span> None =&gt;
+        <span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> doPut() didn't hand work back to us, so the block already existed or was successfully
+        </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> stored. Therefore, we now hold a read lock on the block.</span>
+        val blockResult =<span style="color: rgba(0, 0, 0, 1)"> getLocalValues(blockId).getOrElse {
+          </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> Since we held a read lock between the doPut() and get() calls, the block should not
+          </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> have been evicted, so get() not returning the block indicates some internal error.</span>
+<span style="color: rgba(0, 0, 0, 1)">          releaseLock(blockId)
+          </span><span style="color: rgba(0, 0, 255, 1)">throw</span> <span style="color: rgba(0, 0, 255, 1)">new</span> SparkException(s"get() failed for block $blockId even though we held a lock"<span style="color: rgba(0, 0, 0, 1)">)
+        }
+        </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> We already hold a read lock on the block from the doPut() call and getLocalValues()
+        </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> acquires the lock again, so we need to call releaseLock() here so that the net number
+        </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> of lock acquisitions is 1 (since the caller will only call release() once).</span>
+<span style="color: rgba(0, 0, 0, 1)">        releaseLock(blockId)
+        Left(blockResult)
+      </span><span style="color: rgba(0, 0, 255, 1)">case</span> Some(iter) =&gt;
+        <span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> The put failed, likely because the data was too large to fit in memory and could not be
+        </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> dropped to disk. Therefore, we need to pass the input iterator back to the caller so
+        </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> that they can decide what to do with the values (e.g. process them without caching).</span>
+<span style="color: rgba(0, 0, 0, 1)">       Right(iter)
+    }
+  }</span></pre>
+</div>
+<p>getOrElseUpdate.getOrElseUpdate first tries to get the block from the cache. If not, it calls doPutIterator to calculate and put it in the cache;</p>
+<blockquote>
+<p>org.apache.spark.storage.BlockManager.doPutIterator(BlockManager.scala:996)<br/>org.apache.spark.storage.BlockManager.getOrElseUpdate(BlockManager.scala:700)<br/>org.apache.spark.rdd.RDD.getOrCompute(RDD.scala:334)</p>
+</blockquote>
+<p>Therefore, the stack doPutIterator in jstack indicates that it is not in the cache and needs to be recalculated;</p>
+<p>org.apache.spark.rdd.RDD</p>
+<div class="cnblogs_code">
+<pre>  <span style="color: rgba(0, 128, 0, 1)">/**</span><span style="color: rgba(0, 128, 0, 1)">
+   * Persist this RDD with the default storage level (`MEMORY_ONLY`).
+   </span><span style="color: rgba(0, 128, 0, 1)">*/</span><span style="color: rgba(0, 0, 0, 1)">
+  def cache(): </span><span style="color: rgba(0, 0, 255, 1)">this</span>.type =<span style="color: rgba(0, 0, 0, 1)"> persist()
+
+  </span><span style="color: rgba(0, 128, 0, 1)">/**</span><span style="color: rgba(0, 128, 0, 1)">
+   * Persist this RDD with the default storage level (`MEMORY_ONLY`).
+   </span><span style="color: rgba(0, 128, 0, 1)">*/</span><span style="color: rgba(0, 0, 0, 1)">
+  def persist(): </span><span style="color: rgba(0, 0, 255, 1)">this</span>.type = persist(StorageLevel.MEMORY_ONLY)</pre>
+</div>
+<p>The StorageLevel used by cache is MEMORY_ONLY. If there is not enough memory, some partitions may be evicted. The specific strategy is in org.apache.Spark.storage.memory.MemoryStore.</p>
+<p>Let’s look at StorageLevel:</p>
+<p>org.apache.spark.storage.StorageLevel</p>
+<div class="cnblogs_code">
+<pre><span style="color: rgba(0, 128, 0, 1)">/**</span><span style="color: rgba(0, 128, 0, 1)">
+ * :: DeveloperApi ::
+ * Flags for controlling the storage of an RDD. Each StorageLevel records whether to use memory,
+ * or ExternalBlockStore, whether to drop the RDD to disk if it falls out of memory or
+ * ExternalBlockStore, whether to keep the data in memory in a serialized format, and whether
+ * to replicate the RDD partitions on multiple nodes.
+ *
+ * The [[org.apache.spark.storage.StorageLevel$]] singleton object contains some static constants
+ * for commonly useful storage levels. To create your own storage level object, use the
+ * factory method of the singleton object (`StorageLevel(...)`).
+ </span><span style="color: rgba(0, 128, 0, 1)">*/</span><span style="color: rgba(0, 0, 0, 1)">
+@DeveloperApi
+</span><span style="color: rgba(0, 0, 255, 1)">class</span> StorageLevel <span style="color: rgba(0, 0, 255, 1)">private</span><span style="color: rgba(0, 0, 0, 1)">(
+    </span><span style="color: rgba(0, 0, 255, 1)">private</span><span style="color: rgba(0, 0, 0, 1)"> var _useDisk: Boolean,
+    </span><span style="color: rgba(0, 0, 255, 1)">private</span><span style="color: rgba(0, 0, 0, 1)"> var _useMemory: Boolean,
+    </span><span style="color: rgba(0, 0, 255, 1)">private</span><span style="color: rgba(0, 0, 0, 1)"> var _useOffHeap: Boolean,
+    </span><span style="color: rgba(0, 0, 255, 1)">private</span><span style="color: rgba(0, 0, 0, 1)"> var _deserialized: Boolean,
+    </span><span style="color: rgba(0, 0, 255, 1)">private</span> var _replication: Int = 1<span style="color: rgba(0, 0, 0, 1)">)
+  </span><span style="color: rgba(0, 0, 255, 1)">extends</span><span style="color: rgba(0, 0, 0, 1)"> Externalizable {
+...
+
+object StorageLevel {
+  val NONE </span>= <span style="color: rgba(0, 0, 255, 1)">new</span> StorageLevel(<span style="color: rgba(0, 0, 255, 1)">false</span>, <span style="color: rgba(0, 0, 255, 1)">false</span>, <span style="color: rgba(0, 0, 255, 1)">false</span>, <span style="color: rgba(0, 0, 255, 1)">false</span><span style="color: rgba(0, 0, 0, 1)">)
+  val DISK_ONLY </span>= <span style="color: rgba(0, 0, 255, 1)">new</span> StorageLevel(<span style="color: rgba(0, 0, 255, 1)">true</span>, <span style="color: rgba(0, 0, 255, 1)">false</span>, <span style="color: rgba(0, 0, 255, 1)">false</span>, <span style="color: rgba(0, 0, 255, 1)">false</span><span style="color: rgba(0, 0, 0, 1)">)
+  val DISK_ONLY_2 </span>= <span style="color: rgba(0, 0, 255, 1)">new</span> StorageLevel(<span style="color: rgba(0, 0, 255, 1)">true</span>, <span style="color: rgba(0, 0, 255, 1)">false</span>, <span style="color: rgba(0, 0, 255, 1)">false</span>, <span style="color: rgba(0, 0, 255, 1)">false</span>, 2<span style="color: rgba(0, 0, 0, 1)">)
+  val MEMORY_ONLY </span>= <span style="color: rgba(0, 0, 255, 1)">new</span> StorageLevel(<span style="color: rgba(0, 0, 255, 1)">false</span>, <span style="color: rgba(0, 0, 255, 1)">true</span>, <span style="color: rgba(0, 0, 255, 1)">false</span>, <span style="color: rgba(0, 0, 255, 1)">true</span><span style="color: rgba(0, 0, 0, 1)">)
+  val MEMORY_ONLY_2 </span>= <span style="color: rgba(0, 0, 255, 1)">new</span> StorageLevel(<span style="color: rgba(0, 0, 255, 1)">false</span>, <span style="color: rgba(0, 0, 255, 1)">true</span>, <span style="color: rgba(0, 0, 255, 1)">false</span>, <span style="color: rgba(0, 0, 255, 1)">true</span>, 2<span style="color: rgba(0, 0, 0, 1)">)
+  val MEMORY_ONLY_SER </span>= <span style="color: rgba(0, 0, 255, 1)">new</span> StorageLevel(<span style="color: rgba(0, 0, 255, 1)">false</span>, <span style="color: rgba(0, 0, 255, 1)">true</span>, <span style="color: rgba(0, 0, 255, 1)">false</span>, <span style="color: rgba(0, 0, 255, 1)">false</span><span style="color: rgba(0, 0, 0, 1)">)
+  val MEMORY_ONLY_SER_2 </span>= <span style="color: rgba(0, 0, 255, 1)">new</span> StorageLevel(<span style="color: rgba(0, 0, 255, 1)">false</span>, <span style="color: rgba(0, 0, 255, 1)">true</span>, <span style="color: rgba(0, 0, 255, 1)">false</span>, <span style="color: rgba(0, 0, 255, 1)">false</span>, 2<span style="color: rgba(0, 0, 0, 1)">)
+  val MEMORY_AND_DISK </span>= <span style="color: rgba(0, 0, 255, 1)">new</span> StorageLevel(<span style="color: rgba(0, 0, 255, 1)">true</span>, <span style="color: rgba(0, 0, 255, 1)">true</span>, <span style="color: rgba(0, 0, 255, 1)">false</span>, <span style="color: rgba(0, 0, 255, 1)">true</span><span style="color: rgba(0, 0, 0, 1)">)
+  val MEMORY_AND_DISK_2 </span>= <span style="color: rgba(0, 0, 255, 1)">new</span> StorageLevel(<span style="color: rgba(0, 0, 255, 1)">true</span>, <span style="color: rgba(0, 0, 255, 1)">true</span>, <span style="color: rgba(0, 0, 255, 1)">false</span>, <span style="color: rgba(0, 0, 255, 1)">true</span>, 2<span style="color: rgba(0, 0, 0, 1)">)
+  val MEMORY_AND_DISK_SER </span>= <span style="color: rgba(0, 0, 255, 1)">new</span> StorageLevel(<span style="color: rgba(0, 0, 255, 1)">true</span>, <span style="color: rgba(0, 0, 255, 1)">true</span>, <span style="color: rgba(0, 0, 255, 1)">false</span>, <span style="color: rgba(0, 0, 255, 1)">false</span><span style="color: rgba(0, 0, 0, 1)">)
+  val MEMORY_AND_DISK_SER_2 </span>= <span style="color: rgba(0, 0, 255, 1)">new</span> StorageLevel(<span style="color: rgba(0, 0, 255, 1)">true</span>, <span style="color: rgba(0, 0, 255, 1)">true</span>, <span style="color: rgba(0, 0, 255, 1)">false</span>, <span style="color: rgba(0, 0, 255, 1)">false</span>, 2<span style="color: rgba(0, 0, 0, 1)">)
+  val OFF_HEAP </span>= <span style="color: rgba(0, 0, 255, 1)">new</span> StorageLevel(<span style="color: rgba(0, 0, 255, 1)">true</span>, <span style="color: rgba(0, 0, 255, 1)">true</span>, <span style="color: rgba(0, 0, 255, 1)">true</span>, <span style="color: rgba(0, 0, 255, 1)">false</span>, 1)</pre>
+</div>
+<p>So don’t think that Rdd.cache can avoid repeated calculations after some expensive operations, because MEMORY_ONLY only tries to help you cache the data in memory, and it is not a guarantee. You should use RDD.persist(StorageLevel.MEMORY_AND_DISK)</p>
+<p> </p>
+</div>
+</div>
+<!-- Post Footer -->
+<div class="post-footer">
+<div class="post-navigation">
+<a class="nav-button" href="../blog.html">← Back to Home</a>
+<a class="nav-button" href="0249.html">Next Post →</a>
+</div>
+</div>
+</article>
+</div>
+</body>
+</html>

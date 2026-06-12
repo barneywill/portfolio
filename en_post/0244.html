@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>iptables</title>
+<link href="../css/style3.css" rel="stylesheet"/>
+</head>
+<body>
+<div class="container">
+<!-- Header Navigation -->
+<div class="header">
+<h1><a href="../blog.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+</div>
+<!-- Post Container -->
+<article class="post">
+<!-- Post Header -->
+<div class="post-header">
+<h1>iptables</h1>
+<div class="post-meta">
+<div class="post-meta-item">
+<span class="meta-icon">📅</span>
+<span>January 27, 2019</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">📖</span>
+<span>1 min read</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">👁️</span>
+<span>950 views</span>
+</div>
+</div>
+</div>
+<!-- Post Content -->
+<div class="post-content">
+<div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<p>iptables 1.4.21 </p>
+<p><span class="command"><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201901/1509647-20190127130815299-1076868402.png"/></span></p>
+<p> </p>
+<p><span class="command">Official: https://www.netfilter.org/projects/iptables/index.html</span></p>
+<p> </p>
+<p><span class="command">iptables is the userspace command line program used to configure the Linux 2.4.x and later packet filtering ruleset. It is targeted towards system administrators.</span></p>
+<p>Iptables is a command line tool that together with netfilter forms the firewall of the Linux server. Through iptables, various IP packet filtering rules can be set and managed;</p>
+<p> </p>
+<p>View the current configuration. The following is the initial configuration:</p>
+<blockquote>
+<p># iptables - nL<br/>Chain INPUT (policy ACCEPT)<br/>target     prot opt source               destination         </p>
+<p>Chain FORWARD (policy ACCEPT)<br/>target     prot opt source               destination         </p>
+<p>Chain OUTPUT (policy ACCEPT)<br/>target     prot opt source               destination</p>
+</blockquote>
+<p>There are two types of policies, one is ACCEPT (allowed by default, needs to be added to the blacklist, the initial configuration is to allow all), and the other is DROP (denied by default, needs to be added to the whitelist), the latter is commonly used</p>
+<p>A common strategy for servers is to allow access to the internal network and restrict access to the external network:</p>
+<blockquote>
+<p>#Allow intranet and local access</p>
+<p>iptables - A INPUT - p tcp - s 192.168.0.0/24 - j ACCEPT<br/>iptables - A INPUT - p tcp - s 127.0.0.1 - j ACCEPT</p>
+<p>#Allow ssh login</p>
+<p>iptables - A INPUT - p tcp --dport 22 - j ACCEPT</p>
+<p>#Allow access to dns, curl external network, etc.</p>
+<p>iptables - A INPUT - p udp --sport 53 - j ACCEPT<br/>iptables - A INPUT - m state --state RELATED,ESTABLISHED - j ACCEPT</p>
+<p>#Allow access to port 80</p>
+<p>iptables - A INPUT - p tcp --dport 80 - j ACCEPT</p>
+<p>#Allow ping</p>
+<p>iptables - A INPUT - p icmp --icmp-type echo-request - j ACCEPT</p>
+<p>#allowkeepalived</p>
+<p>iptables - I INPUT - d 224.0.0.0/8 - j ACCEPT<br/>iptables - A INPUT - p vrrp - j ACCEPT</p>
+<p><br/>iptables - P INPUT DROP</p>
+</blockquote>
+<p>Note that before executing the last sentence, you must execute various ACCEPT first, otherwise the server will not be able to log in remotely after execution;</p>
+<p>After the policy takes effect, it looks like this:</p>
+<blockquote>
+<p># iptables - nL<br/>Chain INPUT (policy DROP)<br/>target     prot opt source               destination         <br/>ACCEPT     tcp  --  192.168.0.0/24       0.0.0.0/0           <br/>ACCEPT     tcp  --  127.0.0.1            0.0.0.0/0           <br/>ACCEPT     tcp  --  0.0.0.0/0            0.0.0.0/0            tcp dpt:22</p>
+<p>ACCEPT udp -- 0.0.0.0/0 0.0.0.0/0 udp spt:53<br/>ACCEPT     all  --  0.0.0.0/0            0.0.0.0/0            state RELATED,ESTABLISHED</p>
+<p>Chain FORWARD (policy ACCEPT)<br/>target     prot opt source               destination         </p>
+<p>Chain OUTPUT (policy ACCEPT)<br/>target     prot opt source               destination</p>
+</blockquote>
+<p>If you want to delete a rule, add --line-number</p>
+<blockquote>
+<p># iptables - nL --line-number<br/>Chain INPUT (policy DROP)<br/>num  target     prot opt source               destination         <br/>1    ACCEPT     tcp  --  192.168.0.0/24       0.0.0.0/0           <br/>2    ACCEPT     tcp  --  127.0.0.1            0.0.0.0/0           <br/>3    ACCEPT     tcp  --  0.0.0.0/0            0.0.0.0/0            tcp dpt:22<br/>4    ACCEPT     tcp  --  0.0.0.0/0            0.0.0.0/0            tcp dpt:80<br/>5    ACCEPT     udp  --  0.0.0.0/0            0.0.0.0/0            udp spt:53<br/>6    ACCEPT     all  --  0.0.0.0/0            0.0.0.0/0            state RELATED,ESTABLISHED</p>
+<p>Chain FORWARD (policy ACCEPT)<br/>num  target     prot opt source               destination         </p>
+<p>Chain OUTPUT (policy ACCEPT)<br/>num  target     prot opt source               destination</p>
+</blockquote>
+<p>Then specify the line number to delete</p>
+<blockquote>
+<p># iptables - D INPUT $line</p>
+</blockquote>
+<p>save rule</p>
+<blockquote>
+<p># sudo systemctl stop firewalld.service</p>
+<p># sudo systemctl disable firewalld.service</p>
+<p> </p>
+<p># yum install iptables-services</p>
+<p># systemctl start iptables</p>
+<p># systemctl enable iptables</p>
+<p># service iptables save</p>
+</blockquote>
+<p>Or modify /etc/sysconfig/iptables</p>
+<p> </p>
+<p>Add port mapping</p>
+<blockquote>
+<p># <code>iptables - t nat - A PREROUTING - p tcp --dport 80 - j REDIRECT --to-port 8080</code></p>
+</blockquote>
+<p>Forward requests from port 80 of the local machine to port 8080</p>
+<p>View all port mapping rules</p>
+<blockquote>
+<p># iptables - t nat --list</p>
+</blockquote>
+<p> </p>
+</div>
+</div>
+<!-- Post Footer -->
+<div class="post-footer">
+<div class="post-navigation">
+<a class="nav-button" href="../blog.html">← Back to Home</a>
+<a class="nav-button" href="0245.html">Next Post →</a>
+</div>
+</div>
+</article>
+</div>
+</body>
+</html>

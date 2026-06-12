@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HDFS</title>
+    <link rel="stylesheet" href="../css/style3.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header Navigation -->
+        <div class="header">
+            <h1><a href="../blog.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+        </div>
+
+        <!-- Post Container -->
+        <article class="post">
+            <!-- Post Header -->
+            <div class="post-header">
+                <h1>HDFS</h1>
+                <div class="post-meta">
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📅</span>
+                        <span>May 31, 2022</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">📖</span>
+                        <span>1 min read</span>
+                    </div>
+                    <div class="post-meta-item">
+                        <span class="meta-icon">👁️</span>
+                        <span>326 views</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Post Content -->
+            <div class="post-content">
+                <div class="blogpost-body cnblogs-markdown" id="cnblogs_post_body">
+<p><a href="https://hadoop.apache.org" rel="noopener nofollow" target="_blank">https://hadoop.apache.org</a><br/>
+A distributed file system that provides high-throughput access to application data.</p>
+<p>Key characteristics:</p>
+<ul>
+<li>Optimized for large files, write-once/read-many access patterns, with append-only modifications</li>
+<li>Multiple replicas</li>
+<li>Streaming access rather than low-latency access</li>
+</ul>
+<h1 id="concepts">1. Concepts</h1>
+<h2 id="metadata-file-block-rack-replica-read-write">Metadata, File-Block, Rack, Replica, Reads, and Writes</h2>
+<p><picture>
+  <source srcset="../img/1509647-20220531154909864-1358881016.webp" type="image/webp">
+  <img alt="" src="../img/1509647-20220531154909864-1358881016.png">
+</picture></p>
+<h2 id="file-blockreplication">File-Block、Replication</h2>
+<p><picture>
+  <source srcset="../img/1509647-20220531154952144-620675250.webp" type="image/webp">
+  <img alt="" src="../img/1509647-20220531154952144-620675250.png">
+</picture></p>
+<h1 id="qjm-deployment">QJM Deployment</h1>
+<p>NameNode、DataNode、ZKFC、JournalNode<br/>
+<picture>
+  <source srcset="../img/1509647-20220531155104665-63090709.webp" type="image/webp">
+  <img alt="" src="../img/1509647-20220531155104665-63090709.png">
+</picture></p>
+<h1 id="ha">HA</h1>
+<h3 id="zk-nodes">ZooKeeper Nodes</h3>
+<ul>
+<li><code>/hadoop-ha/${dfs.nameservices}/ActiveBreadCrumb</code>: persistent node</li>
+<li><code>/hadoop-ha/${dfs.nameservices}/ActiveStandbyElectorLock</code>: ephemeral node</li>
+</ul>
+<p>Code:</p>
+<blockquote>
+<p>org.apache.hadoop.hdfs.tools.DFSZKFailoverController</p>
+</blockquote>
+<p><picture>
+  <source srcset="../img/1509647-20220531155226892-410110885.webp" type="image/webp">
+  <img alt="" src="../img/1509647-20220531155226892-410110885.png">
+</picture></p>
+<h1 id="common-commands">2. Common Commands</h1>
+<blockquote>
+<p>hdfs dfs - ls /<br/>
+hdfs dfs - du - h /<br/>
+hdfs dfsadmin - report<br/>
+hdfs haadmin - getAllServiceState<br/>
+hdfs fsck /tmp/36c8b0727c814dc2ae5d520a45fadeb0.51c9f1f1e3652991ed3071c6c0bb0264 - files - blocks - locations - racks<br/>
+hdfs dfs - setrep 2 /user/hive/warehouse/temp.db/test_ext_o/000000_0<br/>
+hdfs balancer - threshold 10<br/>
+hadoop distcp hdfs://master1:8020/foo/a hdfs://master1:8020/foo/b hdfs://master2:8020/bar/foo</p>
+</blockquote>
+<h1 id="read-write-flow">3. Read/Write Flow</h1>
+<h2 id="read">Read</h2>
+<p><picture>
+  <source srcset="../img/1509647-20220531155905623-1585941282.webp" type="image/webp">
+  <img alt="" src="../img/1509647-20220531155905623-1585941282.png">
+</picture></p>
+<h2 id="write">Write</h2>
+<p><picture>
+  <source srcset="../img/1509647-20220531155938375-142050237.webp" type="image/webp">
+  <img alt="" src="../img/1509647-20220531155938375-142050237.png">
+</picture></p>
+<h1 id="namenode-related-topics">4. NameNode-Related Topics</h1>
+<h2 id="files">Files</h2>
+<p>Full image plus incremental logs<br/>
+fsimage、edit log</p>
+<h2 id="memory-estimation">Memory Estimation</h2>
+<p>Total = 198 ∗ num(Directory + Files) + 176 ∗ num(blocks) + 2% ∗ size(JVM Memory Size)</p>
+<h1 id="datanode-related-topics">5. DataNode-Related Topics</h1>
+<h2 id="placement-policy">Placement Policy</h2>
+<p>Selection policy:</p>
+<ul>
+<li>1. Current rack, relative to the HDFS client: <code>chooseLocalNode</code></li>
+<li>2. Remote rack, relative to the HDFS client: <code>chooseRemoteRack</code></li>
+<li>3. Another rack</li>
+<li>4. Fully random: <code>chooseRandom</code></li>
+</ul>
+<p>Code:</p>
+<blockquote>
+<p>org.apache.hadoop.hdfs.DFSOutputStream$DataStreamer.findNewDatanode</p>
+</blockquote>
+<h2 id="replica-checks">Replica Checks</h2>
+<p><code>BlockManager</code> starts a <code>ReplicationMonitor</code> thread. <code>ReplicationMonitor</code> periodically checks which blocks are missing replicas and notifies the source DataNode about blocks that need replication. After receiving the information, the DataNode continuously replicates blocks, with a default batch size of two blocks at a time.</p>
+<p>Code:</p>
+<blockquote>
+<p>org.apache.hadoop.hdfs.server.blockmanagement.BlockManager</p>
+</blockquote>
+<p>Related configuration:</p>
+<blockquote>
+<p>dfs.replication<br/>
+dfs.namenode.replication.interval<br/>
+dfs.namenode.replication.work.multiplier.per.iteration<br/>
+dfs.namenode.replication.max-streams</p>
+</blockquote>
+<h1 id="safemode">6. SafeMode</h1>
+<p>SafeMode is a special NameNode state. In this state, the file system accepts read requests only and rejects changes such as uploads, deletes, and modifications.<br/>
+When the active NameNode starts, HDFS first enters SafeMode. As DataNodes start, they send heartbeats to the NameNode and report the status of available blocks. Once the overall system meets the safety threshold, HDFS automatically leaves SafeMode.<br/>
+Safety threshold: the missing-block ratio is below 0.1%.<br/>
+dfs.namenode.safemode.threshold-pct=0.999</p>
+<p>Command to leave SafeMode:</p>
+<blockquote>
+<p>hdfs dfsadmin - safemode leave</p>
+</blockquote>
+</div>
+            </div>
+
+            <!-- Post Footer -->
+            <div class="post-footer">
+                <div class="post-navigation">
+                    <a href="../blog.html" class="nav-button">← Back to Home</a>
+                    <a href="0009.html" class="nav-button">Next Post →</a>
+                </div>
+            </div>
+        </article>
+    </div>
+</body>
+</html>

@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Expanding Disk Capacity on an Alibaba Cloud Host</title>
+<link href="../css/style3.css" rel="stylesheet"/>
+</head>
+<body>
+<div class="container">
+<!-- Header Navigation -->
+<div class="header">
+<h1><a href="../blog.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+</div>
+<!-- Post Container -->
+<article class="post">
+<!-- Post Header -->
+<div class="post-header">
+<h1>Expanding Disk Capacity on an Alibaba Cloud Host</h1>
+<div class="post-meta">
+<div class="post-meta-item">
+<span class="meta-icon">📅</span>
+<span>December 15, 2019</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">📖</span>
+<span>1 min read</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">👁️</span>
+<span>418 views</span>
+</div>
+</div>
+</div>
+<!-- Post Content -->
+<div class="post-content">
+<div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<p>After console operation disk expansion</p>
+<p>1 installation</p>
+<blockquote>
+<p># yum install cloud-utils-growpart<br/># yum install xfsprogs</p>
+</blockquote>
+<p>2 View all disks</p>
+<blockquote>
+<p># fdisk - l</p>
+</blockquote>
+<p>3 Check the partition size</p>
+<blockquote>
+<p># df - h</p>
+</blockquote>
+<p>4 disk expansion</p>
+<blockquote>
+<p># growpart /dev/vda 1</p>
+</blockquote>
+<p>Format: growpart <var class="keyword varname" id="varname-rz5-5bk-x4u">&lt;DeviceName&gt;</var><var class="keyword varname" id="varname-llw-ka3-mmz"> &lt;PartionNumber&gt;</var></p>
+<p>5 partition expansion</p>
+<blockquote>
+<p># resize2fs /dev/vda1</p>
+</blockquote>
+<p>Format: resize2fs <var class="keyword varname" id="varname-tg9-2am-a9n">&lt;PartitionName&gt;</var></p>
+<p>6 Confirm</p>
+<blockquote>
+<p># df - h</p>
+</blockquote>
+<p> </p>
+<p>Reference: https://help.aliyun.com/document_detail/111738.html?spm=a2c4g.11186623.2.30.4ad77f67UvYpVl#concept-ocb-htw-dhb</p>
+</div>
+</div>
+<!-- Post Footer -->
+<div class="post-footer">
+<div class="post-navigation">
+<a class="nav-button" href="../blog.html">← Back to Home</a>
+<a class="nav-button" href="0083.html">Next Post →</a>
+</div>
+</div>
+</article>
+</div>
+</body>
+</html>

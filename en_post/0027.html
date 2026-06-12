@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Logstash Kafka Consumption Lag</title>
+<link href="../css/style3.css" rel="stylesheet"/>
+</head>
+<body>
+<div class="container">
+<!-- Header Navigation -->
+<div class="header">
+<h1><a href="../blog.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+</div>
+<!-- Post Container -->
+<article class="post">
+<!-- Post Header -->
+<div class="post-header">
+<h1>Logstash Kafka Consumption Lag</h1>
+<div class="post-meta">
+<div class="post-meta-item">
+<span class="meta-icon">📅</span>
+<span>May 18, 2022</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">📖</span>
+<span>1 min read</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">👁️</span>
+<span>512 views</span>
+</div>
+</div>
+</div>
+<!-- Post Content -->
+<div class="post-content">
+<div class="blogpost-body cnblogs-markdown" id="cnblogs_post_body">
+<h1 id="section-0027-1">background</h1>
+<p>In the logstash cluster, the server configuration and task configuration of each node are the same, but one of the nodes has a relatively large consumption delay.</p>
+<h1 id="section-0027-2">position</h1>
+<p>It was observed that the load of the node with the problem was much lower than that of other nodes. Further comparison of the threads in the logstash process revealed that the node with the problem had only 4 worker processes, while the normal node had 16 worker processes.</p>
+<p><picture>
+<source srcset="../img/1509647-20220518174622828-1677955164.webp" type="image/webp"/>
+<img alt="" src="../img/1509647-20220518174622828-1677955164.png"/>
+</picture></p>
+<p>Further investigation revealed that the logstash configuration of the problematic node was different from that of other nodes.</p>
+<blockquote>
+<p>/etc/logstash/logstash.yml<br/>
+pipeline.workers: 4</p>
+</blockquote>
+<p>This configuration is used to set the number of workers. The number of CPU cores is used by default. The server configuration is 16 cores. In fact, only 4 cores are used, and only 25% of the CPU is used, so there is a consumption delay.</p>
+<h1 id="section-0027-3">Summarize</h1>
+<p>The Logstash cluster does not have unified cluster configuration management, which leads to this problem. In addition to this parameter, there are other parameters that may also affect consumption performance, such as pipeline.batch.size</p>
+<h1 id="section-0027-4">Other official references</h1>
+<p><a href="https://www.elastic.co/guide/en/logstash/6.8/performance-troubleshooting.html" rel="noopener nofollow" target="_blank">Logstash tuning</a></p>
+<p><a href="https://www.elastic.co/guide/en/logstash/6.8/plugins-outputs-webhdfs.html" rel="noopener nofollow" target="_blank">HDFS plug-in tuning</a></p>
+<p><a href="https://www.elastic.co/guide/en/logstash/6.8/plugins-outputs-elasticsearch.html" rel="noopener nofollow" target="_blank">Elasticsearch plug-in tuning</a></p>
+<p><a href="https://www.elastic.co/guide/en/logstash/current/ts-plugins.html" rel="noopener nofollow" target="_blank">FAQ</a></p>
+</div>
+</div>
+<!-- Post Footer -->
+<div class="post-footer">
+<div class="post-navigation">
+<a class="nav-button" href="../blog.html">← Back to Home</a>
+<a class="nav-button" href="0028.html">Next Post →</a>
+</div>
+</div>
+</article>
+</div>
+</body>
+</html>

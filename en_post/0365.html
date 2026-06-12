@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>HBase RegionServer hangs frequently</title>
+<link href="../css/style3.css" rel="stylesheet"/>
+</head>
+<body>
+<div class="container">
+<!-- Header Navigation -->
+<div class="header">
+<h1><a href="../blog.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+</div>
+<!-- Post Container -->
+<article class="post">
+<!-- Post Header -->
+<div class="post-header">
+<h1>HBase RegionServer hangs frequently</h1>
+<div class="post-meta">
+<div class="post-meta-item">
+<span class="meta-icon">📅</span>
+<span>October 18, 2018</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">📖</span>
+<span>3 min read</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">👁️</span>
+<span>3652 views</span>
+</div>
+</div>
+</div>
+<!-- Post Content -->
+<div class="post-content">
+<div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<p>Recently, many region servers in the HBase cluster have hung up. Looking at the log of one of the RegionServer1, I found that the server was under great pressure when it hung up at 17:17:14. There were a lot of responseTooSlow and a lot of gc, but there was still a lot of memory left at that time. It was not because oom was killed.</p>
+<blockquote>
+<p>2018-03-13T17:17:13.372+0800: [GC (Allocation Failure) 2018-03-13T17:17:13.372+0800: [ParNew: 3280066K-&gt;256481K(3762880K), 0.0429718 secs] 23536952K-&gt;20513367K(32801920K), 0.0432932 secs] [Times: user=1.92 sys=0.01, real=0.04 secs]</p>
+<p>Heap</p>
+<p>par new generation   total 3762880K, used 1416770K [0x00007f2f4c000000, 0x00007f305f990000, 0x00007f305f990000)</p>
+<p>  eden space 3010368K,  38% used [0x00007f2f4c000000, 0x00007f2f92d182c0, 0x00007f3003bd0000)</p>
+<p>  from space 752512K,  34% used [0x00007f3003bd0000, 0x00007f30136487c0, 0x00007f3031ab0000)</p>
+<p>  to   space 752512K,   0% used [0x00007f3031ab0000, 0x00007f3031ab0000, 0x00007f305f990000)</p>
+<p>concurrent mark-sweep generation total 29039040K, used 19905973K [0x00007f305f990000, 0x00007f374c000000, 0x00007f374c000000)</p>
+<p>Metaspace       used 49530K, capacity 50072K, committed 55492K, reserved 57344K   </p>
+</blockquote>
+<p>The reason why the RegionServer hangs is that when tryRegionServerReport is found to be marked as a dead server, a YouAreDeadException is thrown, and then the HRegionServer.run method will exit, which means that the RegionServer process exits.</p>
+<blockquote>
+<p>2018-03-13 17:17:08,159 FATAL [regionserver/<strong>RegionServer1</strong>/<strong>RegionServer1</strong>:16020] regionserver.HRegionServer: ABORTING region server <strong>RegionServer1</strong>,16020,1519805863844: org.apache.hadoop.hbase.YouAreDeadException: Server REPORT rejected; currently processing <strong>RegionServer1</strong>,16020,1519805863844 as dead server</p>
+</blockquote>
+<blockquote>
+<p>org.apache.hadoop.hbase.YouAreDeadException: org.apache.hadoop.hbase.YouAreDeadException: Server REPORT rejected; currently processing <strong>RegionServer1</strong>,16020,1519805863844 as dead server</p>
+<p>         at org.apache.hadoop.hbase.master.ServerManager.checkIsDead(ServerManager.java:434)</p>
+<p>         at org.apache.hadoop.hbase.master.ServerManager.regionServerReport(ServerManager.java:339)</p>
+<p>         at org.apache.hadoop.hbase.master.MasterRpcServices.regionServerReport(MasterRpcServices.java:339)</p>
+<p>         at org.apache.hadoop.hbase.protobuf.generated.RegionServerStatusProtos$RegionServerStatusService$2.callBlockingMethod(Reg</p>
+<p>ionServerStatusProtos.java:8617)</p>
+<p>         at org.apache.hadoop.hbase.ipc.RpcServer.call(RpcServer.java:2196)</p>
+<p>         at org.apache.hadoop.hbase.ipc.CallRunner.run(CallRunner.java:112)</p>
+<p>         at org.apache.hadoop.hbase.ipc.RpcExecutor.consumerLoop(RpcExecutor.java:133)</p>
+<p>         at org.apache.hadoop.hbase.ipc.RpcExecutor$1.run(RpcExecutor.java:108)</p>
+<p>         at java.lang.Thread.run(Thread.java:745)</p>
+<p> </p>
+<p>         at sun.reflect.NativeConstructorAccessorImpl.newInstance0(Native Method)</p>
+<p>         at sun.reflect.NativeConstructorAccessorImpl.newInstance(NativeConstructorAccessorImpl.java:62)</p>
+<p>         at sun.reflect.DelegatingConstructorAccessorImpl.newInstance(DelegatingConstructorAccessorImpl.java:45)</p>
+<p>         at java.lang.reflect.Constructor.newInstance(Constructor.java:422)</p>
+<p>         at org.apache.hadoop.ipc.RemoteException.instantiateException(RemoteException.java:106)</p>
+<p>         at org.apache.hadoop.ipc.RemoteException.unwrapRemoteException(RemoteException.java:95)</p>
+<p>         at org.apache.hadoop.hbase.protobuf.ProtobufUtil.getRemoteException(ProtobufUtil.java:330)</p>
+<p>         at org.apache.hadoop.hbase.regionserver.HRegionServer.tryRegionServerReport(HRegionServer.java:1153)</p>
+<p>         at org.apache.hadoop.hbase.regionserver.HRegionServer.run(HRegionServer.java:962)</p>
+</blockquote>
+<p>It is marked as dead server because zk session expired</p>
+<blockquote>
+<p>2018-03-13 17:17:08,128 INFO  [regionserver/<strong>RegionServer1</strong>/<strong>RegionServer1</strong>:16020-SendThread(ZKServer1:2181)] zookeeper.ClientCnxn: Client session timed out, have not heard from server in 41499ms for sessionid 0x161d1433ba86c84, closing socket connection and attempting reconnect</p>
+</blockquote>
+<blockquote>
+<p>2018-03-13 17:17:08,445 FATAL [main-EventThread] regionserver.HRegionServer: ABORTING region server <strong>RegionServer1</strong>,16020,1519805863844: regionserver:16020-0x35fe18af217e685, quorum=ZKServer1:2181, baseZNode=/hbase regionserver:16020-0x35fe18af217e685 received expired from ZooKeeper, aborting</p>
+</blockquote>
+<p>The timeout of 41499ms at 17:17:08 is because there was a full gc at 17:16:38 that took 29s.</p>
+<blockquote>
+<p>2018-03-13T17:16:38.268+0800: [GC (Allocation Failure)</p>
+<p>2018-03-13T17:16:38.268+0800: [ParNew (promotion failed): 3762880K-&gt;3762880K(3762880K), 3.2398750 secs]</p>
+<p>2018-03-13T17:16:41.508+0800: [CMS2018-03-13T17:16:47.078+0800: [CMS-concurrent-sweep: 10.829/17.135 secs] [Times: user=161.97 sys=2.65, real=17.13 secs]</p>
+<p> (concurrent mode failure): 28187725K-&gt;21036514K(29039040K), 26.5884371 secs] 31874835K-&gt;21036514K(32801920K), [Metaspace: 49335K-&gt;49335K(57344K)], 29.8297421 secs] [Times: user=40.45 sys=0.14, real=29.82 secs]</p>
+</blockquote>
+<p>But the session timeout configured in HBase-site.XML is 180s. Why does it time out at 41s?</p>
+<blockquote>
+<p>  &lt;property&gt;</p>
+<p>    &lt;name&gt;zookeeper.session.timeout&lt;/name&gt;</p>
+<p>    &lt;value&gt;180000&lt;/value&gt;</p>
+<p>  &lt;/property&gt;</p>
+</blockquote>
+<p>Negotiated timeout = 40000 when establishing a zk session, which is 40s. Why is it configured as 180s but actually 40s?</p>
+<blockquote>
+<p>2018-03-13 17:15:11,522 INFO  [main-SendThread(ZKServer1:2181)] zookeeper.ClientCnxn: Session establishment complet</p>
+<p>e on server ZKServer1/ZKServer1:2181, sessionid = 0x35fe18af217e685, negotiated timeout = 40000</p>
+<p>2018-03-13 17:15:11,526 INFO  [regionserver/<strong>RegionServer1</strong>/<strong>RegionServer1</strong>:16020-SendThread(ZKServer1:2181)]</p>
+<p>zookeeper.ClientCnxn: Session establishment complete on server <strong>RegionServer1</strong>/<strong>RegionServer1</strong>:2181, sessionid = 0x161d1433b</p>
+<p>a86c84, negotiated timeout = 40000</p>
+</blockquote>
+<p>Output after establishing connection in zk</p>
+<div class="cnblogs_code">
+<pre>            LOG.info("Session establishment complete on server "
+
+                    +<span style="color: rgba(0, 0, 0, 1)"> clientCnxnSocket.getRemoteSocketAddress()
+
+                    </span>+ ", sessionid = 0x" +<span style="color: rgba(0, 0, 0, 1)"> Long.toHexString(sessionId)
+
+                    </span>+ ", negotiated timeout = " +<span style="color: rgba(0, 0, 0, 1)"> negotiatedSessionTimeout
+
+                    </span>+ (isRO ? " (READ-ONLY mode)" : ""));</pre>
+</div>
+<p>negotiatedSessionTimeout is called back in onConnected</p>
+<div class="cnblogs_code">
+<pre>        <span style="color: rgba(0, 0, 255, 1)">void</span> onConnected(<span style="color: rgba(0, 0, 255, 1)">int</span> _negotiatedSessionTimeout, <span style="color: rgba(0, 0, 255, 1)">long</span><span style="color: rgba(0, 0, 0, 1)"> _sessionId,
+
+                </span><span style="color: rgba(0, 0, 255, 1)">byte</span>[] _sessionPasswd, <span style="color: rgba(0, 0, 255, 1)">boolean</span> isRO) <span style="color: rgba(0, 0, 255, 1)">throws</span> IOException {</pre>
+</div>
+<p>The callback is in ClientCnxnSocket, and the acquisition is ConnectResponse.getTimeout()</p>
+<div class="cnblogs_code">
+<pre>        ConnectResponse conRsp = <span style="color: rgba(0, 0, 255, 1)">new</span><span style="color: rgba(0, 0, 0, 1)"> ConnectResponse();
+
+        conRsp.deserialize(bbia, </span>"connect"<span style="color: rgba(0, 0, 0, 1)">);
+
+                  sendThread.onConnected(conRsp.getTimeOut(), </span><span style="color: rgba(0, 0, 255, 1)">this</span><span style="color: rgba(0, 0, 0, 1)">.sessionId,
+
+                conRsp.getPasswd(), isRO);</span></pre>
+</div>
+<p>What is taken here is the sessionTimeout in ServerCnxn. This value is initialized in ZooKeeperServer.</p>
+<div class="cnblogs_code">
+<pre>        <span style="color: rgba(0, 0, 255, 1)">int</span> minSessionTimeout =<span style="color: rgba(0, 0, 0, 1)"> getMinSessionTimeout();
+
+        </span><span style="color: rgba(0, 0, 255, 1)">if</span> (sessionTimeout &lt;<span style="color: rgba(0, 0, 0, 1)"> minSessionTimeout) {
+
+            sessionTimeout </span>=<span style="color: rgba(0, 0, 0, 1)"> minSessionTimeout;
+
+        }
+
+        </span><span style="color: rgba(0, 0, 255, 1)">int</span> maxSessionTimeout =<span style="color: rgba(0, 0, 0, 1)"> getMaxSessionTimeout();
+
+        </span><span style="color: rgba(0, 0, 255, 1)">if</span> (sessionTimeout &gt;<span style="color: rgba(0, 0, 0, 1)"> maxSessionTimeout) {
+
+            sessionTimeout </span>=<span style="color: rgba(0, 0, 0, 1)"> maxSessionTimeout;
+
+        }</span></pre>
+</div>
+<p>You can see that it will be limited according to minSessionTimeout and maxSessionTimeout</p>
+<div class="cnblogs_code">
+<pre>    <span style="color: rgba(0, 0, 255, 1)">public</span> <span style="color: rgba(0, 0, 255, 1)">int</span><span style="color: rgba(0, 0, 0, 1)"> getMaxSessionTimeout() {
+
+        </span><span style="color: rgba(0, 0, 255, 1)">return</span> maxSessionTimeout == - 1 ? tickTime * 20<span style="color: rgba(0, 0, 0, 1)"> : maxSessionTimeout;
+
+    }</span></pre>
+</div>
+<p>Since the ZooKeeper server tickTime is set to 2000ms, maxSessionTimeout will be set to 40000ms by default, so to solve this problem you need to modify zk's maxSessionTimeout;</p>
+</div>
+</div>
+<!-- Post Footer -->
+<div class="post-footer">
+<div class="post-navigation">
+<a class="nav-button" href="../blog.html">← Back to Home</a>
+<a class="nav-button" href="0366.html">Next Post →</a>
+</div>
+</div>
+</article>
+</div>
+</body>
+</html>

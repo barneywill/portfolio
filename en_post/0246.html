@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Algorithm Basics Anaconda 1 - Introduction, Installation, and Use</title>
+<link href="../css/style3.css" rel="stylesheet"/>
+</head>
+<body>
+<div class="container">
+<!-- Header Navigation -->
+<div class="header">
+<h1><a href="../blog.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+</div>
+<!-- Post Container -->
+<article class="post">
+<!-- Post Header -->
+<div class="post-header">
+<h1>Algorithm Basics Anaconda 1 - Introduction, Installation, and Use</h1>
+<div class="post-meta">
+<div class="post-meta-item">
+<span class="meta-icon">📅</span>
+<span>January 26, 2019</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">📖</span>
+<span>1 min read</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">👁️</span>
+<span>634 views</span>
+</div>
+</div>
+</div>
+<!-- Post Content -->
+<div class="post-content">
+<div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<p>Anaconda 2</p>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201901/1509647-20190126174847847-1701122406.png"/></p>
+<p>Official: https://www.anaconda.com/</p>
+<p> </p>
+<h1>1 Introduction</h1>
+<p>The Most Popular Python Data Science Platform</p>
+<p>Anaconda® is a package manager, an environment manager, a Python/R data science distribution, and a collection of over 1,500+ open source packages. Anaconda is free and easy to install, and it offers free community support.</p>
+<p>anaconda is a package manager, an environment manager, a data science release package in Python/r language, including 1500+ open source packages; anaconda is free and easy to install, and provides free community support;</p>
+<p>Packages available in Anaconda</p>
+<ul>
+<li>Over 200 packages are automatically installed with Anaconda.</li>
+<li>Over 2000 additional open source packages (including R) can be individually installed from the Anaconda repository with the conda install command.</li>
+<li>Thousands of other packages are available from Anaconda Cloud.</li>
+<li>You can download other packages using the pip install command that is installed with Anaconda. Pip packages provide many of the features of conda packages and in some cases they can work together. However, the preference should be to install the conda package if it is available.</li>
+<li>You can also make your own custom packages using the conda build command, and you can share them with others by uploading them to Anaconda Cloud, PyPi or other repositories.</li>
+</ul>
+<p> </p>
+<h1>2. Installation</h1>
+<blockquote>
+<p># wget https://repo.continuum.io/archive/Anaconda2-2018.12-Linux-x86_64.sh<br/># chmod u+x Anaconda2-2018.12-Linux-x86_64.sh<br/># ./Anaconda2-2018.12-Linux-x86_64.sh</p>
+</blockquote>
+<p> </p>
+<h1>Three uses</h1>
+<p>Commonly used numpy, pandas, scikit-learn, scipy, matlotlib and other packages have been installed. You can also download tensorflow, etc.</p>
+<blockquote>
+<p>$ python<br/># scipy<br/>import scipy<br/>print('scipy: %s' % scipy.__version__)<br/># numpy<br/>import numpy<br/>print('numpy: %s' % numpy.__version__)<br/># matplotlib<br/>import matplotlib<br/>print('matplotlib: %s' % matplotlib.__version__)<br/># pandas<br/>import pandas<br/>print('pandas: %s' % pandas.__version__)<br/># statsmodels<br/>import statsmodels<br/>print('statsmodels: %s' % statsmodels.__version__)<br/># scikit-learn<br/>import sklearn<br/>print('sklearn: %s' % sklearn.__version__)</p>
+</blockquote>
+<p>Test numpy alone</p>
+<blockquote>
+<p># python<br/>Python 2.7.5 (default, Oct 30 2018, 23:45:53) <br/>[GCC 4.8.5 20150623 (Red Hat 4.8.5-36)] on linux2<br/>Type "help", "copyright", "credits" or "license" for more information.<br/>&gt;&gt;&gt; from numpy import *<br/>&gt;&gt;&gt; a = arange(15).reshape(3, 5)<br/>&gt;&gt;&gt; a.shape<br/>(3, 5)<br/>&gt;&gt;&gt; a.ndim<br/>2<br/>&gt;&gt;&gt; a.dtype.name<br/>'int64'<br/>&gt;&gt;&gt; a.itemsize<br/>8<br/>&gt;&gt;&gt; a.size<br/>15<br/>&gt;&gt;&gt; type(a)<br/>&lt;type 'numpy.ndarray'&gt;<br/>&gt;&gt;&gt; </p>
+</blockquote>
+<p> </p>
+</div>
+</div>
+<!-- Post Footer -->
+<div class="post-footer">
+<div class="post-navigation">
+<a class="nav-button" href="../blog.html">← Back to Home</a>
+<a class="nav-button" href="0247.html">Next Post →</a>
+</div>
+</div>
+</article>
+</div>
+</body>
+</html>

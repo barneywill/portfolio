@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Kafka Reassign Stuck</title>
+<link href="../css/style3.css" rel="stylesheet"/>
+</head>
+<body>
+<div class="container">
+<!-- Header Navigation -->
+<div class="header">
+<h1><a href="../blog.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+</div>
+<!-- Post Container -->
+<article class="post">
+<!-- Post Header -->
+<div class="post-header">
+<h1>Kafka Reassign Stuck</h1>
+<div class="post-meta">
+<div class="post-meta-item">
+<span class="meta-icon">📅</span>
+<span>July 17, 2021</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">📖</span>
+<span>1 min read</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">👁️</span>
+<span>1010 views</span>
+</div>
+</div>
+</div>
+<!-- Post Content -->
+<div class="post-content">
+<div class="blogpost-body cnblogs-markdown" id="cnblogs_post_body">
+<p>For details on the Kafka reassign process, see:<a href="https://www.cnblogs.com/barneywill/p/15025404.html" target="_blank">reassign process</a></p>
+<p>Recently, the reassign process in the Kafka cluster has been stuck. The problem occurs as follows:<br/>
+Problem log</p>
+<blockquote>
+<p>2021-07-16 10:35:41,193 INFO kafka.controller.KafkaController: [Controller id=3] 0/2 replicas have caught up with the leader for partition kafka-9 being reassigned. Replica(s) 3,2 still need to catch up</p>
+</blockquote>
+<p>Corresponding code logic</p>
+<pre><code>  case class PartitionReassignmentIsrChange(partition: TopicPartition) extends ControllerEvent {
+    override def state: ControllerState = ControllerState.PartitionReassignment
+
+    override def process(): Unit = {
+      if (!isActive) return
+      // check if this partition is still being reassigned or not
+      controllerContext.partitionsBeingReassigned.get(partition).foreach { reassignedPartitionContext =&gt;
+        val reassignedReplicas = reassignedPartitionContext.newReplicas.toSet
+        zkClient.getTopicPartitionStates(Seq(partition)).get(partition) match {
+          case Some(leaderIsrAndControllerEpoch) =&gt; // check if new replicas have joined ISR
+            val leaderAndIsr = leaderIsrAndControllerEpoch.leaderAndIsr
+            val caughtUpReplicas = reassignedReplicas &amp; leaderAndIsr.isr.toSet
+            if (caughtUpReplicas == reassignedReplicas) {
+              // resume the partition reassignment process
+              info(s"${caughtUpReplicas.size}/${reassignedReplicas.size} replicas have caught up with the leader for " +
+                s"partition $partition being reassigned. Resuming partition reassignment")
+              onPartitionReassignment(partition, reassignedPartitionContext)
+            }
+            else {
+              info(s"${caughtUpReplicas.size}/${reassignedReplicas.size} replicas have caught up with the leader for " +
+                s"partition $partition being reassigned. Replica(s) " +
+                s"${(reassignedReplicas -- leaderAndIsr.isr.toSet).mkString(",")} still need to catch up")
+            }
+          case None =&gt; error(s"Error handling reassignment of partition $partition to replicas " +
+                         s"${reassignedReplicas.mkString(",")} as it was never created")
+        }
+      }
+    }
+  }
+</code></pre>
+<p>Because the node planned by replica is not in isr at this time, we can only wait. The problem is that we keep waiting.</p>
+<p>The logs in the waiting broker are as follows:</p>
+<blockquote>
+<p>2021-07-16 10:35:41,150 WARN state.change.logger: [Broker id=3] Ignoring LeaderAndIsr request from controller 3 with correlation id 969 epoch 44 for partition kafka-9 as the local replica for the partition is in an offline log directory</p>
+</blockquote>
+<p>Corresponding code</p>
+<pre><code>        leaderAndIsrRequest.partitionStates.asScala.foreach { case (topicPartition, stateInfo) =&gt;
+          val partition = getOrCreatePartition(topicPartition)
+          val partitionLeaderEpoch = partition.getLeaderEpoch
+          if (partition eq ReplicaManager.OfflinePartition) {
+            stateChangeLogger.warn(s"Ignoring LeaderAndIsr request from " +
+              s"controller $controllerId with correlation id $correlationId " +
+              s"epoch $controllerEpoch for partition $topicPartition as the local replica for the " +
+              "partition is in an offline log directory")
+            responseMap.put(topicPartition, Errors.KAFKA_STORAGE_ERROR)
+          }
+</code></pre>
+<p>Because the partition is offline, the LeaderAndIsr request will not actually be executed, so it will not join the isr, and then reassign will keep waiting.</p>
+<p>Then why is the partition offline? Continue to follow the logs and find out.</p>
+<blockquote>
+<p>2021-07-16 00:25:17,836 INFO kafka.log.LogManager: Stopping serving logs in dir /data/kafka/data</p>
+</blockquote>
+<p>And there were a lot of disk full errors at that time.</p>
+<blockquote>
+<p>java.io.IOException: No space left on device</p>
+</blockquote>
+<p>Because the disk was full before, Kafka marked this directory as offline. All partitions in this directory will be marked offline, and the LeaderAnsIsr request will not be executed.</p>
+<p>You can search for ‘still need to catch up’ in the controller to see which brokers have been waiting, and then go to these servers to see if there are ‘Stopping serving logs’ logs after startup. If there are, it will get stuck. The solution is to restart the waiting brokers, and then reassign can start</p>
+</div>
+</div>
+<!-- Post Footer -->
+<div class="post-footer">
+<div class="post-navigation">
+<a class="nav-button" href="../blog.html">← Back to Home</a>
+<a class="nav-button" href="0039.html">Next Post →</a>
+</div>
+</div>
+</article>
+</div>
+</body>
+</html>

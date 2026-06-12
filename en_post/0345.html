@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Parquet 1 - Introduction</title>
+<link href="../css/style3.css" rel="stylesheet"/>
+</head>
+<body>
+<div class="container">
+<!-- Header Navigation -->
+<div class="header">
+<h1><a href="../blog.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+</div>
+<!-- Post Container -->
+<article class="post">
+<!-- Post Header -->
+<div class="post-header">
+<h1>Parquet 1 - Introduction</h1>
+<div class="post-meta">
+<div class="post-meta-item">
+<span class="meta-icon">📅</span>
+<span>November 08, 2018</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">📖</span>
+<span>2 min read</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">👁️</span>
+<span>1078 views</span>
+</div>
+</div>
+</div>
+<!-- Post Content -->
+<div class="post-content">
+<div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201811/1509647-20181107165446742-644429150.png"/></p>
+<p><a class="external-link" href="http://parquet.apache.org/" rel="noopener nofollow">http://parquet.apache.org</a></p>
+<blockquote>
+<p>Hierarchy:</p>
+<p><strong>file - &gt; row groups - &gt; column chunks - &gt; pages(data/index/dictionary)</strong></p>
+</blockquote>
+<h2 id="Parquet、Avro、ORC、Kudu-Motivation">Motivation</h2>
+<p>We created Parquet to make the advantages of <strong>compressed, efficient columnar data representation</strong> available to any project in the Hadoop ecosystem.</p>
+<p>Parquet is built from the ground up with complex nested data structures in mind, and uses <strong>the record shredding and assembly algorithm described in the Dremel paper</strong>. We believe this approach is superior to simple flattening of nested name spaces.</p>
+<p>Parquet is built to support very efficient <strong>compression and encoding schemes</strong>. Multiple projects have demonstrated the performance impact of applying the right compression and encoding scheme to the data. Parquet allows compression schemes to be specified on a per-column level, and is future-proofed to allow adding more encodings as they are invented and implemented.</p>
+<p>Parquet is built to be used by anyone. The Hadoop ecosystem is rich with data processing frameworks, and we are not interested in playing favorites. <strong>We believe that an efficient, well-implemented columnar storage substrate should be useful to all frameworks without the cost of extensive and difficult to set up dependencies.</strong></p>
+<blockquote>
+<p>Parquet is designed to allow any project in the Hadoop ecosystem to take advantage of the advantages of compression and columnar storage; Parquet inherently supports complex nested data structures, using the record sharding and integration algorithms mentioned in the Dremel paper; Parquet supports efficient compression and encoding schemes, and many projects have proven that this will greatly improve query performance;</p>
+</blockquote>
+<p> </p>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201811/1509647-20181107165527283-1019315182.png"/></p>
+<p> </p>
+<p> </p>
+<h2 id="Parquet、Avro、ORC、Kudu-Glossary">Glossary</h2>
+<p><strong>Block</strong> (hdfs block): This means a block in hdfs and the meaning is unchanged for describing this file format. The file format is designed to work well on top of hdfs.</p>
+<p><strong>File</strong>: A hdfs file that must include the metadata for the file. It does not need to actually contain the data.</p>
+<p><strong>Row group</strong>: A logical horizontal partitioning of the data into rows. There is no physical structure that is guaranteed for a row group. A row group consists of a column chunk for each column in the dataset.</p>
+<p><strong>Column chunk</strong>: A chunk of the data for a particular column. These live in a particular row group and is guaranteed to be contiguous in the file.</p>
+<p><strong>Page</strong>: Column chunks are divided up into pages. A page is conceptually an indivisible unit (in terms of compression and encoding). There can be multiple page types which is interleaved in a column chunk.</p>
+<p><strong>Hierarchically, a file consists of one or more row groups. A row group contains exactly one column chunk per column. Column chunks contain one or more pages.</strong></p>
+<blockquote>
+<p>A file contains one or more row groups, each column in a row group contains a unique column chunk, and a column chunk contains one or more pages;</p>
+</blockquote>
+<h2 id="Parquet、Avro、ORC、Kudu-Metadata">Metadata</h2>
+<p>There are three types of <strong>metadata</strong>: <strong>file metadata, column (chunk) metadata and page header metadata</strong>. All thrift structures are serialized using the <strong>TCompactProtocol</strong>.</p>
+<p>The file metadata contains the locations of all the column metadata start locations. </p>
+<p>Metadata is written after the data to allow for single pass writing.</p>
+<p>Readers are expected to first <strong>read the file metadata to find all the column chunks they are interested in</strong>. The columns chunks should then be read sequentially.</p>
+<blockquote>
+<p>There are three types of metadata: file metadata, column metadata and page header metadata; file metadata contains the starting position of all column metadata; readers should first read file metadata to find the column chunk they are interested in;</p>
+</blockquote>
+<p> </p>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201811/1509647-20181107165554584-1562783266.png"/></p>
+<p> </p>
+<p>The format is explicitly designed to separate the metadata from the data. This <strong>allows splitting columns into multiple files</strong>, as well as having a single metadata file reference multiple parquet files.</p>
+<blockquote>
+<p>This format is designed to separate metadata and data, so that the data of different columns can be split into different files. At the same time, one metadata file can reference multiple data files;</p>
+</blockquote>
+<p> </p>
+</div>
+</div>
+<!-- Post Footer -->
+<div class="post-footer">
+<div class="post-navigation">
+<a class="nav-button" href="../blog.html">← Back to Home</a>
+<a class="nav-button" href="0346.html">Next Post →</a>
+</div>
+</div>
+</article>
+</div>
+</body>
+</html>

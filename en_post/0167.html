@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>beeline connects to Presto and reports an error</title>
+<link href="../css/style3.css" rel="stylesheet"/>
+</head>
+<body>
+<div class="container">
+<!-- Header Navigation -->
+<div class="header">
+<h1><a href="../blog.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+</div>
+<!-- Post Container -->
+<article class="post">
+<!-- Post Header -->
+<div class="post-header">
+<h1>beeline connects to Presto and reports an error</h1>
+<div class="post-meta">
+<div class="post-meta-item">
+<span class="meta-icon">📅</span>
+<span>March 20, 2019</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">📖</span>
+<span>20 min read</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">👁️</span>
+<span>2848 views</span>
+</div>
+</div>
+</div>
+<!-- Post Content -->
+<div class="post-content">
+<div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<p>hive2.3.4</p>
+<p>presto0.215</p>
+<p> </p>
+<p>Using beeline of hive2.3.4 to connect to Presto reports an error</p>
+<div class="cnblogs_code">
+<pre>$ beeline - d com.facebook.presto.jdbc.PrestoDriver - u <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">jdbc:presto://localhost:8080/hive</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">
+Error: Unrecognized connection property 'url' (state</span>=,code=0)</pre>
+</div>
+<p>Add --verbose to view detailed error reports</p>
+<div class="cnblogs_code">
+<pre>$ beeline - d com.facebook.presto.jdbc.PrestoDriver - u <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">jdbc:presto://localhost:8080/hive</span><span style="color: rgba(128, 0, 0, 1)">"</span> --<span style="color: rgba(0, 0, 0, 1)">verbose 
+Error: Unrecognized connection property 'url' (state</span>=,code=0<span style="color: rgba(0, 0, 0, 1)">)
+java.sql.SQLException: Unrecognized connection property 'url'
+        at com.facebook.presto.jdbc.PrestoDriverUri.validateConnectionProperties(PrestoDriverUri.java:</span>316<span style="color: rgba(0, 0, 0, 1)">)
+        at com.facebook.presto.jdbc.PrestoDriverUri.&lt;init</span>&gt;(PrestoDriverUri.java:95<span style="color: rgba(0, 0, 0, 1)">)
+        at com.facebook.presto.jdbc.PrestoDriverUri.&lt;init</span>&gt;(PrestoDriverUri.java:85<span style="color: rgba(0, 0, 0, 1)">)
+        at com.facebook.presto.jdbc.PrestoDriver.connect(PrestoDriver.java:</span>87<span style="color: rgba(0, 0, 0, 1)">)
+        at java.sql.DriverManager.getConnection(DriverManager.java:</span>664<span style="color: rgba(0, 0, 0, 1)">)
+        at java.sql.DriverManager.getConnection(DriverManager.java:</span>208<span style="color: rgba(0, 0, 0, 1)">)
+        at org.apache.hive.beeline.DatabaseConnection.connect(DatabaseConnection.java:</span>145<span style="color: rgba(0, 0, 0, 1)">)
+        at org.apache.hive.beeline.DatabaseConnection.getConnection(DatabaseConnection.java:</span>209<span style="color: rgba(0, 0, 0, 1)">)
+        at org.apache.hive.beeline.Commands.connect(Commands.java:</span>1641<span style="color: rgba(0, 0, 0, 1)">)
+        at org.apache.hive.beeline.Commands.connect(Commands.java:</span>1536<span style="color: rgba(0, 0, 0, 1)">)
+        at sun.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+        at sun.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:</span>62<span style="color: rgba(0, 0, 0, 1)">)
+        at sun.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:</span>43<span style="color: rgba(0, 0, 0, 1)">)
+        at java.lang.reflect.Method.invoke(Method.java:</span>498<span style="color: rgba(0, 0, 0, 1)">)
+        at org.apache.hive.beeline.ReflectiveCommandHandler.execute(ReflectiveCommandHandler.java:</span>56<span style="color: rgba(0, 0, 0, 1)">)
+        at org.apache.hive.beeline.BeeLine.execCommandWithPrefix(BeeLine.java:</span>1273<span style="color: rgba(0, 0, 0, 1)">)
+        at org.apache.hive.beeline.BeeLine.dispatch(BeeLine.java:</span>1312<span style="color: rgba(0, 0, 0, 1)">)
+        at org.apache.hive.beeline.BeeLine.connectUsingArgs(BeeLine.java:</span>867<span style="color: rgba(0, 0, 0, 1)">)
+        at org.apache.hive.beeline.BeeLine.initArgs(BeeLine.java:</span>776<span style="color: rgba(0, 0, 0, 1)">)
+        at org.apache.hive.beeline.BeeLine.</span><span style="color: rgba(0, 0, 255, 1)">begin</span>(BeeLine.java:1010<span style="color: rgba(0, 0, 0, 1)">)
+        at org.apache.hive.beeline.BeeLine.mainWithInputRedirection(BeeLine.java:</span>519<span style="color: rgba(0, 0, 0, 1)">)
+        at org.apache.hive.beeline.BeeLine.main(BeeLine.java:</span>501<span style="color: rgba(0, 0, 0, 1)">)
+        at sun.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+        at sun.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:</span>62<span style="color: rgba(0, 0, 0, 1)">)
+        at sun.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:</span>43<span style="color: rgba(0, 0, 0, 1)">)
+        at java.lang.reflect.Method.invoke(Method.java:</span>498<span style="color: rgba(0, 0, 0, 1)">)
+        at org.apache.hadoop.util.RunJar.run(RunJar.java:</span>221<span style="color: rgba(0, 0, 0, 1)">)
+        at org.apache.hadoop.util.RunJar.main(RunJar.java:</span>136)</pre>
+</div>
+<p>Here is the error reported during the connect process. The connect parameter is</p>
+<blockquote>
+<p>Usage: connect &lt;url&gt; &lt;username&gt; &lt;password&gt; [driver]</p>
+</blockquote>
+<p> </p>
+<p>Follow up on Hive and Presto code</p>
+<p> </p>
+<p>org.apache.hive.beeline.BeeLine</p>
+<div class="cnblogs_code">
+<pre>  <span style="color: rgba(0, 0, 255, 1)">boolean</span><span style="color: rgba(0, 0, 0, 1)"> dispatch(String line) {
+...
+    </span><span style="color: rgba(0, 0, 255, 1)">if</span><span style="color: rgba(0, 0, 0, 1)"> (isBeeLine) {
+      </span><span style="color: rgba(0, 0, 255, 1)">if</span><span style="color: rgba(0, 0, 0, 1)"> (line.startsWith(COMMAND_PREFIX)) {
+        </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> handle SQLLine command in beeline which starts with ! and does not end with ;</span>
+        <span style="color: rgba(0, 0, 255, 1)">return</span><span style="color: rgba(0, 0, 0, 1)"> execCommandWithPrefix(line);
+      } </span><span style="color: rgba(0, 0, 255, 1)">else</span><span style="color: rgba(0, 0, 0, 1)"> {
+        </span><span style="color: rgba(0, 0, 255, 1)">return</span><span style="color: rgba(0, 0, 0, 1)"> commands.sql(line, getOpts().getEntireLineAsCommand());
+      }
+    } </span><span style="color: rgba(0, 0, 255, 1)">else</span><span style="color: rgba(0, 0, 0, 1)"> {
+      </span><span style="color: rgba(0, 0, 255, 1)">return</span><span style="color: rgba(0, 0, 0, 1)"> commands.sql(line, getOpts().getEntireLineAsCommand());
+    }</span></pre>
+</div>
+<p>The commands and SQL in beeline will go through dispatch. The command is executed by execCommandWithPrefix, and then the Commands will be called reflectively.</p>
+<p> </p>
+<p>org.apache.hive.beeline.Commands</p>
+<div class="cnblogs_code">
+<pre>  <span style="color: rgba(0, 0, 255, 1)">public</span> <span style="color: rgba(0, 0, 255, 1)">boolean</span> connect(String line) <span style="color: rgba(0, 0, 255, 1)">throws</span><span style="color: rgba(0, 0, 0, 1)"> Exception {
+    String example </span>= "Usage: connect &lt;url&gt; &lt;username&gt; &lt;password&gt; [driver]"
+        +<span style="color: rgba(0, 0, 0, 1)"> BeeLine.getSeparator();
+
+    String[] parts </span>=<span style="color: rgba(0, 0, 0, 1)"> beeLine.split(line);
+    </span><span style="color: rgba(0, 0, 255, 1)">if</span> (parts == <span style="color: rgba(0, 0, 255, 1)">null</span><span style="color: rgba(0, 0, 0, 1)">) {
+      </span><span style="color: rgba(0, 0, 255, 1)">return</span> <span style="color: rgba(0, 0, 255, 1)">false</span><span style="color: rgba(0, 0, 0, 1)">;
+    }
+
+    </span><span style="color: rgba(0, 0, 255, 1)">if</span> (parts.length &lt; 2<span style="color: rgba(0, 0, 0, 1)">) {
+      </span><span style="color: rgba(0, 0, 255, 1)">return</span><span style="color: rgba(0, 0, 0, 1)"> beeLine.error(example);
+    }
+
+    String url </span>= parts.length &lt; 2 ? <span style="color: rgba(0, 0, 255, 1)">null</span> : parts[1<span style="color: rgba(0, 0, 0, 1)">];
+    String user </span>= parts.length &lt; 3 ? <span style="color: rgba(0, 0, 255, 1)">null</span> : parts[2<span style="color: rgba(0, 0, 0, 1)">];
+    String pass </span>= parts.length &lt; 4 ? <span style="color: rgba(0, 0, 255, 1)">null</span> : parts[3<span style="color: rgba(0, 0, 0, 1)">];
+    String driver </span>= parts.length &lt; 5 ? <span style="color: rgba(0, 0, 255, 1)">null</span> : parts[4<span style="color: rgba(0, 0, 0, 1)">];
+
+    Properties props </span>= <span style="color: rgba(0, 0, 255, 1)">new</span><span style="color: rgba(0, 0, 0, 1)"> Properties();
+    </span><span style="color: rgba(0, 0, 255, 1)">if</span> (url != <span style="color: rgba(0, 0, 255, 1)">null</span><span style="color: rgba(0, 0, 0, 1)">) {
+      String saveUrl </span>=<span style="color: rgba(0, 0, 0, 1)"> getUrlToUse(url);
+      props.setProperty(JdbcConnectionParams.PROPERTY_URL, saveUrl);
+    }
+
+    String value </span>= <span style="color: rgba(0, 0, 255, 1)">null</span><span style="color: rgba(0, 0, 0, 1)">;
+    </span><span style="color: rgba(0, 0, 255, 1)">if</span> (driver != <span style="color: rgba(0, 0, 255, 1)">null</span><span style="color: rgba(0, 0, 0, 1)">) {
+      props.setProperty(JdbcConnectionParams.PROPERTY_DRIVER, driver);
+    } </span><span style="color: rgba(0, 0, 255, 1)">else</span><span style="color: rgba(0, 0, 0, 1)"> {
+      value </span>=<span style="color: rgba(0, 0, 0, 1)"> Utils.parsePropertyFromUrl(url, JdbcConnectionParams.PROPERTY_DRIVER);
+      </span><span style="color: rgba(0, 0, 255, 1)">if</span> (value != <span style="color: rgba(0, 0, 255, 1)">null</span><span style="color: rgba(0, 0, 0, 1)">) {
+        props.setProperty(JdbcConnectionParams.PROPERTY_DRIVER, value);
+      }
+    }
+
+    </span><span style="color: rgba(0, 0, 255, 1)">if</span> (user != <span style="color: rgba(0, 0, 255, 1)">null</span><span style="color: rgba(0, 0, 0, 1)">) {
+      props.setProperty(JdbcConnectionParams.AUTH_USER, user);
+    } </span><span style="color: rgba(0, 0, 255, 1)">else</span><span style="color: rgba(0, 0, 0, 1)"> {
+      value </span>=<span style="color: rgba(0, 0, 0, 1)"> Utils.parsePropertyFromUrl(url, JdbcConnectionParams.AUTH_USER);
+      </span><span style="color: rgba(0, 0, 255, 1)">if</span> (value != <span style="color: rgba(0, 0, 255, 1)">null</span><span style="color: rgba(0, 0, 0, 1)">) {
+        props.setProperty(JdbcConnectionParams.AUTH_USER, value);
+      }
+    }
+
+    </span><span style="color: rgba(0, 0, 255, 1)">if</span> (pass != <span style="color: rgba(0, 0, 255, 1)">null</span><span style="color: rgba(0, 0, 0, 1)">) {
+      props.setProperty(JdbcConnectionParams.AUTH_PASSWD, pass);
+    } </span><span style="color: rgba(0, 0, 255, 1)">else</span><span style="color: rgba(0, 0, 0, 1)"> {
+      value </span>=<span style="color: rgba(0, 0, 0, 1)"> Utils.parsePropertyFromUrl(url, JdbcConnectionParams.AUTH_PASSWD);
+      </span><span style="color: rgba(0, 0, 255, 1)">if</span> (value != <span style="color: rgba(0, 0, 255, 1)">null</span><span style="color: rgba(0, 0, 0, 1)">) {
+        props.setProperty(JdbcConnectionParams.AUTH_PASSWD, value);
+      }
+    }
+
+    value </span>=<span style="color: rgba(0, 0, 0, 1)"> Utils.parsePropertyFromUrl(url, JdbcConnectionParams.AUTH_TYPE);
+    </span><span style="color: rgba(0, 0, 255, 1)">if</span> (value != <span style="color: rgba(0, 0, 255, 1)">null</span><span style="color: rgba(0, 0, 0, 1)">) {
+      props.setProperty(JdbcConnectionParams.AUTH_TYPE, value);
+    }
+    </span><span style="color: rgba(0, 0, 255, 1)">return</span><span style="color: rgba(0, 0, 0, 1)"> connect(props);
+  }
+
+  </span><span style="color: rgba(0, 0, 255, 1)">public</span> <span style="color: rgba(0, 0, 255, 1)">boolean</span> connect(Properties props) <span style="color: rgba(0, 0, 255, 1)">throws</span><span style="color: rgba(0, 0, 0, 1)"> IOException {
+    String url </span>= getProperty(props, <span style="color: rgba(0, 0, 255, 1)">new</span><span style="color: rgba(0, 0, 0, 1)"> String[] {
+        JdbcConnectionParams.PROPERTY_URL,
+        </span>"javax.jdo.option.ConnectionURL"<span style="color: rgba(0, 0, 0, 1)">,
+        </span>"ConnectionURL"<span style="color: rgba(0, 0, 0, 1)">,
+    });
+    String driver </span>= getProperty(props, <span style="color: rgba(0, 0, 255, 1)">new</span><span style="color: rgba(0, 0, 0, 1)"> String[] {
+        JdbcConnectionParams.PROPERTY_DRIVER,
+        </span>"javax.jdo.option.ConnectionDriverName"<span style="color: rgba(0, 0, 0, 1)">,
+        </span>"ConnectionDriverName"<span style="color: rgba(0, 0, 0, 1)">,
+    });
+    String username </span>= getProperty(props, <span style="color: rgba(0, 0, 255, 1)">new</span><span style="color: rgba(0, 0, 0, 1)"> String[] {
+        JdbcConnectionParams.AUTH_USER,
+        </span>"javax.jdo.option.ConnectionUserName"<span style="color: rgba(0, 0, 0, 1)">,
+        </span>"ConnectionUserName"<span style="color: rgba(0, 0, 0, 1)">,
+    });
+    String password </span>= getProperty(props, <span style="color: rgba(0, 0, 255, 1)">new</span><span style="color: rgba(0, 0, 0, 1)"> String[] {
+        JdbcConnectionParams.AUTH_PASSWD,
+        </span>"javax.jdo.option.ConnectionPassword"<span style="color: rgba(0, 0, 0, 1)">,
+        </span>"ConnectionPassword"<span style="color: rgba(0, 0, 0, 1)">,
+    });
+
+    </span><span style="color: rgba(0, 0, 255, 1)">if</span> (url == <span style="color: rgba(0, 0, 255, 1)">null</span> || url.length() == 0<span style="color: rgba(0, 0, 0, 1)">) {
+      </span><span style="color: rgba(0, 0, 255, 1)">return</span> beeLine.error("Property \"url\" is required"<span style="color: rgba(0, 0, 0, 1)">);
+    }
+    </span><span style="color: rgba(0, 0, 255, 1)">if</span> (driver == <span style="color: rgba(0, 0, 255, 1)">null</span> || driver.length() == 0<span style="color: rgba(0, 0, 0, 1)">) {
+      </span><span style="color: rgba(0, 0, 255, 1)">if</span> (!<span style="color: rgba(0, 0, 0, 1)">beeLine.scanForDriver(url)) {
+        </span><span style="color: rgba(0, 0, 255, 1)">return</span> beeLine.error(beeLine.loc("no-driver"<span style="color: rgba(0, 0, 0, 1)">, url));
+      }
+    }
+
+    String auth </span>= getProperty(props, <span style="color: rgba(0, 0, 255, 1)">new</span><span style="color: rgba(0, 0, 0, 1)"> String[] {JdbcConnectionParams.AUTH_TYPE});
+    </span><span style="color: rgba(0, 0, 255, 1)">if</span> (auth == <span style="color: rgba(0, 0, 255, 1)">null</span><span style="color: rgba(0, 0, 0, 1)">) {
+      auth </span>=<span style="color: rgba(0, 0, 0, 1)"> beeLine.getOpts().getAuthType();
+      </span><span style="color: rgba(0, 0, 255, 1)">if</span> (auth != <span style="color: rgba(0, 0, 255, 1)">null</span><span style="color: rgba(0, 0, 0, 1)">) {
+        props.setProperty(JdbcConnectionParams.AUTH_TYPE, auth);
+      }
+    }
+
+    beeLine.info(</span>"Connecting to " +<span style="color: rgba(0, 0, 0, 1)"> url);
+    </span><span style="color: rgba(0, 0, 255, 1)">if</span> (Utils.parsePropertyFromUrl(url, JdbcConnectionParams.AUTH_PRINCIPAL) == <span style="color: rgba(0, 0, 255, 1)">null</span><span style="color: rgba(0, 0, 0, 1)">) {
+      String urlForPrompt </span>= url.substring(0, url.contains(";") ? url.indexOf(';'<span style="color: rgba(0, 0, 0, 1)">) : url.length());
+      </span><span style="color: rgba(0, 0, 255, 1)">if</span> (username == <span style="color: rgba(0, 0, 255, 1)">null</span><span style="color: rgba(0, 0, 0, 1)">) {
+        username </span>= beeLine.getConsoleReader().readLine("Enter username for " + urlForPrompt + ": "<span style="color: rgba(0, 0, 0, 1)">);
+      }
+      props.setProperty(JdbcConnectionParams.AUTH_USER, username);
+      </span><span style="color: rgba(0, 0, 255, 1)">if</span> (password == <span style="color: rgba(0, 0, 255, 1)">null</span><span style="color: rgba(0, 0, 0, 1)">) {
+        password </span>= beeLine.getConsoleReader().readLine("Enter password for " + urlForPrompt + ": "<span style="color: rgba(0, 0, 0, 1)">,
+          </span><span style="color: rgba(0, 0, 255, 1)">new</span> Character('*'<span style="color: rgba(0, 0, 0, 1)">));
+      }
+      props.setProperty(JdbcConnectionParams.AUTH_PASSWD, password);
+    }
+
+    </span><span style="color: rgba(0, 0, 255, 1)">try</span><span style="color: rgba(0, 0, 0, 1)"> {
+      beeLine.getDatabaseConnections().setConnection(
+          </span><span style="color: rgba(0, 0, 255, 1)">new</span><span style="color: rgba(0, 0, 0, 1)"> DatabaseConnection(beeLine, driver, url, props));
+      beeLine.getDatabaseConnection().getConnection();
+
+      </span><span style="color: rgba(0, 0, 255, 1)">if</span> (!<span style="color: rgba(0, 0, 0, 1)">beeLine.isBeeLine()) {
+        beeLine.updateOptsForCli();
+      }
+      beeLine.runInit();
+
+      beeLine.setCompletions();
+      beeLine.getOpts().setLastConnectedUrl(url);
+      </span><span style="color: rgba(0, 0, 255, 1)">return</span> <span style="color: rgba(0, 0, 255, 1)">true</span><span style="color: rgba(0, 0, 0, 1)">;
+    } </span><span style="color: rgba(0, 0, 255, 1)">catch</span><span style="color: rgba(0, 0, 0, 1)"> (SQLException sqle) {
+      beeLine.getDatabaseConnections().remove();
+      </span><span style="color: rgba(0, 0, 255, 1)">return</span><span style="color: rgba(0, 0, 0, 1)"> beeLine.error(sqle);
+    } </span><span style="color: rgba(0, 0, 255, 1)">catch</span><span style="color: rgba(0, 0, 0, 1)"> (IOException ioe) {
+      </span><span style="color: rgba(0, 0, 255, 1)">return</span><span style="color: rgba(0, 0, 0, 1)"> beeLine.error(ioe);
+    }
+  }</span></pre>
+</div>
+<p>Pay attention to the assignment process of the props field</p>
+<p> </p>
+<p>org.apache.hive.beeline.DatabaseConnection</p>
+<div class="cnblogs_code">
+<pre>  <span style="color: rgba(0, 0, 255, 1)">public</span><span style="color: rgba(0, 0, 0, 1)"> DatabaseConnection(BeeLine beeLine, String driver, String url,
+       Properties info) </span><span style="color: rgba(0, 0, 255, 1)">throws</span><span style="color: rgba(0, 0, 0, 1)"> SQLException {
+    </span><span style="color: rgba(0, 0, 255, 1)">this</span>.beeLine =<span style="color: rgba(0, 0, 0, 1)"> beeLine;
+    </span><span style="color: rgba(0, 0, 255, 1)">this</span>.driver =<span style="color: rgba(0, 0, 0, 1)"> driver;
+    </span><span style="color: rgba(0, 0, 255, 1)">this</span>.url =<span style="color: rgba(0, 0, 0, 1)"> url;
+    </span><span style="color: rgba(0, 0, 255, 1)">this</span>.info =<span style="color: rgba(0, 0, 0, 1)"> info;
+  }
+
+  </span><span style="color: rgba(0, 0, 255, 1)">boolean</span> connect() <span style="color: rgba(0, 0, 255, 1)">throws</span><span style="color: rgba(0, 0, 0, 1)"> SQLException {
+...
+    Map</span>&lt;String, String&gt; hiveVars =<span style="color: rgba(0, 0, 0, 1)"> beeLine.getOpts().getHiveVariables();
+    </span><span style="color: rgba(0, 0, 255, 1)">if</span> (hiveVars != <span style="color: rgba(0, 0, 255, 1)">null</span><span style="color: rgba(0, 0, 0, 1)">){
+      </span><span style="color: rgba(0, 0, 255, 1)">for</span> (Map.Entry&lt;String, String&gt;<span style="color: rgba(0, 0, 0, 1)"> var : hiveVars.entrySet()) {
+        info.put(HIVE_VAR_PREFIX </span>+<span style="color: rgba(0, 0, 0, 1)"> var.getKey(), var.getValue());
+      }
+    }
+
+    Map</span>&lt;String, String&gt; hiveConfVars =<span style="color: rgba(0, 0, 0, 1)"> beeLine.getOpts().getHiveConfVariables();
+    </span><span style="color: rgba(0, 0, 255, 1)">if</span> (hiveConfVars != <span style="color: rgba(0, 0, 255, 1)">null</span><span style="color: rgba(0, 0, 0, 1)">){
+      </span><span style="color: rgba(0, 0, 255, 1)">for</span> (Map.Entry&lt;String, String&gt;<span style="color: rgba(0, 0, 0, 1)"> var : hiveConfVars.entrySet()) {
+        info.put(HIVE_CONF_PREFIX </span>+<span style="color: rgba(0, 0, 0, 1)"> var.getKey(), var.getValue());
+      }
+    }
+
+    </span><span style="color: rgba(0, 0, 255, 1)">if</span><span style="color: rgba(0, 0, 0, 1)"> (isDriverRegistered) {
+      </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> if the driver registered in the driver manager, get the connection via the driver manager</span>
+<span style="color: rgba(0, 0, 0, 1)">      setConnection(DriverManager.getConnection(getUrl(), info));
+    } </span><span style="color: rgba(0, 0, 255, 1)">else</span> {</pre>
+</div>
+<p>The props in Commands are assigned to the info of DatabaseConnection</p>
+<p> </p>
+<p>java.sql.DriverManager</p>
+<div class="cnblogs_code">
+<pre>    <span style="color: rgba(0, 0, 255, 1)">public</span> <span style="color: rgba(0, 0, 255, 1)">static</span><span style="color: rgba(0, 0, 0, 1)"> Connection getConnection(String url,
+        java.util.Properties info) </span><span style="color: rgba(0, 0, 255, 1)">throws</span><span style="color: rgba(0, 0, 0, 1)"> SQLException {
+
+        </span><span style="color: rgba(0, 0, 255, 1)">return</span><span style="color: rgba(0, 0, 0, 1)"> (getConnection(url, info, Reflection.getCallerClass()));
+    }
+
+    </span><span style="color: rgba(0, 0, 255, 1)">private</span> <span style="color: rgba(0, 0, 255, 1)">static</span><span style="color: rgba(0, 0, 0, 1)"> Connection getConnection(
+        String url, java.util.Properties info, Class</span>&lt;?&gt; caller) <span style="color: rgba(0, 0, 255, 1)">throws</span><span style="color: rgba(0, 0, 0, 1)"> SQLException {
+...
+                    Connection con </span>= aDriver.driver.connect(url, info);</pre>
+</div>
+<p>The info of DatabaseConnection is passed to DriverManager and then to Driver. See the specific PrestoDriver below.</p>
+<p> </p>
+<p>com.facebook.presto.jdbc.PrestoDriver</p>
+<div class="cnblogs_code">
+<pre>    <span style="color: rgba(0, 0, 255, 1)">public</span><span style="color: rgba(0, 0, 0, 1)"> Connection connect(String url, Properties info)
+            </span><span style="color: rgba(0, 0, 255, 1)">throws</span><span style="color: rgba(0, 0, 0, 1)"> SQLException
+    {
+        </span><span style="color: rgba(0, 0, 255, 1)">if</span> (!<span style="color: rgba(0, 0, 0, 1)">acceptsURL(url)) {
+            </span><span style="color: rgba(0, 0, 255, 1)">return</span> <span style="color: rgba(0, 0, 255, 1)">null</span><span style="color: rgba(0, 0, 0, 1)">;
+        }
+
+        PrestoDriverUri uri </span>= <span style="color: rgba(0, 0, 255, 1)">new</span><span style="color: rgba(0, 0, 0, 1)"> PrestoDriverUri(url, info);
+
+        OkHttpClient.Builder builder </span>=<span style="color: rgba(0, 0, 0, 1)"> httpClient.newBuilder();
+        uri.setupClient(builder);
+        QueryExecutor executor </span>= <span style="color: rgba(0, 0, 255, 1)">new</span><span style="color: rgba(0, 0, 0, 1)"> QueryExecutor(builder.build());
+
+        </span><span style="color: rgba(0, 0, 255, 1)">return</span> <span style="color: rgba(0, 0, 255, 1)">new</span><span style="color: rgba(0, 0, 0, 1)"> PrestoConnection(uri, executor);
+    }</span></pre>
+</div>
+<p>info is passed to PrestoDriverUri for initialization</p>
+<p> </p>
+<p>com.facebook.presto.jdbc.PrestoDriverUri</p>
+<div class="cnblogs_code">
+<pre>    <span style="color: rgba(0, 0, 255, 1)">public</span><span style="color: rgba(0, 0, 0, 1)"> PrestoDriverUri(String url, Properties driverProperties)
+            </span><span style="color: rgba(0, 0, 255, 1)">throws</span><span style="color: rgba(0, 0, 0, 1)"> SQLException
+    {
+        </span><span style="color: rgba(0, 0, 255, 1)">this</span><span style="color: rgba(0, 0, 0, 1)">(parseDriverUrl(url), driverProperties);
+    }
+
+    </span><span style="color: rgba(0, 0, 255, 1)">private</span><span style="color: rgba(0, 0, 0, 1)"> PrestoDriverUri(URI uri, Properties driverProperties)
+            </span><span style="color: rgba(0, 0, 255, 1)">throws</span><span style="color: rgba(0, 0, 0, 1)"> SQLException
+    {
+        </span><span style="color: rgba(0, 0, 255, 1)">this</span>.uri = requireNonNull(uri, "uri is null"<span style="color: rgba(0, 0, 0, 1)">);
+        address </span>=<span style="color: rgba(0, 0, 0, 1)"> HostAndPort.fromParts(uri.getHost(), uri.getPort());
+        properties </span>=<span style="color: rgba(0, 0, 0, 1)"> mergeConnectionProperties(uri, driverProperties);
+
+        validateConnectionProperties(properties);
+
+        </span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)"> enable SSL by default for standard port</span>
+        useSecureConnection = SSL.getValue(properties).orElse(uri.getPort() == 443<span style="color: rgba(0, 0, 0, 1)">);
+
+        initCatalogAndSchema();
+    }
+
+    </span><span style="color: rgba(0, 0, 255, 1)">private</span> <span style="color: rgba(0, 0, 255, 1)">static</span> <span style="color: rgba(0, 0, 255, 1)">void</span><span style="color: rgba(0, 0, 0, 1)"> validateConnectionProperties(Properties connectionProperties)
+            </span><span style="color: rgba(0, 0, 255, 1)">throws</span><span style="color: rgba(0, 0, 0, 1)"> SQLException
+    {
+        </span><span style="color: rgba(0, 0, 255, 1)">for</span><span style="color: rgba(0, 0, 0, 1)"> (String propertyName : connectionProperties.stringPropertyNames()) {
+            </span><span style="color: rgba(0, 0, 255, 1)">if</span> (ConnectionProperties.forKey(propertyName) == <span style="color: rgba(0, 0, 255, 1)">null</span><span style="color: rgba(0, 0, 0, 1)">) {
+                </span><span style="color: rgba(0, 0, 255, 1)">throw</span> <span style="color: rgba(0, 0, 255, 1)">new</span> SQLException(format("Unrecognized connection property '%s'"<span style="color: rgba(0, 0, 0, 1)">, propertyName));
+            }
+        }
+
+        </span><span style="color: rgba(0, 0, 255, 1)">for</span> (ConnectionProperty&lt;?&gt;<span style="color: rgba(0, 0, 0, 1)"> property : ConnectionProperties.allProperties()) {
+            property.validate(connectionProperties);
+        }
+    }</span></pre>
+</div>
+<p>So the error "Unrecognized connection property 'url'" means ConnectionProperties.forKey("url") == null</p>
+<p>com.facebook.presto.jdbc.ConnectionProperties</p>
+<p>There is indeed no url in ConnectionProperties, so Presto is not compatible with Hive's beeline;</p>
+<p>Try to modify PrestoDriverUri.Java and remove the verification:</p>
+<p> </p>
+<p>com.facebook.presto.jdbc.PrestoDriverUri</p>
+<div class="cnblogs_code">
+<pre>    <span style="color: rgba(0, 0, 255, 1)">private</span> <span style="color: rgba(0, 0, 255, 1)">static</span> <span style="color: rgba(0, 0, 255, 1)">void</span><span style="color: rgba(0, 0, 0, 1)"> validateConnectionProperties(Properties connectionProperties)
+            </span><span style="color: rgba(0, 0, 255, 1)">throws</span><span style="color: rgba(0, 0, 0, 1)"> SQLException
+    {
+</span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)">        for (String propertyName : connectionProperties.stringPropertyNames()) {
+</span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)">            if (ConnectionProperties.forKey(propertyName) == null) {
+</span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)">                throw new SQLException(format("Unrecognized connection property '%s'", propertyName));
+</span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)">            }
+</span><span style="color: rgba(0, 128, 0, 1)">//</span><span style="color: rgba(0, 128, 0, 1)">        }</span>
+ 
+        <span style="color: rgba(0, 0, 255, 1)">for</span> (ConnectionProperty&lt;?&gt;<span style="color: rgba(0, 0, 0, 1)"> property : ConnectionProperties.allProperties()) {
+            property.validate(connectionProperties);
+        }
+    }</span></pre>
+</div>
+<p>Comment out the above lines</p>
+<p> </p>
+<p>To simply modify the class in the jar package, refer to:<a href="https://www.cnblogs.com/barneywill/p/10552322.html" target="_blank">https://www.cnblogs.com/barneywill/p/10552322.html</a></p>
+<p> </p>
+<p>When compiling, I found that I kept getting errors.</p>
+<div class="cnblogs_code">
+<pre>presto-jdbc/com/facebook/presto/jdbc/PrestoDriverUri.java:145: error: method setupSocksProxy <span style="color: rgba(0, 0, 255, 1)">in</span><span style="color: rgba(0, 0, 0, 1)"> class OkHttpUtil cannot be applied to given types;
+            setupSocksProxy(builder, SOCKS_PROXY.getValue(properties));
+            ^
+  required: Builder,Optional&lt;com.google.common.net.HostAndPort</span>&gt;<span style="color: rgba(0, 0, 0, 1)">
+  found: Builder,Optional&lt;com.facebook.presto.jdbc.internal.guava.net.HostAndPort</span>&gt;<span style="color: rgba(0, 0, 0, 1)">
+  reason: argument mismatch; Optional&lt;com.facebook.presto.jdbc.internal.guava.net.HostAndPort</span>&gt; cannot be converted to Optional&lt;com.google.common.net.HostAndPort&gt;<span style="color: rgba(0, 0, 0, 1)">
+presto</span>-jdbc/com/facebook/presto/jdbc/PrestoDriverUri.java:146: error: method setupHttpProxy <span style="color: rgba(0, 0, 255, 1)">in</span><span style="color: rgba(0, 0, 0, 1)"> class OkHttpUtil cannot be applied to given types;
+            setupHttpProxy(builder, HTTP_PROXY.getValue(properties));
+            ^
+  required: Builder,Optional&lt;com.google.common.net.HostAndPort</span>&gt;<span style="color: rgba(0, 0, 0, 1)">
+  found: Builder,Optional&lt;com.facebook.presto.jdbc.internal.guava.net.HostAndPort</span>&gt;<span style="color: rgba(0, 0, 0, 1)">
+  reason: argument mismatch; Optional&lt;com.facebook.presto.jdbc.internal.guava.net.HostAndPort</span>&gt; cannot be converted to Optional&lt;com.google.common.net.HostAndPort&gt;
+2 errors</pre>
+</div>
+<p>Then I discovered that relocation was set when Presto-JDBC was packaged, and some packages were shaded and packaged. For details, see:</p>
+<p>https://github.com/prestodb/presto/blob/master/presto-jdbc/pom.xml</p>
+<div class="cnblogs_code">
+<pre>    <span style="color: rgba(0, 0, 255, 1)">&lt;</span><span style="color: rgba(128, 0, 0, 1)">properties</span><span style="color: rgba(0, 0, 255, 1)">&gt;</span>
+        <span style="color: rgba(0, 0, 255, 1)">&lt;</span><span style="color: rgba(128, 0, 0, 1)">air.main.basedir</span><span style="color: rgba(0, 0, 255, 1)">&gt;</span>${project.parent.basedir}<span style="color: rgba(0, 0, 255, 1)">&lt;/</span><span style="color: rgba(128, 0, 0, 1)">air.main.basedir</span><span style="color: rgba(0, 0, 255, 1)">&gt;</span>
+        <span style="color: rgba(0, 0, 255, 1)">&lt;</span><span style="color: rgba(128, 0, 0, 1)">shadeBase</span><span style="color: rgba(0, 0, 255, 1)">&gt;</span>com.facebook.presto.jdbc.internal<span style="color: rgba(0, 0, 255, 1)">&lt;/</span><span style="color: rgba(128, 0, 0, 1)">shadeBase</span><span style="color: rgba(0, 0, 255, 1)">&gt;</span>
+    <span style="color: rgba(0, 0, 255, 1)">&lt;/</span><span style="color: rgba(128, 0, 0, 1)">properties</span><span style="color: rgba(0, 0, 255, 1)">&gt;</span><span style="color: rgba(0, 0, 0, 1)">
+...
+            </span><span style="color: rgba(0, 0, 255, 1)">&lt;</span><span style="color: rgba(128, 0, 0, 1)">plugin</span><span style="color: rgba(0, 0, 255, 1)">&gt;</span>
+                <span style="color: rgba(0, 0, 255, 1)">&lt;</span><span style="color: rgba(128, 0, 0, 1)">groupId</span><span style="color: rgba(0, 0, 255, 1)">&gt;</span>org.apache.maven.plugins<span style="color: rgba(0, 0, 255, 1)">&lt;/</span><span style="color: rgba(128, 0, 0, 1)">groupId</span><span style="color: rgba(0, 0, 255, 1)">&gt;</span>
+                <span style="color: rgba(0, 0, 255, 1)">&lt;</span><span style="color: rgba(128, 0, 0, 1)">artifactId</span><span style="color: rgba(0, 0, 255, 1)">&gt;</span>maven-shade-plugin<span style="color: rgba(0, 0, 255, 1)">&lt;/</span><span style="color: rgba(128, 0, 0, 1)">artifactId</span><span style="color: rgba(0, 0, 255, 1)">&gt;</span>
+                <span style="color: rgba(0, 0, 255, 1)">&lt;</span><span style="color: rgba(128, 0, 0, 1)">executions</span><span style="color: rgba(0, 0, 255, 1)">&gt;</span>
+                    <span style="color: rgba(0, 0, 255, 1)">&lt;</span><span style="color: rgba(128, 0, 0, 1)">execution</span><span style="color: rgba(0, 0, 255, 1)">&gt;</span>
+                        <span style="color: rgba(0, 0, 255, 1)">&lt;</span><span style="color: rgba(128, 0, 0, 1)">phase</span><span style="color: rgba(0, 0, 255, 1)">&gt;</span>package<span style="color: rgba(0, 0, 255, 1)">&lt;/</span><span style="color: rgba(128, 0, 0, 1)">phase</span><span style="color: rgba(0, 0, 255, 1)">&gt;</span>
+                        <span style="color: rgba(0, 0, 255, 1)">&lt;</span><span style="color: rgba(128, 0, 0, 1)">goals</span><span style="color: rgba(0, 0, 255, 1)">&gt;</span>
+                            <span style="color: rgba(0, 0, 255, 1)">&lt;</span><span style="color: rgba(128, 0, 0, 1)">goal</span><span style="color: rgba(0, 0, 255, 1)">&gt;</span>shade<span style="color: rgba(0, 0, 255, 1)">&lt;/</span><span style="color: rgba(128, 0, 0, 1)">goal</span><span style="color: rgba(0, 0, 255, 1)">&gt;</span>
+                        <span style="color: rgba(0, 0, 255, 1)">&lt;/</span><span style="color: rgba(128, 0, 0, 1)">goals</span><span style="color: rgba(0, 0, 255, 1)">&gt;</span>
+                        <span style="color: rgba(0, 0, 255, 1)">&lt;</span><span style="color: rgba(128, 0, 0, 1)">configuration</span><span style="color: rgba(0, 0, 255, 1)">&gt;</span>
+                            <span style="color: rgba(0, 0, 255, 1)">&lt;</span><span style="color: rgba(128, 0, 0, 1)">createSourcesJar</span><span style="color: rgba(0, 0, 255, 1)">&gt;</span>true<span style="color: rgba(0, 0, 255, 1)">&lt;/</span><span style="color: rgba(128, 0, 0, 1)">createSourcesJar</span><span style="color: rgba(0, 0, 255, 1)">&gt;</span>
+                            <span style="color: rgba(0, 0, 255, 1)">&lt;</span><span style="color: rgba(128, 0, 0, 1)">shadeSourcesContent</span><span style="color: rgba(0, 0, 255, 1)">&gt;</span>true<span style="color: rgba(0, 0, 255, 1)">&lt;/</span><span style="color: rgba(128, 0, 0, 1)">shadeSourcesContent</span><span style="color: rgba(0, 0, 255, 1)">&gt;</span>
+                            <span style="color: rgba(0, 0, 255, 1)">&lt;</span><span style="color: rgba(128, 0, 0, 1)">dependencyReducedPomLocation</span><span style="color: rgba(0, 0, 255, 1)">&gt;</span>${project.build.directory}/pom.xml<span style="color: rgba(0, 0, 255, 1)">&lt;/</span><span style="color: rgba(128, 0, 0, 1)">dependencyReducedPomLocation</span><span style="color: rgba(0, 0, 255, 1)">&gt;</span>
+                            <span style="color: rgba(0, 0, 255, 1)">&lt;</span><span style="color: rgba(128, 0, 0, 1)">relocations</span><span style="color: rgba(0, 0, 255, 1)">&gt;</span>
+                                <span style="color: rgba(0, 0, 255, 1)">&lt;</span><span style="color: rgba(128, 0, 0, 1)">relocation</span><span style="color: rgba(0, 0, 255, 1)">&gt;</span>
+                                    <span style="color: rgba(0, 0, 255, 1)">&lt;</span><span style="color: rgba(128, 0, 0, 1)">pattern</span><span style="color: rgba(0, 0, 255, 1)">&gt;</span>com.facebook.presto.client<span style="color: rgba(0, 0, 255, 1)">&lt;/</span><span style="color: rgba(128, 0, 0, 1)">pattern</span><span style="color: rgba(0, 0, 255, 1)">&gt;</span>
+                                    <span style="color: rgba(0, 0, 255, 1)">&lt;</span><span style="color: rgba(128, 0, 0, 1)">shadedPattern</span><span style="color: rgba(0, 0, 255, 1)">&gt;</span>${shadeBase}.client<span style="color: rgba(0, 0, 255, 1)">&lt;/</span><span style="color: rgba(128, 0, 0, 1)">shadedPattern</span><span style="color: rgba(0, 0, 255, 1)">&gt;</span>
+                                <span style="color: rgba(0, 0, 255, 1)">&lt;/</span><span style="color: rgba(128, 0, 0, 1)">relocation</span><span style="color: rgba(0, 0, 255, 1)">&gt;</span>
+                                <span style="color: rgba(0, 0, 255, 1)">&lt;</span><span style="color: rgba(128, 0, 0, 1)">relocation</span><span style="color: rgba(0, 0, 255, 1)">&gt;</span>
+                                    <span style="color: rgba(0, 0, 255, 1)">&lt;</span><span style="color: rgba(128, 0, 0, 1)">pattern</span><span style="color: rgba(0, 0, 255, 1)">&gt;</span>com.facebook.presto.spi<span style="color: rgba(0, 0, 255, 1)">&lt;/</span><span style="color: rgba(128, 0, 0, 1)">pattern</span><span style="color: rgba(0, 0, 255, 1)">&gt;</span>
+                                    <span style="color: rgba(0, 0, 255, 1)">&lt;</span><span style="color: rgba(128, 0, 0, 1)">shadedPattern</span><span style="color: rgba(0, 0, 255, 1)">&gt;</span>${shadeBase}.spi<span style="color: rgba(0, 0, 255, 1)">&lt;/</span><span style="color: rgba(128, 0, 0, 1)">shadedPattern</span><span style="color: rgba(0, 0, 255, 1)">&gt;</span>
+                                <span style="color: rgba(0, 0, 255, 1)">&lt;/</span><span style="color: rgba(128, 0, 0, 1)">relocation</span><span style="color: rgba(0, 0, 255, 1)">&gt;</span>
+                                <span style="color: rgba(0, 0, 255, 1)">&lt;</span><span style="color: rgba(128, 0, 0, 1)">relocation</span><span style="color: rgba(0, 0, 255, 1)">&gt;</span>
+                                    <span style="color: rgba(0, 0, 255, 1)">&lt;</span><span style="color: rgba(128, 0, 0, 1)">pattern</span><span style="color: rgba(0, 0, 255, 1)">&gt;</span>com.fasterxml.jackson<span style="color: rgba(0, 0, 255, 1)">&lt;/</span><span style="color: rgba(128, 0, 0, 1)">pattern</span><span style="color: rgba(0, 0, 255, 1)">&gt;</span>
+                                    <span style="color: rgba(0, 0, 255, 1)">&lt;</span><span style="color: rgba(128, 0, 0, 1)">shadedPattern</span><span style="color: rgba(0, 0, 255, 1)">&gt;</span>${shadeBase}.jackson<span style="color: rgba(0, 0, 255, 1)">&lt;/</span><span style="color: rgba(128, 0, 0, 1)">shadedPattern</span><span style="color: rgba(0, 0, 255, 1)">&gt;</span>
+                                <span style="color: rgba(0, 0, 255, 1)">&lt;/</span><span style="color: rgba(128, 0, 0, 1)">relocation</span><span style="color: rgba(0, 0, 255, 1)">&gt;</span>
+                                <span style="color: rgba(0, 0, 255, 1)">&lt;</span><span style="color: rgba(128, 0, 0, 1)">relocation</span><span style="color: rgba(0, 0, 255, 1)">&gt;</span>
+                                    <span style="color: rgba(0, 0, 255, 1)">&lt;</span><span style="color: rgba(128, 0, 0, 1)">pattern</span><span style="color: rgba(0, 0, 255, 1)">&gt;</span>com.google.common<span style="color: rgba(0, 0, 255, 1)">&lt;/</span><span style="color: rgba(128, 0, 0, 1)">pattern</span><span style="color: rgba(0, 0, 255, 1)">&gt;</span>
+                                    <span style="color: rgba(0, 0, 255, 1)">&lt;</span><span style="color: rgba(128, 0, 0, 1)">shadedPattern</span><span style="color: rgba(0, 0, 255, 1)">&gt;</span>${shadeBase}.guava<span style="color: rgba(0, 0, 255, 1)">&lt;/</span><span style="color: rgba(128, 0, 0, 1)">shadedPattern</span><span style="color: rgba(0, 0, 255, 1)">&gt;</span>
+                                <span style="color: rgba(0, 0, 255, 1)">&lt;/</span><span style="color: rgba(128, 0, 0, 1)">relocation</span><span style="color: rgba(0, 0, 255, 1)">&gt;</span>
+                                <span style="color: rgba(0, 0, 255, 1)">&lt;</span><span style="color: rgba(128, 0, 0, 1)">relocation</span><span style="color: rgba(0, 0, 255, 1)">&gt;</span>
+                                    <span style="color: rgba(0, 0, 255, 1)">&lt;</span><span style="color: rgba(128, 0, 0, 1)">pattern</span><span style="color: rgba(0, 0, 255, 1)">&gt;</span>com.google.thirdparty<span style="color: rgba(0, 0, 255, 1)">&lt;/</span><span style="color: rgba(128, 0, 0, 1)">pattern</span><span style="color: rgba(0, 0, 255, 1)">&gt;</span>
+                                    <span style="color: rgba(0, 0, 255, 1)">&lt;</span><span style="color: rgba(128, 0, 0, 1)">shadedPattern</span><span style="color: rgba(0, 0, 255, 1)">&gt;</span>${shadeBase}.guava<span style="color: rgba(0, 0, 255, 1)">&lt;/</span><span style="color: rgba(128, 0, 0, 1)">shadedPattern</span><span style="color: rgba(0, 0, 255, 1)">&gt;</span>
+                                <span style="color: rgba(0, 0, 255, 1)">&lt;/</span><span style="color: rgba(128, 0, 0, 1)">relocation</span><span style="color: rgba(0, 0, 255, 1)">&gt;</span>
+                                <span style="color: rgba(0, 0, 255, 1)">&lt;</span><span style="color: rgba(128, 0, 0, 1)">relocation</span><span style="color: rgba(0, 0, 255, 1)">&gt;</span>
+                                    <span style="color: rgba(0, 0, 255, 1)">&lt;</span><span style="color: rgba(128, 0, 0, 1)">pattern</span><span style="color: rgba(0, 0, 255, 1)">&gt;</span>io.airlift<span style="color: rgba(0, 0, 255, 1)">&lt;/</span><span style="color: rgba(128, 0, 0, 1)">pattern</span><span style="color: rgba(0, 0, 255, 1)">&gt;</span>
+                                    <span style="color: rgba(0, 0, 255, 1)">&lt;</span><span style="color: rgba(128, 0, 0, 1)">shadedPattern</span><span style="color: rgba(0, 0, 255, 1)">&gt;</span>${shadeBase}.airlift<span style="color: rgba(0, 0, 255, 1)">&lt;/</span><span style="color: rgba(128, 0, 0, 1)">shadedPattern</span><span style="color: rgba(0, 0, 255, 1)">&gt;</span>
+                                <span style="color: rgba(0, 0, 255, 1)">&lt;/</span><span style="color: rgba(128, 0, 0, 1)">relocation</span><span style="color: rgba(0, 0, 255, 1)">&gt;</span>
+                                <span style="color: rgba(0, 0, 255, 1)">&lt;</span><span style="color: rgba(128, 0, 0, 1)">relocation</span><span style="color: rgba(0, 0, 255, 1)">&gt;</span>
+                                    <span style="color: rgba(0, 0, 255, 1)">&lt;</span><span style="color: rgba(128, 0, 0, 1)">pattern</span><span style="color: rgba(0, 0, 255, 1)">&gt;</span>javax.annotation<span style="color: rgba(0, 0, 255, 1)">&lt;/</span><span style="color: rgba(128, 0, 0, 1)">pattern</span><span style="color: rgba(0, 0, 255, 1)">&gt;</span>
+                                    <span style="color: rgba(0, 0, 255, 1)">&lt;</span><span style="color: rgba(128, 0, 0, 1)">shadedPattern</span><span style="color: rgba(0, 0, 255, 1)">&gt;</span>${shadeBase}.javax.annotation<span style="color: rgba(0, 0, 255, 1)">&lt;/</span><span style="color: rgba(128, 0, 0, 1)">shadedPattern</span><span style="color: rgba(0, 0, 255, 1)">&gt;</span>
+                                <span style="color: rgba(0, 0, 255, 1)">&lt;/</span><span style="color: rgba(128, 0, 0, 1)">relocation</span><span style="color: rgba(0, 0, 255, 1)">&gt;</span>
+                                <span style="color: rgba(0, 0, 255, 1)">&lt;</span><span style="color: rgba(128, 0, 0, 1)">relocation</span><span style="color: rgba(0, 0, 255, 1)">&gt;</span>
+                                    <span style="color: rgba(0, 0, 255, 1)">&lt;</span><span style="color: rgba(128, 0, 0, 1)">pattern</span><span style="color: rgba(0, 0, 255, 1)">&gt;</span>javax.inject<span style="color: rgba(0, 0, 255, 1)">&lt;/</span><span style="color: rgba(128, 0, 0, 1)">pattern</span><span style="color: rgba(0, 0, 255, 1)">&gt;</span>
+                                    <span style="color: rgba(0, 0, 255, 1)">&lt;</span><span style="color: rgba(128, 0, 0, 1)">shadedPattern</span><span style="color: rgba(0, 0, 255, 1)">&gt;</span>${shadeBase}.inject<span style="color: rgba(0, 0, 255, 1)">&lt;/</span><span style="color: rgba(128, 0, 0, 1)">shadedPattern</span><span style="color: rgba(0, 0, 255, 1)">&gt;</span>
+                                <span style="color: rgba(0, 0, 255, 1)">&lt;/</span><span style="color: rgba(128, 0, 0, 1)">relocation</span><span style="color: rgba(0, 0, 255, 1)">&gt;</span>
+                                <span style="color: rgba(0, 0, 255, 1)">&lt;</span><span style="color: rgba(128, 0, 0, 1)">relocation</span><span style="color: rgba(0, 0, 255, 1)">&gt;</span>
+                                    <span style="color: rgba(0, 0, 255, 1)">&lt;</span><span style="color: rgba(128, 0, 0, 1)">pattern</span><span style="color: rgba(0, 0, 255, 1)">&gt;</span>org.openjdk.jol<span style="color: rgba(0, 0, 255, 1)">&lt;/</span><span style="color: rgba(128, 0, 0, 1)">pattern</span><span style="color: rgba(0, 0, 255, 1)">&gt;</span>
+                                    <span style="color: rgba(0, 0, 255, 1)">&lt;</span><span style="color: rgba(128, 0, 0, 1)">shadedPattern</span><span style="color: rgba(0, 0, 255, 1)">&gt;</span>${shadeBase}.jol<span style="color: rgba(0, 0, 255, 1)">&lt;/</span><span style="color: rgba(128, 0, 0, 1)">shadedPattern</span><span style="color: rgba(0, 0, 255, 1)">&gt;</span>
+                                <span style="color: rgba(0, 0, 255, 1)">&lt;/</span><span style="color: rgba(128, 0, 0, 1)">relocation</span><span style="color: rgba(0, 0, 255, 1)">&gt;</span>
+                                <span style="color: rgba(0, 0, 255, 1)">&lt;</span><span style="color: rgba(128, 0, 0, 1)">relocation</span><span style="color: rgba(0, 0, 255, 1)">&gt;</span>
+                                    <span style="color: rgba(0, 0, 255, 1)">&lt;</span><span style="color: rgba(128, 0, 0, 1)">pattern</span><span style="color: rgba(0, 0, 255, 1)">&gt;</span>org.joda.time<span style="color: rgba(0, 0, 255, 1)">&lt;/</span><span style="color: rgba(128, 0, 0, 1)">pattern</span><span style="color: rgba(0, 0, 255, 1)">&gt;</span>
+                                    <span style="color: rgba(0, 0, 255, 1)">&lt;</span><span style="color: rgba(128, 0, 0, 1)">shadedPattern</span><span style="color: rgba(0, 0, 255, 1)">&gt;</span>${shadeBase}.joda.time<span style="color: rgba(0, 0, 255, 1)">&lt;/</span><span style="color: rgba(128, 0, 0, 1)">shadedPattern</span><span style="color: rgba(0, 0, 255, 1)">&gt;</span>
+                                <span style="color: rgba(0, 0, 255, 1)">&lt;/</span><span style="color: rgba(128, 0, 0, 1)">relocation</span><span style="color: rgba(0, 0, 255, 1)">&gt;</span>
+                                <span style="color: rgba(0, 0, 255, 1)">&lt;</span><span style="color: rgba(128, 0, 0, 1)">relocation</span><span style="color: rgba(0, 0, 255, 1)">&gt;</span>
+                                    <span style="color: rgba(0, 0, 255, 1)">&lt;</span><span style="color: rgba(128, 0, 0, 1)">pattern</span><span style="color: rgba(0, 0, 255, 1)">&gt;</span>okhttp3<span style="color: rgba(0, 0, 255, 1)">&lt;/</span><span style="color: rgba(128, 0, 0, 1)">pattern</span><span style="color: rgba(0, 0, 255, 1)">&gt;</span>
+                                    <span style="color: rgba(0, 0, 255, 1)">&lt;</span><span style="color: rgba(128, 0, 0, 1)">shadedPattern</span><span style="color: rgba(0, 0, 255, 1)">&gt;</span>${shadeBase}.okhttp3<span style="color: rgba(0, 0, 255, 1)">&lt;/</span><span style="color: rgba(128, 0, 0, 1)">shadedPattern</span><span style="color: rgba(0, 0, 255, 1)">&gt;</span>
+                                <span style="color: rgba(0, 0, 255, 1)">&lt;/</span><span style="color: rgba(128, 0, 0, 1)">relocation</span><span style="color: rgba(0, 0, 255, 1)">&gt;</span>
+                                <span style="color: rgba(0, 0, 255, 1)">&lt;</span><span style="color: rgba(128, 0, 0, 1)">relocation</span><span style="color: rgba(0, 0, 255, 1)">&gt;</span>
+                                    <span style="color: rgba(0, 0, 255, 1)">&lt;</span><span style="color: rgba(128, 0, 0, 1)">pattern</span><span style="color: rgba(0, 0, 255, 1)">&gt;</span>okio<span style="color: rgba(0, 0, 255, 1)">&lt;/</span><span style="color: rgba(128, 0, 0, 1)">pattern</span><span style="color: rgba(0, 0, 255, 1)">&gt;</span>
+                                    <span style="color: rgba(0, 0, 255, 1)">&lt;</span><span style="color: rgba(128, 0, 0, 1)">shadedPattern</span><span style="color: rgba(0, 0, 255, 1)">&gt;</span>${shadeBase}.okio<span style="color: rgba(0, 0, 255, 1)">&lt;/</span><span style="color: rgba(128, 0, 0, 1)">shadedPattern</span><span style="color: rgba(0, 0, 255, 1)">&gt;</span>
+                                <span style="color: rgba(0, 0, 255, 1)">&lt;/</span><span style="color: rgba(128, 0, 0, 1)">relocation</span><span style="color: rgba(0, 0, 255, 1)">&gt;</span>
+                            <span style="color: rgba(0, 0, 255, 1)">&lt;/</span><span style="color: rgba(128, 0, 0, 1)">relocations</span><span style="color: rgba(0, 0, 255, 1)">&gt;</span></pre>
+</div>
+<p>So you need to manually adjust the package in the source code</p>
+<blockquote>
+<p>okhttp3 - &gt; com.facebook.presto.jdbc.internal.okhttp3<br/>com.google.common - &gt; com.facebook.presto.jdbc.internal.guava<br/>com.facebook.presto.client - &gt; com.facebook.presto.jdbc.internal.client</p>
+</blockquote>
+<p>Source code address:</p>
+<p>https://github.com/prestodb/presto/blob/master/presto-jdbc/src/main/java/com/facebook/presto/jdbc/PrestoDriverUri.java</p>
+<p>Then compile again and it will be ok. Compile command:</p>
+<div class="cnblogs_code">
+<pre><span style="color: rgba(0, 128, 0, 1)">#</span><span style="color: rgba(0, 128, 0, 1)"> javac - cp presto-jdbc-0.215.jar - d presto-jdbc presto-jdbc/com/facebook/presto/jdbc/PrestoDriverUri.java</span></pre>
+</div>
+<p>Then repackage it and use beeline to connect again and it will be ok.</p>
+<p> </p>
+</div>
+</div>
+<!-- Post Footer -->
+<div class="post-footer">
+<div class="post-navigation">
+<a class="nav-button" href="../blog.html">← Back to Home</a>
+<a class="nav-button" href="0168.html">Next Post →</a>
+</div>
+</div>
+</article>
+</div>
+</body>
+</html>

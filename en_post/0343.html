@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>View Hive complete execution of SQL on YARN</title>
+<link href="../css/style3.css" rel="stylesheet"/>
+</head>
+<body>
+<div class="container">
+<!-- Header Navigation -->
+<div class="header">
+<h1><a href="../blog.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+</div>
+<!-- Post Container -->
+<article class="post">
+<!-- Post Header -->
+<div class="post-header">
+<h1>View Hive complete execution of SQL on YARN</h1>
+<div class="post-meta">
+<div class="post-meta-item">
+<span class="meta-icon">📅</span>
+<span>December 07, 2018</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">📖</span>
+<span>1 min read</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">👁️</span>
+<span>6271 views</span>
+</div>
+</div>
+</div>
+<!-- Post Content -->
+<div class="post-content">
+<div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<p>The task name submitted to YARN when Hive executes SQL has been processed. Usually only the first paragraph and the last few characters of SQL can be displayed, which will cause some problems:</p>
+<p>1) Several similar SQLs were submitted at similar times, and they are indistinguishable from each other;</p>
+<p>2) There is a problem with a task. I want to see what the specific execution of this task is? Whose task is it?</p>
+<p>You can view it through the following methods:</p>
+<p>1) If the task is running, enter YARN's ApplicationMaster page, enter job, click configuration, and enter "Hive.query.string" in the filter box in the upper right corner, as shown in the figure:</p>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201812/1509647-20181207163927480-1119372179.png"/></p>
+<p>2) If the task has ended, enter the history server, and the page will be similar to the above;</p>
+<p> </p>
+</div>
+</div>
+<!-- Post Footer -->
+<div class="post-footer">
+<div class="post-navigation">
+<a class="nav-button" href="../blog.html">← Back to Home</a>
+<a class="nav-button" href="0344.html">Next Post →</a>
+</div>
+</div>
+</article>
+</div>
+</body>
+</html>

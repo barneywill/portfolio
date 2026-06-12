@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Failed to perform recovery: Incompatible agent info detected</title>
+<link href="../css/style3.css" rel="stylesheet"/>
+</head>
+<body>
+<div class="container">
+<!-- Header Navigation -->
+<div class="header">
+<h1><a href="../blog.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+</div>
+<!-- Post Container -->
+<article class="post">
+<!-- Post Header -->
+<div class="post-header">
+<h1>Failed to perform recovery: Incompatible agent info detected</h1>
+<div class="post-meta">
+<div class="post-meta-item">
+<span class="meta-icon">📅</span>
+<span>February 15, 2019</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">📖</span>
+<span>1 min read</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">👁️</span>
+<span>867 views</span>
+</div>
+</div>
+</div>
+<!-- Post Content -->
+<div class="post-content">
+<div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<p>The mesos agent failed to start and the error was reported as follows:</p>
+<blockquote>
+<p>Feb 15 22:03:18 server1.bj mesos-slave[1190]: E0215 22:03:18.622994 1192 slave.cpp:7311] EXIT with status 1: Failed to perform recovery: Incompatible agent info detected.<br/>...<br/>Feb 15 22:03:18 server1.bj mesos-slave[1190]: ------------------------------------------------------------<br/>Feb 15 22:03:18 server1.bj mesos-slave[1190]: Old agent info:<br/>Feb 15 22:03:18 server1.bj mesos-slave[1190]: hostname: "server1"<br/>...<br/>Feb 15 22:03:18 server1.bj mesos-slave[1190]: ------------------------------------------------------------<br/>Feb 15 22:03:18 server1.bj mesos-slave[1190]: New agent info:<br/>Feb 15 22:03:18 server1.bj mesos-slave[1190]: hostname: "server1.bj"</p>
+</blockquote>
+<p>Through the log, I found that the hostname has changed, which is caused by modifying the hosts file.</p>
+<blockquote>
+<p># cat /etc/hosts<br/>192.168.0.1 server1 server1.bj<br/>-&gt;<br/>192.168.0.1 server1.bj server1</p>
+</blockquote>
+<p>The solution is also suggested</p>
+<blockquote>
+<p>Feb 15 22:03:18 server1.bj mesos-slave[1190]: If recovery failed due to a change in configuration and you want to<br/>Feb 15 22:03:18 server1.bj mesos-slave[1190]: keep the current agent id, you might want to change the<br/>Feb 15 22:03:18 server1.bj mesos-slave[1190]: `--reconfiguration_policy` flag to a more permissive value.<br/>Feb 15 22:03:18 server1.bj mesos-slave[1190]: <br/>Feb 15 22:03:18 server1.bj mesos-slave[1190]: To restart this agent with a new agent id instead, do as follows:<br/>Feb 15 22:03:18 server1.bj mesos-slave[1190]: rm - f /var/lib/mesos/meta/slaves/latest<br/>Feb 15 22:03:18 server1.bj mesos-slave[1190]: This ensures that the agent does not recover old live executors.</p>
+</blockquote>
+<p>Mesos agent saves a slave.info, which contains hostname. If the hostname changes, that is, it is different from slave.info, an error will be reported.</p>
+<blockquote>
+<p># cat /var/lib/mesos/meta/slaves/latest/slave.info <br/>¥<br/>server1 <br/>cpus		 @2* <br/>mem		̀2* <br/>disk		 ~ﾲ* <br/>ports"<br/>                                                                                                                                                                                                                     ￪2)</p>
+</blockquote>
+<p>repair</p>
+<blockquote>
+<p># rm - f /var/lib/mesos/meta/slaves/latest<br/># service mesos-slave start</p>
+</blockquote>
+<p> </p>
+</div>
+</div>
+<!-- Post Footer -->
+<div class="post-footer">
+<div class="post-navigation">
+<a class="nav-button" href="../blog.html">← Back to Home</a>
+<a class="nav-button" href="0223.html">Next Post →</a>
+</div>
+</div>
+</article>
+</div>
+</body>
+</html>

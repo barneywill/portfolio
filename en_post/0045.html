@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>HBase HMaster Startup Error</title>
+<link href="../css/style3.css" rel="stylesheet"/>
+</head>
+<body>
+<div class="container">
+<!-- Header Navigation -->
+<div class="header">
+<h1><a href="../blog.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+</div>
+<!-- Post Container -->
+<article class="post">
+<!-- Post Header -->
+<div class="post-header">
+<h1>HBase HMaster Startup Error</h1>
+<div class="post-meta">
+<div class="post-meta-item">
+<span class="meta-icon">📅</span>
+<span>May 13, 2021</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">📖</span>
+<span>1 min read</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">👁️</span>
+<span>464 views</span>
+</div>
+</div>
+</div>
+<!-- Post Content -->
+<div class="post-content">
+<div class="blogpost-body cnblogs-markdown" id="cnblogs_post_body">
+<h2 id="section-0045-1">Phenomenon</h2>
+<p>HBase hmaster startup error</p>
+<blockquote>
+<p>master.HMaster: Failed to become active master java.lang.IllegalStateException: The procedure WAL relies on the ability to hsync for proper operation during component failures, but the underlying filesystem does not support doing so. Please check the config value of 'hbase.procedure.store.wal.use.hsync' to set the desired level of robustness and ensure the config value of 'hbase.wal.dir' points to a FileSystem mount that can provide it.</p>
+</blockquote>
+<h2 id="section-0045-2">environment</h2>
+<ul>
+<li>hbase1.6</li>
+<li>hadoop2.9</li>
+</ul>
+<h2 id="section-0045-3">Two methods:</h2>
+<h3 id="section-0045-4">1) Not recommended</h3>
+<pre><code>&lt;property&gt;
+  &lt;name&gt;hbase.unsafe.stream.capability.enforce&lt;/name&gt;
+  &lt;value&gt;false&lt;/value&gt;
+&lt;/property&gt;
+</code></pre>
+<h3 id="section-0045-5">2) Change hadoop dependencies</h3>
+<p>HBase is pre-compiled and the hadoop version that the compilation depends on is 2.8.5. The actual hadoop used is 2.9.2. Replace all $HBASE_HOME/lib/hadoop-*-2.8.5.jar with hadoop-*-2.9.2.jar. The required new version jar package is in this directory: $HADOOP_HOME/share/hadoop/</p>
+<p>After the operation, just restart HBase</p>
+<p>Reference:<a href="https://stackoverflow.com/questions/48709569/hbase-error-illegalstateexception-when-starting-master-hsync" rel="noopener nofollow" target="_blank">https://stackoverflow.com/questions/48709569/hbase-error-illegalstateexception-when-starting-master-hsync</a></p>
+</div>
+</div>
+<!-- Post Footer -->
+<div class="post-footer">
+<div class="post-navigation">
+<a class="nav-button" href="../blog.html">← Back to Home</a>
+<a class="nav-button" href="0046.html">Next Post →</a>
+</div>
+</div>
+</article>
+</div>
+</body>
+</html>

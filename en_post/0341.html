@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Submit Spark task error Caused by: Java.lang.ClassNotFoundException: org.I0Itec.zkclient.exception.ZkNoNodeException</title>
+<link href="../css/style3.css" rel="stylesheet"/>
+</head>
+<body>
+<div class="container">
+<!-- Header Navigation -->
+<div class="header">
+<h1><a href="../blog.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+</div>
+<!-- Post Container -->
+<article class="post">
+<!-- Post Header -->
+<div class="post-header">
+<h1>Submit Spark task error Caused by: Java.lang.ClassNotFoundException: org.I0Itec.zkclient.exception.ZkNoNodeException</h1>
+<div class="post-meta">
+<div class="post-meta-item">
+<span class="meta-icon">📅</span>
+<span>December 12, 2018</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">📖</span>
+<span>1 min read</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">👁️</span>
+<span>2905 views</span>
+</div>
+</div>
+</div>
+<!-- Post Content -->
+<div class="post-content">
+<div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<p>spark 2.1.1</p>
+<p> </p>
+<h1>1. Problem recurrence</h1>
+<blockquote>
+<p><strong>spark-submit --master local[*] --class app.package.AppClass --jars /jarpath/zkclient-0.3.jar --driver-memory 1g app.jar</strong></p>
+</blockquote>
+<p>Report an error</p>
+<blockquote>
+<p>Java HotSpot(TM) 64-Bit Server VM warning: Setting CompressedClassSpaceSize has no effect when compressed class pointers are not used<br/>Java HotSpot(TM) 64-Bit Server VM warning: Cannot open file /export/Logs/hadoop/g1gc.log due to No such file or directory</p>
+<p>18/09/14 16:24:38 336 WARN Utils66: Set SPARK_LOCAL_IP if you need to bind to another address<br/>Exception in thread "main" java.lang.NoClassDefFoundError: org/I0Itec/zkclient/exception/ZkNoNodeException<br/>at kafka.utils.ZKGroupDirs.consumerDir(ZkUtils.scala:727)<br/>at kafka.utils.ZKGroupDirs.consumerGroupDir(ZkUtils.scala:728)<br/>at kafka.utils.ZKGroupTopicDirs.consumerOffsetDir(ZkUtils.scala:733)<br/><strong>at app.package.AppClass.main(AppClass.scala)</strong><br/>at sun.reflect.NativeMethodAccessorImpl.invoke0(Native Method)<br/>at sun.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:62)<br/>at sun.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)<br/>at java.lang.reflect.Method.invoke(Method.java:497)<br/><strong>at org.apache.spark.deploy.SparkSubmit$.org$apache$spark$deploy$SparkSubmit$$runMain(SparkSubmit.scala:738)</strong><br/>at org.apache.spark.deploy.SparkSubmit$.doRunMain$1(SparkSubmit.scala:187)<br/>at org.apache.spark.deploy.SparkSubmit$.submit(SparkSubmit.scala:212)<br/>at org.apache.spark.deploy.SparkSubmit$.main(SparkSubmit.scala:126)<br/>at org.apache.spark.deploy.SparkSubmit.main(SparkSubmit.scala)<br/>Caused by: java.lang.ClassNotFoundException: org.I0Itec.zkclient.exception.ZkNoNodeException<br/><strong>at <a class="external-link" href="http://java.net/" rel="noopener nofollow">java.net</a>.URLClassLoader.findClass(URLClassLoader.java:381)</strong><br/>at java.lang.ClassLoader.loadClass(ClassLoader.java:424)<br/><strong>at sun.misc.Launcher$AppClassLoader.loadClass(Launcher.java:331)</strong><br/>at java.lang.ClassLoader.loadClass(ClassLoader.java:357)<br/>... 15 more</p>
+</blockquote>
+<p> </p>
+<h1>2. Problem analysis</h1>
+<p>ClassNotFoundException: <strong>org.I0Itec.zkclient.exception.ZkNoNodeException</strong></p>
+<p><strong>1 --jars --jars /jarpath/zkclient-0.3.jar</strong></p>
+<p>/jarpath/zkclient-0.3.jar is passed to the Spark application through the --jars parameter</p>
+<p><strong>Class 2 org.I0Itec.zkclient.exception.ZkNoNodeException does exist in /jarpath/zkclient-0.3.jar</strong></p>
+<blockquote>
+<p>javap - cp /jarpath/zkclient-0.3.jar org.I0Itec.zkclient.exception.ZkNoNodeException<br/>Compiled from "ZkNoNodeException.java"<br/>public class org.I0Itec.zkclient.exception.ZkNoNodeException extends org.I0Itec.zkclient.exception.ZkException {<br/>public org.I0Itec.zkclient.exception.ZkNoNodeException();<br/>public org.I0Itec.zkclient.exception.ZkNoNodeException(org.apache.zookeeper.KeeperException);<br/>public org.I0Itec.zkclient.exception.ZkNoNodeException(java.lang.String, org.apache.zookeeper.KeeperException);<br/>public org.I0Itec.zkclient.exception.ZkNoNodeException(java.lang.String);<br/>}</p>
+</blockquote>
+<p><strong>3 --verbose parameter output</strong></p>
+<blockquote>
+<p>Main class:<br/>app.pacakge.AppClass<br/>Arguments:</p>
+<p>System properties:<br/>spark.executor.logs.rolling.maxSize - &gt; 1073741824<br/>spark.driver.memory - &gt; 1g<br/>spark.driver.extraLibraryPath - &gt; /export/App/hadoop-2.6.1/lib/native<br/>spark.eventLog.enabled - &gt; true<br/>spark.eventLog.compress - &gt; true<br/>spark.executor.logs.rolling.time.interval - &gt; daily<br/>SPARK_SUBMIT - &gt; true<br/><a class="external-link" href="http://spark.app.name/" rel="noopener nofollow">spark.app.name</a> -&gt; app.pacakge.AppClass<br/>spark.driver.extraJavaOptions - &gt; - XX:+PrintGCDetails - XX:+UseG1GC - XX:G1HeapRegionSize=32M - XX:+UseGCOverheadLimit - XX:+ExplicitGCInvokesConcurrent - XX:+HeapDumpOnOutOfMemoryError - XX:-UseCompressedClassPointers - XX:CompressedClassSpaceSize=3G - XX:+PrintGCTimeStamps <a rel="nofollow">-Xloggc:/export/Logs/hadoop/g1gc.log</a><br/>spark.jars - &gt; <a class="external-link" href="http://file/home/hadoop/wangxin123/zhike-common-1.0.4-SNAPSHOT.jar,file:/home/hadoop/wangxin123/zkclient-0.3.jar,file:/home/hadoop/wangxin123/zhike.dataprocessing.all-1.0.jar" rel="noopener nofollow">file:/jarpath/zkclient-0.3.jar,file:/jarpath/app.jar</a><br/>spark.sql.adaptive.enabled - &gt; true<br/>spark.submit.deployMode - &gt; client<br/>spark.executor.logs.rolling.maxRetainedFiles - &gt; 10<br/>spark.executor.extraClassPath - &gt; /usr/lib/hadoop/lib/hadoop-lzo.<a class="external-link" href="http://jar/export/App/xdata-spark/extlib/*" rel="noopener nofollow">jar:/export/App/spark/extlib/*</a><br/>spark.eventLog.dir - &gt; <a rel="nofollow">hdfs://hdfs_name/spark/history</a><br/>spark.master - &gt; local[*]<br/>spark.sql.crossJoin.enabled - &gt; true<br/>spark.driver.extraClassPath - &gt; /usr/lib/hadoop/lib/hadoop-lzo.<a class="external-link" href="http://jar/export/App/xdata-spark/extlib/*" rel="noopener nofollow">jar:/export/App/spark/extlib/*</a><br/>Classpath elements:<br/><a class="external-link" href="http://file/home/hadoop/wangxin123/zhike.dataprocessing.all-1.0.jar" rel="noopener nofollow">file:/jarpath/app.jar</a><br/><a class="external-link" href="http://file/home/hadoop/wangxin123/zkclient-0.3.ja" rel="noopener nofollow">file:/jarpath/zkclient-0.3.ja</a>r</p>
+</blockquote>
+<p>It can be seen that /jarpath/zkclient-0.3.jar does exist in the classpath</p>
+<p>To sum up the above three points, why ClassNotFoundException is still reported? Two background knowledge is needed here:</p>
+<p>One is the Spark submit process, see for details <a href="https://www.cnblogs.com/barneywill/p/9820684.html" target="_blank" title="Spark based on big data (1) Spark Submit is the Spark task submission process">https://www.cnblogs.com/barneywill/p/9820684.html</a><a class="createlink" href="https://cf.jd.com/pages/createpage.action?spaceKey=SZDEV&amp;title=Spark&amp;linkCreation=true&amp;fromPageId=137650513" rel="noopener nofollow"><br/></a></p>
+<p>One is Java's classloader, see for details <a href="https://www.cnblogs.com/barneywill/p/10111633.html" target="_blank" title="Introduction to Java Basics ClassLoader Class Loader">https://www.cnblogs.com/barneywill/p/10111633.html</a></p>
+<p> </p>
+<h1>Three problem playback process</h1>
+<p>1 spark-submit<br/>2 spark-class<br/>3 org.apache.spark.launcher.Main<br/>4 org.apache.spark.deploy.SparkSubmit<br/>4.1 Initialize MutableURLClassLoader, add --jars and application jar as classpath to MutableURLClassLoader (note that zkclient-0.3.jar is here at this time), then load the application class, that is, AppClass, through MutableURLClassLoader, and then call main by reflection<br/>4.2 Indirectly calling Kafka.utils.ZKGroupDirs in AppClass.main (Kafka jar is located in Spark.driver.extraClassPath), ZKGroupDirs is loaded by the parent classloader of MutableURLClassLoader, which is AppClassLoader, and Kafka.utils.ZKGroupDirs depends on org.I 0Itec.zkclient.exception.ZkNoNodeException is also loaded by AppClassLoader, not by MutableURLClassLoader, so it is reported that it cannot be loaded, although it seems that zkclient-0.3.jar is indeed in the classpath;</p>
+<p>To solve the problem, you need to add zkclient-0.3.jar to the classpath of AppClassLoader (i.e. Spark.driver.extraClassPath)</p>
+<p> </p>
+</div>
+</div>
+<!-- Post Footer -->
+<div class="post-footer">
+<div class="post-navigation">
+<a class="nav-button" href="../blog.html">← Back to Home</a>
+<a class="nav-button" href="0342.html">Next Post →</a>
+</div>
+</div>
+</article>
+</div>
+</body>
+</html>

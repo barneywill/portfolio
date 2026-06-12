@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>MySQL Error When Started with Docker</title>
+<link href="../css/style3.css" rel="stylesheet"/>
+</head>
+<body>
+<div class="container">
+<!-- Header Navigation -->
+<div class="header">
+<h1><a href="../blog.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+</div>
+<!-- Post Container -->
+<article class="post">
+<!-- Post Header -->
+<div class="post-header">
+<h1>MySQL Error When Started with Docker</h1>
+<div class="post-meta">
+<div class="post-meta-item">
+<span class="meta-icon">📅</span>
+<span>December 29, 2019</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">📖</span>
+<span>1 min read</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">👁️</span>
+<span>526 views</span>
+</div>
+</div>
+</div>
+<!-- Post Content -->
+<div class="post-content">
+<div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<p>docker starts MySQL and restarts repeatedly, passing</p>
+<blockquote>
+<p># docker logs $container_id</p>
+</blockquote>
+<p>View the log as follows:</p>
+<blockquote>
+<p>chown: cannot read directory '/var/lib/mysql/': Permission denied</p>
+</blockquote>
+<p>However, there was no problem in confirming the directory permissions. Even if chmod 777 was used, the same error was reported. Later, it was found that it was a seLinux problem.</p>
+<p>View status</p>
+<blockquote>
+<p># getenforce</p>
+</blockquote>
+<p>Temporarily disabled</p>
+<blockquote>
+<p># setenforce 0</p>
+</blockquote>
+<p>Permanently disabled</p>
+<blockquote>
+<p># vi /etc/selinux/config</p>
+<p># SELINUX= can take one of these three values:<br/>#     enforcing - SELinux security policy is enforced.<br/>#     permissive - SELinux prints warnings instead of enforcing.<br/>#     disabled - No SELinux policy is loaded.<br/>SELINUX=disable</p>
+</blockquote>
+<p>After disabling, docker starts MySQL normally</p>
+</div>
+</div>
+<!-- Post Footer -->
+<div class="post-footer">
+<div class="post-navigation">
+<a class="nav-button" href="../blog.html">← Back to Home</a>
+<a class="nav-button" href="0079.html">Next Post →</a>
+</div>
+</div>
+</article>
+</div>
+</body>
+</html>

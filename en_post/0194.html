@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Hive 5 - hive on spark</title>
+<link href="../css/style3.css" rel="stylesheet"/>
+</head>
+<body>
+<div class="container">
+<!-- Header Navigation -->
+<div class="header">
+<h1><a href="../blog.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+</div>
+<!-- Post Container -->
+<article class="post">
+<!-- Post Header -->
+<div class="post-header">
+<h1>Hive 5 - hive on spark</h1>
+<div class="post-meta">
+<div class="post-meta-item">
+<span class="meta-icon">📅</span>
+<span>March 05, 2019</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">📖</span>
+<span>2 min read</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">👁️</span>
+<span>4227 views</span>
+</div>
+</div>
+</div>
+<!-- Post Content -->
+<div class="post-content">
+<div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<p>hive 2.3.4 on spark 2.4.0</p>
+<p> </p>
+<p>Hive on Spark provides Hive with the ability to utilize Apache Spark as its execution engine.</p>
+<blockquote>
+<p>set hive.execution.engine=spark;</p>
+</blockquote>
+<h1>1 version</h1>
+<p>Hive on Spark is only tested with a specific version of Spark, so a given version of Hive is only guaranteed to work with a specific version of Spark. Other versions of Spark may work with a given version of Hive, but that is not guaranteed. Below is a list of Hive versions and their corresponding compatible Spark versions.</p>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201903/1509647-20190305183825540-1416773709.png"/></p>
+<p>The above versions have been tested, other versions may also be available and need to be tested;</p>
+<h1>2 yarn</h1>
+<p>Instead of the capacity scheduler, the fair scheduler is required.  This fairly distributes an equal share of resources for jobs in the YARN cluster.</p>
+<p>yarn-site.xml</p>
+<blockquote>
+<p>    &lt;property&gt;</p>
+<p>        &lt;name&gt;yarn.resourcemanager.scheduler.class&lt;/name&gt;</p>
+<p>        &lt;value&gt;org.apache.hadoop.yarn.server.resourcemanager.scheduler.fair.FairScheduler&lt;/value&gt;</p>
+<p>    &lt;/property&gt;</p>
+</blockquote>
+<h1>3 spark</h1>
+<blockquote>
+<p>$ export SPARK_HOME=...</p>
+</blockquote>
+<p>Note that you must have a version of Spark which does not include the Hive jars. Meaning one which was not built with the Hive profile. If you will use Parquet tables, it's recommended to also enable the "parquet-provided" profile. Otherwise there could be conflicts in Parquet dependency.</p>
+<p>You cannot directly use the existing Spark installation directory. One is Hive dependency and the other is Parquet dependency. These two dependencies can easily cause problems;</p>
+<h1>4 library</h1>
+<blockquote>
+<p>$ ln -s $SPARK_HOME/jars/scala-library-2.11.8.jar $HIVE_HOME/lib/scala-library-2.11.8.jar<br/>$ ln -s $SPARK_HOME/jars/spark-core_2.11-2.0.2.jar $HIVE_HOME/lib/spark-core_2.11-2.0.2.jar<br/>$ ln -s $SPARK_HOME/jars/spark-network-common_2.11-2.0.2.jar $HIVE_HOME/lib/spark-network-common_2.11-2.0.2.jar</p>
+</blockquote>
+<p>Prior to Hive 2.2.0, link the spark-assembly jar to HIVE_HOME/lib</p>
+<p>Versions before spark2 have Spark-assembly.jar, directly link the jar to HIVE_HOME/lib</p>
+<h1>5 hive</h1>
+<blockquote>
+<p>$ hive<br/>hive&gt; set hive.execution.engine=spark;</p>
+</blockquote>
+<p>Default Spark.master=YARN, more configurations</p>
+<blockquote>
+<p>set spark.master=&lt;Spark Master URL&gt;<br/>set spark.eventLog.enabled=true;<br/>set spark.eventLog.dir=&lt;Spark event log folder (must exist)&gt;<br/>set spark.executor.memory=512m;<br/>set spark.executor.instances=10;<br/>set spark.executor.cores=1;<br/>set spark.serializer=org.apache.spark.serializer.KryoSerializer;</p>
+</blockquote>
+<p>The above configuration can be executed directly like setting up Hive config, or it can be placed in Hive-site.XML, or it can be placed in Spark-defaults.conf in HIVE_CONF_DIR</p>
+<p>This can be done either by adding a file "spark-defaults.conf" with these properties to the Hive classpath, or by setting them on Hive configuration (hive-site.xml).</p>
+<h1>6 Report an error</h1>
+<p>Hive reports error when executing SQL:</p>
+<blockquote>
+<p>FAILED: SemanticException Failed to get a spark session: org.apache.hadoop.hive.ql.metadata.HiveException: Failed to create spark client</p>
+</blockquote>
+<p>The Hive execution log is located at /tmp/$user/Hive.log</p>
+<p>Detailed error log</p>
+<blockquote>
+<p>2019-03-05 11:06:43 ERROR ApplicationMaster:91 - User class threw exception: java.lang.NoSuchFieldError: SPARK_RPC_SERVER_ADDRESS<br/>java.lang.NoSuchFieldError: SPARK_RPC_SERVER_ADDRESS<br/>        at org.apache.hive.spark.client.rpc.RpcConfiguration.&lt;clinit&gt;(RpcConfiguration.java:47)<br/>        at org.apache.hive.spark.client.RemoteDriver.&lt;init&gt;(RemoteDriver.java:134)<br/>        at org.apache.hive.spark.client.RemoteDriver.main(RemoteDriver.java:516)<br/>        at sun.reflect.NativeMethodAccessorImpl.invoke0(Native Method)<br/>        at sun.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:62)<br/>        at sun.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)<br/>        at java.lang.reflect.Method.invoke(Method.java:498)<br/>        at org.apache.spark.deploy.yarn.ApplicationMaster$$anon$2.run(ApplicationMaster.scala:678)</p>
+</blockquote>
+<p>Because Spark is packaged with a Hive dependency, try using a package without Hive.</p>
+<p>https://archive.apache.org/dist/spark/spark-2.0.0/spark-2.0.0-bin-hadoop2.4-without-hive.tgz</p>
+<p>If executed again, a Parquet version conflict will be reported.</p>
+<blockquote>
+<p>Caused by: java.lang.NoSuchMethodError: org.apache.parquet.schema.Types$MessageTypeBuilder.addFields([Lorg/apache/parquet/schema/Type;)Lorg/apache/parquet/schema/Types$BaseGroupBuilder;</p>
+</blockquote>
+<p>Can only be compiled</p>
+<p>1）spark 2.0-2.2</p>
+<blockquote>
+<p>./dev/make-distribution.sh --name "hadoop2-without-hive" --tgz "-Pyarn,hadoop-provided,hadoop-2.7,parquet-provided"</p>
+</blockquote>
+<p>get Spark-2.0.2-bin-hadoop2-without-Hive.tgz</p>
+<p>2) Spark 2.3 and above</p>
+<blockquote>
+<p>./dev/make-distribution.sh --name "hadoop2-without-hive" --tgz "-Pyarn,hadoop-provided,hadoop-2.7,parquet-provided,orc-provided"</p>
+</blockquote>
+<p>get Spark-2.4.0-bin-hadoop2-without-Hive.tgz</p>
+<p> </p>
+<p>Use Spark-2.0.2-bin-hadoop2-without-Hive.tgz to execute again, and there will be an error.</p>
+<blockquote>
+<p>2019-03-05T17:10:55,537 ERROR [901dc3cf-a990-4e8b-95ec-fcf6a9c9002c main] ql.Driver: FAILED: SemanticException Failed to get a spark session: org.apache.hadoop.hive.ql.metadata.HiveException: Failed to create spark client.<br/>org.apache.hadoop.hive.ql.parse.SemanticException: Failed to get a spark session: org.apache.hadoop.hive.ql.metadata.HiveException: Failed to create spark client.</p>
+</blockquote>
+<p>Detailed error log</p>
+<blockquote>
+<p>2019-03-05T17:08:37,364  INFO [stderr-redir-1] client.SparkClientImpl: Caused by: java.lang.ClassNotFoundException: org.apache.hadoop.fs.FSDataInputStream</p>
+</blockquote>
+<p>Missing jar, copy directly from Spark-2.0.0-bin-hadoop2.4-without-Hive</p>
+<blockquote>
+<p>$ cd spark-2.0.2-bin-hadoop2-without-hive<br/>$ cp ../spark-2.4.0-bin-hadoop2.6/jars/hadoop-* jars/<br/>$ cp ../spark-2.4.0-bin-hadoop2.6/jars/slf4j-* jars/<br/>$ cp ../spark-2.4.0-bin-hadoop2.6/jars/log4j-* jars/<br/>$ cp ../spark-2.4.0-bin-hadoop2.6/jars/guava-* jars/<br/>$ cp ../spark-2.4.0-bin-hadoop2.6/jars/commons-* jars/<br/>$ cp ../spark-2.4.0-bin-hadoop2.6/jars/protobuf-* jars/<br/>$ cp ../spark-2.4.0-bin-hadoop2.6/jars/htrace-* jars/</p>
+</blockquote>
+<p>This time it’s ok, execute SQL output</p>
+<blockquote>
+<p>Query ID = hadoop_20190305180847_e8b638c8-394c-496d-a43e-26a0a17f9e18<br/>Total jobs = 1<br/>Launching Job 1 out of 1<br/>In order to change the average load for a reducer (in bytes):<br/>  set hive.exec.reducers.bytes.per.reducer=&lt;number&gt;<br/>In order to limit the maximum number of reducers:<br/>  set hive.exec.reducers.max=&lt;number&gt;<br/>In order to set a constant number of reducers:<br/>  set mapreduce.job.reduces=&lt;number&gt;<br/>Starting Spark Job = d5fea72c-c67c-49ec-9f4c-650a795c74c3<br/>Running with YARN Application = application_1551754784891_0008<br/>Kill Command = $HADOOP_HOME/bin/yarn application -kill application_1551754784891_0008</p>
+<p>Query Hive on Spark job[1] stages: [2, 3]</p>
+<p>Status: Running (Hive on Spark job[1])<br/>--------------------------------------------------------------------------------------<br/>          STAGES   ATTEMPT        STATUS  TOTAL  COMPLETED  RUNNING  PENDING  FAILED  <br/>--------------------------------------------------------------------------------------<br/>Stage-2 ........         0      FINISHED    275        275        0        0       0  <br/>Stage-3 ........         0      FINISHED   1009       1009        0        0       0  <br/>--------------------------------------------------------------------------------------<br/>STAGES: 02/02    [==========================&gt;&gt;] 100%  ELAPSED TIME: 149.58 s   <br/>--------------------------------------------------------------------------------------<br/>Status: Finished successfully in 149.58 seconds<br/>OK</p>
+</blockquote>
+<p>There is no problem using Spark-2.4.0-bin-hadoop2-without-Hive.tgz;</p>
+<p> </p>
+<p>refer to:</p>
+<p>https://cwiki.apache.org/confluence/display/Hive/Hive+on+Spark</p>
+<p>https://cwiki.apache.org/confluence/display/Hive/Hive+on+Spark%3A+Getting+Started</p>
+<p> </p>
+</div>
+</div>
+<!-- Post Footer -->
+<div class="post-footer">
+<div class="post-navigation">
+<a class="nav-button" href="../blog.html">← Back to Home</a>
+<a class="nav-button" href="0195.html">Next Post →</a>
+</div>
+</div>
+</article>
+</div>
+</body>
+</html>

@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>YARN important configuration YARN.nodemanager.local-dirs</title>
+<link href="../css/style3.css" rel="stylesheet"/>
+</head>
+<body>
+<div class="container">
+<!-- Header Navigation -->
+<div class="header">
+<h1><a href="../blog.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+</div>
+<!-- Post Container -->
+<article class="post">
+<!-- Post Header -->
+<div class="post-header">
+<h1>YARN important configuration YARN.nodemanager.local-dirs</h1>
+<div class="post-meta">
+<div class="post-meta-item">
+<span class="meta-icon">📅</span>
+<span>December 13, 2018</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">📖</span>
+<span>1 min read</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">👁️</span>
+<span>8732 views</span>
+</div>
+</div>
+</div>
+<!-- Post Content -->
+<div class="post-content">
+<div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<p>There is a more important configuration YARN.nodemanager.local-dirs in YARN. If the configuration is not good, many problems will occur in the cluster when running in a saturated state:<br/>1 The default configuration is ${hadoop.tmp.dir}/nm-local-dir. The system disk is usually only a few hundred G. If configured here, errors of insufficient disk space will often be reported;<br/>2 Configure one of the data disks, such as /data0/. This data disk will often become unresponsive or directly broken;<br/>3 The correct configuration is to configure all data disks, usually 12. In fact, the description of YARN is very clear.</p>
+<blockquote>
+<p>&lt;property&gt;</p>
+<p>  &lt;description&gt;List of directories to store localized files in. An</p>
+<p>    application's localized file directory will be found in:</p>
+<p>    ${yarn.nodemanager.local-dirs}/usercache/${user}/appcache/application_${appid}.</p>
+<p>    Individual containers' work directories, called container_${contid}, will</p>
+<p>    be subdirectories of this.</p>
+<p> &lt;/description&gt;</p>
+<p>  &lt;name&gt;yarn.nodemanager.local-dirs&lt;/name&gt;</p>
+<p>  &lt;value&gt;${hadoop.tmp.dir}/nm-local-dir&lt;/value&gt;</p>
+<p>&lt;/property&gt;</p>
+</blockquote>
+<p> </p>
+<blockquote>
+<p>  &lt;property&gt;</p>
+<p>    &lt;name&gt;hadoop.tmp.dir&lt;/name&gt;</p>
+<p>    &lt;value&gt;/tmp/hadoop-tmp&lt;/value&gt;</p>
+<p>    &lt;description&gt;A base for other temporary directories.&lt;/description&gt;</p>
+<p>  &lt;/property&gt;</p>
+</blockquote>
+<p> </p>
+<p>CDH recommendations</p>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201902/1509647-20190221095822261-1091247644.png"/></p>
+<p> </p>
+</div>
+</div>
+<!-- Post Footer -->
+<div class="post-footer">
+<div class="post-navigation">
+<a class="nav-button" href="../blog.html">← Back to Home</a>
+<a class="nav-button" href="0323.html">Next Post →</a>
+</div>
+</div>
+</article>
+</div>
+</body>
+</html>

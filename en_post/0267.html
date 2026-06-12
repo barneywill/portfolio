@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Ambari installation wizard gets stuck when clicking next step</title>
+<link href="../css/style3.css" rel="stylesheet"/>
+</head>
+<body>
+<div class="container">
+<!-- Header Navigation -->
+<div class="header">
+<h1><a href="../blog.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+</div>
+<!-- Post Container -->
+<article class="post">
+<!-- Post Header -->
+<div class="post-header">
+<h1>Ambari installation wizard gets stuck when clicking next step</h1>
+<div class="post-meta">
+<div class="post-meta-item">
+<span class="meta-icon">📅</span>
+<span>January 15, 2019</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">📖</span>
+<span>2 min read</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">👁️</span>
+<span>2664 views</span>
+</div>
+</div>
+</div>
+<!-- Post Content -->
+<div class="post-content">
+<div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<p> The first step in Ambari installation is to enter the cluster name. When you click next, the page gets stuck, as shown below:</p>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201901/1509647-20190115181100982-1252626749.png"/></p>
+<p>It was noticed that one of the interface request results was abnormal. http://Ambari.server:8080/API/v1/version_definitions reproduced as follows:</p>
+<blockquote>
+<p>curl -u admin:admin "http://ambari.server:8080/api/v1/version_definitions?fields=VersionDefinition/stack_default,VersionDefinition/stack_repo_update_link_exists,VersionDefinition/max_jdk,VersionDefinition/min_jdk,operating_systems/repositories/Repositories/*,operating_systems/OperatingSystems/*,VersionDefinition/stack_services,VersionDefinition/repository_version&amp;VersionDefinition/show_available=true&amp;VersionDefinition/stack_name=HDP&amp;_=1547529429429"<br/>{<br/>  "href" : "http://ambari.server:8080/api/v1/version_definitions?fields=VersionDefinition/stack_default,VersionDefinition/stack_repo_update_link_exists,VersionDefinition/max_jdk,VersionDefinition/min_jdk,operating_systems/repositories/Repositories/*,operating_systems/OperatingSystems/*,VersionDefinition/stack_services,VersionDefinition/repository_version&amp;VersionDefinition/show_available=true&amp;VersionDefinition/stack_name=HDP&amp;_=1547529429429",<br/>  "items" : [ ]<br/>}</p>
+</blockquote>
+<p>Following up on the code, we found that the corresponding js code is:</p>
+<p>ambari-web/app/controllers/installer.js</p>
+<div class="cnblogs_code">
+<pre>  <span style="color: rgba(0, 128, 0, 1)">/*</span><span style="color: rgba(0, 128, 0, 1)">*
+   * query every stack names from server
+   * @return {Array}
+   </span><span style="color: rgba(0, 128, 0, 1)">*/</span><span style="color: rgba(0, 0, 0, 1)">
+  loadStacksVersions: </span><span style="color: rgba(0, 0, 255, 1)">function</span><span style="color: rgba(0, 0, 0, 1)"> () {
+    </span><span style="color: rgba(0, 0, 255, 1)">var</span> requests =<span style="color: rgba(0, 0, 0, 1)"> [];
+    const dfd </span>=<span style="color: rgba(0, 0, 0, 1)"> $.Deferred();
+    </span><span style="color: rgba(0, 0, 255, 1)">this</span>.get('stackNames').forEach(<span style="color: rgba(0, 0, 255, 1)">function</span><span style="color: rgba(0, 0, 0, 1)"> (stackName) {
+      requests.push(App.ajax.send({
+        name: </span>'wizard.stacks_versions_definitions'<span style="color: rgba(0, 0, 0, 1)">,
+        sender: </span><span style="color: rgba(0, 0, 255, 1)">this</span><span style="color: rgba(0, 0, 0, 1)">,
+        data: {
+          stackName: stackName,
+          dfd: dfd
+        },
+        success: </span>'loadStacksVersionsDefinitionsSuccessCallback'<span style="color: rgba(0, 0, 0, 1)">,
+        error: </span>'loadStacksVersionsErrorCallback'<span style="color: rgba(0, 0, 0, 1)">
+      }));
+    }, </span><span style="color: rgba(0, 0, 255, 1)">this</span><span style="color: rgba(0, 0, 0, 1)">);
+    </span><span style="color: rgba(0, 0, 255, 1)">this</span>.set('loadStacksRequestsCounter'<span style="color: rgba(0, 0, 0, 1)">, requests.length);
+    </span><span style="color: rgba(0, 0, 255, 1)">return</span><span style="color: rgba(0, 0, 0, 1)"> dfd.promise();
+  },</span></pre>
+</div>
+<p>This code needs to access all stack versions, but the server returns empty, so it keeps getting stuck.</p>
+<p>Notice that there is a log when the server starts:</p>
+<blockquote>
+<p>2019-01-15 12:03:45,452 INFO [ambari-client-thread-44] AmbariMetaInfo:1430 - Stack HDP-2.0 is not active, skipping VDF<br/>2019-01-15 12:03:45,452  INFO [ambari-client-thread-44] AmbariMetaInfo:1430 - Stack HDP-2.0.6 is not active, skipping VDF<br/>2019-01-15 12:03:45,452  INFO [ambari-client-thread-44] AmbariMetaInfo:1430 - Stack HDP-2.0.6.GlusterFS is not active, skipping VDF<br/>2019-01-15 12:03:45,452  INFO [ambari-client-thread-44] AmbariMetaInfo:1430 - Stack HDP-2.1 is not active, skipping VDF<br/>2019-01-15 12:03:45,452  INFO [ambari-client-thread-44] AmbariMetaInfo:1430 - Stack HDP-2.1.GlusterFS is not active, skipping VDF<br/>2019-01-15 12:03:45,452  INFO [ambari-client-thread-44] AmbariMetaInfo:1430 - Stack HDP-2.2 is not active, skipping VDF<br/>2019-01-15 12:03:45,453  INFO [ambari-client-thread-44] AmbariMetaInfo:1430 - Stack HDP-2.3 is not active, skipping VDF<br/>2019-01-15 12:03:45,453  INFO [ambari-client-thread-44] AmbariMetaInfo:1430 - Stack HDP-2.3.ECS is not active, skipping VDF<br/>2019-01-15 12:03:45,453  INFO [ambari-client-thread-44] AmbariMetaInfo:1428 - Stack HDP-2.3.GlusterFS is not valid, skipping VDF: The service 'OOZIE' in stack 'HDP:2.3.GlusterFS' extends a non-existent service: 'common-services/OOZIE/5.0.0.2.3'</p>
+</blockquote>
+<p>Follow up log code discovery</p>
+<p>org.apache.ambari.server.api.services.AmbariMetaInfo</p>
+<div class="cnblogs_code">
+<pre>  <span style="color: rgba(0, 0, 255, 1)">private</span> <span style="color: rgba(0, 0, 255, 1)">synchronized</span> <span style="color: rgba(0, 0, 255, 1)">void</span><span style="color: rgba(0, 0, 0, 1)"> ensureVersionDefinitions() {
+...
+        StackId stackId </span>= <span style="color: rgba(0, 0, 255, 1)">new</span><span style="color: rgba(0, 0, 0, 1)"> StackId(stack);
+        </span><span style="color: rgba(0, 0, 255, 1)">if</span> (!<span style="color: rgba(0, 0, 0, 1)">stack.isValid()) {
+          LOG.info(</span>"Stack {} is not valid, skipping VDF: {}", stackId, StringUtils.join(stack.getErrors(), "; "<span style="color: rgba(0, 0, 0, 1)">));
+        } </span><span style="color: rgba(0, 0, 255, 1)">else</span> <span style="color: rgba(0, 0, 255, 1)">if</span> (!<span style="color: rgba(0, 0, 0, 1)">stack.isActive()) {
+          LOG.info(</span>"Stack {} is not active, skipping VDF"<span style="color: rgba(0, 0, 0, 1)">, stackId);
+        }</span></pre>
+</div>
+<p>Here isActive is assigned in StackModule.populateStackInfo:</p>
+<p>org.apache.ambari.server.stack.StackModule</p>
+<div class="cnblogs_code">
+<pre>  <span style="color: rgba(0, 0, 255, 1)">private</span> <span style="color: rgba(0, 0, 255, 1)">void</span><span style="color: rgba(0, 0, 0, 1)"> populateStackInfo() {
+...
+    StackMetainfoXml smx </span>=<span style="color: rgba(0, 0, 0, 1)"> stackDirectory.getMetaInfoFile();
+...
+      stackInfo.setActive(smx.getVersion().isActive());</span></pre>
+</div>
+<p>You can see that isActive takes the value from StackMetainfoXml</p>
+<p>org.apache.ambari.server.state.stack.StackMetainfoXml</p>
+<p>The metainfo.XML corresponding to this class is</p>
+<p>/var/lib/ambari-server/resources/stacks/HDP/$version/metainfo.xml </p>
+<blockquote>
+<p>cat /var/lib/ambari-server/resources/stacks/HDP/2.6/metainfo.xml</p>
+<p>&lt;metainfo&gt;</p>
+<p>  &lt;versions&gt;</p>
+<p>    &lt;active&gt;false&lt;/active&gt;</p>
+<p>  &lt;/versions&gt;</p>
+<p>  &lt;extends&gt;2.5&lt;/extends&gt;</p>
+<p>  &lt;minJdk&gt;1.7&lt;/minJdk&gt;</p>
+<p>  &lt;maxJdk&gt;1.8&lt;/maxJdk&gt;</p>
+<p>&lt;/metainfo&gt;</p>
+</blockquote>
+<p>Check metainfo.XML and find that after the installation is completed, active in each version of metainfo.XML defaults to false;</p>
+<p>Change active to true, and then restart Ambari-server. If the problem is solved after restarting, congratulations. If you still have problems, please continue reading:</p>
+<p>Try to register vdf manually</p>
+<blockquote>
+<p>curl -v -k -u admin:admin -H "X-Requested-By:ambari" -X POST http://ambari.server:8080/api/v1/version_definitions -d '{"VersionDefinition": {"version_url":"http://s3.amazonaws.com/dev.hortonworks.com/HDP/centos7/2.x/BUILDS/2.6.5.0-292/HDP-2.6.5.0-292.xml"}}'</p>
+</blockquote>
+<p>Various versions of vdf can be found here: http://s3.amazonaws.com/dev.hortonworks.com/HDP/hdp_urlinfo.JSON</p>
+<p> </p>
+<p>Finally saw the stack selection page</p>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201901/1509647-20190115181858708-408658137.png"/></p>
+<p> </p>
+</div>
+</div>
+<!-- Post Footer -->
+<div class="post-footer">
+<div class="post-navigation">
+<a class="nav-button" href="../blog.html">← Back to Home</a>
+<a class="nav-button" href="0268.html">Next Post →</a>
+</div>
+</div>
+</article>
+</div>
+</body>
+</html>

@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Using VS Code</title>
+<link href="../css/style3.css" rel="stylesheet"/>
+</head>
+<body>
+<div class="container">
+<!-- Header Navigation -->
+<div class="header">
+<h1><a href="../blog.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+</div>
+<!-- Post Container -->
+<article class="post">
+<!-- Post Header -->
+<div class="post-header">
+<h1>Using VS Code</h1>
+<div class="post-meta">
+<div class="post-meta-item">
+<span class="meta-icon">📅</span>
+<span>June 27, 2020</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">📖</span>
+<span>2 min read</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">👁️</span>
+<span>857 views</span>
+</div>
+</div>
+</div>
+<!-- Post Content -->
+<div class="post-content">
+<div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<p>VSCode（Visual Studio Code）</p>
+<p><picture>
+<source srcset="../img/1509647-20200626233258493-823022250.webp" type="image/webp"/>
+<img alt="" src="../img/1509647-20200626233258493-823022250.png"/>
+</picture></p>
+<p>Official website: https://code.visualstudio.com/                                                                                                                                                                                                                                                                            </p>
+<p><em><em><picture>
+<source srcset="../img/1509647-20200626233455963-623378097.webp" type="image/webp"/>
+<img alt="" src="../img/1509647-20200626233455963-623378097.png"/>
+</picture></em></em></p>
+<p>Visual Studio Code is a lightweight but powerful source code editor which runs on your desktop and is available for Windows, macOS and Linux. It comes with built-in support for JavaScript, TypeScript and Node.js and has a rich ecosystem of extensions for other languages (such as C++, C#, Java, Python, PHP, Go) and runtimes (such as .NET and Unity). </p>
+<p>Although it is just an editor, it excels in its simplicity and fast startup speed. With the support of various plug-ins, it is equivalent to a small IDE, giving people a refreshing feeling. The disadvantage is that it can only open one project at a time.</p>
+<h1>1 installation                                                                                                              </h1>
+<p>Download address: https://code.visualstudio.com/#alt-downloads                                                                                                                                                                              <br/>  Versions for various platforms are provided for windows (32/64, zip), mac, and Linux (deb/rpm/tar.gz), and they are free, unlike Microsoft's style. Under Windows, change Cmd in the following shortcut keys to Ctrl.</p>
+<p><picture>
+<source srcset="../img/1509647-20200626234201669-1093340419.webp" type="image/webp"/>
+<img alt="" src="../img/1509647-20200626234201669-1093340419.png"/>
+</picture></p>
+<p> </p>
+<p>After installation, open the plug-in on the left (Cmd+Shift+X) to start installing the plug-in                                                                                                                                                                                   </p>
+<h3>Universal plug-in</h3>
+<p>vscode-icons (modify the icon of the directory tree on the left)</p>
+<p>Vim (vi editor)</p>
+<p>Vimacs (add emacs shortcut keys in vi input mode)</p>
+<p>Markdown All in One (markdown editor)</p>
+<p>TODO Highlight (todo highlight)</p>
+<p>Bracket Pair Colorizer (different bracket pairs are distinguished by different colors)</p>
+<p>Setting Sync (save your vscode configuration to github, configure in one place, all synchronized)</p>
+<h3>Develop plug-ins </h3>
+<p>Code Runner (code execution, right-click on the code fragment or file to run code)</p>
+<p>Git Extension Pack (git package, including: Git History / Project Manager / GitLens / gitignore / Open in GitHub...)</p>
+<p>MySQL (connect to MySQL database and query)</p>
+<h3>Language plugin</h3>
+<p>Python Extension Pack (python package, including: Python / Visual Code IntelliCode / MagicPython / Django / Jinja)</p>
+<p>Java Extension Pack (java package, including: Language Support for Java / Debugger for Java / Java Test Runner / Maven for Java / Java Dependency View / Visual Studio IntelliCode) / Lombok</p>
+<p>Scala Syntax / Scala Language Server</p>
+<p>...</p>
+<p>The above plug-ins are quite easy to use. For example, GitLens can display all submission history in the code.</p>
+<h2>Configuration and directory introduction</h2>
+<p>The user configuration in vscode is located at</p>
+<div>
+<div>
+<ul>
+<li>Windows <code>%APPDATA%\Code\User\settings.json</code></li>
+<li>macOS <code>$HOME/Library/Application Support/Code/User/settings.json</code></li>
+<li>Linux <code>$HOME/.config/Code/User/settings.json</code></li>
+</ul>
+</div>
+
+
+
+
+The project configuration is located at</div>
+<div>
+<ul>
+<li>$HOME/.vscode</li>
+</ul>
+</div>
+<div>The installed plug-in is located under $HOME/.vscode/extensions</div>
+<h2>2. Use</h2>
+<p>Open the command palette (Cmd+Shift+P)                                                                                                                                                                                                 <br/>                                                                                                                                                                                                                          <br/>Directory tree on the left (Cmd+Shift+E)                                                                                                                                                                                                   <br/>Find Left (Cmd+Shift+F)                                                                                                                                                                                                     <br/>Run left (Cmd+Shift+D)                                                                                                                                                                                                     <br/>Left plugin (Cmd+Shift+X)</p>
+<p>Git on the left (Ctrl+Shift+G)                                                                                                                                                                                                    <br/>                                                                                                                                                                                                                          <br/>Open terminal (Ctrl+`)</p>
+<p>Open file (Cmd+P)</p>
+<p>Open directory (Cmd+O)</p>
+<p>Collapse the entire directory tree (Cmd+Shift+Up)</p>
+<p>Collapse and expand a single directory (Left / Right)</p>
+<p>Some scenarios: For case conversion, select text, open the command panel, enter transform, and you can choose to convert to uppercase or lowercase from the command prompt.</p>
+<h3>1 Java</h3>
+<p>Official tutorial: https://code.visualstudio.com/docs/languages/java                                                                                                                                                                         </p>
+<p>Configure the java environment: Set environment variables in /etc/profile: JAVA_HOME and PATH. After the settings are completed, restart vscode.</p>
+<h4>1.1 Demo version (Hello World)</h4>
+<h5>write</h5>
+<p>Create new file (Cmd+N)                                                                                                                                                                                                       <br/>Save the file as HelloWorld.java (Cmd+S)                                                                                                                                                                                    <br/>Write a program (smart prompt)                                                                                                                                                                                                      <br/>Enter class</p>
+<p><picture>
+<source srcset="../img/1509647-20200626235531919-802507323.webp" type="image/webp"/>
+<img alt="" src="../img/1509647-20200626235531919-802507323.png"/>
+</picture></p>
+<p>After carriage return</p>
+<p><picture>
+<source srcset="../img/1509647-20200626235626219-969481440.webp" type="image/webp"/>
+<img alt="" src="../img/1509647-20200626235626219-969481440.png"/>
+</picture></p>
+<p>Enter main</p>
+<p><picture>
+<source srcset="../img/1509647-20200626235813347-1530120253.webp" type="image/webp"/>
+<img alt="" src="../img/1509647-20200626235813347-1530120253.png"/>
+</picture></p>
+<p>After carriage return</p>
+<p><picture>
+<source srcset="../img/1509647-20200626235918853-719681938.webp" type="image/webp"/>
+<img alt="" src="../img/1509647-20200626235918853-719681938.png"/>
+</picture></p>
+<p>Enter sysout</p>
+<p><picture>
+<source srcset="../img/1509647-20200627000006354-474571806.webp" type="image/webp"/>
+<img alt="" src="../img/1509647-20200627000006354-474571806.png"/>
+</picture></p>
+<p>After carriage return</p>
+<p><picture>
+<source srcset="../img/1509647-20200627000057411-1480541028.webp" type="image/webp"/>
+<img alt="" src="../img/1509647-20200627000057411-1480541028.png"/>
+</picture></p>
+<p> There is a prompt after hovering the mouse</p>
+<p><picture>
+<source srcset="../img/1509647-20200627000336808-1365036848.webp" type="image/webp"/>
+<img alt="" src="../img/1509647-20200627000336808-1365036848.png"/>
+</picture></p>
+<p>The experience is quite good.</p>
+<p>other:</p>
+<ul>
+<li>You can view the class structure from the Explorer-outline on the left</li>
+<li>You can view the calling hierarchy from References on the left</li>
+<li>Search globally from Search on the left</li>
+<li>All test cases can be found from Test on the left</li>
+<li>From the GitLens on the left, you can view all git-related records of the current file</li>
+</ul>
+<h5><span style="font-size: 0.83em">run</span></h5>
+<ul>
+<li>Click Run on the main function</li>
+<li>Right-click on the class name and Run Code (Ctrl+Opt+N)</li>
+<li>Enter Run (Cmd+Shift+D) on the left and click Run and Debug </li>
+<li>Enter the menu Run-Run Debugging (F5)</li>
+</ul>
+<h4>1.2 Maven version</h4>
+<p>Install maven</p>
+<p>Open the command palette (Cmd+Shift+P)<em id="__mceDel">                                                                                                                                                                                                </em></p>
+<p><em id="__mceDel">Enter java                                                                                                                                                                                                                 <br/>Choose Java: Create Java Project                                                                                                                                                                                            <br/>Choose Maven                                                                                                                                                                                                                <br/>Select archetype:archetype-quickstart-jdk8                                                                                                                                                                                 <br/></em></p>
+<p>You can quickly execute commands through the maven window</p>
+<p><picture>
+<source srcset="../img/1509647-20200627001720908-690654475.webp" type="image/webp"/>
+<img alt="" src="../img/1509647-20200627001720908-690654475.png"/>
+</picture></p>
+<p>You can also execute the mvn command through the terminal</p>
+<blockquote>
+<p>mvn clean package - DskipTests=true</p>
+</blockquote>
+<h4>1.3 Import Maven project</h4>
+<p>Open folder (Cmd+K Cmd+D)</p>
+<p>Select an existing project directory</p>
+<p>Finish</p>
+<h3>2 Scala</h3>
+<p>Install scala environment and add SCALA_HOME and PATH environment variables in /etc/profile.</p>
+<p>Create a new HelloWorld.scala and write</p>
+<p><picture>
+<source srcset="../img/1509647-20200627154322468-471326503.webp" type="image/webp"/>
+<img alt="" src="../img/1509647-20200627154322468-471326503.png"/>
+</picture></p>
+<p>run</p>
+<p>Right-click on the directory tree file and run code (Ctrl+Opt+N)</p>
+<p>ps: Scala currently does not find a way to run unit tests.</p>
+<h3>3 Python</h3>
+<p>Install python environment</p>
+<p>Create a new HelloWorld.py and write</p>
+<p><picture>
+<source srcset="../img/1509647-20200627155041302-773703937.webp" type="image/webp"/>
+<img alt="" src="../img/1509647-20200627155041302-773703937.png"/>
+</picture></p>
+<p>run</p>
+<p>Right-click on the file tree file and run code (Ctrl+Opt+N)</p>
+<h3>4 Shell</h3>
+<p>Create a new testsh and write</p>
+<p><picture>
+<source srcset="../img/1509647-20200627165003090-985770386.webp" type="image/webp"/>
+<img alt="" src="../img/1509647-20200627165003090-985770386.png"/>
+</picture></p>
+<p> </p>
+<p>Right-click on the file tree file and run code (Ctrl+Opt+N)</p>
+<p> </p>
+</div>
+</div>
+<!-- Post Footer -->
+<div class="post-footer">
+<div class="post-navigation">
+<a class="nav-button" href="../blog.html">← Back to Home</a>
+<a class="nav-button" href="0064.html">Next Post →</a>
+</div>
+</div>
+</article>
+</div>
+</body>
+</html>

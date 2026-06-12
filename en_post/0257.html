@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Elasticsearch 1 - Introduction, installation, use</title>
+<link href="../css/style3.css" rel="stylesheet"/>
+</head>
+<body>
+<div class="container">
+<!-- Header Navigation -->
+<div class="header">
+<h1><a href="../blog.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+</div>
+<!-- Post Container -->
+<article class="post">
+<!-- Post Header -->
+<div class="post-header">
+<h1>Elasticsearch 1 - Introduction, installation, use</h1>
+<div class="post-meta">
+<div class="post-meta-item">
+<span class="meta-icon">📅</span>
+<span>January 21, 2019</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">📖</span>
+<span>6 min read</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">👁️</span>
+<span>655 views</span>
+</div>
+</div>
+</div>
+<!-- Post Content -->
+<div class="post-content">
+<div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<p>ElasticSearch 6.6.0</p>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201901/1509647-20190120223444562-2105334535.png"/></p>
+<p>Official: https://www.elastic.co/</p>
+<p> </p>
+<h1>1 Introduction</h1>
+<p>Elasticsearch is simply a distributed encapsulation of Lucene, adding the concepts of shard (each shard is a sub-index and an index of Lucene) and replica; so you can also see concepts in Lucene in Elasticsearch, such as index, document, etc.</p>
+<p> </p>
+<p>Elasticsearch is a highly scalable open-source full-text search and analytics engine. It allows you to store, search, and analyze big volumes of data quickly and in near real time. It is generally used as the underlying engine/technology that powers applications that have complex search features and requirements.</p>
+<p><em>Elasticsearch is a scalable, open source full-text search and analysis engine. Elasticsearch can store, search and analyze large-scale data in near real-time; Elasticsearch is usually used as the underlying technology or engine to enable applications to implement complex query requirements and scenarios.</em></p>
+<p> </p>
+<h2>core concepts</h2>
+<h3>1 Cluster concept</h3>
+<h4>Cluster</h4>
+<p>A cluster is a collection of one or more nodes (servers) that together holds your entire data and provides federated indexing and search capabilities across all nodes. A cluster is identified by a unique name which by default is "elasticsearch". This name is important because a node can only be part of a cluster if the node is set up to join the cluster by its name.</p>
+<p><em>Cluster consists of one or more Nodes. Cluster as a whole holds all data and provides indexing and query functions. Cluster has a unique name, and the default is Elasticsearch.</em></p>
+<h4>Node</h4>
+<p>A node is a single server that is part of your cluster, stores your data, and participates in the cluster’s indexing and search capabilities. Just like a cluster, a node is identified by a name which by default is a random Universally Unique IDentifier (UUID) that is assigned to the node at startup. You can define any node name you want if you do not want the default. This name is important for administration purposes where you want to identify which servers in your network correspond to which nodes in your Elasticsearch cluster.<br/>A node can be configured to join a specific cluster by the cluster name. By default, each node is set up to join a cluster named elasticsearch which means that if you start up a number of nodes on your network and—assuming they can discover each other—they will all automatically form and join a single cluster named elasticsearch.</p>
+<p><em>A Node is a server. As a component of the cluster, it stores data and participates in the indexing and query functions of the cluster. Each Node also has a unique name, which is UUID by default.</em><br/><em>Each Node can join the cluster by specifying a cluster name;</em></p>
+<h3>2 Index concept</h3>
+<h4>Index</h4>
+<p>An index is a collection of documents that have somewhat similar characteristics. An index is identified by a name (that must be all lowercase) and this name is used to refer to the index when performing indexing, search, update, and delete operations against the documents in it.</p>
+<p><em>An Index is a collection of documents with similar characteristics; an Index also has a name (all lowercase).</em></p>
+<h4>Type (obsolete)</h4>
+<p>A type used to be a logical category/partition of your index to allow you to store different types of documents in the same index. It is no longer possible to create multiple types in an index, and the whole concept of types will be removed in a later version. </p>
+<p><em>A type is a logical concept, indicating a category or partition in the index, which will be abandoned in the future;</em></p>
+<p>Abandonment progress:<br/>Indices created in Elasticsearch 6.0.0 or later may only contain a single mapping type. Indices created in 5.x with multiple mapping types will continue to function as before in Elasticsearch 6.x. Types will be deprecated in APIs in Elasticsearch 7.0.0, and completely removed in 8.0.0.</p>
+<p>Reason for abandonment:<br/>Initially, we spoke about an “index” being similar to a “database” in an SQL database, and a “type” being equivalent to a “table”.<br/>This was a bad analogy that led to incorrect assumptions. In an SQL database, tables are independent of each other. The columns in one table have no bearing on columns with the same name in another table. This is not the case for fields in a mapping type.</p>
+<h4>Document</h4>
+<p>A document is a basic unit of information that can be indexed. This document is expressed in JSON (JavaScript Object Notation) which is a ubiquitous internet data interchange format.</p>
+<p><em>A document is the basic information unit of an index, in the format of JSON;</em></p>
+<h3>3 others</h3>
+<h4>Near Realtime (NRT)</h4>
+<p>Elasticsearch is a near-realtime search platform. What this means is there is a slight latency (normally one second) from the time you index a document until the time it becomes searchable.</p>
+<p><em>Elasticsearch is a near-real-time search platform. Near-real-time means that the delay from inserting a document to being able to search the document is very small, usually 1 second.</em></p>
+<h4>Shards</h4>
+<p>An index can potentially store a large amount of data that can exceed the hardware limits of a single node. For example, a single index of a billion documents taking up 1TB of disk space may not fit on the disk of a single node or may be too slow to serve search requests from a single node alone.<br/>To solve this problem, Elasticsearch provides the ability to subdivide your index into multiple pieces called shards. When you create an index, you can simply define the number of shards that you want. Each shard is in itself a fully-functional and independent "index" that can be hosted on any node in the cluster.</p>
+<p>Sharding is important for two primary reasons:</p>
+<p>It allows you to horizontally split/scale your content volume<br/>It allows you to distribute and parallelize operations across shards (potentially on multiple nodes) thus increasing performance/throughput</p>
+<p>The mechanics of how a shard is distributed and also how its documents are aggregated back into search requests are completely managed by Elasticsearch and is transparent to you as the user.</p>
+<p><em>If an index is very large, it may exceed the hardware limit of a single machine. ES's solution is to divide the index into multiple sub-indexes, and each sub-index is also called a shard. When creating an index, you can specify the number of shards, and each shard is an independent index;</em><br/><em>Shard is very important: 1) horizontal expansion; 2) distributed and parallel operations;</em></p>
+<h4>Replicas</h4>
+<p>In a network/cloud environment where failures can be expected anytime, it is very useful and highly recommended to have a failover mechanism in case a shard/node somehow goes offline or disappears for whatever reason. To this end, Elasticsearch allows you to make one or more copies of your index’s shards into what are called replica shards, or replicas for short.</p>
+<p>Replication is important for two primary reasons:</p>
+<p>It provides high availability in case a shard/node fails. For this reason, it is important to note that a replica shard is never allocated on the same node as the original/primary shard that it was copied from.<br/>It allows you to scale out your search volume/throughput since searches can be executed on all replicas in parallel.</p>
+<p><em>Failure (hardware failure or network failure) is inevitable in a network environment, so failover is very important; ES allows you to configure each shard to have 0 or more backups, also called replicas (replicas);</em><br/><em>Replica is very important: 1) high availability; 2) parallel operation;</em></p>
+<h4>Summary</h4>
+<p>To summarize, each index can be split into multiple shards. An index can also be replicated zero (meaning no replicas) or more times. Once replicated, each index will have primary shards (the original shards that were replicated from) and replica shards (the copies of the primary shards).</p>
+<p>The number of shards and replicas can be defined per index at the time the index is created. After the index is created, you may also change the number of replicas dynamically anytime. You can change the number of shards for an existing index using the _shrink and _split APIs, however this is not a trivial task and pre-planning for the correct number of shards is the optimal approach.</p>
+<p>By default, each index in Elasticsearch is allocated 5 primary shards and 1 replica which means that if you have at least two nodes in your cluster, your index will have 5 primary shards and another 5 replica shards (1 complete replica) for a total of 10 shards per index.</p>
+<p><em>Each index can be split into multiple shards, and each index can be replicated 0 or more times; once replicated, each index will have a primary shard (primary shard, replicated data) and a replica shard (replicated shard, replicated data from the primary shard);</em><br/><em>The number of shards and replicas can be configured when creating the index, and can be modified later;</em><br/><em>The default number of shards is 5, and the default number of replicas is 1;</em></p>
+<p>Each Elasticsearch shard is a Lucene index. There is a maximum number of documents you can have in a single Lucene index. As of LUCENE-5843, the limit is 2,147,483,519 (= Integer.MAX_VALUE - 128) documents. You can monitor shard sizes using the _cat/shards API.</p>
+<p><em>Each ES shard is a Lucene index. There is a limit on the number of documents in the Lucene index. If the number is exceeded, ES needs to add more shards;</em></p>
+<p> </p>
+<h1>2. Installation</h1>
+<h2>1 Docker installation</h2>
+<blockquote>
+<p># docker run elasticsearch</p>
+</blockquote>
+<h2>2 Ambari installation</h2>
+<p>For details, see:<a href="https://www.cnblogs.com/barneywill/p/10281678.html" target="_blank">https://www.cnblogs.com/barneywill/p/10281678.html</a></p>
+<h2>3 Manual tar installation </h2>
+<blockquote>
+<p># curl -L -O https://artifacts.elastic.co/downloads/elasticsearch/elasticsearch-6.6.2.tar.gz<br/># tar -xvf elasticsearch-6.6.2.tar.gz<br/># cd elasticsearch-6.6.2</p>
+</blockquote>
+<p>Configuration file</p>
+<blockquote>
+<p>config/elasticsearch.yml</p>
+</blockquote>
+<p>You can configure the cluster name, data directory (like HDFS, you can configure multiple hard disks to improve performance), etc.;</p>
+<p>start up</p>
+<blockquote>
+<p># bin/elasticsearch</p>
+</blockquote>
+<h2>4 Manual yum installation</h2>
+<blockquote>
+<p># yum install elasticsearch</p>
+</blockquote>
+<p>Configuration file</p>
+<blockquote>
+<p>/etc/elasticsearch/elasticsearch.yml</p>
+</blockquote>
+<p>start up</p>
+<blockquote>
+<p># service elasticsearch start</p>
+</blockquote>
+<p> </p>
+<p>Access after startup</p>
+<blockquote>
+<p># curl http://$es_server:9200</p>
+<p>{<br/>  "name" : "y8NAQ9f",<br/>  "cluster_name" : "es_jdc",<br/>  "cluster_uuid" : "fZU17hfjTKO2IDUwnGmbEg",<br/>  "version" : {<br/>    "number" : "6.6.0",<br/>    "build_flavor" : "default",<br/>    "build_type" : "tar",<br/>    "build_hash" : "a9861f4",<br/>    "build_date" : "2019-01-24T11:27:09.439740Z",<br/>    "build_snapshot" : false,<br/>    "lucene_version" : "7.6.0",<br/>    "minimum_wire_compatibility_version" : "5.6.0",<br/>    "minimum_index_compatibility_version" : "5.0.0"<br/>  },<br/>  "tagline" : "You Know, for Search"<br/>}</p>
+</blockquote>
+<p>If an error occurs on startup</p>
+<blockquote>
+<p>ERROR: [1] bootstrap checks failed<br/>[1]: max virtual memory areas vm.max_map_count [65530] is too low, increase to at least [262144]</p>
+</blockquote>
+<p>Current configuration</p>
+<blockquote>
+<p># sysctl -a|grep vm.max_map_count<br/>vm.max_map_count = 65530</p>
+</blockquote>
+<p>Modification method</p>
+<blockquote>
+<p>sysctl -w vm.max_map_count=262144</p>
+<p>or</p>
+<p>echo 'vm.max_map_count=262144' &gt;&gt; /etc/sysctl.conf</p>
+</blockquote>
+<p> </p>
+<p>Important configuration: https://www.elastic.co/guide/en/Elasticsearch/reference/current/important-settings.html</p>
+<h1>Three uses</h1>
+<p>Elasticsearch uses standard RESTful APIs and JSON. We also build and maintain clients in many languages such as Java, Python, .NET, SQL, and PHP. </p>
+<p>Among them, rest API method, see for details <a href="https://www.cnblogs.com/barneywill/p/10296419.html" target="_blank">https://www.cnblogs.com/barneywill/p/10296419.html</a></p>
+<p> </p>
+<p>For data migration between hadoop and Elasticsearch, refer to: https://www.elastic.co/products/hadoop</p>
+<p> </p>
+<h1>4. Turn on security</h1>
+<p>Reference: https://www.netiq.com/documentation/sentinel-84/s84-install/data/t4e6i397w7if.html</p>
+<p> </p>
+</div>
+</div>
+<!-- Post Footer -->
+<div class="post-footer">
+<div class="post-navigation">
+<a class="nav-button" href="../blog.html">← Back to Home</a>
+<a class="nav-button" href="0258.html">Next Post →</a>
+</div>
+</div>
+</article>
+</div>
+</body>
+</html>

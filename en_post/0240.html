@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Ambari 5 - Deploy Hue via Ambari</title>
+<link href="../css/style3.css" rel="stylesheet"/>
+</head>
+<body>
+<div class="container">
+<!-- Header Navigation -->
+<div class="header">
+<h1><a href="../blog.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+</div>
+<!-- Post Container -->
+<article class="post">
+<!-- Post Header -->
+<div class="post-header">
+<h1>Ambari 5 - Deploy Hue via Ambari</h1>
+<div class="post-meta">
+<div class="post-meta-item">
+<span class="meta-icon">📅</span>
+<span>January 29, 2019</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">📖</span>
+<span>3 min read</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">👁️</span>
+<span>3181 views</span>
+</div>
+</div>
+</div>
+<!-- Post Content -->
+<div class="post-content">
+<div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<p>ambari2.7.3 (hdp3.1) install hue4.2</p>
+<p>Ambari's HDP does not natively support hue installation. Here is how to make Ambari support hue installation by adding a service:</p>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201901/1509647-20190129120203202-201034162.png"/></p>
+<p>Official: http://gethue.com/</p>
+<p>Hue is an open source Workbench for developing and accessing Data Apps.</p>
+<h1>1. Install SERVICE</h1>
+<p>Third-party service: https://github.com/EsharEditor/Ambari-hue-service</p>
+<h2>1 download</h2>
+<blockquote>
+<p>VERSION=`hdp-select status hadoop-client | sed 's/hadoop-client - \([0-9]\.[0-9]\).*/\1/'`<br/>rm -rf /var/lib/ambari-server/resources/stacks/HDP/$VERSION/services/HUE  <br/>sudo git clone https://github.com/EsharEditor/ambari-hue-service.git /var/lib/ambari-server/resources/stacks/HDP/$VERSION/services/HUE</p>
+</blockquote>
+<h2>2 modifications</h2>
+<p>The third-party service installed is hue3.11, which needs to be changed to 4.2. The following changes are required:</p>
+<blockquote>
+<p># cd /var/lib/ambari-server/resources/stacks/HDP/3.1/services/HUE<br/># sed -i 's/3.11.0/4.2.0/g' metainfo.xml<br/># sed -i 's/3.11.0/4.2.0/g' README.md<br/># sed -i 's/3.11.0/4.2.0/g' package/scripts/params.py<br/># sed -i 's/3.11.0/4.2.0/g' package/scripts/setup_hue.py</p>
+<p> </p>
+<p># vi package/scripts/params.py</p>
+<p>--modify line</p>
+<p> 32 #download_url = 'cat /etc/yum.repos.d/HDP.repo | grep "baseurl" | awk -F \'=\' \'{print $2"hue/hue-4.2.0.tgz"}\''<br/>     33 download_url = 'echo "http://gethue.com/downloads/releases/4.2.0/hue-4.2.0.tgz"'</p>
+<p>    187 webhdfs_url = format('http://' + hdfs_httpfs_host + ':50070/webhdfs/v1')</p>
+<p>--without yarn</p>
+<p>:234,256s/^/#/g</p>
+<p> </p>
+<p># vi package/scripts/common.py</p>
+<p>--add line 59,63,64</p>
+<p> 58 Execute('tar -zxvf hue.tgz -C {0} &amp;&amp; rm -f hue.tgz'.format(params.hue_install_ dir))<br/>     59   Execute('mkdir -p {0}'.format(params.hue_dir))<br/>     60   # Ensure all Hue files owned by hue     61   Execute('chown -R {0}:{1} {2}'.format(params.hue_user,params.hue_group,params.        hue_dir))<br/>     62   Execute('ln -s {0} /usr/hdp/current/hue-server'.format(params.hue_dir))<br/>     63   Execute('rm -rf {0}/*'.format(params.hue_dir))<br/>     64   Execute('cd /usr/local/hue-4.2.0 &amp;&amp; make install')</p>
+<p>--comment line</p>
+<p>     90     #services_configurations['httpfs-site'] = {}<br/>     91     #services_configurations['httpfs-site']['httpfs.proxyuser.hue.groups'] = '*'<br/>     92     #services_configurations['httpfs-site']['httpfs.proxyuser.hue.hosts'] = '*'</p>
+<p> </p>
+<p># vi package/scripts/setup_hue.py</p>
+<p>--comment line</p>
+<p>     26   #Logger.info("Creating symlinks /usr/hdp/current/hadoop-client/lib/hue-plugins        -4.2.0-SNAPSHOT.jar")<br/>     27   #Link("{0}/desktop/libs/hadoop/java-lib/*".format(params.hue_dir),to = "/usr/h        dp/current/hadoop-client/lib")</p>
+<p> </p>
+<p># vi package/files/configs.sh</p>
+<p>     39 PASSWD="admin"</p>
+</blockquote>
+<p>Pay attention to this step</p>
+<blockquote>
+<p>download_url = 'echo "http://gethue.com/downloads/releases/4.2.0/hue-4.2.0.tgz"'</p>
+</blockquote>
+<p>hue-4.2.0.tgz needs to be downloaded manually and placed on a URL accessible to the server (such as local Nginx), and the download_url here must be modified at the same time.</p>
+<h1>2. Deployment in Ambari</h1>
+<h2>1 Add user</h2>
+<blockquote>
+<p>useradd hue</p>
+</blockquote>
+<h2>2 Page deployment and installation of hue</h2>
+<p>The installed hue directory is located at /usr/local/hue/</p>
+<h2>3 Modify configuration</h2>
+<p>1) Modify database configuration</p>
+<blockquote>
+<p># vi desktop/conf/hue.ini</p>
+<p>  [[database]]</p>
+<p>    # Database engine is typically one of:</p>
+<p>    # postgresql_psycopg2, mysql, sqlite3 or oracle.</p>
+<p>    #</p>
+<p>    # Note that for sqlite3, 'name', below is a path to the filename. For other backends, it is the database name</p>
+<p>    # Note for Oracle, options={"threaded":true} must be set in order to avoid crashes.</p>
+<p>    # Note for Oracle, you can use the Oracle Service Name by setting "host=" and "port=" and then "name=&lt;host&gt;:&lt;port&gt;/&lt;service_name&gt;".</p>
+<p>    # Note for MariaDB use the 'mysql' engine.</p>
+<p>    ## engine=sqlite3</p>
+<p>    ## host=</p>
+<p>    ## port=</p>
+<p>    ## user=</p>
+<p>    ## password=</p>
+<p>    # conn_max_age option to make database connection persistent value in seconds</p>
+<p>    # https://docs.djangoproject.com/en/1.9/ref/databases/#persistent-connections</p>
+<p>    ## conn_max_age=0</p>
+<p>    # Execute this script to produce the database password. This will be used when 'password' is not set.</p>
+<p>    ## password_script=/path/script</p>
+<p>    ## name=desktop/desktop.db</p>
+</blockquote>
+<p>Modify engine, host, port, user, password, name</p>
+<p>2) Initialize the database</p>
+<blockquote>
+<p># build/env/bin/hue syncdb</p>
+</blockquote>
+<p>An initial username and password will be created</p>
+<blockquote>
+<p># build/env/bin/hue migrate</p>
+</blockquote>
+<p>3) If you want to support database queries such as MySQL, find</p>
+<blockquote>
+<p>  [[databases]]</p>
+<p> </p>
+<p>    # mysql, oracle, or postgresql configuration.</p>
+<p>    ## [[[mysql]]]</p>
+<p>      # Name to show in the UI.</p>
+<p>      ## nice_name="My SQL DB"</p>
+<p> </p>
+<p>      # For MySQL and PostgreSQL, name is the name of the database.</p>
+<p>      # For Oracle, Name is instance of the Oracle server. For express edition</p>
+<p>      # this is 'xe' by default.</p>
+<p>      ## name=mysqldb</p>
+<p> </p>
+<p>      # Database backend to use. This can be:</p>
+<p>      # 1. mysql</p>
+<p>      # 2. postgresql</p>
+<p>      # 3. oracle</p>
+<p>      ## engine=mysql</p>
+<p> </p>
+<p>      # IP or hostname of the database to connect to.</p>
+<p>      ## host=localhost</p>
+<p> </p>
+<p>      # Port the database server is listening to. Defaults are:</p>
+<p>      # 1. MySQL: 3306</p>
+<p>      # 2. PostgreSQL: 5432</p>
+<p>      # 3. Oracle Express Edition: 1521</p>
+<p>      ## port=3306</p>
+<p> </p>
+<p>      # Username to authenticate with when connecting to the database.</p>
+<p>      ## user=example</p>
+<p> </p>
+<p>      # Password matching the username to authenticate with when</p>
+<p>      # connecting to the database.</p>
+<p>      ## password=example</p>
+</blockquote>
+<p>Just add according to the comments, you can add multiple</p>
+<p>4) If you need to add Impala query, find</p>
+<blockquote>
+<p>[impala]</p>
+<p>  # Host of the Impala Server (one of the Impalad)</p>
+<p>  # server_host=localhost</p>
+<p> </p>
+<p>  # Port of the Impala Server</p>
+<p>  ## server_port=21050</p>
+</blockquote>
+<p>Note that this is port 21050, not port 21000 for Impala-Shell connection.</p>
+<p>5) You can hide the menus of some components by configuring blacklist</p>
+<blockquote>
+<p>[desktop]</p>
+<p> app_blacklist=beeswax,impala,security,filebrowser,jobbrowser,rdbms,jobsub,pig,hbase,sqoop,zookeeper,metastore,spark,oozie,indexer</p>
+</blockquote>
+<h2>4 start</h2>
+<p>direct start</p>
+<blockquote>
+<p># build/env/bin/hue runcherrypyserver</p>
+</blockquote>
+<p>Start supervisor in the background (supervisor will monitor and start hue server)</p>
+<blockquote>
+<p># nohup build/env/bin/supervisor start &gt;&gt; logs/hue.out 2&gt;&amp;1 &amp;</p>
+</blockquote>
+<p>The log is located under /usr/local/hue/logs/</p>
+<h1>Three uses</h1>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201901/1509647-20190129115804604-1957622752.png"/></p>
+<p> </p>
+<p>If hue uses Nginx proxy, be sure to set the Host, otherwise a 400 error will be reported:</p>
+<blockquote>
+<p>location / {</p>
+<p>  proxy_pass http://hue_backend;</p>
+<p>  proxy_set_header Host hue.anything;</p>
+<p>}</p>
+</blockquote>
+<p>In addition, you can also use Nginx to manage hue’s static files to speed up access; </p>
+<p> </p>
+<p>Reference: https://blog.csdn.net/zhouyuanlinli/article/details/83374416</p>
+<p> </p>
+</div>
+</div>
+<!-- Post Footer -->
+<div class="post-footer">
+<div class="post-navigation">
+<a class="nav-button" href="../blog.html">← Back to Home</a>
+<a class="nav-button" href="0241.html">Next Post →</a>
+</div>
+</div>
+</article>
+</div>
+</body>
+</html>

@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Spark will pause for a few minutes between jobs</title>
+<link href="../css/style3.css" rel="stylesheet"/>
+</head>
+<body>
+<div class="container">
+<!-- Header Navigation -->
+<div class="header">
+<h1><a href="../blog.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+</div>
+<!-- Post Container -->
+<article class="post">
+<!-- Post Header -->
+<div class="post-header">
+<h1>Spark will pause for a few minutes between jobs</h1>
+<div class="post-meta">
+<div class="post-meta-item">
+<span class="meta-icon">📅</span>
+<span>December 27, 2018</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">📖</span>
+<span>1 min read</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">👁️</span>
+<span>853 views</span>
+</div>
+</div>
+</div>
+<!-- Post Content -->
+<div class="post-content">
+<div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<p>I encountered a problem today. In the Spark application, SQL is executed in a loop. Each SQL will write data to a table, such as</p>
+<blockquote>
+<p>insert overwrite table test_table partition(dt) select * from test_table_another;</p>
+</blockquote>
+<p>There is no other logic except executing SQL. Each SQL will correspond to a job. On the Spark web ui, you can see that there will be a pause between jobs for a few minutes, and it is very regular. There will be a pause between any two jobs. Isn't it amazing?</p>
+<p> </p>
+<p>The answer is revealed:</p>
+<p>When Spark executes insert overwrite table partition, it is divided into two parts, one is to execute select (read data), and the other is to execute load partition (write data). For details, see the execution plan;</p>
+<p>Each SQL corresponds to a job. The select part (reading data) of this job does not include the load partition part (writing data). In order to be compatible with Hive, Spark directly uses Hive's metadata database. All ddl operations directly call Hive code through reflection (spark2.1 relies on hive1.2). This process is not included in the Spark job, so it seems that after the job is executed, it pauses for a few minutes before executing the next job. The few minutes of pause here are actually doing the load partition operation (writing data);</p>
+<p> </p>
+<p>There is another problem here. When hive1.2 deletes files in loadPartition, it is a serial operation, which is very slow. This problem was changed to a thread pool in hive2. See the specific code and problem analysis for details:<a href="https://www.cnblogs.com/barneywill/p/10154922.html" target="_blank">https://www.cnblogs.com/barneywill/p/10154922.html</a></p>
+<p> </p>
+</div>
+</div>
+<!-- Post Footer -->
+<div class="post-footer">
+<div class="post-navigation">
+<a class="nav-button" href="../blog.html">← Back to Home</a>
+<a class="nav-button" href="0292.html">Next Post →</a>
+</div>
+</div>
+</article>
+</div>
+</body>
+</html>

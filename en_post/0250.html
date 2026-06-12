@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Linux server upgrade glibc failure recovery</title>
+<link href="../css/style3.css" rel="stylesheet"/>
+</head>
+<body>
+<div class="container">
+<!-- Header Navigation -->
+<div class="header">
+<h1><a href="../blog.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+</div>
+<!-- Post Container -->
+<article class="post">
+<!-- Post Header -->
+<div class="post-header">
+<h1>Linux server upgrade glibc failure recovery</h1>
+<div class="post-meta">
+<div class="post-meta-item">
+<span class="meta-icon">📅</span>
+<span>January 24, 2019</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">📖</span>
+<span>1 min read</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">👁️</span>
+<span>6078 views</span>
+</div>
+</div>
+</div>
+<!-- Post Content -->
+<div class="post-content">
+<div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<p>Redhat6 system installs glibc-2.12 by default. Some software depends on glibc-2.14. In this case, you need to upgrade glibc. Download and install http://ftp.gnu.org/gnu/glibc/glibc-2.14.tar.gz</p>
+<blockquote>
+<p># ./configure --prefix=/usr --disable-profile --enable-add-ons --with-headers=/usr/include --with-binutils=/usr/bin<br/># make<br/># make install</p>
+</blockquote>
+<p>As a result, make install reports an error. At the same time, all commands except cd cannot be used. Various shared libraries will be reported: *: cannot open shared object file: No such file or directory.</p>
+<blockquote>
+<p>ls: error while loading shared libraries: libselinux.so.1: cannot open shared object file: No such file or directory</p>
+</blockquote>
+<p>These shared libraries are located under /lib64/, and the machine cannot log in remotely at this time.<br/>Now there is only one terminal root account logged in to the server, and nothing can be done except executing cd, omg<br/>All kinds of Google can't solve it, so you have to work hard on your own.</p>
+<p>1 First try to remotely transfer all files and links under /lib64/ from other servers to the local machine, but various transfer commands cannot be used, such as nc, scp, etc.</p>
+<p>2 Secondly, I suspect that the link may be damaged and try to manually rebuild the link that reported the error.</p>
+<blockquote>
+<p># ln - s libtinfo.so.5.7 libtinfo.so.5<br/>ln: creating symbolic link `libtinfo.so.5': File exists</p>
+</blockquote>
+<p>Although ls cannot be used, it seems that various files and links under /lib64/ are still there, so why does it report No such file or directory?</p>
+<p>3 Check the current environment variables through export again (export can still be used):</p>
+<blockquote>
+<p># export<br/>declare - x LD_LIBRARY_PATH="/usr/local/lib"</p>
+</blockquote>
+<p>Try to modify LD_LIBRARY_PATH and add /lib64:</p>
+<blockquote>
+<p>export LD_LIBRARY_PATH=/lib64:$LD_LIBRARY_PATH</p>
+</blockquote>
+<p>Many commands can be used. The process of upgrading glibc this time is as follows. Take one of the libraries as an example:</p>
+<p>Before installation:</p>
+<blockquote>
+<p>-rwxr-xr-x  1 root root  161776 Jun 19  2018 ld-2.12.so<br/>lrwxrwxrwx  1 root root      10 Jun 19  2018 ld-linux-x86-64.so.2 - &gt; ld-2.12.so</p>
+</blockquote>
+<p>After installation:</p>
+<blockquote>
+<p>-rwxr-xr-x  1 root root  161776 Jun 19  2018 ld-2.12.so<br/>-rwxr-xr-x  1 root root  838308 Jan 24 15:41 ld-2.14.so<br/>lrwxrwxrwx  1 root root      10 Jan 24 16:28 ld-linux-x86-64.so.2 - &gt; ld-2.14.so</p>
+</blockquote>
+<p>Roll back the changes in this installation, that is, change all links to point back to version 2.12</p>
+<blockquote>
+<p># ls - l /lib64|grep 2.14|grep lrw|awk '{print "ln - snf "$11" "$9}'|sed 's/2.14/2.12/g'<br/>ln - snf ld-2.12.so ld-linux-x86-64.so.2<br/>ln - snf libBrokenLocale-2.12.so libBrokenLocale.so.1<br/>ln - snf libanl-2.12.so libanl.so.1<br/>ln - snf libc-2.12.so libc.so.6<br/>ln - snf libcidn-2.12.so libcidn.so.1<br/>ln - snf libcrypt-2.12.so libcrypt.so.1<br/>ln - snf libdl-2.12.so libdl.so.2<br/>ln - snf libm-2.12.so libm.so.6<br/>ln - snf libnsl-2.12.so libnsl.so.1<br/>ln - snf libnss_compat-2.12.so libnss_compat.so.2<br/>ln - snf libnss_dns-2.12.so libnss_dns.so.2<br/>ln - snf libnss_files-2.12.so libnss_files.so.2<br/>ln - snf libnss_hesiod-2.12.so libnss_hesiod.so.2<br/>ln - snf libnss_nis-2.12.so libnss_nis.so.2<br/>ln - snf libnss_nisplus-2.12.so libnss_nisplus.so.2<br/>ln - snf libpthread-2.12.so libpthread.so.0<br/>ln - snf libresolv-2.12.so libresolv.so.2<br/>ln - snf librt-2.12.so librt.so.1<br/>ln - snf libutil-2.12.so libutil.so.1</p>
+</blockquote>
+<p>Execute them all once, the fault will be restored, various commands can be used, and the machine will resume remote login.</p>
+</div>
+</div>
+<!-- Post Footer -->
+<div class="post-footer">
+<div class="post-navigation">
+<a class="nav-button" href="../blog.html">← Back to Home</a>
+<a class="nav-button" href="0251.html">Next Post →</a>
+</div>
+</div>
+</article>
+</div>
+</body>
+</html>

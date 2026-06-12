@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>vi&amp;vim basics</title>
+<link href="../css/style3.css" rel="stylesheet"/>
+</head>
+<body>
+<div class="container">
+<!-- Header Navigation -->
+<div class="header">
+<h1><a href="../blog.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+</div>
+<!-- Post Container -->
+<article class="post">
+<!-- Post Header -->
+<div class="post-header">
+<h1>vi&amp;vim basics</h1>
+<div class="post-meta">
+<div class="post-meta-item">
+<span class="meta-icon">📅</span>
+<span>April 02, 2019</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">📖</span>
+<span>4 min read</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">👁️</span>
+<span>597 views</span>
+</div>
+</div>
+</div>
+<!-- Post Content -->
+<div class="post-content">
+<div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<h1><img alt="" src="https://img2020.cnblogs.com/blog/1509647/202006/1509647-20200616223223503-1779599432.png"/></h1>
+<h1>1 vi configuration file</h1>
+<blockquote>
+<p>~/.vimrc<br/>or<br/>/etc/vimrc</p>
+</blockquote>
+<p>ps: If you are using the vim plug-in in idea, the configuration file used is ~/.ideavimrc~~~`s</p>
+<p> </p>
+<p>The color matching can be modified in the configuration file, the key bindings can be modified, and the configuration can be modified, such as</p>
+<blockquote>
+<p><code class="sourceCode bash"><span id="cb1-3"><span class="ex">inoremap <span class="op">&lt;C-a<span class="op">&gt; <span class="op">&lt;Home<span class="op">&gt;</span></span></span></span></span></span></code></p>
+<p><code class="sourceCode bash"><span id="cb1-3"></span></code><code class="sourceCode bash"><span id="cb1-3"><span class="ex"><span class="op"><span class="op"><span class="op"><span class="op"><span id="cb1-4"><span class="ex">inoremap <span class="op">&lt;C-e<span class="op">&gt; <span class="op">&lt;End<span class="op">&gt;</span></span></span></span></span></span></span></span></span></span></span></span></code></p>
+<p><code class="sourceCode bash"><span id="cb1-3"></span></code><code class="sourceCode bash"><span id="cb1-3"><span class="ex"><span class="op"><span class="op"><span class="op"><span class="op"><span id="cb1-4"><span class="ex"><span class="op"><span class="op"><span class="op"><span class="op"><span id="cb1-5"><span class="st">inoremap &lt;C-p&gt; &lt;Up&gt;</span></span></span></span></span></span></span></span></span></span></span></span></span></span></code></p>
+<p><code class="sourceCode bash"><span id="cb1-3"><span class="ex"><span class="op"><span class="op"><span class="op"><span class="op"><span id="cb1-4"><span class="ex"><span class="op"><span class="op"><span class="op"><span class="op"><span id="cb1-5"><span class="st"><span id="cb1-6"><span class="st"><span class="ex">inoremap <span class="op">&lt;C-n<span class="op">&gt; <span class="op">&lt;Down<span class="op">&gt;</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></code></p>
+<p><code class="sourceCode bash"><span id="cb1-3"></span></code><code class="sourceCode bash"><span id="cb1-3"><span class="ex"><span class="op"><span class="op"><span class="op"><span class="op"><span id="cb1-4"><span class="ex"><span class="op"><span class="op"><span class="op"><span class="op"><span id="cb1-5"><span class="st"><span id="cb1-6"><span class="st"><span class="ex"><span class="op"><span class="op"><span class="op"><span class="op"><span id="cb1-7"><span class="ex">inoremap <span class="op">&lt;C-b<span class="op">&gt; <span class="op">&lt;Left<span class="op">&gt;</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></code></p>
+<p><code class="sourceCode bash"><span id="cb1-3"></span></code><code class="sourceCode bash"><span id="cb1-3"><span class="ex"><span class="op"><span class="op"><span class="op"><span class="op"><span id="cb1-4"><span class="ex"><span class="op"><span class="op"><span class="op"><span class="op"><span id="cb1-5"><span class="st"><span id="cb1-6"><span class="st"><span class="ex"><span class="op"><span class="op"><span class="op"><span class="op"><span id="cb1-7"><span class="ex"><span class="op"><span class="op"><span class="op"><span class="op"><span id="cb1-8"><span class="ex">inoremap <span class="op">&lt;C-f<span class="op">&gt; <span class="op">&lt;Right<span class="op">&gt;</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></code></p>
+<p> </p>
+<p>colorscheme darkblue</p>
+</blockquote>
+<p>Default color folder: /usr/share/vim/vim74/colors</p>
+<p>Note that 74 is the version number</p>
+<p> </p>
+<h1>Two modes</h1>
+<p>Three modes: command mode, bottom line command mode, input mode</p>
+<h2>Command Mode</h2>
+<h3>1 Move the cursor up/down/left/right</h3>
+<blockquote>
+<p>h Left</p>
+<p>k Up</p>
+<p>j Down</p>
+<p>l RIght</p>
+</blockquote>
+<p>Number+j|k|h|l can quickly move number characters</p>
+<h3>2 Cursor moves quickly</h3>
+<blockquote>
+<p>G (end of file)</p>
+<p>1G (beginning of file)</p>
+<p>gg </p>
+<p>10G (jump to the beginning of line 10)</p>
+<p>10gg </p>
+<p>:10Enter </p>
+<p>10 Enter (cursor moves down 10 lines)</p>
+<p>10j </p>
+<p> </p>
+<p>H (top row of current screen)</p>
+<p>L (bottom row of current screen)</p>
+<p>M (move the cursor to the middle line of the screen)</p>
+<p>^ (start of line, no spaces, first non-whitespace character, soft start of line)</p>
+<p>0 (Number 0, start of line, including spaces, first character, hard start of line)</p>
+<p>$ (end of line)</p>
+<p>- (previous line beginning, soft line beginning)</p>
+<p>+ (beginning of next line, soft line beginning)</p>
+<p> </p>
+<p>Space (move backward 1 character)</p>
+<p>10 spaces (move backward 10 characters)</p>
+<p>10l (lowercase L)</p>
+<p>w (move to the beginning of the next word, where words are separated by non-letters)</p>
+<p>W (move to the beginning of the next word, words here are separated by spaces)</p>
+<p>e (move to the end of the next word, same as above)</p>
+<p>E (words here are separated by spaces, same as above)</p>
+<p>ge (reverse e)</p>
+<p>b (move to the beginning of the previous word, same as above)</p>
+<p>B (words here are separated by spaces, same as above)</p>
+<p> </p>
+<p>( (move to the beginning of the previous sentence)</p>
+<p>) (move to the beginning of the next sentence)</p>
+<p>{ (move to the previous paragraph, separated by blank lines)</p>
+<p>} (move to next paragraph, separated by blank line)</p>
+<p> </p>
+<p>Ctrl+g (list editing information, including file name, line number, column number, etc.)</p>
+<p>&gt;&gt; (indent, one tab)</p>
+<p>&lt;&lt; (anti-indent, one tab)</p>
+<p> </p>
+<p>f any character (move the cursor backward to the specified character)</p>
+<p>F any character (move the cursor forward to the specified character)</p>
+<p>tAny character (move the cursor to before the specified character)</p>
+<p>T any character (move the cursor in the reverse direction to before the specified character)</p>
+<p>10f any character (move the cursor backward to the 10th occurrence of the specified character)</p>
+<p>; (repeat, repeat the above operation and continue to move the cursor to the next position)</p>
+<p>, (reverse, return the cursor to the previous position)</p>
+</blockquote>
+<h3>3 turn pages</h3>
+<blockquote>
+<p>Ctrl+b (turn up one page)</p>
+<p>Ctrl+u (turn up half a page)</p>
+<p>Ctrl+f (turn down one page)</p>
+<p>Ctrl+d (turn half page down)</p>
+<p>Ctrl+e (the screen scrolls down, the cursor position remains unchanged, different from j)</p>
+<p>Ctrl+y (Scroll up the screen, the cursor position remains unchanged, the difference is k)</p>
+</blockquote>
+<h3>4 search</h3>
+<blockquote>
+<p>/something (search down)</p>
+<p>?something (search up)</p>
+<p>n next N previous</p>
+<p> </p>
+<p># (Select the word currently under the cursor upwards)</p>
+<p>* (Down to select the word currently under the cursor)</p>
+</blockquote>
+<h3>5 Delete characters</h3>
+<blockquote>
+<p>x (delete backward, Delete)</p>
+<p>X (delete forward, Backspace)</p>
+<p>10x (delete 10 characters backward)</p>
+<p>10X (delete 10 characters forward)</p>
+<p>dw (delete 1 word backward)</p>
+<p>10dw (delete 10 words backward)</p>
+<p>d^ (delete the cursor to the beginning of the line)</p>
+<p>d0 </p>
+<p>d$ (delete cursor to end of line)</p>
+<p>D </p>
+<p> </p>
+<p>di' (remove characters between '')</p>
+<p>da' (delete characters between '', including ')</p>
+<p>di" (delete the characters between "")</p>
+<p>da" (delete the characters between "", including ")</p>
+<p>ci ca (modify)</p>
+<p>yi ya (copy)</p>
+<p> </p>
+<p>dd (delete current line)</p>
+<p>dj (delete next line)</p>
+<p>dk (delete previous line)</p>
+<p>d10d (delete 10 lines)</p>
+<p>10dd (delete 10 rows)</p>
+<p>dG (Delete the line where the cursor is located to the end)</p>
+<p>d1G (Delete the line where the cursor is to the first line)</p>
+</blockquote>
+<h3>6 Visual copy and paste</h3>
+<blockquote>
+<p>V (visual row mode, block selection mode, then move the cursor up and down until the desired row is selected)</p>
+<p>v (Visual mode, then move the cursor left or right until the desired character is selected)</p>
+<p>y (copy all selected characters)</p>
+<p>d (cut selected characters)</p>
+<p>p (paste the selected text to the line below the cursor)</p>
+<p>P (paste the selected text to the line above the cursor)</p>
+</blockquote>
+<h3> </h3>
+<h3>7 copy</h3>
+<blockquote>
+<p>yy (copy entire line)</p>
+<p>Y</p>
+<p>10yy (copy 10 lines)</p>
+<p>yw (copy next word)</p>
+<p>10yw (copy the next 10 words)</p>
+<p>yG (copy current line to last line)</p>
+<p>y1G (copy the current line to the first line)</p>
+<p>y0 (copy the current cursor to the beginning of the line)</p>
+<p>y^</p>
+<p>y$ (copy the current cursor to the end of the line)</p>
+<p> </p>
+<p>The above cut and copy can only be used in vi with p. If you want to paste in other applications, you need to copy to the clipboard. The command is as follows:</p>
+<p>"*yG (select all and copy)</p>
+</blockquote>
+<h3>8 undo&amp;redo operations</h3>
+<blockquote>
+<p>u (undo restores to the state before editing)</p>
+<p>U (undo restores the previous operation, press it again to repeat the last operation)</p>
+<p>. (redo repeats the previous command, such as dw)</p>
+</blockquote>
+<h3>9 Temporary suspend and return</h3>
+<blockquote>
+<p>Ctrl+z (suspend)</p>
+<p>fg (return)</p>
+</blockquote>
+<h3>10 marks</h3>
+<blockquote>
+<p>m any character (mark the current position of the cursor as any character)</p>
+<p>`Any character (quick return mark)</p>
+<p>'Any character (quickly returns to the beginning of the marked line)</p>
+<p>:delmarks any character (unmark)</p>
+</blockquote>
+<h2>Last Line Mode</h2>
+<p>Command mode input: enter bottom line command mode, delete: or return to command mode after command execution</p>
+<h3>1 Show line number or cancel</h3>
+<blockquote>
+<p>:set number</p>
+<p>:set nonumber</p>
+<p>or</p>
+<p>:set nu</p>
+<p>:set nonu</p>
+</blockquote>
+<h3>2 automatic indentation</h3>
+<blockquote>
+<p>:set ai<br/>or<br/>:set autoindent</p>
+</blockquote>
+<h3>3 Smart indentation</h3>
+<blockquote>
+<p>:set si<br/>or<br/>:set smartindent</p>
+</blockquote>
+<h3>4 Cancel automatic indentation when pasting</h3>
+<blockquote>
+<p>:set noai nosi<br/>or<br/>:set paste</p>
+</blockquote>
+<h3>5 Text replacement a-&gt;b</h3>
+<blockquote>
+<p>:%s/a/b/g (all lines)</p>
+<p>:s/a/b/g (current line)</p>
+<p>:1,5s/a/b/g (lines 1-5)</p>
+<p> </p>
+<p>:1,5s/^/#/b (Add comments on lines 1-5)</p>
+<p>Another way, under vim</p>
+<p>1) Ctrl+v (enter block selection mode)</p>
+<p>2) j (move the cursor to select lines 1-5)</p>
+<p>3) I (capital i, enter at the beginning of the line)</p>
+<p>4) # (enter comment characters)</p>
+<p>5) Esc (twice, exit block selection mode, and add comment characters at the beginning of lines 1-5)</p>
+</blockquote>
+<p> </p>
+<h3>6 Change the file format to unix</h3>
+<blockquote>
+<p>:set fileformat unix</p>
+</blockquote>
+<h3>7 Save &amp; Exit</h3>
+<blockquote>
+<p>:w (save)</p>
+<p>:q (quit)</p>
+<p>:q! (discard modifications and exit, equal to ZQ)</p>
+<p>:wq (save and exit, equal to ZZ)</p>
+</blockquote>
+<p> </p>
+<h3>8 Temporary execution of orders</h3>
+<blockquote>
+<p>:! some command (temporarily execute some command)</p>
+</blockquote>
+<h3>9 cut</h3>
+<blockquote>
+<p>:x,yd (cut lines x to y)</p>
+<p>:x,y m z (move lines x to y after line z)</p>
+</blockquote>
+<h3>10 vim color matching</h3>
+<blockquote>
+<p>:colorscheme (View current color scheme)</p>
+<p>:colorscheme darkblue (modify color scheme, permanent modification requires modification of .vimrc)</p>
+</blockquote>
+<h3>11 others</h3>
+<blockquote>
+<p>:h (help)</p>
+<p>:e filename (open another file)</p>
+<p>:new (open new file)</p>
+<p>:sav filename (save as)</p>
+<p> </p>
+<p>:sp [filename] (open another file and split the screen up and down at the same time)</p>
+<p>:vsp [filename] (open another file and split the screen left and right)</p>
+<p>:q (exit split screen)</p>
+<p>Ctrl+w h|j|k|l (cursor moves between split screens)</p>
+</blockquote>
+<p> </p>
+<h2>Insert Mode</h2>
+<p>Start in command mode</p>
+<h3>1 Insert characters</h3>
+<blockquote>
+<p>i (insert after cursor)</p>
+<p>I (insert at beginning of line)</p>
+<p>a (append after cursor)</p>
+<p>A (append at end of line)</p>
+<p>o (Insert a newline from the current position and insert characters starting after the newline)</p>
+<p>O (Insert a newline from the current position and insert characters starting before the newline)</p>
+<p>r (replace the current character and return to command mode after replacement)</p>
+<p>R (enter replacement mode)</p>
+<p>c0 (Delete all characters from the cursor to the beginning of the line and enter insert mode)</p>
+<p>c$ (Delete all characters from the cursor to the end of the line and enter insert mode)</p>
+<p>C </p>
+<p>cc (delete the current line and enter insert mode)</p>
+<p>cw (delete the word after the cursor and enter insert mode)</p>
+</blockquote>
+<h3>2 After entering input mode</h3>
+<blockquote>
+<p>Ctrl+w (delete 1 word to the left)</p>
+<p>Ctrl+u (delete to the left to the beginning of the line)</p>
+<p>Ctrl+h (delete 1 character to the left)</p>
+<p> </p>
+<p>Ctrl+t (increase indent at beginning of line)</p>
+<p>Ctrl+d (remove indent at beginning of line)</p>
+<p> </p>
+<p>Ctrl+a (insert last inserted content)</p>
+<p>Ctrl+@ (Insert the last inserted content and end insert mode)</p>
+<p> </p>
+<p>Ctrl+o (Temporarily return to command mode, return to input mode after executing a command, to avoid switching modes back and forth)</p>
+<p> </p>
+<p>Ctrl+u (restore last modification)</p>
+</blockquote>
+<p>After vi enters the input mode, there are very few shortcut keys, such as moving the cursor. Although you can use Ctrl+o, it is still not as convenient as emacs. But the good news is that you can bind emacs shortcut keys in vi.</p>
+<blockquote>
+<p># vi .vimrc</p>
+<p><span style="font-family: SimSun; font-size: 14px"><code class="sourceCode bash"><span id="cb1-3"><span class="ex">inoremap <span class="op">&lt;C-a<span class="op">&gt; <span class="op">&lt;Home<span class="op">&gt;</span></span></span></span></span></span></code></span></p>
+<p><span style="font-family: SimSun; font-size: 14px"><code class="sourceCode bash"><span id="cb1-3"></span></code><code class="sourceCode bash"><span id="cb1-3"><span class="ex"><span class="op"><span class="op"><span class="op"><span class="op"><span id="cb1-4"><span class="ex">inoremap <span class="op">&lt;C-e<span class="op">&gt; <span class="op">&lt;End<span class="op">&gt;</span></span></span></span></span></span></span></span></span></span></span></span></code></span></p>
+<p><span style="font-family: SimSun; font-size: 14px"><code class="sourceCode bash"><span id="cb1-3"></span></code><code class="sourceCode bash"><span id="cb1-3"><span class="ex"><span class="op"><span class="op"><span class="op"><span class="op"><span id="cb1-4"><span class="ex"><span class="op"><span class="op"><span class="op"><span class="op"><span id="cb1-5"><span class="st">inoremap &lt;C-p&gt; &lt;Up&gt;</span></span></span></span></span></span></span></span></span></span></span></span></span></span></code></span></p>
+<p><span style="font-family: SimSun; font-size: 14px"><code class="sourceCode bash"><span id="cb1-3"><span class="ex"><span class="op"><span class="op"><span class="op"><span class="op"><span id="cb1-4"><span class="ex"><span class="op"><span class="op"><span class="op"><span class="op"><span id="cb1-5"><span class="st"><span id="cb1-6"><span class="st"><span class="ex">inoremap <span class="op">&lt;C-n<span class="op">&gt; <span class="op">&lt;Down<span class="op">&gt;</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></code></span></p>
+<p><span style="font-family: SimSun; font-size: 14px"><code class="sourceCode bash"><span id="cb1-3"></span></code><code class="sourceCode bash"><span id="cb1-3"><span class="ex"><span class="op"><span class="op"><span class="op"><span class="op"><span id="cb1-4"><span class="ex"><span class="op"><span class="op"><span class="op"><span class="op"><span id="cb1-5"><span class="st"><span id="cb1-6"><span class="st"><span class="ex"><span class="op"><span class="op"><span class="op"><span class="op"><span id="cb1-7"><span class="ex">inoremap <span class="op">&lt;C-b<span class="op">&gt; <span class="op">&lt;Left<span class="op">&gt;</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></code></span></p>
+<p><span style="font-family: SimSun; font-size: 14px"><code class="sourceCode bash"><span id="cb1-3"></span></code><code class="sourceCode bash"><span id="cb1-3"><span class="ex"><span class="op"><span class="op"><span class="op"><span class="op"><span id="cb1-4"><span class="ex"><span class="op"><span class="op"><span class="op"><span class="op"><span id="cb1-5"><span class="st"><span id="cb1-6"><span class="st"><span class="ex"><span class="op"><span class="op"><span class="op"><span class="op"><span id="cb1-7"><span class="ex"><span class="op"><span class="op"><span class="op"><span class="op"><span id="cb1-8"><span class="ex">inoremap <span class="op">&lt;C-f<span class="op">&gt; <span class="op">&lt;Right<span class="op">&gt;</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></code></span></p>
+</blockquote>
+<p><span style="font-family: SimSun"><span><span class="ex"><span class="op"><span class="op"><span class="op"><span class="op"><span><span class="ex"><span class="op"><span class="op"><span class="op"><span class="op"><span><span class="st"><span><span class="st"><span class="ex"><span class="op"><span class="op"><span class="op"><span class="op"><span><span class="ex"><span class="op"><span class="op"><span class="op"><span class="op"><span><span class="ex"><span class="op"><span class="op"><span class="op"><span class="op"><span><span class="ex"><span class="op"><span class="op"><span class="op"><span class="op"><span><span class="ex"><span class="op"><span class="op"><span class="op"><span class="op">The above will be bound to shortcut keys such as Ctrl+aepnbf, which can be said to be a perfect combination of two swords.</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></p>
+<h3>3 Return to command mode</h3>
+<blockquote>
+<p>Esc</p>
+<p>Ctrl+c</p>
+<p>Ctrl+[</p>
+</blockquote>
+<p> </p>
+</div>
+</div>
+<!-- Post Footer -->
+<div class="post-footer">
+<div class="post-navigation">
+<a class="nav-button" href="../blog.html">← Back to Home</a>
+<a class="nav-button" href="0151.html">Next Post →</a>
+</div>
+</div>
+</article>
+</div>
+</body>
+</html>

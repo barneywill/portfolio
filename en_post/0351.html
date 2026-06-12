@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Kafka cluster broker process exits with errors one by one</title>
+<link href="../css/style3.css" rel="stylesheet"/>
+</head>
+<body>
+<div class="container">
+<!-- Header Navigation -->
+<div class="header">
+<h1><a href="../blog.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+</div>
+<!-- Post Container -->
+<article class="post">
+<!-- Post Header -->
+<div class="post-header">
+<h1>Kafka cluster broker process exits with errors one by one</h1>
+<div class="post-meta">
+<div class="post-meta-item">
+<span class="meta-icon">📅</span>
+<span>November 07, 2018</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">📖</span>
+<span>3 min read</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">👁️</span>
+<span>2377 views</span>
+</div>
+</div>
+</div>
+<!-- Post Content -->
+<div class="post-content">
+<div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<p align="center" style="text-align: left"> kafka0.8.1</p>
+<h1>1. Problem phenomenon</h1>
+<p>The production environment Kafka servers 134, 135, and 136 died on October 11 and October 13 respectively:</p>
+<p>134 logs</p>
+<blockquote>
+<p>[<strong>2014-10-13 16:45:41</strong>,902] FATAL [KafkaApi-134] Halting due to unrecoverable I/O error while handling produce request:  (kafka.server.KafkaApis)</p>
+</blockquote>
+<p>135 logs</p>
+<blockquote>
+<p>[<strong>2014-10-11 11:02:35</strong>,754] FATAL [KafkaApi-135] Halting due to unrecoverable I/O error while handling produce request:  (kafka.server.KafkaApis)</p>
+</blockquote>
+<p>136 logs</p>
+<blockquote>
+<p>[<strong>2014-10-13 19:10:35</strong>,106] FATAL [KafkaApi-136] Halting due to unrecoverable I/O error while handling produce request:  (kafka.server.KafkaApis)</p>
+</blockquote>
+<p>Java.io.FileNotFoundException (No such file or directory) is reported. The specific error log is as follows:</p>
+<p> <img alt="" src="https://img2018.cnblogs.com/blog/1509647/201811/1509647-20181107113137426-1319444713.png"/></p>
+<p>Among them, cacheClear-onlineConfirm-1 is a partition used by the online confirmation environment;</p>
+<h1>2. Problem analysis</h1>
+<p>After receiving the message as the leader, the Kafka broker will call Kafka.log.Log.append to add the message to the local log.</p>
+<p> <img alt="" src="https://img2018.cnblogs.com/blog/1509647/201811/1509647-20181107113216822-857135045.png"/></p>
+<p>MaybeRoll will be called first to check whether roll needs to be done.</p>
+<p> <img alt="" src="https://img2018.cnblogs.com/blog/1509647/201811/1509647-20181107113245013-3371048.png"/></p>
+<p>A new segment will be created in the roll, and the index file of the old segment will be trimmed.</p>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201811/1509647-20181107113324508-845852205.png"/></p>
+<p>resize will be called in trimToValidSize, and RandomAccessFile will be used in resize to open the index file. The error is reported in this line:</p>
+<p> <img alt="" src="https://img2018.cnblogs.com/blog/1509647/201811/1509647-20181107113351012-2025249102.png"/></p>
+<h2>1.1 Why do we need to trim the index?</h2>
+<p>The index file initialization process is:</p>
+<p> <img alt="" src="https://img2018.cnblogs.com/blog/1509647/201811/1509647-20181107113411750-206497324.png"/></p>
+<p>LogSegment constructor:</p>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201811/1509647-20181107113436662-1505444252.png"/></p>
+<p>OffsetIndex constructor:</p>
+<p> <img alt="" src="https://img2018.cnblogs.com/blog/1509647/201811/1509647-20181107113458856-54070882.png"/></p>
+<p>It can be seen that the file size is fixed when the index file is initialized, and is defined according to the maxIndexSize in the configuration, so the index file size of the last segment is the same, and is initially much larger than the log file, as shown in the red box in the following figure:</p>
+<p> <img alt="" src="https://img2018.cnblogs.com/blog/1509647/201811/1509647-20181107113549489-1789379036.png"/></p>
+<p>However, such an index file will have a lot of waste, so when rolling, the file size will be trimmed based on the actual number of entries in the index file, so that only the necessary file size is needed to store information, as shown in the blue box above;</p>
+<p> </p>
+<h2>1.2 When does RandomAccessFile report Java.io.FileNotFoundException?</h2>
+<p>The directory /home/test exists, but /home/test/1.txt does not exist, and /home/test/1/1.txt does not exist either. Use RandomAccessFile to read /home/test/1.txt and /home/test/1/1.txt respectively. It is found that the program will not report an error when reading /home/test/1.txt, but the program will report an error when reading /home/test/1/1.txt:</p>
+<p>1) Read /home/test/1.txt</p>
+<p> <img alt="" src="https://img2018.cnblogs.com/blog/1509647/201811/1509647-20181107113909669-752341242.png"/></p>
+<p>2) Read /home/test/1/1.txt</p>
+<p> <img alt="" src="https://img2018.cnblogs.com/blog/1509647/201811/1509647-20181107114023516-49833767.png"/></p>
+<p>So an error is reported</p>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201811/1509647-20181107114047237-1789570224.png"/></p>
+<p>yes<strong>because</strong><strong>cacheClear-onlineConfirm-1</strong><strong>Directory does not exist, not because 00000000000002001137.index</strong><strong>Index file does not exist</strong>；</p>
+<p> </p>
+<h2>1.3 When will the directory be deleted?</h2>
+<p>Before the Kafka server process exits, there are many errors in the log:</p>
+<p> <img alt="" src="https://img2018.cnblogs.com/blog/1509647/201811/1509647-20181107114119488-335951937.png"/></p>
+<p>The Kafka server has a background thread that performs retention checks. The default check interval is 5 minutes.</p>
+<p> <img alt="" src="https://img2018.cnblogs.com/blog/1509647/201811/1509647-20181107114136610-1706311831.png"/></p>
+<p>Checking errors on 134-136 respectively found:</p>
+<p> <img alt="" src="https://img2018.cnblogs.com/blog/1509647/201811/1509647-20181107114225320-241740390.png"/></p>
+<p>It can be seen that 134 starts reporting error from 10:49:48, 135 starts reporting error from 11:00:38, 136 starts reporting error from 11:00:03, and their check intervals are different, 134 is 5 minutes, 135 and 136 are both 1 minute. It can be seen that the partition directory on 134 was deleted before 10:49:48, 135 was deleted before 11:00:38, and 136 was deleted before 11:00:03;</p>
+<p> </p>
+<h2>1.4 Why do Kafka processes exit at different times?</h2>
+<p>Each Kafka partition has a leader. Only the leader will append the message, so only the leader can execute the above code and exit the process.</p>
+<p> <img alt="" src="https://img2018.cnblogs.com/blog/1509647/201811/1509647-20181107114253679-1309944985.png"/></p>
+<p>The leader will determine whether roll is needed when accepting the message. When the segment size exceeds the limit or the segment existence time exceeds the limit, it will perform roll. When the leader executes roll, it will report an error and exit;</p>
+<p> </p>
+<p>So at the beginning, 135 served as the leader, and then executed roll and exited at 11:02:35 on the 11th:</p>
+<blockquote>
+<p>[2014-10-11 11:02:35,754] FATAL [KafkaApi-135] Halting due to unrecoverable I/O error while handling produce request:  (kafka.server.KafkaApis) </p>
+</blockquote>
+<p>Then 134 takes over as leader, and then executes roll at 16:45:41 on the 13th and exits with an error:</p>
+<blockquote>
+<p>[2014-10-13 16:45:41,902] FATAL [KafkaApi-134] Halting due to unrecoverable I/O error while handling produce request:  (kafka.server.KafkaApis)</p>
+</blockquote>
+<p>In the end, only 136 was left to take over as leader, and then executed roll at 19:10:35 on the 13th and exited with an error:</p>
+<blockquote>
+<p>[2014-10-13 16:45:41,902] FATAL [KafkaApi-134] Halting due to unrecoverable I/O error while handling produce request:  (kafka.server.KafkaApis)</p>
+</blockquote>
+<p> </p>
+<p>Ps：</p>
+<p>From the server.log on 135, we can see that 135 acted as the leader to operate the ISR on August 20:</p>
+<p> <img alt="" src="https://img2018.cnblogs.com/blog/1509647/201811/1509647-20181107114324048-575832989.png"/></p>
+<p>It can be seen from the controller.log of 134 that when 135 died, 134 acted as the controller and took over the partition where 135 was originally the leader:</p>
+<p> <img alt="" src="https://img2018.cnblogs.com/blog/1509647/201811/1509647-20181107114409620-282163817.png"/></p>
+<p>After 134 died, 136, as the controller, took over the partition where 134 was originally the leader:</p>
+<p> <img alt="" src="https://img2018.cnblogs.com/blog/1509647/201811/1509647-20181107114450703-1046855243.png"/></p>
+<h1>Three problem positioning</h1>
+<p>There are several possibilities for the Partition directory to be deleted, one is deleted by the operating system, one is deleted manually, and the other is deleted by Kafka itself;</p>
+<h2>1 operating system removal</h2>
+<p>The /tmp directory is a temporary directory, and the operating system will be responsible for deleting expired files.</p>
+<p> <img alt="" src="https://img2018.cnblogs.com/blog/1509647/201811/1509647-20181107114532207-75357819.png"/></p>
+<p> </p>
+<p>Checking the cron log found that the time when 134-136 executed tmpwatch that day was around 3 a.m., and it was only executed once.</p>
+<blockquote>
+<p>Oct 11 03:28:02 hz1-13-134 run-parts(/etc/cron.daily)[24593]: starting tmpwatch</p>
+<p>Oct 11 03:28:02 hz1-13-134 run-parts(/etc/cron.daily)[24829]: finished tmpwatch</p>
+</blockquote>
+<p> </p>
+<p>Ps：</p>
+<p><strong>tmpwatch</strong> recursively removes files which haven't been accessed for a given time. Normally, it's used to clean up directories which are used for temporary holding space such as /tmp.</p>
+<p>It does not follow symbolic links in the directories it's cleaning (even if a symbolic link is given as its argument), will not switch filesystems, skips<em>lost+found</em> directories owned by the root user, and only removes empty directories, regular files, and symbolic links.</p>
+<p>By default, <strong>tmpwatch</strong> dates files by their atime (access time), not their mtime (modification time). </p>
+<p> </p>
+<p> </p>
+<h2>2 Manually deleted</h2>
+<p> <img alt="" src="https://img2018.cnblogs.com/blog/1509647/201811/1509647-20181107114613557-999035992.png"/></p>
+<p>The Kafka log directory belongs to root, and only root has write permissions, so if it is deleted manually, it can only be deleted by root itself, which is unlikely.</p>
+<p> </p>
+<p>Ps: Manually deleting the partition directory can easily reproduce server errors;</p>
+<p> </p>
+<h2>3 Kafka deletes itself</h2>
+<p>Looking at the Kafka code, we found that there is indeed a method to delete a partition, located in Kafka.cluster.Partition:</p>
+<p> <img alt="" src="https://img2018.cnblogs.com/blog/1509647/201811/1509647-20181107114643133-2005705176.png"/></p>
+<p>The deleteLog method of LogManager is as follows:</p>
+<p> <img alt="" src="https://img2018.cnblogs.com/blog/1509647/201811/1509647-20181107114709596-1343561052.png"/></p>
+<p>The delete method of Log is as follows:</p>
+<p> <img alt="" src="https://img2018.cnblogs.com/blog/1509647/201811/1509647-20181107114732927-1539753704.png"/></p>
+<p>The method will iteratively delete all segments, then clear the segment variables, and finally delete the partition directory;</p>
+<p> </p>
+<p>There are two points to consider here:</p>
+<ol>
+<li>The problem occurs because Kafka thinks that the partition exists but in fact the partition has been deleted for some reason, so an error is reported. If the above deleteLog method is called to delete the partition, it means that Kafka must know that the partition has been deleted (the segments variable is cleared, and segments.lastEntry() will definitely not be available when rolling), so there will be no problem;</li>
+<li>To execute roll, the current broker needs to be the leader of the partition, but the above deleteLog method is called by ReplicaManager.stopReplica. If stopReplica is called, it means that the current broker is no longer the replica of the partition, let alone the leader;</li>
+</ol>
+<p>The above two points can prove that Kafka did not delete the partition directory by itself;</p>
+<p> </p>
+<h1>Four causes of the problem</h1>
+<h2>1 background</h2>
+<p>1.1 Kafka’s retention check will call the Kafka.log.Log.deleteOldSegment method:</p>
+<p> <img alt="" src="https://img2018.cnblogs.com/blog/1509647/201811/1509647-20181107114756287-1285998122.png"/></p>
+<p>It can be found that if there is no new message, the last segment will always be empty. At this time, the segment will not be deleted or rolled. This segment will remain intact;</p>
+<p>1) If the segment is empty during the retention check, roll will not be executed. Even if the partition directory is empty, no error will be reported, so<strong>It is not possible to directly infer the time when the directory was deleted based on the error time.</strong>；</p>
+<p>2) If a segment is empty for a long time, it may meet the deletion conditions of tmpwatch, that is, it has not been accessed for more than 10 days. If the segment file is deleted, the partition directory will become an empty directory and will also be deleted;</p>
+<p> </p>
+<p>1.2 Kafka will call the Kafka.log.Log.append method when receiving a message, and the append method will call the maybeRoll method:</p>
+<p> <img alt="" src="https://img2018.cnblogs.com/blog/1509647/201811/1509647-20181107114819756-1881507643.png"/></p>
+<p>It can be found that when the segment is empty, that is, segment.size=0, even if the segment creation time exceeds the limit, roll will not be performed when receiving the first message, but after receiving the first message, segment.size&gt;0, then if the second message is received, roll will be performed;</p>
+<p> </p>
+<h2>2 Simulate and reproduce the problem occurrence process</h2>
+<p>1) The Kafka server configures the retention check interval to 1 minute and starts the Kafka server;</p>
+<blockquote>
+<p><strong>log.retention.check.interval.ms</strong>=60000</p>
+</blockquote>
+<p>2) 10:00:00, create test topic:</p>
+<blockquote>
+<p><strong>kafka-topics.sh --zookeeper $zk_server:2187 --create --topic test --partitions 1 --config retention.ms=300000 --config segment.ms=600000</strong></p>
+</blockquote>
+<p>3) Immediately delete the partition directory test-0 manually;</p>
+<p>4) At least 4 retention checks are performed before 10:05:00, because the last modification time of the segment variable in the memory has not exceeded<strong>retention.ms</strong>(The red box in the screenshot below), so roll will not be executed and no error will be reported;</p>
+<p> <img alt="" src="https://img2018.cnblogs.com/blog/1509647/201811/1509647-20181107114849125-1717234768.png"/></p>
+<p>5) After 10:05:00, when performing retention check, the last modification time of segment exceeds<strong>retention.ms</strong>, but because the segment is empty (the red box in the screenshot below), roll will not be executed and no error will be reported;</p>
+<p> <img alt="" src="https://img2018.cnblogs.com/blog/1509647/201811/1509647-20181107114904439-123455118.png"/></p>
+<p>6) After 10:10:00, the segment creation time exceeds<strong>segment.ms</strong>(The red box in the screenshot below);</p>
+<p> <img alt="" src="https://img2018.cnblogs.com/blog/1509647/201811/1509647-20181107114917023-1679709717.png"/></p>
+<p>7) At 10:10:01, send the first message to Kafka</p>
+<blockquote>
+<p><strong>kafka-console-producer.sh --broker-list $kafka_server:9081 –topic test</strong></p>
+</blockquote>
+<p>8) In the Kafka server, since segment.size=0 at this time, the conditions in the red box in the picture below in maybeRoll are not met.</p>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201811/1509647-20181107115005203-1406431150.png"/></p>
+<p> </p>
+<p>Therefore, roll will not be performed and no error will be reported;</p>
+<p>9) Starting from 10:10:01, every time the Kafka server performs a retention check, both conditions in the red box in the figure below are true.</p>
+<p><img alt="" src="https://img2018.cnblogs.com/blog/1509647/201811/1509647-20181107115032502-279885295.png"/></p>
+<p>When the roll conditions are met, roll is performed, and then an error is reported:</p>
+<blockquote>
+<p><strong>ERROR</strong> Uncaught exception in scheduled task 'kafka-log-retention' (kafka.utils.KafkaScheduler)</p>
+<p>java.io.FileNotFoundException: /home/wuweiwei/kafkalogs/1/test-0/00000000000000000000.index (No such file or directory)</p>
+</blockquote>
+<p>10) Before sending the second message to Kafka, the server will report the above error when checking every 1 minute. Since the check is performed by a background thread, so<strong>kafka</strong><strong>Process will not exit</strong>；</p>
+<p>11) 10:20:00, send the second message to Kafka</p>
+<blockquote>
+<p><strong>kafka-console-producer.sh --broker-list $kafka_server:9081 –topic test</strong></p>
+</blockquote>
+<p>12) In the Kafka server, since the first message has been received before, segment.size&gt;0 at this time, so the two conditions in the red box in the picture below in maybeRoll are both true.</p>
+<p> <img alt="" src="https://img2018.cnblogs.com/blog/1509647/201811/1509647-20181107115057739-1159483831.png"/></p>
+<p>When the roll conditions are met, roll is performed, and then an error is reported:</p>
+<blockquote>
+<p><strong>FATAL</strong> [KafkaApi-101] Halting due to unrecoverable I/O error while handling produce request:  (kafka.server.KafkaApis)</p>
+<p>kafka.common.KafkaStorageException: I/O exception in append to log 'test1-0'</p>
+<p>Caused by: java.io.FileNotFoundException: /home/test/kafkalogs/1/test-0/00000000000000000000.index (No such file or directory)</p>
+</blockquote>
+<p>Since this error is reported in the Kafka process,<strong>kafka</strong><strong>Process exits</strong>；</p>
+<p> </p>
+<h2>3. The actual problem occurrence process</h2>
+<h3>3.1 135 server</h3>
+<p>1）<strong>2014-10-01 03:44</strong>Previously, Kafka performed a retention check on the partition cacheClear-onlineConfirm-1, deleted the old segment and created a new empty segment;</p>
+<p>2) No new message arrives in partition cacheClear-onlineConfirm-1 from 2014-10-01 03:44 to 2014-10-11 03:44, so this partition always has only one empty segment;</p>
+<p>3）<strong>2014-10-11 03:44</strong> anacron is executed and tmpwatch is called to clean up the /tmp directory. The full path of partition cacheClear-onlineConfirm-1 is /tmp/Kafka-logs/ cacheClear-onlineConfirm-1. tmpwatch finds that the partition directory was last accessed 10 days ago and deletes it;</p>
+<p>4) Kafka has been performing retention checks between 2014-10-11 03:44 and 11:00:03, but because the segment variable in the memory is an empty segment, roll is not executed and no error is reported;</p>
+<p>5) Between 2014-10-11 10:59:38 and 11:00:38, the first message arrived in partition cacheClear-onlineConfirm-1;</p>
+<p>6）<strong>2014-10-11 11:00:38</strong>, Kafka performs retention check. At this time, the segment is not empty, enters roll, and then starts to report errors (ERROR);</p>
+<p>7）<strong>2014-10-11 11:02:35</strong>, the second message reaches the partition cacheClear-onlineConfirm-1. At this time, Kafka rolls before append, reports an error (FATAL), and the Kafka process exits;</p>
+<h3>3.2 134 server</h3>
+<p>1) After server 135 hangs up, server 134 takes over the partition cacheClear-onlineConfirm-1 as the leader;</p>
+<p>2）<strong>2014-10-13 16:45:41</strong>, 134 The server receives the first message, executes roll, reports an error (FATAL), and the process exits;</p>
+<h3>3.3 136 server</h3>
+<p>1) After server 134 hangs up, server 136 takes over the partition cacheClear-onlineConfirm-1 as the leader;</p>
+<p>2）<strong>2014-10-13 19:10:35</strong>, 136 The server receives the first message, executes roll, reports an error (FATAL), and the process exits;</p>
+<p> </p>
+<h1>Five Summary of Problems</h1>
+<p>1) Using the default Kafka log directory /tmp/Kafka-logs is a hidden danger. You can first add /tmp/Kafka-logs to the directory exclusion list of /etc/cron.daily/tmpwatch;</p>
+<p>2) In addition, you can sort out Kafka's logs, especially ERROR and FATAL, and monitor the logs to find problems in time;</p>
+<p> </p>
+</div>
+</div>
+<!-- Post Footer -->
+<div class="post-footer">
+<div class="post-navigation">
+<a class="nav-button" href="../blog.html">← Back to Home</a>
+<a class="nav-button" href="0352.html">Next Post →</a>
+</div>
+</div>
+</article>
+</div>
+</body>
+</html>

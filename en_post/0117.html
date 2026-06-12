@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Marathon has been in the waiting state after restarting the app</title>
+<link href="../css/style3.css" rel="stylesheet"/>
+</head>
+<body>
+<div class="container">
+<!-- Header Navigation -->
+<div class="header">
+<h1><a href="../blog.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+</div>
+<!-- Post Container -->
+<article class="post">
+<!-- Post Header -->
+<div class="post-header">
+<h1>Marathon has been in the waiting state after restarting the app</h1>
+<div class="post-meta">
+<div class="post-meta-item">
+<span class="meta-icon">📅</span>
+<span>June 14, 2019</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">📖</span>
+<span>1 min read</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">👁️</span>
+<span>917 views</span>
+</div>
+</div>
+</div>
+<!-- Post Content -->
+<div class="post-content">
+<div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<p>After marathon restarts the app, it has been in the waiting state. Check the marathon log.</p>
+<blockquote>
+<p># journalctl - u marathon - f</p>
+</blockquote>
+<p>There are the following logs:</p>
+<div class="cnblogs_code">
+<pre>Jun 14 12:58:38 DataOne-002 marathon[15801]: [2019-06-14 12:58:38,321] INFO  Offer [2a0fb98b-f8df-44e8-965c-54ad7203fa45-O1623]. Constraints <span style="color: rgba(0, 0, 255, 1)">for</span> run spec [/app] <span style="color: rgba(0, 0, 255, 1)">not</span><span style="color: rgba(0, 0, 0, 1)"> satisfied.
+Jun </span>14 12:58:38 DataOne-002 marathon[15801]: The conflicting constraints are: [field: <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">hostname</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">
+Jun </span>14 12:58:38 DataOne-002 marathon[15801<span style="color: rgba(0, 0, 0, 1)">]: operator: CLUSTER
+Jun </span>14 12:58:38 DataOne-002 marathon[15801]: value: <span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(128, 0, 0, 1)">192.168.0.1</span><span style="color: rgba(128, 0, 0, 1)">"</span><span style="color: rgba(0, 0, 0, 1)">
+Jun </span>14 12:58:38 DataOne-002 marathon[15801]: ] (mesosphere.mesos.ResourceMatcher$:marathon-akka.actor.default-dispatcher-3645<span style="color: rgba(0, 0, 0, 1)">)
+Jun </span>14 12:58:38 DataOne-002 marathon[15801]: [2019-06-14 12:58:38,322] INFO  Offer [2a0fb98b-f8df-44e8-965c-54ad7203fa45-O1624]. Considering resources with roles {*} without resident reservation labels. Not all basic resources satisfied: cpus NOT SATISFIED (1.0 &gt; 0.0), mem SATISFIED (1024.0 &lt;= 1024.0) (mesosphere.mesos.ResourceMatcher$:marathon-akka.actor.default-dispatcher-3645)</pre>
+</div>
+<p>It can be seen that the resource has not been satisfied. In the above example, the CPU resource is insufficient, so it cannot be deployed;</p>
+<p> </p>
+</div>
+</div>
+<!-- Post Footer -->
+<div class="post-footer">
+<div class="post-navigation">
+<a class="nav-button" href="../blog.html">← Back to Home</a>
+<a class="nav-button" href="0118.html">Next Post →</a>
+</div>
+</div>
+</article>
+</div>
+</body>
+</html>

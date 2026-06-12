@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Using zsh</title>
+<link href="../css/style3.css" rel="stylesheet"/>
+</head>
+<body>
+<div class="container">
+<!-- Header Navigation -->
+<div class="header">
+<h1><a href="../blog.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+</div>
+<!-- Post Container -->
+<article class="post">
+<!-- Post Header -->
+<div class="post-header">
+<h1>Using zsh</h1>
+<div class="post-meta">
+<div class="post-meta-item">
+<span class="meta-icon">📅</span>
+<span>June 18, 2020</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">📖</span>
+<span>1 min read</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">👁️</span>
+<span>700 views</span>
+</div>
+</div>
+</div>
+<!-- Post Content -->
+<div class="post-content">
+<div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<p> </p>
+<h1>1. Install zsh</h1>
+<p> </p>
+<blockquote>
+<p># apt-get install zsh (ubuntu)<br/># yum install zsh (redhat &amp; centos)<br/># zypper in zsh (opensuse)<br/># mac comes with it</p>
+</blockquote>
+<p> </p>
+<h1>2. Install oh my zsh</h1>
+<blockquote>
+<p>$ sh - c "$(curl - fsSL https://raw.github.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"</p>
+</blockquote>
+<p>Official website: https://ohmyz.sh</p>
+<p> </p>
+<p>After installation, the .zshrc file and .oh-my-zsh directory will be added to the home directory. Other servers can copy these two directly.</p>
+<p> </p>
+<h1>3. Install plugin</h1>
+<p> </p>
+<h2>1 zsh-autosuggestions</h2>
+<blockquote>
+<p>git clone https://github.com/zsh-users/zsh-autosuggestions ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-autosuggestions</p>
+<p># vi .zshrc</p>
+<p>plugins=( [plugins...] zsh-autosuggestions)</p>
+</blockquote>
+<p>ps:</p>
+<p>1 Multiple plugins separated by spaces</p>
+<p>2 plugin directory ~/.oh-my-zsh/custom/plugins. After one installation, the plugin directory can be directly synchronized to other servers.</p>
+<p>3 After the prompt, use Ctrl+f to automatically complete</p>
+<p>4 The default color of the prompt is gray, which may not be obvious under some themes. It can be modified as follows:</p>
+<blockquote>
+<p>vim ~/.oh-my-zsh/custom/plugins/zsh-autosuggestions/zsh-autosuggestions.zsh<br/>typeset - g ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE='fg=yellow'</p>
+</blockquote>
+<h2>2 zsh-syntax-highlighting</h2>
+<p> </p>
+<blockquote>
+<p>git clone https://github.com/zsh-users/zsh-syntax-highlighting.git ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-syntax-highlighting</p>
+<p># vi .zshrc</p>
+<p>plugins=( [plugins...] zsh-syntax-highlighting)</p>
+</blockquote>
+<p> </p>
+<h2>3 autojump</h2>
+<p> </p>
+<p> </p>
+<h1>four themes</h1>
+<p>View all themes that come with it</p>
+<p> </p>
+<blockquote>
+<p># ls ~/.oh-my-zsh/themes</p>
+</blockquote>
+<p>Format: theme name.zsh-theme</p>
+<p> </p>
+<blockquote>
+<p># vi .zshrc<br/>ZSH_THEME="robbyrussell"</p>
+</blockquote>
+<p> </p>
+<p>Modify ZSH_THEME as the theme name</p>
+<p>Recommended:mortalscumbag</p>
+<p> </p>
+<h1>5. Modify the default shell</h1>
+<h2>1 When installing oh-my-zsh</h2>
+<p>Select y at the end of installation</p>
+<h2>2 chsh command</h2>
+<p># chsh - s /bin/zsh</p>
+<h2>3 Modify passwd file</h2>
+<p># vi /etc/passwd</p>
+<p>Change a user's last /bin/bash to /bin/zsh</p>
+<h1>six more</h1>
+<h2>1 d</h2>
+<p>List all previously visited directories</p>
+<blockquote>
+<p># d</p>
+</blockquote>
+<p>Directly enter the corresponding directory through numbers</p>
+<blockquote>
+<p># 0</p>
+</blockquote>
+<p> </p>
+<p><a class="entry" href="https://www.cnblogs.com/barneywill/p/13111438.html" target="_blank"> </a></p>
+</div>
+</div>
+<!-- Post Footer -->
+<div class="post-footer">
+<div class="post-navigation">
+<a class="nav-button" href="../blog.html">← Back to Home</a>
+<a class="nav-button" href="0067.html">Next Post →</a>
+</div>
+</div>
+</article>
+</div>
+</body>
+</html>

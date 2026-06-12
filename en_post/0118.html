@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Time zone problem when Docker starts Java application</title>
+<link href="../css/style3.css" rel="stylesheet"/>
+</head>
+<body>
+<div class="container">
+<!-- Header Navigation -->
+<div class="header">
+<h1><a href="../blog.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+</div>
+<!-- Post Container -->
+<article class="post">
+<!-- Post Header -->
+<div class="post-header">
+<h1>Time zone problem when Docker starts Java application</h1>
+<div class="post-meta">
+<div class="post-meta-item">
+<span class="meta-icon">📅</span>
+<span>June 13, 2019</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">📖</span>
+<span>1 min read</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">👁️</span>
+<span>506 views</span>
+</div>
+</div>
+</div>
+<!-- Post Content -->
+<div class="post-content">
+<div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<p>Start tomcat or Java applications in Docker. The default time to obtain is UTC time. This is because the locale in the container is not set to East 8. The simplest way is to add JAVA_OPTS</p>
+<p>If it is Java, add it directly after the Java command.</p>
+<blockquote>
+<p>-Duser.timezone=Asia/Shanghai</p>
+</blockquote>
+<p>If it is tomcat, you can set CATALINA_OPTS first</p>
+<blockquote>
+<p>export CATALINA_OPTS=' - Duser.timezone=Asia/Shanghai '</p>
+</blockquote>
+<p>Start tomcat again</p>
+<p> </p>
+</div>
+</div>
+<!-- Post Footer -->
+<div class="post-footer">
+<div class="post-navigation">
+<a class="nav-button" href="../blog.html">← Back to Home</a>
+<a class="nav-button" href="0119.html">Next Post →</a>
+</div>
+</div>
+</article>
+</div>
+</body>
+</html>

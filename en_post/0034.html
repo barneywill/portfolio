@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>supervisor</title>
+<link href="../css/style3.css" rel="stylesheet"/>
+</head>
+<body>
+<div class="container">
+<!-- Header Navigation -->
+<div class="header">
+<h1><a href="../blog.html" style="color: #3a3f47; text-decoration: none;">Weiwei's Blog</a></h1>
+</div>
+<!-- Post Container -->
+<article class="post">
+<!-- Post Header -->
+<div class="post-header">
+<h1>supervisor</h1>
+<div class="post-meta">
+<div class="post-meta-item">
+<span class="meta-icon">📅</span>
+<span>August 30, 2021</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">📖</span>
+<span>1 min read</span>
+</div>
+<div class="post-meta-item">
+<span class="meta-icon">👁️</span>
+<span>189 views</span>
+</div>
+</div>
+</div>
+<!-- Post Content -->
+<div class="post-content">
+<div class="blogpost-body cnblogs-markdown" id="cnblogs_post_body">
+<h1 id="section-0034-1">Introduction</h1>
+<p>Supervisor is a client/server system that allows its users to monitor and control a number of processes on UNIX-like operating systems.<br/>
+Official website:<a href="http://supervisord.org" rel="noopener nofollow" target="_blank">http://supervisord.org</a></p>
+<h1 id="section-0034-2">Install</h1>
+<blockquote>
+<p>yum install supervisor</p>
+</blockquote>
+<h1 id="section-0034-3">Configuration</h1>
+<h2 id="section-0034-4">Configuration file path</h2>
+<p>/etc/supervisord.d/*.ini</p>
+<h2 id="section-0034-5">Configuration file example</h2>
+<p>/etc/supervisord.d/mypro.ini</p>
+<blockquote>
+<p>[program:mypro]<br/>
+environment=JAVA_HOME="/usr/java/jdk1.8.0_202-amd64"<br/>
+directory=/path/to/mypro<br/>
+command=sh /path/to/mypro/start.sh<br/>
+autostart=true<br/>
+autorestart=true<br/>
+user=root<br/>
+numprocs=1<br/>
+startretries=3<br/>
+stopasgroup=true<br/>
+killasgroup=true<br/>
+startsecs=5<br/>
+stderr_logfile=/path/to/mypro/stderr.log<br/>
+stdout_logfile=/path/to/mypro/stdout.log</p>
+</blockquote>
+<p>Configurable environment variables, startup commands, startup users, log directories, etc.</p>
+<h1 id="section-0034-6">start up</h1>
+<blockquote>
+<p>systemctl start supervisord.service<br/>
+systemctl enable supervisord.service</p>
+</blockquote>
+<h1 id="section-0034-7">use</h1>
+<blockquote>
+<p>supervisorctl status<br/>
+supervisorctl start<br/>
+supervisorctl stop<br/>
+supervisorctl restart<br/>
+supervisorctl update<br/>
+supervisorctl reload</p>
+</blockquote>
+</div>
+</div>
+<!-- Post Footer -->
+<div class="post-footer">
+<div class="post-navigation">
+<a class="nav-button" href="../blog.html">← Back to Home</a>
+<a class="nav-button" href="0035.html">Next Post →</a>
+</div>
+</div>
+</article>
+</div>
+</body>
+</html>
